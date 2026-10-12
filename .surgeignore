@@ -1,0 +1,9 @@
+AGENTS.md
+IDEAS.md
+PUBLISHED.md
+deploy.sh
+.pi
+.surgeignore
+*.md
+.omc
+*.test.js

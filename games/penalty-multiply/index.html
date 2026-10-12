@@ -1,0 +1,88 @@
+<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#174d37"><title>Пенальті-множення — Keeper Fun Games</title><link rel="stylesheet" href="../../shared/kf.css"><style>
+.game-shell{max-width:860px;margin:0 auto;padding:17px 0 56px}.game-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.game-panel{background:var(--paper);border-radius:28px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line)}.intro,.finish{padding:clamp(25px,6vw,55px);text-align:center}.intro-icon,.finish-icon{width:104px;height:104px;margin:0 auto 23px;display:grid;place-items:center;background:#e8f7d5;border-radius:29px;font-size:3.5rem;transform:rotate(-7deg)}.intro h1,.finish h1{font-size:clamp(2.1rem,6vw,3.5rem);line-height:1.07;margin:0 0 13px}.intro p,.finish p{font-size:1.08rem;color:var(--muted);line-height:1.5;max-width:500px;margin:0 auto 27px}.table-box{background:#f0f3e6;border-radius:22px;padding:20px;max-width:590px;margin:0 auto 28px}.table-box h2{font-size:1rem;margin:0 0 12px}.chips{display:flex;justify-content:center;flex-wrap:wrap;gap:9px}.chip{min-width:58px;min-height:56px;padding:10px;border:2px solid #c5d4c1;border-radius:14px;background:white;color:var(--ink);font-weight:900;font-size:1.13rem;transition:background-color .16s,transform .16s,border-color .16s}.chip[aria-pressed=true]{background:var(--green);border-color:var(--green);color:white}.chip:active{transform:scale(.96)}.chip.all{min-width:85px;font-size:.94rem}.choice-hint{font-size:.85rem!important;margin:13px 0 0!important}.intro .btn{min-width:225px}.play-screen[hidden],.intro[hidden],.finish[hidden]{display:none}.match-head{background:#123d2d;color:white;padding:17px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.match-head strong{color:var(--lime);font-size:.92rem}.dots{display:flex;gap:8px}.dot{width:19px;height:19px;border:2px solid #c6d8c6;border-radius:50%;background:transparent}.dot.goal{background:var(--lime);border-color:var(--lime)}.dot.saved{background:var(--gold);border-color:var(--gold)}.dot.current{border-color:white;box-shadow:0 0 0 3px #ffffff3b}.question-area{text-align:center;background:#eaf5db;padding:19px 16px 20px}.question-area .eyebrow{color:#38794d;margin:0 0 4px}.question{font-size:clamp(2.3rem,8vw,4rem);font-weight:950;letter-spacing:-.05em;margin:0;line-height:1.15;font-variant-numeric:tabular-nums}.field{position:relative;overflow:hidden;min-height:365px;background:repeating-linear-gradient(0deg,#2e8650 0 64px,#297c49 64px 128px);padding:25px 20px 28px}.field:before{content:"";position:absolute;width:360px;height:360px;border:2px solid #ffffff6b;border-radius:50%;bottom:-310px;left:50%;transform:translateX(-50%);pointer-events:none}.field:after{content:"";position:absolute;inset:0 8% auto;height:230px;border:2px solid #ffffff45;border-top:0;pointer-events:none}.goal{position:relative;z-index:1;margin:auto;max-width:700px;min-height:170px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px;background:repeating-linear-gradient(0deg,#ffffff2d 0 2px,transparent 2px 27px),repeating-linear-gradient(90deg,#ffffff2d 0 2px,transparent 2px 27px),#0d4c34;border:7px solid white;border-bottom-width:10px;border-radius:13px 13px 4px 4px;box-shadow:0 11px 0 #143e2b,0 18px 25px #062a2155}.target{position:relative;z-index:2;min-width:0;min-height:123px;border:2px solid #ffffff9c;border-radius:14px;background:#fffdf0;color:var(--ink);font-size:clamp(1.7rem,5vw,2.6rem);font-weight:950;font-variant-numeric:tabular-nums;box-shadow:0 5px 0 #b8d4ad;transition:transform .16s,background-color .16s,box-shadow .16s}.target:hover:not(:disabled){transform:translateY(-3px);background:#eafbc4}.target:active:not(:disabled){transform:scale(.96)}.target:disabled{cursor:default;opacity:1}.target.correct{background:var(--lime);border-color:#dfff96}.target.wrong{background:#ffe5ad;border-color:#f4c563}.ball{position:absolute;z-index:5;bottom:32px;left:calc(50% - 25px);font-size:48px;line-height:1;filter:drop-shadow(3px 8px 2px #07321d8c);transition:transform .62s cubic-bezier(.2,.8,.24,1);pointer-events:none}.ball.kick{transform:translate(var(--ball-x),var(--ball-y)) scale(.52) rotate(520deg)}.keeper{position:absolute;left:calc(50% - 24px);top:218px;font-size:43px;z-index:4;pointer-events:none;transition:transform .52s ease}.keeper.dive{transform:translate(var(--keeper-x),-105px) rotate(var(--keeper-rotate))}.feedback{padding:18px 24px 25px;text-align:center;min-height:113px}.feedback p{font-size:1.15rem;font-weight:850;margin:0 0 12px}.feedback .btn{min-width:180px}.feedback:empty{min-height:42px}.finish .score{display:inline-block;background:var(--green);color:var(--lime);padding:12px 29px;border-radius:18px;font-size:3rem;font-weight:950;margin-bottom:20px;font-variant-numeric:tabular-nums}.finish .actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}.finish .actions .btn{min-width:180px}
+@media(max-width:540px){.game-shell{padding-top:8px}.game-panel{border-radius:22px}.intro,.finish{padding:30px 17px}.table-box{padding:16px 10px}.chips{gap:7px}.chip{min-width:55px}.match-head{padding:13px 16px}.field{padding:19px 12px 20px;min-height:320px}.goal{gap:7px;padding:9px;border-width:5px;border-bottom-width:8px;min-height:144px}.target{min-height:110px}.keeper{top:184px}.ball{bottom:25px}.feedback{padding:18px 12px 23px}}
+</style></head><body><header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></header><main class="wrap game-shell"><div class="game-top"><a class="back-link" href="../../">← До каталогу</a><span class="eyebrow muted">Математика · ⚽</span></div><div class="game-panel">
+<section class="intro" id="intro"><div class="intro-icon" aria-hidden="true">🥅</div><h1>Пенальті-множення</h1><p>Розв’яжи приклад і натисни правильну відповідь у воротах. Попереду 5 ударів!</p><div class="table-box"><h2>Які таблиці тренуємо?</h2><div class="chips" id="chips" aria-label="Таблиці множення"></div><p class="choice-hint">Можна обрати кілька чисел.</p></div><button class="btn btn-dark" id="start" type="button">На поле →</button></section>
+<section class="play-screen" id="play" hidden><div class="match-head"><strong id="round-label">УДАР 1 ІЗ 5</strong><div class="dots" id="dots" aria-label="Результати ударів"></div></div><div class="question-area"><div class="eyebrow">Обери відповідь</div><div class="question" id="question">7 × 6 = ?</div></div><div class="field" id="field"><div class="goal" id="goal" aria-label="Варіанти відповіді"></div><span class="keeper" id="keeper" aria-hidden="true">🧤</span><span class="ball" id="ball" aria-hidden="true">⚽</span></div><div class="feedback" id="feedback" role="status" aria-live="polite"></div></section>
+<section class="finish" id="finish" hidden><div class="finish-icon" aria-hidden="true">🏆</div><h1>Матч завершено!</h1><div class="score" id="final-score">0 / 5</div><p id="final-message"></p><div class="actions"><button class="btn btn-dark" id="again" type="button">Ще раз ↗</button><a class="btn btn-light" href="../../">До каталогу</a></div></section>
+</div></main><script src="../../shared/kf.js"></script><script src="../../shared/kf-ui.js"></script><script>
+'use strict';
+(() => {
+  const slug = 'penalty-multiply', total = 5;
+  const $ = id => document.getElementById(id);
+  const selected = new Set([2,3,4,5]);
+  const rand = n => Math.floor(Math.random() * n);
+  let round = 0, score = 0, results = [], answer = 0, locked = false, startingCoins = 0, timer;
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function renderChips() {
+    $('chips').innerHTML = `<button type="button" class="chip all" aria-pressed="${selected.size === 9}" data-table="all">Усі</button>` + Array.from({length:9}, (_, i) => i + 2).map(n => `<button type="button" class="chip" aria-pressed="${selected.has(n)}" data-table="${n}">${n}</button>`).join('');
+  }
+  $('chips').addEventListener('click', e => {
+    const chip = e.target.closest('.chip'); if (!chip) return;
+    if (chip.dataset.table === 'all') { selected.clear(); for (let n = 2; n <= 10; n++) selected.add(n); }
+    else { const n = Number(chip.dataset.table); if (selected.has(n) && selected.size > 1) selected.delete(n); else selected.add(n); }
+    renderChips();
+  });
+  function makeOptions(a,b) {
+    const correct = a*b;
+    const possibilities = [a*(b+1),a*(b-1), (a+1)*b, (a-1)*b, correct+2, correct-2, correct+3, correct-3, correct+5, correct-5].filter(n => n > 0 && n !== correct);
+    const unique = [...new Set(possibilities)].sort(() => Math.random() - .5);
+    const choices = [correct, ...unique.slice(0,2)];
+    for (let i = choices.length-1; i > 0; i--) { const j = rand(i+1); [choices[i],choices[j]] = [choices[j],choices[i]]; }
+    return choices;
+  }
+  function drawDots() {
+    $('dots').innerHTML = Array.from({length:total}, (_,i) => `<span class="dot ${results[i] === true ? 'goal' : results[i] === false ? 'saved' : i === round ? 'current' : ''}" aria-label="Удар ${i+1}: ${results[i] === true ? 'гол' : results[i] === false ? 'сейв' : 'ще попереду'}"></span>`).join('');
+  }
+  function next() {
+    clearTimeout(timer); locked = false;
+    $('ball').classList.remove('kick'); $('ball').style.removeProperty('--ball-x'); $('ball').style.removeProperty('--ball-y');
+    $('keeper').classList.remove('dive');
+    $('feedback').replaceChildren();
+    const tables = [...selected]; const a = tables[rand(tables.length)], b = 2 + rand(9);
+    answer = a*b;
+    $('round-label').textContent = `УДАР ${round+1} ІЗ ${total}`;
+    $('question').textContent = `${a} × ${b} = ?`;
+    $('goal').innerHTML = makeOptions(a,b).map(n => `<button type="button" class="target" data-value="${n}" aria-label="Відповідь ${n}">${n}</button>`).join('');
+    drawDots();
+  }
+  function finish() {
+    $('play').hidden = true; $('finish').hidden = false;
+    const result = KF.finishGame(slug,{score,max:total});
+    const earned = KF.get().coins - startingCoins;
+    $('final-score').textContent = `${score} / ${total}`;
+    $('final-message').textContent = `${score === 5 ? 'Усі удари в ціль! Чудовий матч!' : score > 0 ? 'Класний матч! Спробуєш ще раз?' : 'Гарне тренування! Спробуй ще раз.'} Зароблено ${earned} 🪙${result.perfect ? ' (є бонус за 5 голів!)' : '.'}`;
+    if (score > 0) KFUI.confetti();
+  }
+  function shoot(button) {
+    if (locked) return;
+    locked = true;
+    const good = Number(button.dataset.value) === answer;
+    results.push(good); if (good) score++;
+    KF.answer(slug,good);
+    $('goal').querySelectorAll('button').forEach(b => { b.disabled = true; if (Number(b.dataset.value) === answer) b.classList.add('correct'); });
+    if (!good) button.classList.add('wrong');
+    const ball = $('ball').getBoundingClientRect(), target = button.getBoundingClientRect();
+    $('ball').style.setProperty('--ball-x', `${target.left + target.width/2 - ball.left - ball.width/2}px`);
+    $('ball').style.setProperty('--ball-y', `${target.top + target.height/2 - ball.top - ball.height/2}px`);
+    // Force a frame between resetting the ball and kicking it.
+    requestAnimationFrame(() => $('ball').classList.add('kick'));
+    if (!good) { $('keeper').style.setProperty('--keeper-x', `${target.left + target.width/2 - ($('keeper').getBoundingClientRect().left + 24)}px`); $('keeper').style.setProperty('--keeper-rotate', button === $('goal').firstElementChild ? '-25deg' : '25deg'); $('keeper').classList.add('dive'); }
+    drawDots();
+    timer = setTimeout(() => {
+      const text = document.createElement('p');
+      text.textContent = good ? 'ГОООЛ! ⚽ Чудовий удар!' : `Воротар зловив! 🧤 Правильна відповідь: ${answer}`;
+      const nextButton = document.createElement('button');
+      nextButton.type = 'button'; nextButton.className = 'btn btn-dark';
+      nextButton.textContent = round === total-1 ? 'Результат →' : 'Наступний удар →';
+      nextButton.addEventListener('click', () => { round++; if (round === total) finish(); else next(); });
+      $('feedback').replaceChildren(text,nextButton);
+      nextButton.focus({preventScroll:true});
+    }, reduced() ? 100 : 720);
+  }
+  $('goal').addEventListener('click', e => { const button = e.target.closest('button.target'); if (button) shoot(button); });
+  function start() { clearTimeout(timer); round = 0; score = 0; results = []; startingCoins = KF.get().coins; $('intro').hidden = true; $('finish').hidden = true; $('play').hidden = false; next(); }
+  $('start').addEventListener('click',start); $('again').addEventListener('click',start);
+  renderChips();
+})();
+</script></body></html>

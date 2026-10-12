@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#174d37">
+<title>Examen de mates — Keeper Fun Games</title>
+<link rel="stylesheet" href="../../shared/kf.css">
+<style>
+.game-shell{max-width:900px;margin:0 auto;padding:17px 0 56px}
+.game-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}
+[hidden]{display:none!important}
+
+/* Hub */
+.hub{padding:clamp(22px,5vw,44px)}
+.hub-head{display:flex;gap:18px;align-items:center;margin-bottom:22px}
+.hub-icon{flex:none;width:84px;height:84px;display:grid;place-items:center;background:#e8f7d5;border-radius:24px;font-size:2.8rem;transform:rotate(-7deg)}
+.hub h1{font-size:clamp(1.9rem,6vw,3rem);line-height:1.05;margin:0 0 6px}
+.hub-head p{margin:0;color:var(--muted);font-size:1.02rem;line-height:1.45}
+.stations{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.station{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:22px;background:#fff;border:1px solid var(--line);box-shadow:0 4px 0 #e2e9dc}
+.station-title{display:flex;gap:12px;align-items:center}
+.station-title span{font-size:2rem}
+.station-title strong{display:block;font-size:1.18rem;letter-spacing:-.02em}
+.station-title small{display:block;color:var(--muted);font-weight:700}
+.levels{display:flex;flex-wrap:wrap;gap:8px}
+.level{min-width:56px;min-height:56px;padding:6px 10px;border-radius:14px;border:2px solid #c5d4c1;background:#fff;color:var(--ink);font-weight:900;font-size:1.05rem;transition:transform .16s,background-color .16s,border-color .16s}
+.level:hover:not(:disabled){border-color:var(--green);background:#f1f8e6}
+.level:active:not(:disabled){transform:scale(.95)}
+.level.done{background:#e3f4cb;border-color:#9fca6a}
+.level:disabled{background:#eef1ea;border-color:#e0e5dc;color:#9aa89e}
+.level-hint{margin:0;color:var(--muted);font-size:.9rem;min-height:1.3em}
+.exam-card{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px;border-radius:22px;background:var(--green);color:#fff}
+.exam-card strong{font-size:1.3rem;display:block}
+.exam-card p{margin:4px 0 0;color:#d6ecd9}
+.hub-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.report{margin-top:18px;padding:16px 18px;border-radius:18px;background:#f0f3e6}
+.report h2{font-size:1rem;margin:0 0 10px}
+.report-row{display:grid;grid-template-columns:minmax(120px,1fr) 2fr auto;gap:10px;align-items:center;padding:5px 0;font-weight:700}
+.bar{height:12px;border-radius:10px;background:#dfe6d6;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pitch);border-radius:10px}
+.bar.low i{background:#e5a12a}
+.report-row b{font-variant-numeric:tabular-nums;min-width:4.5em;text-align:right}
+
+/* Play */
+.match-head{background:#123d2d;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.match-head strong{color:var(--lime);font-size:.92rem;letter-spacing:.08em;text-transform:uppercase}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dot{width:16px;height:16px;border:2px solid #c6d8c6;border-radius:50%}
+.dot.ok{background:var(--lime);border-color:var(--lime)}
+.dot.miss{background:var(--gold);border-color:var(--gold)}
+.dot.now{border-color:#fff;box-shadow:0 0 0 3px #ffffff3b}
+.prompt{background:#eaf5db;padding:20px 22px;display:flex;gap:14px;align-items:flex-start;justify-content:space-between}
+.prompt-text{font-size:clamp(1.3rem,4.4vw,1.9rem);font-weight:900;line-height:1.25;margin:0;letter-spacing:-.02em}
+.prompt-ua{margin:10px 0 0;padding:10px 14px;border-radius:14px;background:#fff;color:var(--ink);font-weight:700;line-height:1.4}
+.ua-btn{flex:none;min-width:56px;min-height:56px;border:2px solid #c5d4c1;border-radius:16px;background:#fff;font-size:1.5rem}
+.ua-btn[aria-pressed=true]{border-color:var(--green);background:#e3f4cb}
+.work{padding:22px clamp(14px,4vw,28px);display:grid;grid-template-columns:minmax(0,1fr);gap:18px;justify-items:center}
+.work>*{max-width:100%}
+.prompt-text.long{font-size:clamp(1.05rem,3.6vw,1.4rem);line-height:1.35}
+.feedback{padding:0 22px 24px;text-align:center}
+.feedback:empty{padding:0}
+.fb-box{display:inline-block;max-width:640px;padding:16px 20px;border-radius:18px;text-align:left;font-weight:700;line-height:1.45}
+.fb-box.ok{background:#e3f4cb}
+.fb-box.miss{background:#fff1d1}
+.fb-box p{margin:0 0 6px}
+.fb-box .fb-title{font-size:1.25rem;font-weight:950}
+.fb-box .fb-ua{color:var(--muted)}
+.feedback .btn{margin-top:14px;min-width:200px}
+.inline-hint{min-height:1.5em;margin:0;text-align:center;font-weight:800;color:#8a5a00;max-width:560px}
+.inline-hint .fb-ua{display:block;color:var(--muted);font-weight:700}
+
+/* Choices */
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px)}
+.choice{min-height:72px;border:2px solid #c5d4c1;border-radius:18px;background:#fff;color:var(--ink);font-size:clamp(1.3rem,4vw,1.7rem);font-weight:900;font-variant-numeric:tabular-nums;box-shadow:0 5px 0 #d6e0d1;position:relative;transition:transform .16s,background-color .16s}
+.choice:hover:not(:disabled){background:#f1f8e6;transform:translateY(-2px)}
+.choice:active:not(:disabled){transform:scale(.97)}
+.choice:disabled{cursor:default}
+.choice.right{background:var(--lime);border-color:#9fca6a}
+.choice.wrong{background:#ffe5ad;border-color:#f4c563}
+.choice kbd{position:absolute;top:6px;left:9px;font:700 .72rem system-ui;color:var(--muted)}
+
+/* Number entry + keypad */
+.num-box{min-width:min(100%,300px);min-height:72px;padding:8px 20px;border-radius:18px;border:3px solid var(--green);background:#fff;font-size:clamp(2rem,7vw,2.8rem);font-weight:950;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:.02em}
+.num-box .unit{font-size:.6em;color:var(--muted);margin-left:6px}
+.num-box.empty{color:#b5c2b8}
+.keypad{display:grid;grid-template-columns:repeat(3,72px);gap:9px}
+.key{min-height:62px;border:0;border-radius:16px;background:#fff;color:var(--ink);font-size:1.6rem;font-weight:900;box-shadow:0 4px 0 #cdd7c8,inset 0 0 0 2px #dfe6d9;transition:transform .12s,background-color .12s}
+.key:hover{background:#f1f8e6}
+.key:active,.key.pressed{transform:translateY(3px);box-shadow:0 1px 0 #cdd7c8,inset 0 0 0 2px #dfe6d9}
+.key.ok{background:var(--lime);font-size:1.1rem}
+.key.back{font-size:1.3rem}
+.kbd-hint{margin:0;color:var(--muted);font-size:.85rem;text-align:center}
+
+/* Taquilla packs */
+.packs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;max-width:760px}
+.pack-col{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px;border-radius:18px;background:#f4f7ee;border:1px solid var(--line)}
+.pack-col h3{margin:0;font-size:1.05rem}
+.pack-col h3 small{display:block;font-size:.7rem;color:var(--muted);font-weight:700;letter-spacing:0}
+.pack-count{font-size:2rem;font-weight:950;font-variant-numeric:tabular-nums;line-height:1}
+.pile{min-height:92px;width:100%;display:flex;flex-wrap:wrap;align-content:flex-end;justify-content:center;gap:3px}
+.tk{display:block;border-radius:4px;box-shadow:0 2px 0 #0002}
+.tk.UM{width:40px;height:26px;background:#174d37}
+.tk.C{width:30px;height:18px;background:#2f8a52}
+.tk.D{width:9px;height:26px;background:#e5a12a}
+.tk.U{width:9px;height:9px;background:#e0574b}
+.pile-more{font-weight:900;color:var(--muted);font-size:.85rem;align-self:center}
+.pm{display:flex;gap:6px}
+.pm button{min-width:52px;min-height:52px;border-radius:14px;border:2px solid #c5d4c1;background:#fff;font-size:1.5rem;font-weight:900}
+.pm button:hover:not(:disabled){background:#f1f8e6}
+.trade{min-height:48px;width:100%;border-radius:12px;border:2px dashed #b9c9b4;background:transparent;font-weight:800;font-size:.82rem;color:var(--green)}
+.trade:hover:not(:disabled){background:#fff}
+.trade:disabled{opacity:.35}
+.pack-total{font-size:1.3rem;font-weight:900}
+.pack-total b{font-variant-numeric:tabular-nums;font-size:1.6rem}
+.packs.readonly .pm,.packs.readonly .trade{display:none}
+.flash{animation:flash .5s ease}
+@keyframes flash{50%{background:#fff3c4;transform:scale(1.04)}}
+
+/* Decompose */
+.decomp{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;font-size:1.5rem;font-weight:900}
+.slot{min-width:64px;min-height:72px;border-radius:16px;border:3px solid #c5d4c1;background:#fff;font-size:2rem;font-weight:950;display:inline-grid;place-items:center}
+.slot.active{border-color:var(--green);box-shadow:0 0 0 4px #c9f26988}
+.decomp small{font-size:1.1rem;color:var(--muted);margin-left:2px}
+
+/* Notebook column operation */
+.notebook{--cell:clamp(52px,13vw,68px);padding:14px 18px 18px;border-radius:16px;background:#fffef8;background-image:linear-gradient(#cfe0f066 1px,transparent 1px),linear-gradient(90deg,#cfe0f066 1px,transparent 1px);background-size:calc(var(--cell)/2) calc(var(--cell)/2);border:1px solid #d5dfe8;box-shadow:0 6px 18px #12302012}
+.nb-grid{display:grid;grid-template-columns:calc(var(--cell)*.7) repeat(var(--cols),var(--cell));align-items:end}
+.nb-head{font-size:.95rem;font-weight:900;color:#5272a0;text-align:center;padding-bottom:4px}
+.nb-cell{height:var(--cell);display:grid;place-items:center;font-size:calc(var(--cell)*.62);font-weight:800;font-variant-numeric:tabular-nums;position:relative;font-family:ui-rounded,system-ui,sans-serif}
+.nb-mark{height:calc(var(--cell)*.5);display:grid;place-items:center;font-size:calc(var(--cell)*.36);font-weight:900;color:#c0392b}
+.nb-mark.carry{color:#2f6fb0}
+.nb-sign{font-size:calc(var(--cell)*.62);font-weight:800;display:grid;place-items:center;height:var(--cell)}
+.nb-line{grid-column:1/-1;height:3px;background:var(--ink);border-radius:2px;margin:2px 0}
+.nb-col-on{background:#c9f26955;border-radius:10px}
+.digit-wrap{position:relative;display:inline-flex;align-items:baseline}
+.small-one{font-size:.5em;color:#c0392b;margin-right:1px;transform:translateY(-.35em)}
+.crossed{position:relative;color:#9aa89e}
+.crossed:after{content:"";position:absolute;left:-10%;right:-10%;top:52%;height:3px;background:#c0392b;transform:rotate(-28deg)}
+.nb-result{color:var(--green)}
+.nb-result.slot-now:empty:after{content:"?";color:#b5c2b8}
+.fly{position:fixed;z-index:50;font-size:22px;pointer-events:none;transition:transform .55s cubic-bezier(.2,.8,.3,1)}
+.col-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.prueba{margin:0;padding:10px 16px;border-radius:14px;background:#e9f1fb;font-weight:800;font-variant-numeric:tabular-nums}
+.shake{animation:shake .35s ease}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* Number line (rounding) */
+.nline{width:100%;max-width:760px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px}
+.goal-btn{min-width:96px;min-height:96px;padding:8px;border-radius:16px;border:5px solid #fff;background:repeating-linear-gradient(0deg,#ffffff33 0 2px,transparent 2px 14px),repeating-linear-gradient(90deg,#ffffff33 0 2px,transparent 2px 14px),#0d4c34;color:#fff;font-weight:950;font-size:1.15rem;font-variant-numeric:tabular-nums;box-shadow:0 5px 0 #143e2b;transition:transform .16s}
+.goal-btn:hover:not(:disabled){transform:translateY(-3px)}
+.goal-btn.right{background:#2f8a52;outline:4px solid var(--lime)}
+.goal-btn.wrong{background:#8a6a1c}
+.goal-btn span{display:block;font-size:.7rem;opacity:.8;font-weight:800}
+.track{position:relative;height:110px}
+.track-line{position:absolute;left:0;right:0;top:64px;height:4px;background:#2d5a44;border-radius:2px}
+.tick{position:absolute;top:56px;width:2px;height:20px;background:#2d5a44;transform:translateX(-1px)}
+.tick.mid{top:48px;height:36px;width:4px;background:#e5a12a;transform:translateX(-2px)}
+.tick-label{position:absolute;top:88px;transform:translateX(-50%);font-size:.8rem;font-weight:900;color:#a36d00;white-space:nowrap}
+.nl-ball{position:absolute;top:18px;transform:translateX(-50%);display:grid;justify-items:center;transition:left .6s cubic-bezier(.2,.8,.3,1)}
+.nl-ball b{font-size:.95rem;background:#fff;border:2px solid var(--green);border-radius:10px;padding:1px 8px;font-variant-numeric:tabular-nums}
+.nl-ball i{font-style:normal;font-size:30px;line-height:1}
+.rule{margin:0;padding:10px 16px;border-radius:14px;background:#fff1d1;font-weight:800}
+
+/* Mercado */
+.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:100%;max-width:640px}
+.pcard{padding:14px;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:0 4px 0 #e2e9dc;text-align:center}
+.pcard strong{display:block;font-size:1.05rem}
+.pcard .price{font-size:1.5rem;font-weight:950;font-variant-numeric:tabular-nums}
+.pcard .rounded{display:block;margin-top:4px;color:#2f6fb0;font-weight:900}
+.budget{padding:10px 18px;border-radius:14px;background:#123d2d;color:#fff;font-weight:900;font-size:1.15rem}
+.budget b{color:var(--lime);font-variant-numeric:tabular-nums}
+.phase{margin:0;font-weight:900;color:var(--green);letter-spacing:.06em;text-transform:uppercase;font-size:.85rem}
+.yesno{display:flex;gap:12px}
+.yesno .btn{min-width:140px;font-size:1.2rem}
+
+/* Result */
+.finish{padding:clamp(25px,6vw,50px);text-align:center}
+.finish h1{font-size:clamp(2rem,6vw,3rem);margin:0 0 12px}
+.finish .score{display:inline-block;background:var(--green);color:var(--lime);padding:12px 29px;border-radius:18px;font-size:2.8rem;font-weight:950;margin-bottom:18px;font-variant-numeric:tabular-nums}
+.finish p{color:var(--muted);font-size:1.08rem;max-width:520px;margin:0 auto 20px;line-height:1.5}
+.finish .report{text-align:left;max-width:520px;margin:0 auto 22px}
+.finish .actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* Glossary */
+dialog{border:0;border-radius:24px;padding:0;max-width:min(560px,calc(100vw - 24px));width:100%;box-shadow:0 30px 80px #0005}
+dialog::backdrop{background:#0a2a1d99}
+.gloss{padding:22px}
+.gloss h2{margin:0 0 12px}
+.gloss table{width:100%;border-collapse:collapse}
+.gloss td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.gloss td:first-child{font-weight:900;white-space:nowrap}
+.gloss .btn{margin-top:16px;width:100%}
+
+@media(max-width:600px){
+  .game-shell{padding-top:8px}
+  .panel{border-radius:22px}
+  .hub-icon{width:64px;height:64px;font-size:2.1rem}
+  .prompt{padding:16px}
+  .work{padding:18px 10px}
+  .packs{gap:6px}
+  .pack-col{padding:10px 3px}
+  .pm button{min-width:44px;min-height:52px}
+  .trade{font-size:.72rem}
+  .goal-btn{min-width:78px;min-height:84px;font-size:1rem}
+  .keypad{grid-template-columns:repeat(3,68px)}
+  .report-row{grid-template-columns:1fr 1fr auto}
+}
+@media(hover:none){.kbd-hint,.choice kbd{display:none}}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></header>
+<main class="wrap game-shell">
+  <div class="game-top"><a class="back-link" href="../../">← До каталогу</a><span class="eyebrow muted">Matemáticas · 3º Primaria</span></div>
+  <div class="panel">
+    <section class="hub" id="hub">
+      <div class="hub-head">
+        <div class="hub-icon" aria-hidden="true">📝</div>
+        <div><h1>Examen de mates</h1><p>Тренуємось до іспиту. Завдання іспанською, як у школі. Кнопка 🇺🇦 пояснить українською.</p></div>
+      </div>
+      <div class="stations" id="stations"></div>
+      <div class="exam-card">
+        <div><strong>⚽ Partido-examen</strong><p>12 завдань з усіх тем — як справжня контрольна.</p></div>
+        <button class="btn" type="button" id="exam-btn">Почати іспит</button>
+      </div>
+      <div class="hub-tools"><button class="btn btn-light" type="button" id="gloss-btn">📖 Слова для іспиту</button></div>
+      <div class="report" id="report" hidden><h2>Для батьків: точність за темами</h2><div id="report-rows"></div></div>
+    </section>
+
+    <section id="play" hidden>
+      <div class="match-head"><strong id="play-label"></strong><div class="dots" id="dots"></div></div>
+      <div class="prompt">
+        <div><p class="prompt-text" id="prompt-es"></p><p class="prompt-ua" id="prompt-ua" hidden></p></div>
+        <button class="ua-btn" type="button" id="ua-btn" aria-pressed="false" aria-label="Пояснення українською" title="Пояснення українською (клавіша U)">🇺🇦</button>
+      </div>
+      <div class="work" id="work"></div>
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="finish" id="finish" hidden>
+      <h1 id="finish-title"></h1>
+      <div class="score" id="finish-score"></div>
+      <p id="finish-text"></p>
+      <div class="report" id="finish-report" hidden></div>
+      <div class="actions"><button class="btn btn-dark" type="button" id="again-btn">Ще раз</button><button class="btn btn-light" type="button" id="hub-btn">До станцій</button></div>
+    </section>
+  </div>
+</main>
+
+<dialog id="gloss" aria-labelledby="gloss-title">
+  <div class="gloss">
+    <h2 id="gloss-title">📖 Palabras del examen</h2>
+    <table id="gloss-table"></table>
+    <button class="btn btn-dark" type="button" id="gloss-close">Зрозуміло</button>
+  </div>
+</dialog>
+
+<script src="../../shared/kf.js"></script>
+<script src="../../shared/kf-ui.js"></script>
+<script src="engine.js"></script>
+<script>
+'use strict';
+(() => {
+  const SLUG = 'math-exam';
+  const ROUND = 8;
+  const EXAM = 12;
+  const PASS = 6;
+  const M = window.MathExam;
+  const $ = (id) => document.getElementById(id);
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const h = (tag, props = {}, ...kids) => {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    el.append(...kids.flat().filter((x) => x !== null && x !== undefined && x !== false));
+    return el;
+  };
+
+  const STATIONS = [
+    { topic: 'valor', name: 'Taquilla', icon: '🎟️', ua: 'Розряди: UM, C, D, U' },
+    { topic: 'columna', name: 'Pase a la columna', icon: '🧮', ua: 'Додавання й віднімання в стовпчик' },
+    { topic: 'redondeo', name: '¿A qué portería?', icon: '🥅', ua: 'Округлення' },
+    { topic: 'estimacion', name: 'Mercado de fichajes', icon: '💶', ua: 'Прикидка і задачі' },
+  ];
+  const stationOf = (topic) => STATIONS.find((s) => s.topic === topic);
+  const PLACE_KEYS = ['UM', 'C', 'D', 'U'];
+  const PLACE_UA = { UM: 'одиниці тисяч', C: 'сотні', D: 'десятки', U: 'одиниці' };
+  const PRAISE = ['¡Muy bien!', '¡Golazo!', '¡Perfecto!', '¡Paradón!', '¡Eso es!'];
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  const GLOSSARY = [
+    ['UM', 'unidades de millar', 'одиниці тисяч (1.000)'],
+    ['C', 'centenas', 'сотні (100)'],
+    ['D', 'decenas', 'десятки (10)'],
+    ['U', 'unidades', 'одиниці (1)'],
+    ['cifra', 'una de 0–9', 'цифра (4.528 має 4 цифри)'],
+    ['valor', '¿cuánto vale?', 'скільки вона важить: 5 у 4.528 = 500'],
+    ['descomponer', '4.528 = 4.000 + 500 + 20 + 8', 'розкласти на розряди'],
+    ['llevarse una', 'en la suma', 'перенести 1 у наступний стовпчик'],
+    ['pedir prestado', 'en la resta', 'позичити 1 у сусіда зліва (3 → 13)'],
+    ['redondear', 'a la decena / centena / millar', 'округлити до десятків / сотень / тисяч'],
+    ['más próxima', 'el número más cerca', 'найближча'],
+    ['estimar', 'calcular más o menos', 'прикинути приблизно'],
+    ['presupuesto', 'dinero que tienes', 'бюджет — скільки є грошей'],
+    ['¿Te alcanza?', '¿tienes bastante?', 'чи вистачить грошей?'],
+  ];
+
+  // ---------- Saved progress ----------
+  const loadData = () => {
+    const d = KF.gameData(SLUG);
+    return { topics: { ...(d.topics || {}) }, levels: { ...(d.levels || {}) }, passed: { ...(d.passed || {}) } };
+  };
+  let data = loadData();
+  const saveData = () => KF.gameData(SLUG, data);
+  const unlocked = (topic) => Math.max(1, data.levels[topic] || 1);
+  const levelsOf = (topic) => (M.LEVELS && M.LEVELS[topic]) || [];
+
+  const recordTopic = (topic, correct) => {
+    const t = data.topics[topic] || { right: 0, total: 0 };
+    t.total++;
+    if (correct) t.right++;
+    data.topics[topic] = t;
+    saveData();
+  };
+
+  // ---------- Formatting answers ----------
+  const fmt = (n) => (typeof n === 'number' ? M.fmt(n) : String(n));
+  const answerText = (task) => {
+    const a = task.answer;
+    if (task.choices) {
+      const c = task.choices.find((x) => x.value === a);
+      if (c) return c.label;
+    }
+    if (a && typeof a === 'object' && 'UM' in a) return PLACE_KEYS.map((k) => `${a[k]} ${k}`).join(' + ');
+    if (a && typeof a === 'object' && 'exact' in a) return `${fmt(a.exact)} €`;
+    return fmt(a);
+  };
+
+  // ---------- Hub ----------
+  const renderHub = () => {
+    data = loadData();
+    const cards = STATIONS.map((s) => {
+      const levels = levelsOf(s.topic);
+      const open = unlocked(s.topic);
+      const hint = h('p', { class: 'level-hint', text: levels[open - 1] ? `Рівень ${open}: ${levels[open - 1].ua}` : '' });
+      const buttons = levels.map((lv) => {
+        const n = lv.level;
+        const locked = n > open;
+        return h('button', {
+          type: 'button',
+          class: `level${data.passed[`${s.topic}:${n}`] ? ' done' : ''}`,
+          disabled: locked,
+          'aria-label': `${s.name}, рівень ${n}${locked ? ' (закрито)' : ''}`,
+          title: `${lv.es} — ${lv.ua}`,
+          onclick: () => startTraining(s.topic, n),
+          onmouseenter: () => { hint.textContent = `Рівень ${n}: ${lv.ua}`; },
+          onfocus: () => { hint.textContent = `Рівень ${n}: ${lv.ua}`; },
+        }, locked ? '🔒' : String(n));
+      });
+      return h('div', { class: 'station' },
+        h('div', { class: 'station-title' }, h('span', { 'aria-hidden': 'true', text: s.icon }), h('div', {}, h('strong', { text: s.name }), h('small', { text: s.ua }))),
+        h('div', { class: 'levels' }, buttons),
+        hint);
+    });
+    $('stations').replaceChildren(...cards);
+    renderReport($('report-rows'), $('report'));
+  };
+
+  const renderReport = (rowsEl, wrapEl) => {
+    const rows = STATIONS.filter((s) => data.topics[s.topic]?.total).map((s) => {
+      const t = data.topics[s.topic];
+      const pct = Math.round((t.right / t.total) * 100);
+      return h('div', { class: 'report-row' },
+        h('span', { text: s.name }),
+        h('span', { class: `bar${pct < 70 ? ' low' : ''}` }, h('i', { style: `width:${pct}%` })),
+        h('b', { text: `${pct}% · ${t.right}/${t.total}` }));
+    });
+    rowsEl.replaceChildren(...rows);
+    wrapEl.hidden = rows.length === 0;
+  };
+
+  // ---------- Session ----------
+  let session = null;
+  let ctrl = null; // current input controller: { onKey(e) => handled }
+
+  const show = (id) => {
+    for (const s of ['hub', 'play', 'finish']) $(s).hidden = s !== id;
+    window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
+  };
+
+  const startTraining = (topic, level) => {
+    const tasks = Array.from({ length: ROUND }, () => M.makeTask(topic, level));
+    begin({ mode: 'train', topic, level, tasks });
+  };
+
+  const startExam = () => {
+    const tasks = M.makeExam({ count: EXAM, weights: M.weakWeights(data.topics) });
+    begin({ mode: 'exam', tasks });
+  };
+
+  const begin = (opts) => {
+    session = { ...opts, index: 0, score: 0, results: [], startCoins: KF.get().coins, byTopic: {} };
+    show('play');
+    nextTask();
+  };
+
+  const drawDots = () => {
+    const dots = session.tasks.map((_, i) => {
+      const r = session.results[i];
+      const cls = r === true ? 'ok' : r === false ? 'miss' : i === session.index ? 'now' : '';
+      return h('span', { class: `dot ${cls}` });
+    });
+    $('dots').replaceChildren(...dots);
+  };
+
+  const nextTask = () => {
+    const task = session.tasks[session.index];
+    session.task = task;
+    session.mistakes = 0;
+    const st = stationOf(task.topic);
+    $('play-label').textContent = session.mode === 'exam'
+      ? `Partido-examen · ${session.index + 1}/${session.tasks.length}`
+      : `${st.name} · nivel ${task.level} · ${session.index + 1}/${session.tasks.length}`;
+    $('prompt-es').textContent = task.es;
+    $('prompt-es').classList.toggle('long', task.es.length > 110);
+    $('prompt-ua').textContent = task.ua || '';
+    setUa(false);
+    $('feedback').replaceChildren();
+    drawDots();
+    renderTask(task);
+  };
+
+  const setUa = (on) => {
+    $('ua-btn').setAttribute('aria-pressed', String(on));
+    $('prompt-ua').hidden = !on || !$('prompt-ua').textContent;
+  };
+  $('ua-btn').addEventListener('click', () => setUa($('ua-btn').getAttribute('aria-pressed') !== 'true'));
+
+  // Called once per task when it is resolved.
+  const resolveTask = (correct, error) => {
+    const task = session.task;
+    session.results[session.index] = correct;
+    if (correct) session.score++;
+    const bt = session.byTopic[task.topic] || { right: 0, total: 0 };
+    bt.total++;
+    if (correct) bt.right++;
+    session.byTopic[task.topic] = bt;
+    KF.answer(SLUG, correct);
+    recordTopic(task.topic, correct);
+    drawDots();
+
+    const box = correct
+      ? h('div', { class: 'fb-box ok' }, h('p', { class: 'fb-title', text: `${pick(PRAISE)} ✅` }))
+      : h('div', { class: 'fb-box miss' },
+        h('p', { class: 'fb-title', text: 'Casi… 🧤' }),
+        error?.es && h('p', { text: error.es }),
+        error?.ua && h('p', { class: 'fb-ua', text: `🇺🇦 ${error.ua}` }),
+        h('p', { text: `Respuesta correcta: ${answerText(task)}` }));
+    const last = session.index === session.tasks.length - 1;
+    const next = h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? 'Результат →' : 'Далі →');
+    $('feedback').replaceChildren(box, h('br'), next);
+    ctrl = { onKey: (e) => (e.key === 'Enter' || e.key === ' ') && (goNext(), true) };
+    next.focus({ preventScroll: true });
+    if (!reduced()) $('feedback').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+
+  const goNext = () => {
+    session.index++;
+    if (session.index >= session.tasks.length) finish();
+    else nextTask();
+  };
+
+  const finish = () => {
+    ctrl = null;
+    const { score, tasks, mode, topic, level } = session;
+    const max = tasks.length;
+    const res = KF.finishGame(SLUG, { score, max });
+    const earned = KF.get().coins - session.startCoins;
+    let text;
+    if (mode === 'train') {
+      const passed = score >= PASS;
+      if (passed) {
+        data.passed[`${topic}:${level}`] = true;
+        if (level < levelsOf(topic).length && unlocked(topic) <= level) data.levels[topic] = level + 1;
+        saveData();
+      }
+      text = passed
+        ? (level < levelsOf(topic).length ? `Рівень пройдено! Відкрито рівень ${level + 1}.` : 'Усі рівні цієї станції пройдено!')
+        : `Для наступного рівня треба ${PASS} з ${max}. Спробуй ще раз — вийде!`;
+    } else {
+      text = score >= 10 ? 'Ти готовий до іспиту! 💪' : 'Добре тренування! Слабкі теми частіше з’являтимуться в тренуваннях.';
+    }
+    $('finish-title').textContent = mode === 'exam' ? 'Fin del partido' : '¡Entrenamiento terminado!';
+    $('finish-score').textContent = `${score} / ${max}`;
+    $('finish-text').textContent = `${text} Зароблено ${earned} 🪙${res.perfect ? ' (з бонусом за ідеальний раунд!)' : '.'}`;
+    if (mode === 'exam') {
+      const rows = Object.entries(session.byTopic).map(([t, v]) => h('div', { class: 'report-row' },
+        h('span', { text: stationOf(t).name }),
+        h('span', { class: `bar${v.right / v.total < 0.7 ? ' low' : ''}` }, h('i', { style: `width:${Math.round((v.right / v.total) * 100)}%` })),
+        h('b', { text: `${v.right}/${v.total}` })));
+      $('finish-report').replaceChildren(h('h2', { text: 'По темах' }), ...rows);
+      $('finish-report').hidden = false;
+    } else {
+      $('finish-report').hidden = true;
+    }
+    show('finish');
+    if (score >= max - 2) KFUI.confetti();
+    $('again-btn').focus({ preventScroll: true });
+  };
+
+  $('again-btn').addEventListener('click', () => (session.mode === 'exam' ? startExam() : startTraining(session.topic, session.level)));
+  $('hub-btn').addEventListener('click', () => { ctrl = null; renderHub(); show('hub'); });
+  $('exam-btn').addEventListener('click', startExam);
+
+  // ---------- Shared widgets ----------
+  const hintEl = () => h('p', { class: 'inline-hint', role: 'status' });
+  const sayHint = (el, es, ua) => {
+    el.replaceChildren(h('span', { text: es || '' }), ua ? h('span', { class: 'fb-ua', text: `🇺🇦 ${ua}` }) : '');
+  };
+  const shake = (el) => {
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+  };
+
+  // Number entry with on-screen keypad; keyboard digits / Backspace / Enter.
+  const numberInput = ({ onSubmit, unit = '', maxLen = 5, okLabel = 'OK' }) => {
+    let value = '';
+    const box = h('div', { class: 'num-box empty', 'aria-live': 'polite' });
+    const draw = () => {
+      box.classList.toggle('empty', !value);
+      box.replaceChildren(value ? M.fmt(Number(value)) : '?', unit ? h('span', { class: 'unit', text: unit }) : '');
+    };
+    const press = (k) => {
+      if (k === 'back') value = value.slice(0, -1);
+      else if (k === 'ok') { if (value) onSubmit(Number(value)); return; }
+      else if (value.length < maxLen) value = value === '0' ? k : value + k;
+      draw();
+    };
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) => h('button', {
+      type: 'button',
+      class: `key${k === 'ok' ? ' ok' : k === 'back' ? ' back' : ''}`,
+      'data-key': k,
+      'aria-label': k === 'back' ? 'Стерти' : k === 'ok' ? 'Перевірити' : k,
+      onclick: () => press(k),
+    }, k === 'back' ? '⌫' : k === 'ok' ? okLabel : k));
+    const pad = h('div', { class: 'keypad' }, keys);
+    draw();
+    const flashKey = (k) => {
+      const b = pad.querySelector(`[data-key="${k}"]`);
+      if (!b) return;
+      b.classList.add('pressed');
+      setTimeout(() => b.classList.remove('pressed'), 120);
+    };
+    const onKey = (e) => {
+      if (/^[0-9]$/.test(e.key)) { press(e.key); flashKey(e.key); return true; }
+      if (e.key === 'Backspace') { press('back'); flashKey('back'); return true; }
+      if (e.key === 'Enter') { press('ok'); flashKey('ok'); return true; }
+      return false;
+    };
+    const reset = () => { value = ''; draw(); };
+    return { box, pad, onKey, reset, hint: h('p', { class: 'kbd-hint', text: 'Можна вводити з клавіатури: цифри, ⌫, Enter' }) };
+  };
+
+  // ---------- Renderers per kind ----------
+  const renderTask = (task) => {
+    const work = $('work');
+    work.replaceChildren();
+    ctrl = null;
+    const kind = task.kind;
+    if (kind === 'choice') return renderChoice(task, work);
+    if (kind === 'packs') return renderPacks(task, work, true);
+    if (kind === 'decompose') return renderDecompose(task, work);
+    if (kind === 'column') return session.mode === 'exam' ? renderColumnWhole(task, work) : renderColumnSteps(task, work);
+    if (kind === 'round') return renderRound(task, work);
+    if (kind === 'estimate') return renderEstimate(task, work);
+    return renderNumber(task, work);
+  };
+
+  const submitSimple = (task, value) => {
+    const r = M.checkAnswer(task, value);
+    resolveTask(r.correct, r.error);
+    return r;
+  };
+
+  const renderChoice = (task, work) => {
+    const buttons = task.choices.map((c, i) => h('button', {
+      type: 'button',
+      class: 'choice',
+      onclick: () => choose(i),
+    }, h('kbd', { text: String(i + 1) }), c.label));
+    const choose = (i) => {
+      if (buttons[0].disabled) return;
+      buttons.forEach((b) => { b.disabled = true; });
+      const r = submitSimple(task, task.choices[i].value);
+      task.choices.forEach((c, j) => { if (c.value === task.answer) buttons[j].classList.add('right'); });
+      if (!r.correct) buttons[i].classList.add('wrong');
+    };
+    work.append(h('div', { class: 'choices' }, buttons), h('p', { class: 'kbd-hint', text: `Клавіші 1–${buttons.length}` }));
+    ctrl = {
+      onKey: (e) => {
+        const n = Number(e.key);
+        if (n >= 1 && n <= buttons.length) { choose(n - 1); return true; }
+        return false;
+      },
+    };
+    buttons[0].focus({ preventScroll: true });
+  };
+
+  const renderNumber = (task, work) => {
+    if (task.data?.packs) work.append(packsView(task.data.packs, false).el);
+    const input = numberInput({ onSubmit: (v) => { ctrl = null; submitSimple(task, v); } });
+    work.append(input.box, input.pad, input.hint);
+    ctrl = { onKey: input.onKey };
+  };
+
+  // Ticket packs: UM / C / D / U piles with +/− and group/ungroup trades.
+  const PACK_VALUE = { UM: 1000, C: 100, D: 10, U: 1 };
+  const packsView = (initial, editable, onChange) => {
+    const counts = { UM: 0, C: 0, D: 0, U: 0, ...initial };
+    const cols = {};
+    const total = h('b');
+    const el = h('div', { class: `packs${editable ? '' : ' readonly'}` });
+    const pile = (k) => {
+      const n = counts[k];
+      const shown = Math.min(n, k === 'UM' ? 6 : 12);
+      const items = Array.from({ length: shown }, () => h('i', { class: `tk ${k}` }));
+      if (n > shown) items.push(h('span', { class: 'pile-more', text: `+${n - shown}` }));
+      return items;
+    };
+    const draw = () => {
+      for (const k of PLACE_KEYS) {
+        const c = cols[k];
+        c.count.textContent = counts[k];
+        c.pile.replaceChildren(...pile(k));
+        if (c.minus) c.minus.disabled = counts[k] === 0;
+        if (c.group) c.group.disabled = counts[k] < 10;
+        if (c.split) c.split.disabled = counts[k] < 1;
+      }
+      total.textContent = M.fmt(PLACE_KEYS.reduce((s, k) => s + counts[k] * PACK_VALUE[k], 0));
+      onChange?.(counts);
+    };
+    const flash = (k) => {
+      if (reduced()) return;
+      cols[k].wrap.classList.remove('flash');
+      void cols[k].wrap.offsetWidth;
+      cols[k].wrap.classList.add('flash');
+    };
+    PLACE_KEYS.forEach((k, i) => {
+      const left = PLACE_KEYS[i - 1];
+      const right = PLACE_KEYS[i + 1];
+      const c = { count: h('div', { class: 'pack-count' }), pile: h('div', { class: 'pile', 'aria-hidden': 'true' }) };
+      const kids = [h('h3', {}, k, h('small', { text: `${PACK_VALUE[k] === 1000 ? '1.000' : PACK_VALUE[k]}` })), c.pile, c.count];
+      if (editable) {
+        c.minus = h('button', { type: 'button', 'aria-label': `Забрати пачку ${k}`, onclick: () => { counts[k]--; draw(); } }, '−');
+        const plus = h('button', { type: 'button', 'aria-label': `Додати пачку ${k}`, onclick: () => { counts[k]++; draw(); } }, '+');
+        kids.push(h('div', { class: 'pm' }, c.minus, plus));
+        if (left) {
+          c.group = h('button', {
+            type: 'button', class: 'trade', title: `10 ${k} → 1 ${left}`,
+            onclick: () => { counts[k] -= 10; counts[left]++; draw(); flash(left); },
+          }, `Agrupar 10 → 1 ${left}`);
+          kids.push(c.group);
+        }
+        if (right) {
+          c.split = h('button', {
+            type: 'button', class: 'trade', title: `1 ${k} → 10 ${right}`,
+            onclick: () => { counts[k]--; counts[right] += 10; draw(); flash(right); },
+          }, `Desagrupar 1 → 10 ${right}`);
+          kids.push(c.split);
+        }
+      }
+      c.wrap = h('div', { class: 'pack-col' }, kids);
+      cols[k] = c;
+      el.append(c.wrap);
+    });
+    draw();
+    return { el, counts, total };
+  };
+
+  const renderPacks = (task, work) => {
+    const view = packsView({}, true);
+    const check = h('button', { class: 'btn btn-dark', type: 'button', onclick: () => submit() }, 'Comprobar ✓');
+    const submit = () => {
+      if (check.disabled) return;
+      check.disabled = true;
+      work.querySelectorAll('.packs button').forEach((b) => { b.disabled = true; });
+      ctrl = null;
+      submitSimple(task, { ...view.counts });
+    };
+    work.append(view.el, h('div', { class: 'pack-total' }, 'Total: ', view.total), check, h('p', { class: 'kbd-hint', text: 'Tab — між кнопками, Enter — натиснути. Ctrl+Enter — перевірити' }));
+    ctrl = { onKey: (e) => (e.key === 'Enter' && (e.ctrlKey || e.metaKey) ? (submit(), true) : false) };
+  };
+
+  const renderDecompose = (task, work) => {
+    const vals = { UM: '', C: '', D: '', U: '' };
+    let active = 0;
+    const slots = PLACE_KEYS.map((k, i) => h('button', {
+      type: 'button', class: 'slot', 'aria-label': `${k}: ${PLACE_UA[k]}`,
+      onclick: () => { active = i; draw(); },
+    }));
+    const parts = [];
+    PLACE_KEYS.forEach((k, i) => {
+      if (i) parts.push(h('span', { text: '+' }));
+      parts.push(h('span', {}, slots[i], h('small', { text: k })));
+    });
+    const draw = () => slots.forEach((s, i) => {
+      s.textContent = vals[PLACE_KEYS[i]] || '';
+      s.classList.toggle('active', i === active);
+    });
+    const submit = () => {
+      if (PLACE_KEYS.some((k) => vals[k] === '')) { sayHint(hint, 'Rellena las cuatro casillas.', 'Заповни всі чотири клітинки.'); return; }
+      ctrl = null;
+      slots.forEach((s) => { s.disabled = true; });
+      submitSimple(task, Object.fromEntries(PLACE_KEYS.map((k) => [k, Number(vals[k])])));
+    };
+    const press = (k) => {
+      if (k === 'ok') return submit();
+      const key = PLACE_KEYS[active];
+      if (k === 'back') {
+        if (vals[key] === '' && active > 0) active--;
+        else vals[key] = '';
+      } else {
+        vals[key] = k;
+        if (active < 3) active++;
+      }
+      draw();
+    };
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) => h('button', {
+      type: 'button', class: `key${k === 'ok' ? ' ok' : k === 'back' ? ' back' : ''}`,
+      'aria-label': k === 'back' ? 'Стерти' : k === 'ok' ? 'Перевірити' : k,
+      onclick: () => press(k),
+    }, k === 'back' ? '⌫' : k === 'ok' ? 'OK' : k));
+    const hint = hintEl();
+    work.append(h('div', { class: 'decomp' }, parts), hint, h('div', { class: 'keypad' }, keys), h('p', { class: 'kbd-hint', text: 'Цифри, ⌫, ←/→ між клітинками, Enter' }));
+    draw();
+    ctrl = {
+      onKey: (e) => {
+        if (/^[0-9]$/.test(e.key)) { press(e.key); return true; }
+        if (e.key === 'Backspace') { press('back'); return true; }
+        if (e.key === 'Enter') { press('ok'); return true; }
+        if (e.key === 'ArrowLeft') { active = Math.max(0, active - 1); draw(); return true; }
+        if (e.key === 'ArrowRight') { active = Math.min(3, active + 1); draw(); return true; }
+        return false;
+      },
+    };
+  };
+
+  // ---------- Column operations (notebook) ----------
+  const digitMap = (n) => {
+    const s = String(n);
+    const m = {};
+    PLACE_KEYS.slice().reverse().forEach((k, i) => { m[k] = i < s.length ? Number(s[s.length - 1 - i]) : null; });
+    return m;
+  };
+
+  const notebook = (d, cols) => {
+    const places = PLACE_KEYS.slice(4 - cols);
+    const grid = h('div', { class: 'nb-grid', style: `--cols:${cols}` });
+    const cells = { mark: {}, top: {}, bottom: {}, result: {} };
+    grid.append(h('span'), ...places.map((p) => h('div', { class: 'nb-head', text: p })));
+    grid.append(h('span'), ...places.map((p) => (cells.mark[p] = h('div', { class: 'nb-mark' }))));
+    grid.append(h('span'), ...places.map((p) => (cells.top[p] = h('div', { class: 'nb-cell' }))));
+    grid.append(h('div', { class: 'nb-sign', text: d.op === '-' ? '−' : '+' }), ...places.map((p) => (cells.bottom[p] = h('div', { class: 'nb-cell' }))));
+    grid.append(h('div', { class: 'nb-line' }));
+    grid.append(h('span'), ...places.map((p) => (cells.result[p] = h('div', { class: 'nb-cell nb-result' }))));
+    return { el: h('div', { class: 'notebook' }, grid), cells, places };
+  };
+
+  const columnCount = (d) => Math.max(String(d.a).length, String(d.b).length, String(d.result).length);
+
+  const fillOperands = (nb, d) => {
+    const A = digitMap(d.a);
+    const B = digitMap(d.b);
+    for (const p of nb.places) {
+      nb.cells.top[p].textContent = A[p] ?? '';
+      nb.cells.bottom[p].textContent = B[p] ?? '';
+    }
+    return { A, B };
+  };
+
+  const renderColumnWhole = (task, work) => {
+    const d = task.data;
+    const nb = notebook(d, columnCount(d));
+    fillOperands(nb, d);
+    const input = numberInput({ onSubmit: (v) => { ctrl = null; submitSimple(task, v); } });
+    work.append(nb.el, input.box, input.pad, input.hint);
+    ctrl = { onKey: input.onKey };
+  };
+
+  const renderColumnSteps = (task, work) => {
+    const d = task.data;
+    const cols = columnCount(d);
+    const nb = notebook(d, cols);
+    const { A, B } = fillOperands(nb, d);
+    const order = nb.places.slice().reverse(); // U, D, C, UM
+    const needed = String(d.result).length;
+    const cur = { ...A }; // current top digits (after borrows)
+    const crossed = {};
+    const smallOne = {};
+    let step = 0;
+    let borrowedHere = false;
+    const hint = hintEl();
+
+    const drawTop = (p) => {
+      const cell = nb.cells.top[p];
+      if (A[p] === null) { cell.textContent = ''; return; }
+      const digit = h('span', { class: crossed[p] ? 'crossed' : '', text: String(A[p]) });
+      cell.replaceChildren(h('span', { class: 'digit-wrap' }, smallOne[p] ? h('span', { class: 'small-one', text: '1' }) : '', digit));
+      if (crossed[p]) {
+        nb.cells.mark[p].textContent = String(cur[p] - (smallOne[p] ? 10 : 0));
+        nb.cells.mark[p].className = 'nb-mark';
+      }
+    };
+    const highlight = () => {
+      for (const p of nb.places) {
+        const on = p === order[step];
+        for (const row of ['top', 'bottom', 'result']) nb.cells[row][p].classList.toggle('nb-col-on', on);
+        nb.cells.result[p].classList.toggle('slot-now', on);
+      }
+    };
+
+    const borrowBtn = d.op === '-' ? h('button', { class: 'btn btn-light', type: 'button', onclick: () => borrow() }, '🤝 Pedir prestado') : null;
+    const flyBall = (from, to) => {
+      if (reduced()) return;
+      const a = from.getBoundingClientRect();
+      const b = to.getBoundingClientRect();
+      const ball = h('span', { class: 'fly', text: '⚽', style: `left:${a.left + a.width / 2 - 11}px;top:${a.top}px` });
+      document.body.append(ball);
+      requestAnimationFrame(() => { ball.style.transform = `translate(${b.left - a.left}px,${b.top - a.top}px)`; });
+      setTimeout(() => ball.remove(), 650);
+    };
+
+    const stepError = (digit, flag) => {
+      const r = M.checkColumnStep ? M.checkColumnStep(task, step, digit, flag) : null;
+      return r && r.error ? r.error : null;
+    };
+
+    const borrow = () => {
+      const p = order[step];
+      const s = d.steps[step];
+      if (!s || step >= needed) return;
+      if (borrowedHere) return;
+      if (!s.borrowed) {
+        session.mistakes++;
+        sayHint(hint, `Aquí no hace falta: ${cur[p]} es mayor o igual que ${B[p] ?? 0}.`, 'Тут позичати не треба: зверху більше або стільки ж.');
+        shake(nb.el);
+        return;
+      }
+      borrowedHere = true;
+      cur[p] += 10;
+      smallOne[p] = true;
+      let j = step + 1;
+      while (j < order.length && cur[order[j]] === 0) {
+        cur[order[j]] = 9;
+        crossed[order[j]] = true;
+        drawTop(order[j]);
+        j++;
+      }
+      if (j < order.length) {
+        cur[order[j]] -= 1;
+        crossed[order[j]] = true;
+        drawTop(order[j]);
+      }
+      drawTop(p);
+      sayHint(hint, `Ahora: ${cur[p]} − ${B[p] ?? 0}`, `Тепер віднімай: ${cur[p]} − ${B[p] ?? 0}`);
+    };
+
+    const enter = (digit) => {
+      if (step >= needed) return;
+      const p = order[step];
+      const s = d.steps[step];
+      if (d.op === '-' && s.borrowed && !borrowedHere) {
+        session.mistakes++;
+        const err = stepError(digit, false);
+        sayHint(hint, err?.es || `Arriba hay ${cur[p]} y abajo ${B[p]}: no se puede. Pulsa «Pedir prestado».`, err?.ua || `Зверху ${cur[p]}, знизу ${B[p]} — так не можна. Натисни «Pedir prestado».`);
+        shake(nb.el);
+        return;
+      }
+      if (digit !== s.digit) {
+        session.mistakes++;
+        const err = stepError(digit, d.op === '-' ? borrowedHere : undefined);
+        const carryIn = d.op === '+' && step > 0 && d.steps[step - 1].carryOut;
+        const fallbackEs = d.op === '+'
+          ? `Suma otra vez: ${A[p] ?? 0} + ${B[p] ?? 0}${carryIn ? ' + 1 (la que te llevas)' : ''}.`
+          : `Resta otra vez: ${cur[p]} − ${B[p] ?? 0}.`;
+        const fallbackUa = d.op === '+'
+          ? `Додай ще раз${carryIn ? ' і не забудь 1, яку переносили' : ''}.`
+          : 'Відніми ще раз уважно.';
+        sayHint(hint, err?.es || fallbackEs, err?.ua || fallbackUa);
+        shake(nb.cells.result[p]);
+        return;
+      }
+      nb.cells.result[p].textContent = String(digit);
+      hint.replaceChildren();
+      if (d.op === '+' && s.carryOut && step + 1 < order.length) {
+        const nextP = order[step + 1];
+        flyBall(nb.cells.result[p], nb.cells.mark[nextP]);
+        setTimeout(() => {
+          nb.cells.mark[nextP].textContent = '1';
+          nb.cells.mark[nextP].className = 'nb-mark carry';
+        }, reduced() ? 0 : 500);
+        sayHint(hint, 'Me llevo una ⚽', 'Переносимо 1 у наступний стовпчик');
+      }
+      step++;
+      borrowedHere = false;
+      if (step >= needed) return done();
+      highlight();
+    };
+
+    const done = () => {
+      for (const p of nb.places) for (const row of ['top', 'bottom', 'result']) nb.cells[row][p].classList.remove('nb-col-on', 'slot-now');
+      if (borrowBtn) borrowBtn.disabled = true;
+      pad.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+      ctrl = null;
+      if (d.op === '-') work.insertBefore(h('p', { class: 'prueba', text: `Prueba: ${M.fmt(d.result)} + ${M.fmt(d.b)} = ${M.fmt(d.a)} ✓` }), hint);
+      const clean = session.mistakes === 0;
+      resolveTask(clean, clean ? null : {
+        es: 'Lo has terminado. ¡La próxima vez a la primera!',
+        ua: 'Готово! Наступного разу — з першої спроби.',
+      });
+    };
+
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((k) => h('button', {
+      type: 'button', class: 'key', onclick: () => enter(Number(k)),
+    }, k));
+    const pad = h('div', { class: 'keypad' }, keys);
+    for (const p of nb.places) drawTop(p);
+    highlight();
+    work.append(nb.el, hint, borrowBtn ? h('div', { class: 'col-actions' }, borrowBtn) : '', pad,
+      h('p', { class: 'kbd-hint', text: d.op === '-' ? 'Цифри — відповідь у стовпчику, P — pedir prestado' : 'Цифри — відповідь у стовпчику, справа наліво' }));
+    ctrl = {
+      onKey: (e) => {
+        if (/^[0-9]$/.test(e.key)) { enter(Number(e.key)); return true; }
+        if ((e.key === 'p' || e.key === 'P') && borrowBtn) { borrow(); return true; }
+        return false;
+      },
+    };
+  };
+
+  // ---------- Rounding: which goal is closer ----------
+  const renderRound = (task, work) => {
+    const d = task.data;
+    const hideLine = task.level >= 5 || d.hideLine;
+    if (hideLine) {
+      const input = numberInput({ onSubmit: (v) => { ctrl = null; afterRound(submitSimple(task, v)); } });
+      work.append(input.box, input.pad, input.hint);
+      ctrl = { onKey: input.onKey };
+      return;
+    }
+    const pct = ((d.n - d.low) / (d.high - d.low)) * 100;
+    const track = h('div', { class: 'track' }, h('div', { class: 'track-line' }));
+    for (let i = 0; i <= 10; i++) track.append(h('i', { class: `tick${i === 5 ? ' mid' : ''}`, style: `left:${i * 10}%` }));
+    track.append(h('span', { class: 'tick-label', style: 'left:50%', text: M.fmt(d.mid) }));
+    const ball = h('div', { class: 'nl-ball', style: `left:${pct}%` }, h('b', { text: M.fmt(d.n) }), h('i', { text: '⚽' }));
+    track.append(ball);
+    const goal = (value, side) => h('button', {
+      type: 'button', class: 'goal-btn', 'aria-label': `Ворота ${M.fmt(value)}`,
+      onclick: () => shoot(value),
+    }, h('span', { text: side === 'L' ? '← 1' : '2 →' }), M.fmt(value));
+    const left = goal(d.low, 'L');
+    const right = goal(d.high, 'R');
+    const shoot = (value) => {
+      if (left.disabled) return;
+      left.disabled = true;
+      right.disabled = true;
+      ctrl = null;
+      const r = M.checkAnswer(task, value);
+      ball.style.left = task.answer === d.low ? '-6%' : '106%';
+      (task.answer === d.low ? left : right).classList.add('right');
+      if (!r.correct) (value === d.low ? left : right).classList.add('wrong');
+      resolveTask(r.correct, r.error);
+      afterRound(r);
+    };
+    work.append(h('div', { class: 'nline' }, left, track, right), h('p', { class: 'kbd-hint', text: '← / → або 1 / 2 — обрати ворота' }));
+    ctrl = {
+      onKey: (e) => {
+        if (e.key === 'ArrowLeft' || e.key === '1') { shoot(d.low); return true; }
+        if (e.key === 'ArrowRight' || e.key === '2') { shoot(d.high); return true; }
+        return false;
+      },
+    };
+  };
+  const afterRound = () => {
+    const d = session.task.data;
+    if (d.n === d.mid) $('work').append(h('p', { class: 'rule', text: '¡Justo en el medio! El 5 sube → ' + M.fmt(d.high) }));
+  };
+
+  // ---------- Estimation market ----------
+  const renderEstimate = (task, work) => {
+    const d = task.data;
+    const placeEs = d.place === 'UM' ? 'al millar' : 'a la centena';
+    const cards = d.items.map((it, i) => h('div', { class: 'pcard' },
+      h('strong', { text: it.name }),
+      h('div', { class: 'price', text: `${M.fmt(it.price)} €` }),
+      h('span', { class: 'rounded', hidden: true, 'data-i': i, text: `≈ ${M.fmt(d.rounded[i])} €` })));
+    const phaseEl = h('p', { class: 'phase' });
+    const hint = hintEl();
+    const area = h('div', { class: 'work', style: 'padding:0' });
+    let clean = true;
+    const showRounded = () => work.querySelectorAll('.rounded').forEach((r) => { r.hidden = false; });
+
+    const ask = (phase, title, es, ua, next) => {
+      phaseEl.textContent = title;
+      sayHint(hint, es, ua);
+      const input = numberInput({
+        unit: '€',
+        onSubmit: (v) => {
+          const r = M.checkAnswer(task, { phase, value: v });
+          if (r.correct) { next(); return; }
+          clean = false;
+          sayHint(hint, r.error?.es || 'Revísalo otra vez.', r.error?.ua || 'Перевір ще раз.');
+          shake(input.box);
+          input.reset();
+        },
+      });
+      const help = phase === 'estimate' ? h('button', { class: 'btn btn-light', type: 'button', onclick: showRounded }, '💡 Показати округлені ціни') : '';
+      area.replaceChildren(input.box, input.pad, help, input.hint);
+      ctrl = { onKey: input.onKey };
+    };
+
+    const askFits = () => {
+      phaseEl.textContent = '3 · ¿Te alcanza?';
+      sayHint(hint, `Total: ${M.fmt(d.exact)} €. Presupuesto: ${M.fmt(d.budget)} €.`, 'Чи вистачить грошей?');
+      const answer = (yes) => {
+        const r = M.checkAnswer(task, { phase: 'fits', value: yes });
+        if (!r.correct) clean = false;
+        ctrl = null;
+        area.replaceChildren();
+        resolveTask(clean, clean ? null : r.error || { es: `Total ${M.fmt(d.exact)} € y presupuesto ${M.fmt(d.budget)} €.`, ua: 'Порівняй суму з бюджетом.' });
+      };
+      area.replaceChildren(h('div', { class: 'yesno' },
+        h('button', { class: 'btn btn-dark', type: 'button', onclick: () => answer(true) }, 'Sí (S)'),
+        h('button', { class: 'btn btn-light', type: 'button', onclick: () => answer(false) }, 'No (N)')));
+      ctrl = {
+        onKey: (e) => {
+          if (e.key === 's' || e.key === 'S') { answer(true); return true; }
+          if (e.key === 'n' || e.key === 'N') { answer(false); return true; }
+          return false;
+        },
+      };
+    };
+
+    work.append(h('div', { class: 'budget' }, 'Presupuesto: ', h('b', { text: `${M.fmt(d.budget)} €` })), h('div', { class: 'players' }, cards), phaseEl, hint, area);
+    ask('estimate', '1 · Estima', `Redondea los precios ${placeEs} y suma.`, `Округли ціни (${d.place === 'UM' ? 'до тисяч' : 'до сотень'}) і додай.`, () => {
+      showRounded();
+      ask('exact', '2 · Calcula exacto', 'Ahora suma los precios exactos.', 'Тепер додай точні ціни.', askFits);
+    });
+  };
+
+  // ---------- Glossary ----------
+  $('gloss-table').replaceChildren(...GLOSSARY.map(([a, b, c]) => h('tr', {}, h('td', { text: a }), h('td', {}, b, h('br'), h('span', { class: 'muted', text: c })))));
+  $('gloss-btn').addEventListener('click', () => $('gloss').showModal());
+  $('gloss-close').addEventListener('click', () => $('gloss').close());
+
+  // ---------- Keyboard ----------
+  document.addEventListener('keydown', (e) => {
+    if ($('gloss').open || e.altKey) return;
+    if (e.key === 'Escape' && !$('play').hidden) { ctrl = null; renderHub(); show('hub'); return; }
+    if ((e.key === 'u' || e.key === 'U') && !$('play').hidden) { setUa($('ua-btn').getAttribute('aria-pressed') !== 'true'); return; }
+    // Enter/Space on a focused button keeps its native click (Tab users), except Ctrl/Cmd+Enter.
+    const onButton = e.target instanceof HTMLButtonElement && (e.key === 'Enter' || e.key === ' ') && !e.ctrlKey && !e.metaKey;
+    if (ctrl && !onButton && ctrl.onKey(e)) e.preventDefault();
+  });
+  // Mouse clicks on keypad keys must not steal focus, so a following Enter submits instead of re-pressing the key.
+  document.addEventListener('mousedown', (e) => {
+    if (e.target instanceof Element && e.target.closest('.key')) e.preventDefault();
+  });
+
+  if (!M) {
+    $('stations').replaceChildren(h('p', { text: 'Не вдалося завантажити завдання. Онови сторінку.' }));
+    return;
+  }
+  // Parents' test mode: expose the current session for automated checks.
+  if (KF.TEST_MODE) window.__mathExam = { get session() { return session; } };
+  renderHub();
+})();
+</script>
+</body>
+</html>

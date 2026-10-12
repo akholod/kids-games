@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#174d37"><title>Keeper Fun Games — грай і збирай наліпки</title><link rel="stylesheet" href="shared/kf.css">
+<style>
+.hero{background:var(--green);color:white;position:relative;overflow:hidden;padding:42px 0 64px}.hero:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 130px,#ffffff08 130px 260px);pointer-events:none}.hero-inner{position:relative;display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:30px}.hero h1{font-size:clamp(2.6rem,7vw,5.4rem);line-height:.99;margin:15px 0 20px;font-weight:950;max-width:650px}.hero h1 em{font-style:normal;color:var(--lime)}.hero p{font-size:1.12rem;line-height:1.55;max-width:400px;color:#e0ecdf;margin:0}.hero .eyebrow{color:var(--lime)}.hero-art{height:255px;border:2px solid #ffffff65;border-radius:120px 120px 20px 20px;position:relative;background:radial-gradient(circle at 50% 110%,#ffffff12 0 32%,transparent 32.4%),repeating-linear-gradient(0deg,#ffffff05 0 34px,transparent 34px 68px);box-shadow:inset 0 0 0 12px #ffffff0d,0 25px 60px #001d174f;display:grid;place-items:center}.hero-art:before{content:"";position:absolute;inset:18px 20px 0;border:2px solid #ffffff4b;border-bottom:0;border-radius:110px 110px 0 0}.hero-ball{font-size:6.3rem;filter:drop-shadow(8px 16px 3px #001b1759);transform:rotate(-18deg)}.art-tag{position:absolute;background:var(--lime);color:var(--ink);border-radius:12px;padding:8px 13px;font-weight:900;box-shadow:0 6px 0 #0a392b}.art-tag.one{left:-15px;bottom:26px;transform:rotate(-7deg)}.art-tag.two{right:-9px;top:28px;transform:rotate(8deg);background:var(--gold)}
+.main{position:relative;margin-top:-25px;padding-bottom:45px}body:not(.games-view) .hero{display:none}body:not(.games-view) .main{margin-top:26px}.tabs{display:flex;gap:8px;padding:7px;background:var(--paper);border-radius:20px;box-shadow:var(--shadow);width:max-content;max-width:100%;overflow-x:auto;margin-bottom:32px}.tab{border:0;background:transparent;min-height:56px;padding:10px 19px;border-radius:14px;font-weight:850;color:var(--muted);white-space:nowrap;transition:background-color .18s,color .18s}.tab[aria-selected=true]{background:var(--green);color:white}.tab-panel[hidden]{display:none}.section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:20px}.section-head h2{font-size:clamp(1.7rem,4vw,2.3rem);margin:0}.section-head p{margin:6px 0 0;color:var(--muted)}#games-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.category{margin-bottom:30px;min-width:0}.category h3{font-size:1.1rem;margin:0 0 14px}.game-grid{display:grid;grid-template-columns:1fr;gap:16px}.game-card{display:flex;flex-direction:column;min-height:245px;padding:22px;border-radius:24px;background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow);position:relative;overflow:hidden}.game-card.ready{transition:transform .18s ease,box-shadow .18s ease}.game-card.ready:hover{transform:translateY(-4px);box-shadow:0 18px 35px #123b2426}.game-card.ready:active{transform:scale(.96)}.game-card.soon{background:#edeee6;color:#69786e;box-shadow:none}.game-icon{width:57px;height:57px;display:grid;place-items:center;background:#e5f4cc;border-radius:17px;font-size:2rem;margin-bottom:16px}.game-card.soon .game-icon{background:#dce2d6}.game-card strong{font-size:1.24rem;line-height:1.2}.game-card p{font-size:.95rem;line-height:1.45;margin:8px 0 16px;color:var(--muted)}.game-bottom{display:flex;justify-content:space-between;align-items:end;gap:8px;margin-top:auto;font-size:.85rem;font-weight:800}.game-go{background:var(--lime);border-radius:999px;padding:8px 14px;color:var(--ink)}.soon-label{background:#dde3d8;border-radius:999px;padding:8px 12px}
+.album-intro{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;margin-bottom:20px}.pack-bar{padding:17px 20px;background:var(--green);color:white;border-radius:22px;display:flex;align-items:center;gap:17px;flex-wrap:wrap;justify-content:space-between;margin-bottom:27px}.pack-bar p{margin:0;color:#dcebdd;line-height:1.4}.pack-bar strong{color:var(--lime)}.pack-bar .btn{min-width:210px}.pack-hint{font-size:.85rem;width:100%;color:#f3e9ad}.sticker-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:13px}.sticker{min-width:0;min-height:199px;position:relative;border-radius:15px;padding:9px;background:linear-gradient(150deg,#fffef8,#e8eadf);border:2px solid #c7d4be;box-shadow:0 5px 0 #cad3c2;display:flex;flex-direction:column;overflow:hidden}.sticker.rare{border-color:#76a8d9;background:linear-gradient(145deg,#fff,#e4f0fb)}.sticker.legend{border-color:#e9ac3e;background:linear-gradient(145deg,#fff7d7,#fff,#f9e5af);box-shadow:0 5px 0 #d8a749}.sticker.missing{filter:grayscale(1);opacity:.7;background:#e4e8e0;border-style:dashed;box-shadow:none}.sticker-top{display:flex;justify-content:space-between;align-items:center;font-size:.81rem;font-weight:900}.sticker-player{flex:1;display:grid;place-items:center;position:relative;min-height:94px}.sticker-player:before{content:"";position:absolute;width:83px;height:83px;border-radius:50%;background:var(--jersey,#b9c6bc);opacity:.2}.shirt{position:relative;display:grid;place-items:center;clip-path:polygon(24% 0,38% 9%,62% 9%,76% 0,100% 19%,86% 42%,75% 34%,75% 100%,25% 100%,25% 34%,14% 42%,0 19%);background:var(--jersey,#b5bcb2);width:65px;height:72px;color:#111;text-shadow:0 1px 2px #fff;font-weight:950;font-size:1.8rem;box-shadow:inset 0 15px #ffffff66}.missing .shirt{background:#9daaa1;color:#edf0e9}.sticker-name{text-align:center;font-weight:900;font-size:.77rem;overflow-wrap:anywhere;line-height:1.2;min-height:29px;display:grid;place-items:center}.sticker-rarity{text-align:center;font-size:.6rem;font-weight:900;letter-spacing:.1em;color:#6b765f;text-transform:uppercase}.duplicate{position:absolute;right:5px;top:36px;padding:3px 7px;background:var(--ink);color:white;border-radius:20px;font-size:.72rem;font-weight:900}
+.achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.badge{display:flex;gap:15px;align-items:center;padding:17px}.badge-icon{width:58px;height:58px;flex:none;display:grid;place-items:center;font-size:1.8rem;background:#ebf7d4;border-radius:18px}.badge.locked{opacity:.63;background:#f1f1e9;box-shadow:none}.badge.locked .badge-icon{filter:grayscale(1);background:#e3e7df}.badge strong{display:block;font-size:1.02rem}.badge p{margin:4px 0 0;color:var(--muted);font-size:.86rem;line-height:1.35}.badge small{display:block;color:#347448;font-weight:800;margin-top:4px}
+.parents{margin-top:55px;border-top:1px solid var(--line);padding:24px 0 50px}.parents details{max-width:760px}.parents summary{cursor:pointer;font-weight:850;min-height:56px;display:flex;align-items:center;width:max-content}.parent-body{padding:18px 0}.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}.stat{background:white;border-radius:12px;padding:12px 17px;font-weight:800}.stat b{color:var(--pitch);font-variant-numeric:tabular-nums}.parents h3{font-size:1rem;margin:21px 0 7px}.parents p{color:var(--muted);font-size:.9rem;line-height:1.5}.parents textarea{width:100%;min-height:76px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;resize:vertical;font-size:.86rem}.parent-actions{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.parents .btn{font-size:.9rem;min-height:56px}.danger{color:#9e3730;background:none;border:0;padding:10px 0;font-weight:800;min-height:56px}
+dialog{border:0;padding:0;border-radius:27px;background:var(--paper);color:var(--ink);width:min(92vw,690px);box-shadow:0 24px 80px #001c17a8}dialog::backdrop{background:#07291fc9;backdrop-filter:blur(5px)}.reveal{padding:25px;text-align:center}.reveal h2{font-size:2rem;margin:0 0 8px}.reveal p{color:var(--muted);margin-bottom:23px}.reveal-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:25px}.reveal-cards .sticker{min-height:220px;opacity:0;transform:translateY(25px) rotate(-5deg);animation:reveal-card .5s ease forwards;animation-delay:var(--delay)}.new-label{position:absolute;top:36px;left:5px;background:var(--lime);font-size:.7rem;font-weight:950;padding:4px 7px;border-radius:7px;z-index:1}@keyframes reveal-card{to{opacity:1;transform:translateY(0) rotate(0)}}
+@media(max-width:750px){#games-list{grid-template-columns:1fr}.hero-inner{grid-template-columns:1fr}.hero{padding:33px 0 59px}.hero-art{height:165px;max-width:450px;width:100%;justify-self:center}.hero-ball{font-size:4rem}.hero-art:before{inset:12px 18px 0}.game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sticker-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:520px){.hero h1{font-size:2.9rem}.hero-art{height:125px}.hero-ball{font-size:3rem}.art-tag{font-size:.75rem}.main{margin-top:-21px}.tabs{width:100%;gap:2px}.tab{flex:1;padding:8px 6px;font-size:.85rem}.game-grid{grid-template-columns:1fr}.game-card{min-height:0;padding:18px}.game-icon{margin-bottom:10px}.sticker-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.sticker{min-height:172px;padding:5px}.sticker-player{min-height:78px}.shirt{width:53px;height:61px;font-size:1.45rem}.sticker-name{font-size:.67rem}.achievement-grid{grid-template-columns:1fr}.album-intro{grid-template-columns:1fr}.pack-bar .btn{width:100%}.reveal{padding:18px 10px}.reveal-cards{gap:5px}.reveal-cards .sticker{min-height:175px}}
+</style></head><body class="games-view">
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="./" aria-label="Keeper Fun Games, головна"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></header>
+<section class="hero"><div class="wrap hero-inner"><div><div class="eyebrow">⚡ Виходь на поле</div><h1>Грай. Забивай.<br><em>Збирай команду.</em></h1><p>Короткі ігри, голи й наліпки футболістів. Обирай гру та починай матч!</p></div><div class="hero-art" aria-hidden="true"><span class="art-tag one">+1 🪙 за гол</span><span class="hero-ball">⚽</span><span class="art-tag two">🏆 Твоя команда</span></div></div></section>
+<main class="wrap main"><div class="tabs" role="tablist" aria-label="Розділи"><button type="button" class="tab" role="tab" id="tab-games" aria-controls="panel-games" aria-selected="true" data-tab="games">⚽ Ігри</button><button type="button" class="tab" role="tab" id="tab-album" aria-controls="panel-album" aria-selected="false" data-tab="album" tabindex="-1">📒 Альбом</button><button type="button" class="tab" role="tab" id="tab-awards" aria-controls="panel-awards" aria-selected="false" data-tab="awards" tabindex="-1">🏅 Досягнення</button></div>
+<section class="tab-panel" id="panel-games" role="tabpanel" aria-labelledby="tab-games"><div class="section-head"><div><h2>Обери матч</h2><p>Одна гра — кілька хвилин.</p></div></div><div id="games-list"></div></section>
+<section class="tab-panel" id="panel-album" role="tabpanel" aria-labelledby="tab-album" hidden><div class="album-intro"><div class="section-head" style="margin:0"><div><h2>Альбом наліпок</h2><p>Збирай футболістів у свою команду.</p></div></div><strong id="album-progress" class="coin-pill">0 / 24</strong></div><div class="pack-bar"><div><strong>🎁 Пакунок із 3 наліпками</strong><p>Ціна: <span id="pack-price"></span> 🪙. Монети отримуєш за правильні відповіді.</p></div><button type="button" id="open-pack" class="btn">Відкрити пакунок</button><span id="pack-hint" class="pack-hint" hidden>Поки не вистачає монет. Зіграй матч і забий кілька голів!</span></div><div class="sticker-grid" id="sticker-grid"></div></section>
+<section class="tab-panel" id="panel-awards" role="tabpanel" aria-labelledby="tab-awards" hidden><div class="section-head"><div><h2>Досягнення</h2><p>Кожен матч наближає до нової нагороди.</p></div><strong class="coin-pill" id="award-progress">0 / 14</strong></div><div class="achievement-grid" id="achievement-grid"></div></section>
+<section class="parents"><details><summary>⚙️ Для батьків</summary><div class="parent-body"><h3>Тест-режим</h3><p id="test-mode-text">Можна грати без зарахування прогресу. Дитячий прогрес не зміниться.</p><div class="parent-actions"><a class="btn btn-light" id="test-mode-link" href="./?parent">🧪 Увімкнути тест-режим</a></div><p>Прогрес зберігається лише в цьому браузері. Щоб перенести його на інший пристрій, скопіюйте код.</p><div class="stats" id="stats"></div><h3>Зберегти прогрес</h3><textarea id="export-code" readonly aria-label="Код для збереження прогресу"></textarea><div class="parent-actions"><button type="button" class="btn btn-dark" id="copy-code">Скопіювати код</button></div><h3>Відновити прогрес</h3><p>Вставте код з іншого пристрою. Це замінить поточний прогрес.</p><textarea id="import-code" aria-label="Код для відновлення прогресу" placeholder="Вставте код сюди"></textarea><div class="parent-actions"><button type="button" class="btn btn-dark" id="import-btn">Відновити</button></div><p id="import-status" role="status"></p><button type="button" class="danger" id="reset-btn">Скинути весь прогрес</button></div></details></section></main>
+<dialog id="pack-dialog" aria-labelledby="reveal-title"><div class="reveal"><h2 id="reveal-title">🎉 Нові наліпки!</h2><p>Подивись, хто приєднався до команди.</p><div id="reveal-cards" class="reveal-cards"></div><button type="button" class="btn btn-dark" id="close-pack">До альбому</button></div></dialog>
+<script src="shared/kf.js"></script><script src="shared/kf-ui.js"></script><script>
+'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  // Markup here is built only from KF constants and safeCount() numbers.
+  const setMarkup = (el, html) => el.replaceChildren(document.createRange().createContextualFragment(html));
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  function showTab(name) {
+    document.body.classList.toggle('games-view', name === 'games');
+    tabs.forEach(tab => { const active = tab.dataset.tab === name; tab.setAttribute('aria-selected', active); tab.tabIndex = active ? 0 : -1; $(tab.getAttribute('aria-controls')).hidden = !active; });
+  }
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => showTab(tab.dataset.tab));
+    tab.addEventListener('keydown', e => { const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!step) return; e.preventDefault(); const next = tabs[(index + step + tabs.length) % tabs.length]; showTab(next.dataset.tab); next.focus(); });
+  });
+  const safeCount = n => Number.isFinite(Number(n)) ? Math.max(0, Number(n)) : 0;
+  const matchesWord = n => n % 10 === 1 && n % 100 !== 11 ? 'матч' : [2,3,4].includes(n % 10) && !(n % 100 >= 12 && n % 100 <= 14) ? 'матчі' : 'матчів';
+  function renderGames() {
+    const state = KF.get();
+    setMarkup($('games-list'), Object.entries(KF.CATEGORIES).map(([key, category]) => {
+      const games = KF.GAMES.filter(g => g.category === key && KF.isListed(g));
+      if (!games.length) return '';
+      return `<div class="category"><h3>${category.emoji} ${category.title}</h3><div class="game-grid">${games.map(g => {
+        const record = state.games?.[g.slug];
+        const ready = KF.isPlayable(g);
+        const beta = g.status === 'beta' ? '<span class="beta-tag">Бета</span>' : '';
+        return `<${ready ? 'a href="games/' + g.slug + '/"' : 'div'} class="game-card ${ready ? 'ready' : 'soon'}"><span class="game-icon" aria-hidden="true">${g.emoji}</span><strong>${g.title}${beta}</strong><p>${g.desc}</p><span class="game-bottom"><span>${record ? `Рекорд ${safeCount(record.best)}/${safeCount(record.max)} · ${safeCount(record.plays)} ${matchesWord(safeCount(record.plays))}` : ready ? 'Твій перший матч чекає' : 'Ще готуємо'}</span><span class="${ready ? 'game-go' : 'soon-label'}">${ready ? 'Грати →' : '🔒 Скоро'}</span></span></${ready ? 'a' : 'div'}>`;
+      }).join('')}</div></div>`;
+    }).join(''));
+  }
+  const rarityName = {common:'ЗВИЧАЙНА',rare:'РІДКІСНА',legend:'ЛЕГЕНДА'};
+  function stickerHTML(s, missing, extra = '') {
+    const count = safeCount(KF.get().stickers?.[s.id]);
+    return `<div class="sticker ${missing ? 'missing' : s.rarity}" style="--jersey:${missing ? '#9daaa1' : s.color}" ${missing ? `aria-label="Невідома наліпка"` : `aria-label="${s.name}, ${rarityName[s.rarity]}"`}><div class="sticker-top"><span>${missing ? '??' : s.pos}</span><span>${missing ? '🔒' : s.flag}</span></div><div class="sticker-player"><span class="shirt">${missing ? '?' : s.num}</span></div><div class="sticker-name">${missing ? 'Невідомий' : s.name}</div><div class="sticker-rarity">${missing ? 'Знайди мене' : rarityName[s.rarity]}</div>${!missing && count > 1 && !extra ? `<span class="duplicate">×${count}</span>` : ''}${extra}</div>`;
+  }
+  function renderAlbum() {
+    const collected = KF.STICKERS.filter(s => KF.get().stickers?.[s.id]).length;
+    $('album-progress').textContent = `${collected} / ${KF.STICKERS.length}`;
+    setMarkup($('sticker-grid'), KF.STICKERS.map(s => stickerHTML(s, !KF.get().stickers?.[s.id])).join(''));
+    $('open-pack').disabled = !KF.canBuyPack();
+    $('pack-hint').hidden = KF.canBuyPack();
+  }
+  function renderAwards() {
+    const earned = KF.get().achievements || {};
+    $('award-progress').textContent = `${KF.ACHIEVEMENTS.filter(a => earned[a.id]).length} / ${KF.ACHIEVEMENTS.length}`;
+    setMarkup($('achievement-grid'), KF.ACHIEVEMENTS.map(a => `<div class="badge card ${earned[a.id] ? '' : 'locked'}"><span class="badge-icon" aria-hidden="true">${earned[a.id] ? a.icon : '🔒'}</span><span><strong>${a.title}</strong><p>${a.desc}</p>${earned[a.id] ? '<small>Отримано ✓</small>' : ''}</span></div>`).join(''));
+  }
+  function renderParents() {
+    const s = KF.get().stats;
+    setMarkup($('stats'), `<div class="stat">Матчі: <b>${safeCount(s.games)}</b></div><div class="stat">Правильні відповіді: <b>${safeCount(s.correct)}</b></div><div class="stat">Пакунки: <b>${safeCount(s.packs)}</b></div>`);
+    $('export-code').value = KF.exportCode();
+  }
+  if (KF.TEST_MODE) {
+    $('test-mode-text').className = 'test-note';
+    $('test-mode-text').textContent = 'Зараз увімкнено: статистика, код і скидання нижче стосуються тільки тестового прогресу.';
+    $('test-mode-link').href = './?parent=off';
+    $('test-mode-link').textContent = 'Вимкнути тест-режим';
+  }
+  function render() { renderGames(); renderAlbum(); renderAwards(); renderParents(); }
+  $('pack-price').textContent = KF.PACK_PRICE;
+  $('open-pack').addEventListener('click', () => {
+    const got = KF.openPack();
+    if (!got) return;
+    setMarkup($('reveal-cards'), got.map(s => stickerHTML(s,false,s.isNew ? '<span class="new-label">НОВА!</span>' : '')).join(''));
+    // Put stagger delay on the cards themselves, not their grid wrappers.
+    [...$('reveal-cards').querySelectorAll('.sticker')].forEach((card, i) => card.style.setProperty('--delay', `${i * .16}s`));
+    $('pack-dialog').showModal();
+    KFUI.confetti();
+  });
+  $('close-pack').addEventListener('click', () => $('pack-dialog').close());
+  $('copy-code').addEventListener('click', async () => {
+    $('export-code').select();
+    try { await navigator.clipboard.writeText($('export-code').value); KFUI.toast('Код скопійовано!'); }
+    catch { KFUI.toast('Виділений код можна скопіювати вручну.'); }
+  });
+  $('import-btn').addEventListener('click', () => {
+    if (!confirm('Замінити поточний прогрес збереженим кодом?')) return;
+    const ok = KF.importCode($('import-code').value);
+    $('import-status').textContent = ok ? 'Прогрес відновлено!' : 'Код не підходить. Перевірте його й спробуйте ще раз.';
+    if (ok) $('import-code').value = '';
+  });
+  $('reset-btn').addEventListener('click', () => {
+    if (confirm('Скинути ВЕСЬ прогрес? Це не можна скасувати.')) { KF.reset(); $('import-status').textContent = 'Прогрес скинуто.'; }
+  });
+  KF.on('change', render);
+  render();
+})();
+</script></body></html>
