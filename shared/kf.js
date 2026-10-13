@@ -72,7 +72,7 @@
       emoji: '🏆',
       category: 'fun',
       desc: 'Чемпіонати, клуби, зірки й правила. Українською, español, English.',
-      status: 'beta',
+      status: 'ready',
     },
   ];
 
