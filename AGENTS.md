@@ -1,7 +1,7 @@
 # Kids games
 
 Interactive HTML games/exercises for an 8-year-old.
-Site: https://keeper-fun-games.surge.sh
+Site: Cloudflare Worker `keeper-fun-games` on `*.workers.dev` (personal account; old https://keeper-fun-games.surge.sh redirects there).
 
 ## Child context
 - Native language: Ukrainian. Goes to a Spanish school. Learning English.
@@ -12,6 +12,7 @@ Site: https://keeper-fun-games.surge.sh
 - `games/<slug>/index.html` — one game per folder, inline game CSS/JS, no build step.
 - `shared/kf.js` — progress core (`window.KF`): coins, stickers, achievements, game registry `KF.GAMES`.
 - `shared/kf-ui.js`, `shared/kf.css` — shared look + toasts for coins/achievements.
+- `worker/`, `migrations/`, `wrangler.jsonc` — backend (users with PIN, progress sync, results) — see `BACKEND.md`.
 
 ## Conventions
 - Big buttons, works offline after load.
@@ -24,8 +25,12 @@ Site: https://keeper-fun-games.surge.sh
   and `KF.finishGame(slug, { score, max })` at round end; add a "back to catalog" link (`../../`).
 - New game → add entry to `GAMES` in `shared/kf.js`: `beta` while in progress (visible only in test mode), then `ready`.
 - Test mode for parents: any page with `?parent` (off: `?parent=off`) — per-tab sandbox progress (100 coins), real progress untouched.
-- Progress is localStorage only; transfer between devices via export/import code in the catalog.
+- Progress: guest = localStorage only; logged-in user = local copy synced to D1 in the background (offline-first).
+  Games keep using the synchronous `KF` API and never call the network themselves.
+- Users are added by hand: `node scripts/add-user.mjs <name> <pin> [avatar]` (`--update` changes the PIN).
 
 ## Publish
-- `./deploy.sh` (surge, domain from `CNAME`, exclusions in `.surgeignore`).
-- First time: `npx surge login`.
+- `./deploy.sh` — remote D1 migrations + `wrangler deploy` (static files from the root, exclusions in `.assetsignore`;
+  `books/` must never be uploaded). Needs `wrangler login` to the personal account (`account_id` in `wrangler.jsonc`).
+- Local: `wrangler dev --local --persist-to ~/.cache/kf-wrangler-state --port 8790 > ~/.cache/kf-dev.log 2>&1`
+  (logs must go outside the project, otherwise the asset watcher reload-loops).

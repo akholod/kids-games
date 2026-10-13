@@ -1,5 +1,6 @@
 #!/bin/sh
-# Deploy the whole project root to surge (domain from CNAME, exclusions in .surgeignore).
+# Apply remote D1 migrations, then deploy the Worker + static assets (exclusions in .assetsignore).
 set -e
 cd "$(dirname "$0")"
-npx -y surge . "$(cat CNAME)"
+wrangler d1 migrations apply keeper-fun-games --remote
+wrangler deploy

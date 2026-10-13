@@ -16,6 +16,9 @@
   const TEST_COINS = 100;
   const PACK_PRICE = 10;
   const PACK_SIZE = 3;
+  const USER_KEY = 'kf-user';
+  const slotKey = (id) => `kf-sync-u${id}`;
+  const PUSH_DELAY = 1500;
 
   const detectTestMode = () => {
     try {
@@ -159,13 +162,34 @@
     return s;
   };
 
-  const load = () => {
+  const readJSON = (key) => {
     try {
-      const raw = store.getItem(KEY);
-      return raw ? merge(fresh(), JSON.parse(raw)) : initial();
+      const raw = store.getItem(key);
+      return raw ? JSON.parse(raw) : null;
     } catch {
-      return initial();
+      return null;
     }
+  };
+
+  // Logged-in user (never in test mode) and its sync slot { base, baseRev, dirty, outbox }.
+  let user = TEST_MODE ? null : readJSON(USER_KEY);
+  let sync = null;
+  let authStatus = user ? 'pending' : 'guest';
+
+  const load = () => {
+    if (user) {
+      const slot = readJSON(slotKey(user.id)) || {};
+      sync = {
+        base: merge(fresh(), slot.base || {}),
+        baseRev: slot.baseRev || 0,
+        dirty: !!slot.dirty,
+        outbox: slot.outbox || [],
+      };
+      return merge(fresh(), slot.state || {});
+    }
+    sync = null;
+    const data = readJSON(KEY);
+    return data ? merge(fresh(), data) : initial();
   };
 
   let state = load();
@@ -175,21 +199,38 @@
     for (const fn of listeners[type] || []) fn(payload);
   };
 
-  const save = () => {
+  const persist = () => {
     try {
-      store.setItem(KEY, JSON.stringify(state));
+      if (sync) store.setItem(slotKey(user.id), JSON.stringify({ state, ...sync }));
+      else store.setItem(KEY, JSON.stringify(state));
     } catch {
       // storage full or disabled — progress lives only in memory
     }
+  };
+
+  const save = () => {
+    if (sync) {
+      sync.dirty = true;
+      localVer++;
+      if (authStatus !== 'expired') {
+        setStatus('pending');
+        schedulePush();
+      }
+    }
+    persist();
     emit('change', state);
   };
 
+  // Returns true if new achievements were added.
   const checkAchievements = () => {
+    let added = false;
     for (const a of ACHIEVEMENTS) {
       if (state.achievements[a.id] || !a.check(state)) continue;
       state.achievements[a.id] = Date.now();
+      added = true;
       emit('achievement', a);
     }
+    return added;
   };
 
   const commit = () => {
@@ -226,6 +267,302 @@
     return PACK_STICKERS[PACK_STICKERS.length - 1];
   };
 
+  // ---- Server sync (logged-in users only; all network work is in the background) ----
+
+  const clone = (x) => JSON.parse(JSON.stringify(x));
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+  const uuid = () =>
+    globalThis.crypto?.randomUUID?.() ||
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+
+  const isMaxPath = (p) =>
+    (p[0] === 'stats' && p.length === 2 && p[1] === 'bestStreak') ||
+    (p[0] === 'games' && p.length === 3 && ['best', 'max', 'lastPlayed'].includes(p[2]));
+
+  // Three-way merge of two states that diverged from `base` (see BACKEND.md).
+  const mergeVal = (b, l, s, path) => {
+    if (typeof l === 'number' && typeof s === 'number') {
+      return isMaxPath(path) ? Math.max(l, s) : s + (l - (typeof b === 'number' ? b : 0));
+    }
+    if (Array.isArray(l) && Array.isArray(s)) {
+      const seen = new Set();
+      return [...l, ...s].filter((x) => {
+        const k = JSON.stringify(x);
+        return seen.has(k) ? false : seen.add(k);
+      });
+    }
+    if (isObj(l) && isObj(s)) {
+      const bb = isObj(b) ? b : {};
+      const out = {};
+      for (const k of new Set([...Object.keys(l), ...Object.keys(s)])) {
+        const inL = k in l;
+        const inS = k in s;
+        const sub = [...path, k];
+        if (path.length === 0 && k === 'achievements') {
+          // earliest timestamp wins, never lose one
+          out[k] = { ...s[k], ...l[k] };
+          for (const id of Object.keys(out[k])) {
+            if (s[k]?.[id] && l[k]?.[id]) out[k][id] = Math.min(s[k][id], l[k][id]);
+          }
+        } else if (inL && inS) out[k] = mergeVal(bb[k], l[k], s[k], sub);
+        else if (inL) {
+          // gone on the server: drop only if local did not touch it
+          if (!(k in bb && same(l[k], bb[k]))) out[k] = l[k];
+        } else if (!(k in bb && same(s[k], bb[k]))) out[k] = s[k];
+      }
+      return out;
+    }
+    return same(l, b) ? s : l;
+  };
+
+  const merge3 = (base, local, server) => {
+    const b = merge(fresh(), base || {});
+    const l = merge(fresh(), local || {});
+    const s = merge(fresh(), server || {});
+    const out = mergeVal(b, l, s, []);
+    // streaks belong together: take them from the side that played last
+    const ld = l.stats.lastDay || '';
+    const sd = s.stats.lastDay || '';
+    const pick = ld > sd || (ld === sd && l.stats.streak >= s.stats.streak) ? l.stats : s.stats;
+    for (const k of ['streak', 'dayStreak', 'lastDay']) out.stats[k] = pick[k];
+    out.coins = Math.max(0, out.coins);
+    return out;
+  };
+
+  let pushTimer = 0;
+  let retryTimer = 0;
+  let failures = 0;
+  let localVer = 0;
+  let inflight = null;
+  let syncing = null;
+  let lastPull = 0;
+
+  const setStatus = (status) => {
+    if (status === authStatus) return;
+    authStatus = status;
+    emit('auth', { user, status });
+  };
+
+  const needsPush = () => !!sync && (sync.dirty || sync.outbox.length > 0);
+
+  const api = async (method, path, body, keepalive) => {
+    try {
+      const res = await fetch(`/api${path}`, {
+        method,
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        keepalive: keepalive || undefined,
+      });
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        // empty body (204) or not JSON
+      }
+      return { status: res.status, data: data || {} };
+    } catch {
+      return { status: 0, data: {} };
+    }
+  };
+
+  // Network/auth failure: 401 => ask for the PIN again, otherwise retry later with backoff.
+  const fail = (status) => {
+    if (status === 401) {
+      setStatus('expired');
+      return;
+    }
+    failures++;
+    setStatus('offline');
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(() => syncNow(), Math.min(300000, 5000 * 2 ** (failures - 1)));
+  };
+
+  // Take the server state (at `rev`) into the local copy, merging unsent local changes.
+  const absorb = (remoteState, rev) => {
+    const remote = merge(fresh(), remoteState || {});
+    // Copies: `state` is mutated in place by games, `sync.base` must stay as the server had it.
+    if (needsPush()) {
+      state = clone(merge3(sync.base, state, remote));
+      sync.dirty = true;
+    } else {
+      state = clone(remote);
+    }
+    sync.base = remote;
+    sync.baseRev = rev;
+    if (checkAchievements()) sync.dirty = true;
+    localVer++;
+    persist();
+    emit('change', state);
+  };
+
+  const dropResults = (sent) => {
+    const ids = new Set(sent.map((r) => r.id));
+    sync.outbox = sync.outbox.filter((r) => !ids.has(r.id));
+  };
+
+  const doPush = async (keepalive) => {
+    clearTimeout(pushTimer);
+    const uid = user?.id;
+    for (let i = 0; i < 4 && user?.id === uid && authStatus !== 'expired'; i++) {
+      if (!needsPush()) break;
+      const ver = localVer;
+      const sent = clone(state);
+      const results = sync.outbox.slice(0, 100);
+      const r = await api('PUT', '/progress', { baseRev: sync.baseRev, state: sent, results }, keepalive && i === 0);
+      if (user?.id !== uid) return false;
+      if (r.status === 200) {
+        failures = 0;
+        dropResults(results);
+        sync.base = sent;
+        sync.baseRev = r.data.rev;
+        sync.dirty = localVer !== ver;
+        persist();
+      } else if (r.status === 409) {
+        dropResults(results);
+        absorb(r.data.state, r.data.rev);
+      } else {
+        fail(r.status);
+        return false;
+      }
+    }
+    if (user && !needsPush()) {
+      setStatus('synced');
+      return true;
+    }
+    if (user && authStatus === 'pending') schedulePush();
+    return false;
+  };
+
+  const flush = (keepalive) => {
+    if (!user || !sync) return Promise.resolve(false);
+    inflight ||= doPush(keepalive)
+      .catch(() => false)
+      .finally(() => {
+        inflight = null;
+      });
+    return inflight;
+  };
+
+  const schedulePush = () => {
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => flush(), PUSH_DELAY);
+  };
+
+  const pull = async () => {
+    const r = await api('GET', '/progress');
+    if (!user) return;
+    if (r.status !== 200) return fail(r.status);
+    if (inflight) return; // a push started meanwhile; it will reconcile
+    failures = 0;
+    if (r.data.state && r.data.rev !== sync.baseRev) absorb(r.data.state, r.data.rev);
+    lastPull = Date.now();
+    setStatus(needsPush() ? 'pending' : 'synced');
+  };
+
+  // Pull, then push whatever is left. Safe to call any time.
+  const syncNow = () => {
+    syncing ||= (async () => {
+      if (inflight) await inflight;
+      if (!user) return;
+      await pull();
+      if (user && needsPush() && authStatus !== 'expired') await flush();
+    })()
+      .catch(() => {})
+      .finally(() => {
+        syncing = null;
+      });
+    return syncing;
+  };
+
+  const guestState = () => {
+    const data = TEST_MODE ? null : readJSON(REAL_KEY);
+    return data ? merge(fresh(), data) : fresh();
+  };
+
+  const auth = {
+    get user() {
+      return user;
+    },
+    get status() {
+      return authStatus;
+    },
+
+    async users() {
+      if (TEST_MODE) return { ok: false, error: 'test_mode' };
+      const r = await api('GET', '/users');
+      return r.status === 200 ? { ok: true, users: r.data.users || [] } : { ok: false, error: r.data.error || 'network' };
+    },
+
+    async login(userId, pin) {
+      if (TEST_MODE) return { ok: false, error: 'test_mode' };
+      const hasGuestProgress = auth.hasGuestProgress();
+      const r = await api('POST', '/login', { userId, pin });
+      if (r.status !== 200) {
+        const { error, attemptsLeft, retryAfter } = r.data;
+        return { ok: false, error: error || 'network', attemptsLeft, retryAfter, hasGuestProgress };
+      }
+      user = r.data.user;
+      try {
+        store.setItem(USER_KEY, JSON.stringify(user));
+      } catch {
+        // memory only
+      }
+      state = load();
+      persist();
+      failures = 0;
+      authStatus = 'pending';
+      emit('change', state);
+      emit('auth', { user, status: authStatus });
+      await syncNow();
+      return { ok: true, user, hasGuestProgress };
+    },
+
+    // Guest state differs from a fresh one.
+    hasGuestProgress: () => !TEST_MODE && !same(guestState(), fresh()),
+
+    // Add the guest progress to the logged-in user and clear the guest copy.
+    adoptGuest() {
+      if (!user) return false;
+      state = merge3(fresh(), guestState(), state);
+      try {
+        store.removeItem(REAL_KEY);
+      } catch {
+        // ignore
+      }
+      commit();
+      return true;
+    },
+
+    // force: push once (max ~3 s), then log out even if changes could not be sent.
+    async logout({ force = false } = {}) {
+      if (!user) return { ok: true, lost: false };
+      if (needsPush() && authStatus !== 'expired') {
+        await (force ? Promise.race([flush(), new Promise((r) => setTimeout(r, 3000))]) : flush());
+      }
+      const lost = needsPush();
+      if (lost && !force) return { ok: false };
+      const id = user.id;
+      await (force ? Promise.race([api('POST', '/logout', {}), new Promise((r) => setTimeout(r, 3000))]) : api('POST', '/logout', {}));
+      clearTimeout(pushTimer);
+      clearTimeout(retryTimer);
+      try {
+        store.removeItem(USER_KEY);
+        if (force) store.removeItem(slotKey(id));
+      } catch {
+        // ignore
+      }
+      user = null;
+      state = load();
+      authStatus = 'guest';
+      emit('change', state);
+      emit('auth', { user, status: authStatus });
+      return { ok: true, lost };
+    },
+  };
+
   const KF = {
     GAMES,
     CATEGORIES,
@@ -234,6 +571,8 @@
     PACK_PRICE,
     PACK_SIZE,
     TEST_MODE,
+    auth,
+    _merge3: merge3,
 
     get: () => state,
 
@@ -272,6 +611,7 @@
       g.best = Math.max(g.best, score);
       g.max = max;
       g.lastPlayed = Date.now();
+      if (sync) sync.outbox.push({ id: uuid(), slug, score, max, at: Date.now() });
       st.games++;
       touchDay();
       const perfect = max > 0 && score === max;
@@ -357,10 +697,38 @@
 
   // Sync between open tabs (real progress only; the test sandbox is per-tab).
   window.addEventListener('storage', (e) => {
-    if (TEST_MODE || e.key !== KEY) return;
-    state = load();
-    emit('change', state);
+    if (TEST_MODE) return;
+    if (e.key === USER_KEY || e.key === null) {
+      user = readJSON(USER_KEY);
+      state = load();
+      authStatus = user ? (authStatus === 'guest' ? 'pending' : authStatus) : 'guest';
+      emit('change', state);
+      emit('auth', { user, status: authStatus });
+    } else if (e.key === (user ? slotKey(user.id) : KEY)) {
+      state = load();
+      emit('change', state);
+    }
   });
+
+  if (!TEST_MODE) {
+    // Pull on load/focus/online, push when the page is hidden.
+    const refresh = () => {
+      if (Date.now() - lastPull > 3000) syncNow();
+    };
+    window.addEventListener('online', () => {
+      failures = 0;
+      syncNow();
+    });
+    window.addEventListener('focus', refresh);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          if (needsPush() && authStatus !== 'expired') flush(true);
+        } else refresh();
+      });
+    }
+    if (user) syncNow();
+  }
 
   window.KF = KF;
 })();

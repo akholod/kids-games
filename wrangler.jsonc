@@ -1,0 +1,19 @@
+{
+  "name": "keeper-fun-games",
+  "account_id": "20e6b39c875856725537b92999c1b53a",
+  "compatibility_date": "2026-10-01",
+  "main": "worker/index.js",
+  "workers_dev": true,
+  "assets": {
+    "directory": ".",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "keeper-fun-games",
+      "database_id": "5f07272a-a7bc-4293-8cfb-527a22a1357a",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

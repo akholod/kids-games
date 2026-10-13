@@ -39,6 +39,23 @@
   KF.on('coins', delta => { if (delta > 0) toast(`+${delta} 🪙`, 'coin'); });
   KF.on('achievement', a => { toast(`🏅 ${a.title} — нове досягнення!`); confetti(); });
   KF.on('sticker', x => { if (x.isNew) { toast(`🌟 Нова наліпка: ${x.name}!`); confetti(); } });
+  // Sync state of the logged-in player. Any element with data-kf-sync gets data-state;
+  // data-kf-sync="" shows the short label, ="long" the explanation, ="dot" only the state.
+  const SYNC = {
+    synced: { short: 'Збережено ✓', long: 'Усе збережено. Прогрес однаковий на всіх пристроях.' },
+    pending: { short: 'Зберігаю', long: 'Зберігаю прогрес… Це кілька секунд.' },
+    offline: { short: 'Без інтернету', long: 'Немає інтернету. Прогрес чекає тут і збережеться, коли інтернет повернеться.' },
+    expired: { short: 'Введи PIN', long: 'Введи PIN ще раз, щоб прогрес зберігався.' },
+  };
+  function updateSync() {
+    const status = KF.auth?.status || 'guest';
+    document.querySelectorAll('[data-kf-sync]').forEach(el => {
+      el.dataset.state = status;
+      const mode = el.dataset.kfSync;
+      if (mode !== 'dot') el.textContent = SYNC[status]?.[mode === 'long' ? 'long' : 'short'] || '';
+    });
+  }
+  if (KF.auth) KF.on('auth', updateSync);
   function testRibbon() {
     if (!KF.TEST_MODE) return;
     const bar = document.createElement('div');
@@ -54,5 +71,5 @@
   }
   updateCoins();
   testRibbon();
-  window.KFUI = { toast, confetti, updateCoins };
+  window.KFUI = { toast, confetti, updateCoins, updateSync, SYNC };
 })();

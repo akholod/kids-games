@@ -1,0 +1,15 @@
+books/
+.pi/
+.git/
+node_modules/
+.omc/
+worker/
+migrations/
+scripts/
+*.md
+wrangler.jsonc
+deploy.sh
+.assetsignore
+.gitignore
+*.test.js
+.wrangler/

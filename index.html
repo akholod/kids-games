@@ -5,19 +5,24 @@
 .main{position:relative;margin-top:-25px;padding-bottom:45px}body:not(.games-view) .hero{display:none}body:not(.games-view) .main{margin-top:26px}.tabs{display:flex;gap:8px;padding:7px;background:var(--paper);border-radius:20px;box-shadow:var(--shadow);width:max-content;max-width:100%;overflow-x:auto;margin-bottom:32px}.tab{border:0;background:transparent;min-height:56px;padding:10px 19px;border-radius:14px;font-weight:850;color:var(--muted);white-space:nowrap;transition:background-color .18s,color .18s}.tab[aria-selected=true]{background:var(--green);color:white}.tab-panel[hidden]{display:none}.section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:20px}.section-head h2{font-size:clamp(1.7rem,4vw,2.3rem);margin:0}.section-head p{margin:6px 0 0;color:var(--muted)}#games-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.category{margin-bottom:30px;min-width:0}.category h3{font-size:1.1rem;margin:0 0 14px}.game-grid{display:grid;grid-template-columns:1fr;gap:16px}.game-card{display:flex;flex-direction:column;min-height:245px;padding:22px;border-radius:24px;background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow);position:relative;overflow:hidden}.game-card.ready{transition:transform .18s ease,box-shadow .18s ease}.game-card.ready:hover{transform:translateY(-4px);box-shadow:0 18px 35px #123b2426}.game-card.ready:active{transform:scale(.96)}.game-card.soon{background:#edeee6;color:#69786e;box-shadow:none}.game-icon{width:57px;height:57px;display:grid;place-items:center;background:#e5f4cc;border-radius:17px;font-size:2rem;margin-bottom:16px}.game-card.soon .game-icon{background:#dce2d6}.game-card strong{font-size:1.24rem;line-height:1.2}.game-card p{font-size:.95rem;line-height:1.45;margin:8px 0 16px;color:var(--muted)}.game-bottom{display:flex;justify-content:space-between;align-items:end;gap:8px;margin-top:auto;font-size:.85rem;font-weight:800}.game-go{background:var(--lime);border-radius:999px;padding:8px 14px;color:var(--ink)}.soon-label{background:#dde3d8;border-radius:999px;padding:8px 12px}
 .album-intro{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;margin-bottom:20px}.pack-bar{padding:17px 20px;background:var(--green);color:white;border-radius:22px;display:flex;align-items:center;gap:17px;flex-wrap:wrap;justify-content:space-between;margin-bottom:27px}.pack-bar p{margin:0;color:#dcebdd;line-height:1.4}.pack-bar strong{color:var(--lime)}.pack-bar .btn{min-width:210px}.pack-hint{font-size:.85rem;width:100%;color:#f3e9ad}.sticker-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:13px}.sticker{min-width:0;min-height:199px;position:relative;border-radius:15px;padding:9px;background:linear-gradient(150deg,#fffef8,#e8eadf);border:2px solid #c7d4be;box-shadow:0 5px 0 #cad3c2;display:flex;flex-direction:column;overflow:hidden}.sticker.rare{border-color:#76a8d9;background:linear-gradient(145deg,#fff,#e4f0fb)}.sticker.legend{border-color:#e9ac3e;background:linear-gradient(145deg,#fff7d7,#fff,#f9e5af);box-shadow:0 5px 0 #d8a749}.sticker.missing{filter:grayscale(1);opacity:.7;background:#e4e8e0;border-style:dashed;box-shadow:none}.sticker-top{display:flex;justify-content:space-between;align-items:center;font-size:.81rem;font-weight:900}.sticker-player{flex:1;display:grid;place-items:center;position:relative;min-height:94px}.sticker-player:before{content:"";position:absolute;width:83px;height:83px;border-radius:50%;background:var(--jersey,#b9c6bc);opacity:.2}.shirt{position:relative;display:grid;place-items:center;clip-path:polygon(24% 0,38% 9%,62% 9%,76% 0,100% 19%,86% 42%,75% 34%,75% 100%,25% 100%,25% 34%,14% 42%,0 19%);background:var(--jersey,#b5bcb2);width:65px;height:72px;color:#111;text-shadow:0 1px 2px #fff;font-weight:950;font-size:1.8rem;box-shadow:inset 0 15px #ffffff66}.missing .shirt{background:#9daaa1;color:#edf0e9}.sticker-name{text-align:center;font-weight:900;font-size:.77rem;overflow-wrap:anywhere;line-height:1.2;min-height:29px;display:grid;place-items:center}.sticker-rarity{text-align:center;font-size:.6rem;font-weight:900;letter-spacing:.1em;color:#6b765f;text-transform:uppercase}.duplicate{position:absolute;right:5px;top:36px;padding:3px 7px;background:var(--ink);color:white;border-radius:20px;font-size:.72rem;font-weight:900}
 .achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.badge{display:flex;gap:15px;align-items:center;padding:17px}.badge-icon{width:58px;height:58px;flex:none;display:grid;place-items:center;font-size:1.8rem;background:#ebf7d4;border-radius:18px}.badge.locked{opacity:.63;background:#f1f1e9;box-shadow:none}.badge.locked .badge-icon{filter:grayscale(1);background:#e3e7df}.badge strong{display:block;font-size:1.02rem}.badge p{margin:4px 0 0;color:var(--muted);font-size:.86rem;line-height:1.35}.badge small{display:block;color:#347448;font-weight:800;margin-top:4px}
-.parents{margin-top:55px;border-top:1px solid var(--line);padding:24px 0 50px}.parents details{max-width:760px}.parents summary{cursor:pointer;font-weight:850;min-height:56px;display:flex;align-items:center;width:max-content}.parent-body{padding:18px 0}.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}.stat{background:white;border-radius:12px;padding:12px 17px;font-weight:800}.stat b{color:var(--pitch);font-variant-numeric:tabular-nums}.parents h3{font-size:1rem;margin:21px 0 7px}.parents p{color:var(--muted);font-size:.9rem;line-height:1.5}.parents textarea{width:100%;min-height:76px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;resize:vertical;font-size:.86rem}.parent-actions{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.parents .btn{font-size:.9rem;min-height:56px}.danger{color:#9e3730;background:none;border:0;padding:10px 0;font-weight:800;min-height:56px}
+.parents{margin-top:55px;border-top:1px solid var(--line);padding:24px 0 50px}.parents details{max-width:760px}.parents summary{cursor:pointer;font-weight:850;min-height:56px;display:flex;align-items:center;width:max-content}.parent-body{padding:18px 0}.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}.stat{background:white;border-radius:12px;padding:12px 17px;font-weight:800}.stat b{color:var(--pitch);font-variant-numeric:tabular-nums}.parents h3{font-size:1rem;margin:21px 0 7px}.parents p{color:var(--muted);font-size:.9rem;line-height:1.5}.parents textarea{width:100%;min-height:76px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;resize:vertical;font-size:.86rem}.parent-actions{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.parents .btn{font-size:.9rem;min-height:56px}.code-box>summary{gap:10px}.code-box>summary:after{content:"Показати";padding:6px 12px;border-radius:100px;background:#e8eedf;color:var(--muted);font-size:.8rem}.code-box[open]>summary:after{content:"Сховати"}.danger{color:#9e3730;background:none;border:0;padding:10px 0;font-weight:800;min-height:56px}
 dialog{border:0;padding:0;border-radius:27px;background:var(--paper);color:var(--ink);width:min(92vw,690px);box-shadow:0 24px 80px #001c17a8}dialog::backdrop{background:#07291fc9;backdrop-filter:blur(5px)}.reveal{padding:25px;text-align:center}.reveal h2{font-size:2rem;margin:0 0 8px}.reveal p{color:var(--muted);margin-bottom:23px}.reveal-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:25px}.reveal-cards .sticker{min-height:220px;opacity:0;transform:translateY(25px) rotate(-5deg);animation:reveal-card .5s ease forwards;animation-delay:var(--delay)}.new-label{position:absolute;top:36px;left:5px;background:var(--lime);font-size:.7rem;font-weight:950;padding:4px 7px;border-radius:7px;z-index:1}@keyframes reveal-card{to{opacity:1;transform:translateY(0) rotate(0)}}
 @media(max-width:750px){#games-list{grid-template-columns:1fr}.hero-inner{grid-template-columns:1fr}.hero{padding:33px 0 59px}.hero-art{height:165px;max-width:450px;width:100%;justify-self:center}.hero-ball{font-size:4rem}.hero-art:before{inset:12px 18px 0}.game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sticker-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:520px){.hero h1{font-size:2.9rem}.hero-art{height:125px}.hero-ball{font-size:3rem}.art-tag{font-size:.75rem}.main{margin-top:-21px}.tabs{width:100%;gap:2px}.tab{flex:1;padding:8px 6px;font-size:.85rem}.game-grid{grid-template-columns:1fr}.game-card{min-height:0;padding:18px}.game-icon{margin-bottom:10px}.sticker-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.sticker{min-height:172px;padding:5px}.sticker-player{min-height:78px}.shirt{width:53px;height:61px;font-size:1.45rem}.sticker-name{font-size:.67rem}.achievement-grid{grid-template-columns:1fr}.album-intro{grid-template-columns:1fr}.pack-bar .btn{width:100%}.reveal{padding:18px 10px}.reveal-cards{gap:5px}.reveal-cards .sticker{min-height:175px}}
 </style></head><body class="games-view">
-<header class="site-header"><div class="wrap header-inner"><a class="brand" href="./" aria-label="Keeper Fun Games, головна"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></header>
-<section class="hero"><div class="wrap hero-inner"><div><div class="eyebrow">⚡ Виходь на поле</div><h1>Грай. Забивай.<br><em>Збирай команду.</em></h1><p>Короткі ігри, голи й наліпки футболістів. Обирай гру та починай матч!</p></div><div class="hero-art" aria-hidden="true"><span class="art-tag one">+1 🪙 за гол</span><span class="hero-ball">⚽</span><span class="art-tag two">🏆 Твоя команда</span></div></div></section>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="./" aria-label="Keeper Fun Games, головна"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="header-right"><div class="who kf-auth" id="who" data-kf-sync="dot" hidden></div><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></div></header>
+<section class="hero"><div class="wrap hero-inner"><div><div class="eyebrow" id="hero-eyebrow">⚡ Виходь на поле</div><h1>Грай. Забивай.<br><em>Збирай команду.</em></h1><p>Короткі ігри, голи й наліпки футболістів. Обирай гру та починай матч!</p></div><div class="hero-art" aria-hidden="true"><span class="art-tag one">+1 🪙 за гол</span><span class="hero-ball">⚽</span><span class="art-tag two">🏆 Твоя команда</span></div></div></section>
 <main class="wrap main"><div class="tabs" role="tablist" aria-label="Розділи"><button type="button" class="tab" role="tab" id="tab-games" aria-controls="panel-games" aria-selected="true" data-tab="games">⚽ Ігри</button><button type="button" class="tab" role="tab" id="tab-album" aria-controls="panel-album" aria-selected="false" data-tab="album" tabindex="-1">📒 Альбом</button><button type="button" class="tab" role="tab" id="tab-awards" aria-controls="panel-awards" aria-selected="false" data-tab="awards" tabindex="-1">🏅 Досягнення</button></div>
 <section class="tab-panel" id="panel-games" role="tabpanel" aria-labelledby="tab-games"><div class="section-head"><div><h2>Обери матч</h2><p>Одна гра — кілька хвилин.</p></div></div><div id="games-list"></div></section>
 <section class="tab-panel" id="panel-album" role="tabpanel" aria-labelledby="tab-album" hidden><div class="album-intro"><div class="section-head" style="margin:0"><div><h2>Альбом наліпок</h2><p>Збирай футболістів у свою команду.</p></div></div><strong id="album-progress" class="coin-pill">0 / 24</strong></div><div class="pack-bar"><div><strong>🎁 Пакунок із 3 наліпками</strong><p>Ціна: <span id="pack-price"></span> 🪙. Монети отримуєш за правильні відповіді.</p></div><button type="button" id="open-pack" class="btn">Відкрити пакунок</button><span id="pack-hint" class="pack-hint" hidden>Поки не вистачає монет. Зіграй матч і забий кілька голів!</span></div><div class="sticker-grid" id="sticker-grid"></div></section>
 <section class="tab-panel" id="panel-awards" role="tabpanel" aria-labelledby="tab-awards" hidden><div class="section-head"><div><h2>Досягнення</h2><p>Кожен матч наближає до нової нагороди.</p></div><strong class="coin-pill" id="award-progress">0 / 14</strong></div><div class="achievement-grid" id="achievement-grid"></div></section>
-<section class="parents"><details><summary>⚙️ Для батьків</summary><div class="parent-body"><h3>Тест-режим</h3><p id="test-mode-text">Можна грати без зарахування прогресу. Дитячий прогрес не зміниться.</p><div class="parent-actions"><a class="btn btn-light" id="test-mode-link" href="./?parent">🧪 Увімкнути тест-режим</a></div><p>Прогрес зберігається лише в цьому браузері. Щоб перенести його на інший пристрій, скопіюйте код.</p><div class="stats" id="stats"></div><h3>Зберегти прогрес</h3><textarea id="export-code" readonly aria-label="Код для збереження прогресу"></textarea><div class="parent-actions"><button type="button" class="btn btn-dark" id="copy-code">Скопіювати код</button></div><h3>Відновити прогрес</h3><p>Вставте код з іншого пристрою. Це замінить поточний прогрес.</p><textarea id="import-code" aria-label="Код для відновлення прогресу" placeholder="Вставте код сюди"></textarea><div class="parent-actions"><button type="button" class="btn btn-dark" id="import-btn">Відновити</button></div><p id="import-status" role="status"></p><button type="button" class="danger" id="reset-btn">Скинути весь прогрес</button></div></details></section></main>
+<section class="parents"><details><summary>⚙️ Для батьків</summary><div class="parent-body"><h3>Тест-режим</h3><p id="test-mode-text">Можна грати без зарахування прогресу. Дитячий прогрес не зміниться.</p><div class="parent-actions"><a class="btn btn-light" id="test-mode-link" href="./?parent">🧪 Увімкнути тест-режим</a></div><p id="sync-text">Прогрес зберігається лише в цьому браузері. Щоб перенести його на інший пристрій, скопіюйте код.</p><div class="stats" id="stats"></div><details class="code-box" id="code-box" open><summary>🔑 Код прогресу</summary><h3>Зберегти прогрес</h3><textarea id="export-code" readonly aria-label="Код для збереження прогресу"></textarea><div class="parent-actions"><button type="button" class="btn btn-dark" id="copy-code">Скопіювати код</button></div><h3>Відновити прогрес</h3><p>Вставте код з іншого пристрою. Це замінить поточний прогрес.</p><textarea id="import-code" aria-label="Код для відновлення прогресу" placeholder="Вставте код сюди"></textarea><div class="parent-actions"><button type="button" class="btn btn-dark" id="import-btn">Відновити</button></div><p id="import-status" role="status"></p></details><button type="button" class="danger" id="reset-btn">Скинути весь прогрес</button></div></details></section></main>
 <dialog id="pack-dialog" aria-labelledby="reveal-title"><div class="reveal"><h2 id="reveal-title">🎉 Нові наліпки!</h2><p>Подивись, хто приєднався до команди.</p><div id="reveal-cards" class="reveal-cards"></div><button type="button" class="btn btn-dark" id="close-pack">До альбому</button></div></dialog>
+<dialog id="login-dialog" class="login kf-auth" aria-labelledby="pick-title">
+<div class="login-step" id="step-pick"><div class="login-top"><span class="eyebrow">⚽ Роздягальня</span><button type="button" class="login-x" id="login-close" aria-label="Закрити">✕</button></div><h2 id="pick-title">Хто грає?</h2><p>Натисни на своє імʼя.</p><div class="players" id="players"></div><p class="login-msg" id="pick-msg" role="status"></p><div class="login-retry" id="pick-retry" hidden><button type="button" class="btn" id="retry-users">Спробувати ще</button></div><button type="button" class="login-guest" id="play-guest">Грати як гість</button></div>
+<div class="login-step" id="step-pin" hidden><div class="login-top"><button type="button" class="login-back" id="pin-back">← Назад</button><button type="button" class="login-x" id="pin-close" aria-label="Закрити">✕</button></div><div class="pin-who"><span id="pin-face"></span><h2 id="pin-title">Привіт!</h2><p>Введи свій PIN: 4 цифри.</p></div><div class="pin-dots" id="pin-dots" role="img" tabindex="-1" aria-label="PIN: введено 0 з 4"><i></i><i></i><i></i><i></i></div><p class="login-msg" id="pin-msg" role="status"></p><span class="pin-clock" id="pin-clock" aria-hidden="true" hidden></span><div class="keypad" id="keypad"><button type="button" data-digit="1">1</button><button type="button" data-digit="2">2</button><button type="button" data-digit="3">3</button><button type="button" data-digit="4">4</button><button type="button" data-digit="5">5</button><button type="button" data-digit="6">6</button><button type="button" data-digit="7">7</button><button type="button" data-digit="8">8</button><button type="button" data-digit="9">9</button><span></span><button type="button" data-digit="0">0</button><button type="button" class="key-erase" id="key-erase" aria-label="Стерти">⌫</button></div></div>
+</dialog>
+<dialog id="ask-dialog" class="ask" aria-labelledby="ask-title"><form method="dialog"><div class="ask-icon" id="ask-icon" aria-hidden="true"></div><h2 id="ask-title"></h2><p id="ask-text"></p><div class="ask-actions"><button class="btn btn-light" value="secondary" id="ask-no"></button><button class="btn" value="primary" id="ask-yes"></button></div></form></dialog>
 <script src="shared/kf.js"></script><script src="shared/kf-ui.js"></script><script>
 'use strict';
 (() => {
@@ -34,7 +39,8 @@ dialog{border:0;padding:0;border-radius:27px;background:var(--paper);color:var(-
     tab.addEventListener('keydown', e => { const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!step) return; e.preventDefault(); const next = tabs[(index + step + tabs.length) % tabs.length]; showTab(next.dataset.tab); next.focus(); });
   });
   const safeCount = n => Number.isFinite(Number(n)) ? Math.max(0, Number(n)) : 0;
-  const matchesWord = n => n % 10 === 1 && n % 100 !== 11 ? 'матч' : [2,3,4].includes(n % 10) && !(n % 100 >= 12 && n % 100 <= 14) ? 'матчі' : 'матчів';
+  const plural = (n, one, few, many) => n % 10 === 1 && n % 100 !== 11 ? one : [2,3,4].includes(n % 10) && !(n % 100 >= 12 && n % 100 <= 14) ? few : many;
+  const matchesWord = n => plural(n, 'матч', 'матчі', 'матчів');
   function renderGames() {
     const state = KF.get();
     setMarkup($('games-list'), Object.entries(KF.CATEGORIES).map(([key, category]) => {
@@ -72,7 +78,7 @@ dialog{border:0;padding:0;border-radius:27px;background:var(--paper);color:var(-
   }
   if (KF.TEST_MODE) {
     $('test-mode-text').className = 'test-note';
-    $('test-mode-text').textContent = 'Зараз увімкнено: статистика, код і скидання нижче стосуються тільки тестового прогресу.';
+    $('test-mode-text').textContent = 'Зараз увімкнено: статистика, код і скидання нижче стосуються тільки тестового прогресу. Вхід у профіль і синхронізація в тест-режимі вимкнені.';
     $('test-mode-link').href = './?parent=off';
     $('test-mode-link').textContent = 'Вимкнути тест-режим';
   }
@@ -104,5 +110,343 @@ dialog{border:0;padding:0;border-radius:27px;background:var(--paper);color:var(-
   });
   KF.on('change', render);
   render();
+})();
+
+// Who is playing: header chip, login (player cards + PIN), guest progress merge, logout.
+// Talks only to KF.auth (contract at the end of BACKEND.md). Test mode never logs in.
+(() => {
+  const auth = KF.TEST_MODE ? null : KF.auth;
+  if (!auth) return;
+  const $ = id => document.getElementById(id);
+  const h = (tag, props = {}, ...kids) => { const el = Object.assign(document.createElement(tag), props); el.append(...kids); return el; };
+  const plural = (n, one, few, many) => n % 10 === 1 && n % 100 !== 11 ? one : [2,3,4].includes(n % 10) && !(n % 100 >= 12 && n % 100 <= 14) ? few : many;
+  const count = n => Number.isFinite(Number(n)) ? Math.max(0, Number(n)) : 0;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  // Names and avatars come from the server: always set them as text, never as markup.
+  const KITS = ['#e2463f', '#2f7de1', '#f2b632', '#8a5ad8', '#18a06a', '#f07a2a', '#e85b9a', '#1c9fb0'];
+  const kitColor = u => KITS[(Math.abs(parseInt(u.id, 10)) || [...String(u.name)].reduce((a, c) => a + c.codePointAt(0), 0)) % KITS.length];
+  const face = u => { const a = String(u.avatar || '').trim(); return a && [...a].length <= 8 ? a : (String(u.name || '?').trim()[0] || '?').toUpperCase(); };
+  function avatar(u, size = '') {
+    const el = h('span', { className: `kf-avatar ${size}`, textContent: face(u) });
+    el.style.setProperty('--kit', kitColor(u));
+    el.setAttribute('aria-hidden', 'true');
+    return el;
+  }
+
+  // ---- Header chip + menu ----
+  const who = $('who');
+  let shownId;
+  function renderWho() {
+    const user = auth.user;
+    who.hidden = false;
+    $('hero-eyebrow').textContent = user ? `⚡ ${user.name}, виходь на поле` : '⚡ Виходь на поле';
+    $('sync-text').textContent = user
+      ? `Профіль «${user.name}»: прогрес зберігається на сервері й сам переходить на інші пристрої. Код нижче — запасний варіант.`
+      : 'Прогрес гостя зберігається лише в цьому браузері. Щоб він був на всіх пристроях, увійдіть у профіль («Увійти» вгорі) або перенесіть кодом.';
+    const id = user ? user.id : null;
+    if (id !== shownId || !who.childElementCount) {
+      shownId = id;
+      $('code-box').open = !user; // logged in: progress syncs itself, the code is only a backup
+      const btn = user
+        ? h('button', { type: 'button', className: 'who-btn', id: 'who-btn' },
+            (() => { const a = avatar(user); a.append(h('i', { className: 'kf-sync-dot' })); a.lastChild.dataset.kfSync = 'dot'; return a; })(),
+            h('span', { className: 'who-text' }, h('b', { textContent: user.name }), (() => { const s = h('small'); s.dataset.kfSync = ''; return s; })()))
+        : h('button', { type: 'button', className: 'who-btn who-login', id: 'who-btn' }, h('span', { className: 'who-icon', textContent: '👤' }), 'Увійти');
+      btn.addEventListener('click', onWhoClick);
+      who.replaceChildren(btn);
+      if (user) {
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-controls', 'who-menu');
+        const status = h('p');
+        status.dataset.kfSync = 'long';
+        const logout = h('button', { type: 'button', className: 'btn btn-light who-logout', id: 'logout-btn', textContent: '👋 Вийти' });
+        logout.addEventListener('click', doLogout);
+        who.append(h('div', { className: 'who-menu', id: 'who-menu', hidden: true },
+          h('div', { className: 'who-menu-head' }, avatar(user, 'lg'), h('div', {}, h('strong', { textContent: user.name }), h('span', { textContent: 'Зараз грає' }))),
+          status, logout));
+      }
+    }
+    KFUI.updateSync();
+  }
+  function onWhoClick(e) {
+    if (!auth.user) openLogin();
+    else if (auth.status === 'expired') openLogin(auth.user);
+    else toggleMenu(!menuOpen(), true, e.detail === 0); // detail 0 = opened from the keyboard
+  }
+  const menuOpen = () => $('who-menu') && !$('who-menu').hidden;
+  function toggleMenu(open, refocus = true, fromKeyboard = false) {
+    const menu = $('who-menu');
+    if (!menu || menu.hidden === !open) return;
+    menu.hidden = !open;
+    $('who-btn').setAttribute('aria-expanded', open);
+    if (open && fromKeyboard) $('logout-btn').focus();
+    else if (refocus) $('who-btn').focus();
+  }
+  document.addEventListener('pointerdown', e => { if (menuOpen() && !who.contains(e.target)) toggleMenu(false, false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && menuOpen()) toggleMenu(false); });
+  who.addEventListener('focusout', e => { if (menuOpen() && e.relatedTarget && !who.contains(e.relatedTarget)) toggleMenu(false, false); });
+
+  async function doLogout() {
+    const btn = $('logout-btn');
+    btn.disabled = true;
+    btn.textContent = 'Зберігаю…';
+    let r;
+    try { r = await auth.logout(); } catch { r = { ok: false }; }
+    if (r && r.ok === false) {
+      btn.disabled = false;
+      btn.textContent = '👋 Вийти';
+      toggleMenu(false, false);
+      const choice = await ask({ icon: '☁️', title: 'Ще не все збережено', text: 'Частина прогресу ще не долетіла до сервера. Якщо вийти зараз, її можна загубити. Краще зачекати, поки зʼявиться інтернет.', primary: 'Залишитись', secondary: 'Вийти все одно' });
+      if (choice !== 'secondary') { $('who-btn').focus(); return; }
+      try { await auth.logout({ force: true }); } catch { /* checked below */ }
+      if (auth.user) { KFUI.toast('Поки не вийшло вийти. Спробуй, коли зʼявиться інтернет.'); $('who-btn').focus(); return; }
+    }
+    renderWho();
+    if (!auth.user) KFUI.toast('Тепер граємо як гість 👋');
+    $('who-btn').focus();
+  }
+
+  // ---- Small question dialog (guest merge, logout warning). Resolves 'primary' | 'secondary' | null (Esc). ----
+  function ask({ icon, title, text, primary, secondary }) {
+    const d = $('ask-dialog');
+    $('ask-icon').textContent = icon;
+    $('ask-title').textContent = title;
+    $('ask-text').textContent = text;
+    $('ask-yes').textContent = primary;
+    $('ask-no').textContent = secondary;
+    d.returnValue = '';
+    d.showModal();
+    $('ask-yes').focus();
+    return new Promise(resolve => d.addEventListener('close', () => resolve(d.returnValue || null), { once: true }));
+  }
+
+  // ---- Login dialog ----
+  const dlg = $('login-dialog');
+  const dots = $('pin-dots');
+  const keys = [...$('keypad').querySelectorAll('button')];
+  const lockedUntil = {};
+  let users = [], current = null, pin = '', busy = false, direct = false, lockTimer = 0, loadToken = 0;
+  const onPin = () => !$('step-pin').hidden;
+
+  function openLogin(user) {
+    toggleMenu(false, false);
+    direct = !!user;
+    if (!dlg.open) dlg.showModal();
+    if (user) showPin(user); else showPick();
+  }
+  function closeLogin() {
+    stopLock();
+    current = null;
+    dlg.close();
+    $('who-btn')?.focus();
+  }
+  function goBack() {
+    if (onPin() && !direct) showPick(); else closeLogin();
+  }
+
+  async function showPick(message = '') {
+    stopLock();
+    current = null;
+    direct = false;
+    $('step-pin').hidden = true;
+    $('step-pick').hidden = false;
+    dlg.setAttribute('aria-labelledby', 'pick-title');
+    $('pick-retry').hidden = true;
+    $('pick-msg').textContent = message;
+    $('players').replaceChildren(...[0, 1].map(() => { const s = h('div', { className: 'player skeleton' }, h('i'), h('u')); s.setAttribute('aria-hidden', 'true'); return s; }));
+    $('play-guest').focus();
+    const token = ++loadToken;
+    let list;
+    try { list = await auth.users(); } catch { list = null; }
+    if (token !== loadToken || !dlg.open || onPin()) return;
+    list = Array.isArray(list) ? list : list?.users;
+    if (!Array.isArray(list)) {
+      $('players').replaceChildren();
+      $('pick-msg').dataset.kind = 'net';
+      $('pick-msg').textContent = navigator.onLine === false
+        ? '📶 Немає інтернету, тому список гравців не завантажився. Можна грати як гість!'
+        : '📶 Не вдалося завантажити гравців. Спробуй ще раз або грай як гість.';
+      $('pick-retry').hidden = false;
+      return;
+    }
+    users = list;
+    if (!users.length) {
+      $('players').replaceChildren();
+      $('pick-msg').dataset.kind = 'net';
+      $('pick-msg').textContent = 'Тут ще немає гравців. Попроси батьків додати тебе.';
+      return;
+    }
+    $('players').replaceChildren(...users.map((u, i) => {
+      const kit = h('span', { className: 'kit', textContent: face(u) });
+      const card = h('button', { type: 'button', className: 'player' }, ...(i < 9 ? [h('kbd', { textContent: i + 1 })] : []), kit, h('b', { textContent: u.name }));
+      card.style.setProperty('--kit', kitColor(u));
+      kit.setAttribute('aria-hidden', 'true');
+      card.addEventListener('click', () => showPin(u));
+      return card;
+    }));
+    $('players').firstElementChild.focus();
+  }
+
+  function showPin(u) {
+    current = u;
+    pin = '';
+    busy = false;
+    $('step-pick').hidden = true;
+    $('step-pin').hidden = false;
+    dlg.setAttribute('aria-labelledby', 'pin-title');
+    $('pin-face').replaceChildren(avatar(u, 'xl'));
+    $('pin-title').textContent = `Привіт, ${u.name}!`;
+    $('pin-back').textContent = direct ? '← Інший гравець' : '← Назад';
+    dots.className = 'pin-dots';
+    setMsg(direct ? 'Введи PIN ще раз, щоб прогрес зберігався.' : '');
+    drawDots();
+    if (lockLeft() > 0) startLock(); else { stopLock(); setKeys(true); }
+    dots.focus();
+  }
+  function setMsg(text, kind = '') {
+    $('pin-msg').textContent = text;
+    $('pin-msg').dataset.kind = kind;
+  }
+  function drawDots() {
+    [...dots.children].forEach((d, i) => d.classList.toggle('on', i < pin.length));
+    dots.setAttribute('aria-label', `PIN: введено ${pin.length} з 4`);
+  }
+  function setKeys(on) { keys.forEach(k => { k.disabled = !on; }); }
+
+  function press(d) {
+    if (busy || lockLeft() || pin.length >= 4) return;
+    if (dots.classList.contains('is-bad') || $('pin-msg').dataset.kind === 'net') { dots.classList.remove('is-bad'); setMsg(''); }
+    pin += d;
+    drawDots();
+    if (pin.length === 4) setTimeout(submit, 160); // let the 4th dot show first
+  }
+  function erase() {
+    if (busy || lockLeft()) return;
+    pin = pin.slice(0, -1);
+    drawDots();
+  }
+
+  async function submit() {
+    if (busy || pin.length < 4 || lockLeft() || !current) return;
+    const user = current;
+    busy = true;
+    setKeys(false);
+    dots.classList.add('is-busy');
+    setMsg('Перевіряю…');
+    let r;
+    try { r = await auth.login(user.id, pin); } catch { r = { ok: false, error: 'network' }; }
+    if (current !== user) return; // dialog closed or another player chosen meanwhile
+    busy = false;
+    dots.classList.remove('is-busy');
+    pin = '';
+    if (r && !r.error && r.ok !== false) return loggedIn(r.user || auth.user || user, r.hasGuestProgress);
+    setKeys(true);
+    drawDots();
+    const err = r?.error;
+    if (err === 'bad_pin') {
+      dots.classList.remove('is-bad');
+      void dots.offsetWidth; // restart the shake
+      dots.classList.add('is-bad');
+      const left = Number(r.attemptsLeft);
+      setMsg(`Не той PIN, спробуй ще 🙂${left > 0 && left <= 2 ? ` Залишилось спроб: ${left}.` : ''}`, 'bad');
+    } else if (err === 'locked') {
+      lockedUntil[user.id] = Date.now() + (count(r.retryAfter) || 300) * 1000;
+      startLock();
+    } else if (err === 'no_user') {
+      showPick('Цього гравця вже немає. Обери ще раз.');
+    } else {
+      setMsg(navigator.onLine === false
+        ? '📶 Немає інтернету. Перевір Wi‑Fi і спробуй ще раз.'
+        : '📶 Не вдалося зʼєднатися. Спробуй ще раз трохи згодом.', 'net');
+    }
+  }
+
+  const lockLeft = () => current ? Math.max(0, Math.ceil(((lockedUntil[current.id] || 0) - Date.now()) / 1000)) : 0;
+  function startLock() {
+    stopLock();
+    setKeys(false);
+    pin = '';
+    drawDots();
+    const clock = $('pin-clock');
+    clock.hidden = false;
+    const tick = () => {
+      const s = lockLeft();
+      if (!s) { stopLock(); setKeys(true); setMsg('Можна пробувати знову 🙂'); return; }
+      clock.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+      const text = `Багато спроб підряд. Зачекай ${Math.ceil(s / 60)} хв і спробуй ще ⏳`;
+      if ($('pin-msg').textContent !== text) setMsg(text, 'wait'); // once a minute, so screen readers are not flooded
+    };
+    tick();
+    lockTimer = setInterval(tick, 1000);
+  }
+  function stopLock() {
+    clearInterval(lockTimer);
+    $('pin-clock').hidden = true;
+  }
+
+  async function loggedIn(user, guestHint) {
+    dots.classList.add('is-ok');
+    [...dots.children].forEach(d => d.classList.add('on'));
+    setMsg('Готово! ⚽', 'ok');
+    await wait(500);
+    current = null;
+    dlg.close();
+    renderWho();
+    $('who-btn').focus();
+    KFUI.toast(`Привіт, ${user.name}! ⚽`);
+    await offerGuestMerge(user, guestHint);
+  }
+
+  async function offerGuestMerge(user, guestHint) {
+    let has = guestHint;
+    if (has === undefined) try { has = await auth.hasGuestProgress(); } catch { return; }
+    if (!has) return;
+    let g = typeof has === 'object' ? has : null;
+    if (!g) try { g = JSON.parse(localStorage.getItem('kf-progress-v1')); } catch { g = null; }
+    const coins = count(g?.coins);
+    const stickers = typeof g?.stickers === 'number' ? count(g.stickers) : Object.keys(g?.stickers || {}).length;
+    const parts = [coins && `${coins} ${plural(coins, 'монета', 'монети', 'монет')}`, stickers && `${stickers} ${plural(stickers, 'наліпка', 'наліпки', 'наліпок')}`].filter(Boolean);
+    const choice = await ask({
+      icon: '🎒', title: 'Знайшли прогрес гостя',
+      text: `На цьому пристрої є прогрес гостя${parts.length ? ` (${parts.join(', ')})` : ''}. Додати його в профіль ${user.name}?`,
+      primary: 'Так, додати', secondary: 'Ні',
+    });
+    $('who-btn').focus();
+    if (choice !== 'primary') return;
+    try {
+      if (await auth.adoptGuest() === false) throw new Error('not adopted');
+      KFUI.toast(`Готово! Прогрес гостя тепер у профілі ${user.name} 🎉`);
+      KFUI.confetti();
+    } catch {
+      KFUI.toast('Не вийшло додати. Спробуй ще раз пізніше.');
+    }
+  }
+
+  keys.forEach(k => k.addEventListener('click', () => (k.dataset.digit ? press(k.dataset.digit) : erase())));
+  $('pin-back').addEventListener('click', () => showPick());
+  $('pin-close').addEventListener('click', closeLogin);
+  $('login-close').addEventListener('click', closeLogin);
+  $('play-guest').addEventListener('click', closeLogin);
+  $('retry-users').addEventListener('click', () => showPick());
+  dlg.addEventListener('cancel', e => { e.preventDefault(); goBack(); });
+  dlg.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); goBack(); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (onPin()) {
+      if (/^[0-9]$/.test(e.key)) { e.preventDefault(); press(e.key); }
+      else if (e.key === 'Backspace') { e.preventDefault(); erase(); }
+      else if (e.key === 'Enter' && !e.target.matches('.login-top button')) { e.preventDefault(); submit(); }
+      return;
+    }
+    const cards = [...$('players').querySelectorAll('.player:not(.skeleton)')];
+    if (/^[1-9]$/.test(e.key) && cards[e.key - 1]) { e.preventDefault(); cards[e.key - 1].click(); return; }
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    const at = cards.indexOf(document.activeElement);
+    if (step && cards.length) { e.preventDefault(); cards[at < 0 ? 0 : (at + step + cards.length) % cards.length].focus(); }
+  });
+
+  KF.on('auth', renderWho);
+  renderWho();
 })();
 </script></body></html>
