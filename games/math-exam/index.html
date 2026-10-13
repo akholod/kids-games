@@ -64,6 +64,17 @@
 .fb-box{display:inline-block;max-width:640px;padding:16px 20px;border-radius:18px;text-align:left;font-weight:700;line-height:1.45}
 .fb-box.ok{background:#e3f4cb}
 .fb-box.miss{background:#fff1d1}
+.cards{display:flex;gap:6px;align-items:center}
+.cards i{display:block;width:16px;height:22px;border-radius:3px;border:2px solid #ffffff55}
+.cards i.yellow{background:#ffd23f;border-color:#ffd23f}
+.cards i.red{background:#e2453c;border-color:#e2453c}
+.ref{display:flex;gap:16px;align-items:center;margin:4px 0 10px}
+.ref-card{flex:none;width:56px;height:78px;border-radius:8px;box-shadow:0 8px 18px #0003;transform:rotate(-8deg);animation:ref-in .45s cubic-bezier(.2,1.4,.4,1) both}
+.ref-card.yellow{background:#ffd23f}
+.ref-card.red{background:#e2453c}
+.ref p{margin:0}
+.ref .fb-title{font-size:1.35rem}
+@keyframes ref-in{from{transform:translateY(-30px) rotate(-30deg) scale(.6);opacity:0}}
 .fb-box p{margin:0 0 6px}
 .fb-box .fb-title{font-size:1.25rem;font-weight:950}
 .fb-box .fb-ua{color:var(--muted)}
@@ -219,7 +230,7 @@ dialog::backdrop{background:#0a2a1d99}
       </div>
       <div class="stations" id="stations"></div>
       <div class="exam-card">
-        <div><strong>⚽ Partido-examen</strong><p>12 завдань з усіх тем — як справжня контрольна.</p></div>
+        <div><strong>⚽ Partido-examen</strong><p>12 завдань з усіх тем, як справжня контрольна. Перша помилка — 🟨 жовта картка, друга — 🟥 червона, і матч починається знову.</p></div>
         <button class="btn" type="button" id="exam-btn">Почати іспит</button>
       </div>
       <div class="hub-tools"><button class="btn btn-light" type="button" id="gloss-btn">📖 Слова для іспиту</button></div>
@@ -227,7 +238,7 @@ dialog::backdrop{background:#0a2a1d99}
     </section>
 
     <section id="play" hidden>
-      <div class="match-head"><strong id="play-label"></strong><div class="dots" id="dots"></div></div>
+      <div class="match-head"><strong id="play-label"></strong><div class="cards" id="cards" aria-label="Картки"></div><div class="dots" id="dots"></div></div>
       <div class="prompt">
         <div><p class="prompt-text" id="prompt-es"></p><p class="prompt-ua" id="prompt-ua" hidden></p></div>
         <button class="ua-btn" type="button" id="ua-btn" aria-pressed="false" aria-label="Пояснення українською" title="Пояснення українською (клавіша U)">🇺🇦</button>
@@ -422,9 +433,16 @@ dialog::backdrop{background:#0a2a1d99}
   };
 
   const begin = (opts) => {
-    session = { ...opts, index: 0, score: 0, results: [], startCoins: KF.get().coins, byTopic: {} };
+    session = { ...opts, index: 0, score: 0, results: [], startCoins: KF.get().coins, byTopic: {}, cards: 0 };
+    drawCards();
     show('play');
     nextTask();
+  };
+
+  // Exam only: 1st mistake = yellow card, 2nd = red card (restart).
+  const drawCards = () => {
+    const n = session.mode === 'exam' ? session.cards : 0;
+    $('cards').replaceChildren(...Array.from({ length: n }, (_, i) => h('i', { class: i ? 'red' : 'yellow' })));
   };
 
   const drawDots = () => {
@@ -471,18 +489,30 @@ dialog::backdrop{background:#0a2a1d99}
     KF.answer(SLUG, correct);
     recordTopic(task.topic, correct);
     drawDots();
+    if (session.mode === 'exam' && !correct) {
+      session.cards++;
+      drawCards();
+    }
+    const red = session.mode === 'exam' && session.cards >= 2;
+    const card = session.mode === 'exam' && !correct && h('div', { class: 'ref' },
+      h('span', { class: `ref-card ${red ? 'red' : 'yellow'}`, 'aria-hidden': 'true' }),
+      h('div', {},
+        h('p', { class: 'fb-title', text: red ? 'Червона картка!' : 'Жовта картка!' }),
+        h('p', { text: red ? 'Друга помилка — матч починається знову. Ти зможеш!' : 'Ще одна помилка — і буде червона картка.' })));
 
     const box = correct
       ? h('div', { class: 'fb-box ok' }, h('p', { class: 'fb-title', text: `${pick(PRAISE)} ✅` }))
       : h('div', { class: 'fb-box miss' },
-        h('p', { class: 'fb-title', text: 'Casi… 🧤' }),
+        card || h('p', { class: 'fb-title', text: 'Casi… 🧤' }),
         error?.es && h('p', { text: error.es }),
         error?.ua && h('p', { class: 'fb-ua', text: `🇺🇦 ${error.ua}` }),
         h('p', { text: `Respuesta correcta: ${answerText(task)}` }));
     const last = session.index === session.tasks.length - 1;
-    const next = h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? 'Результат →' : 'Далі →');
+    const next = red
+      ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startExam() }, 'Почати знову ↺')
+      : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? 'Результат →' : 'Далі →');
     $('feedback').replaceChildren(box, h('br'), next);
-    ctrl = { onKey: (e) => (e.key === 'Enter' || e.key === ' ') && (goNext(), true) };
+    ctrl = { onKey: (e) => (e.key === 'Enter' || e.key === ' ') && (next.click(), true) };
     next.focus({ preventScroll: true });
     if (!reduced()) $('feedback').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   };
@@ -511,7 +541,7 @@ dialog::backdrop{background:#0a2a1d99}
         ? (level < levelsOf(topic).length ? `Рівень пройдено! Відкрито рівень ${level + 1}.` : 'Усі рівні цієї станції пройдено!')
         : `Для наступного рівня треба ${PASS} з ${max}. Спробуй ще раз — вийде!`;
     } else {
-      text = score >= 10 ? 'Ти готовий до іспиту! 💪' : 'Добре тренування! Слабкі теми частіше з’являтимуться в тренуваннях.';
+      text = session.cards === 0 ? 'Чиста гра, жодної картки! Ти готовий до іспиту! 💪' : 'Іспит пройдено з однією жовтою карткою. Майже ідеально!';
     }
     $('finish-title').textContent = mode === 'exam' ? 'Fin del partido' : '¡Entrenamiento terminado!';
     $('finish-score').textContent = `${score} / ${max}`;
