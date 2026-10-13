@@ -12,8 +12,7 @@
   ];
   const PLACE_BY_KEY = Object.fromEntries(PLACES.map((p) => [p.key, p]));
   const UA_GEN = { UM: 'тисяч', C: 'сотень', D: 'десятків', U: 'одиниць' };
-  const ROUND_ES = { D: 'a la decena', C: 'a la centena', UM: 'al millar' };
-  const ROUND_ES_NEXT = { D: 'más próxima', C: 'más próxima', UM: 'más próximo' };
+  const ROUND_ES = { D: 'a las decenas', C: 'a las centenas', UM: 'a las unidades de millar' };
   const ROUND_UA = { D: 'десятків', C: 'сотень', UM: 'тисяч' };
   const LOWER_ES = { D: 'unidades', C: 'decenas', UM: 'centenas' };
   const ORDER = ['U', 'D', 'C', 'UM']; // right to left
@@ -22,55 +21,134 @@
     { key: 'valor', es: 'Taquilla', ua: 'Каса' },
     { key: 'columna', es: 'Pase a la columna', ua: 'Пас у стовпчик' },
     { key: 'redondeo', es: '¿A qué portería?', ua: 'У які ворота?' },
-    { key: 'estimacion', es: 'Mercado de fichajes', ua: 'Ринок трансферів' },
+    { key: 'problemas', es: 'Problemas del club', ua: 'Задачі клубу' },
   ];
 
   const LEVELS = {
     valor: [
       { level: 1, es: 'Lugar de la cifra', ua: 'Місце цифри' },
       { level: 2, es: 'Valor de la cifra', ua: 'Значення цифри' },
-      { level: 3, es: 'Forma el número', ua: 'Склади число' },
-      { level: 4, es: 'Descomposición', ua: 'Розклад числа' },
-      { level: 5, es: 'Lee los paquetes', ua: 'Прочитай пачки' },
+      { level: 3, es: 'Mayor y menor valor', ua: 'Більше і менше значення' },
+      { level: 4, es: 'Forma el número', ua: 'Склади число' },
+      { level: 5, es: 'Descomposición', ua: 'Розклад числа' },
+      { level: 6, es: 'Muro de descomposición', ua: 'Стіна розкладу' },
+      { level: 7, es: 'Lee los paquetes', ua: 'Прочитай пачки' },
+      { level: 8, es: 'Se lee', ua: 'Як читається' },
+      { level: 9, es: 'Añade, quita y series', ua: 'Додай, відніми, послідовності' },
     ],
     columna: [
-      { level: 1, es: 'Suma sin llevar', ua: 'Додавання без переносу' },
-      { level: 2, es: 'Suma llevando una', ua: 'Додавання з одним переносом' },
-      { level: 3, es: 'Suma llevando varias', ua: 'Додавання з кількома переносами' },
-      { level: 4, es: 'Resta sin pedir prestado', ua: 'Віднімання без позичання' },
-      { level: 5, es: 'Resta pidiendo una vez', ua: 'Віднімання з одним позичанням' },
-      { level: 6, es: 'Resta pidiendo varias veces', ua: 'Віднімання з кількома позичаннями' },
-      { level: 7, es: 'Resta con ceros', ua: 'Віднімання з нулями' },
+      { level: 1, es: 'Llevando una vez', ua: 'Один перенос / одне позичання' },
+      { level: 2, es: 'Llevando varias veces', ua: 'Кілька переносів / позичань' },
+      { level: 3, es: 'Con ceros', ua: 'З нулями' },
+      { level: 4, es: 'Busca el error', ua: 'Знайди помилку' },
+      { level: 5, es: 'Prueba de la resta', ua: 'Перевірка віднімання' },
+      { level: 6, es: 'Número que falta', ua: 'Яке число пропущено' },
     ],
     redondeo: [
-      { level: 1, es: 'A la decena', ua: 'До десятків' },
-      { level: 2, es: 'A la centena', ua: 'До сотень' },
-      { level: 3, es: 'Al millar', ua: 'До тисяч' },
-      { level: 4, es: 'Mezcla y mitades', ua: 'Мікс і «рівно половина»' },
-      { level: 5, es: 'Sin recta', ua: 'Без числової прямої' },
+      { level: 1, es: 'Con la recta', ua: 'З числовою прямою' },
+      { level: 2, es: 'Sin recta', ua: 'Без прямої' },
     ],
-    estimacion: [
-      { level: 1, es: 'Estima la compra', ua: 'Оціни покупку' },
-      { level: 2, es: 'Compra grande', ua: 'Велика покупка' },
-      { level: 3, es: 'Problemas', ua: 'Задачі' },
+    problemas: [
+      { level: 1, es: 'Juntar y quitar', ua: 'Додати чи відняти' },
+      { level: 2, es: 'Comparar y completar', ua: 'Порівняти і доповнити' },
     ],
   };
 
-  const ITEMS = [
-    'Balón de fútbol', 'Botas', 'Camiseta del equipo', 'Guantes de portero',
-    'Red de portería', 'Equipación completa', 'Entradas del partido', 'Silbato y tarjetas',
+  // Word problems: one operation each; templates return the Spanish text for (a, b).
+  const PROBLEM_TEMPLATES = {
+    1: {
+      '+': [
+        (a, b) => `En el estadio hay ${fmt(a)} aficionados. Llegan ${fmt(b)} más. ¿Cuántos aficionados hay ahora?`,
+        (a, b) => `El club vendió ${fmt(a)} entradas el sábado y ${fmt(b)} el domingo. ¿Cuántas entradas vendió en total?`,
+        (a, b) => `En la tienda del club hay ${fmt(a)} camisetas. Llegan ${fmt(b)} camisetas más. ¿Cuántas camisetas hay ahora?`,
+        (a, b) => `Leo tiene ${fmt(a)} puntos en un videojuego de fútbol y gana ${fmt(b)} más. ¿Cuántos puntos tiene ahora?`,
+        (a, b) => `El club ha recaudado ${fmt(a)} euros con las entradas y ${fmt(b)} euros con las camisetas. ¿Cuántos euros ha recaudado en total?`,
+        (a, b) => `En el almacén hay ${fmt(a)} balones azules y ${fmt(b)} balones blancos. ¿Cuántos balones hay en total?`,
+        (a, b) => `El lunes visitaron el museo del club ${fmt(a)} personas y el martes ${fmt(b)} personas. ¿Cuántas personas lo visitaron en los dos días?`,
+        (a, b) => `El campo tiene ${fmt(a)} asientos en la grada norte y ${fmt(b)} en la grada sur. ¿Cuántos asientos hay en total?`,
+      ],
+      '-': [
+        (a, b) => `La tienda del club tenía ${fmt(a)} balones. Vende ${fmt(b)}. ¿Cuántos balones le quedan?`,
+        (a, b) => `El estadio tiene ${fmt(a)} entradas a la venta. Ya se han vendido ${fmt(b)}. ¿Cuántas entradas quedan?`,
+        (a, b) => `En el estadio había ${fmt(a)} aficionados. Se marchan ${fmt(b)}. ¿Cuántos aficionados quedan?`,
+        (a, b) => `El club tenía ${fmt(a)} euros en la caja y gasta ${fmt(b)} euros en equipaciones. ¿Cuántos euros le quedan?`,
+        (a, b) => `Leo tenía ${fmt(a)} puntos en el videojuego y pierde ${fmt(b)}. ¿Cuántos puntos le quedan?`,
+        (a, b) => `En el almacén había ${fmt(a)} camisetas. Se han vendido ${fmt(b)}. ¿Cuántas camisetas quedan?`,
+        (a, b) => `Una caja de la tienda tenía ${fmt(a)} pegatinas de futbolistas. Se regalan ${fmt(b)}. ¿Cuántas pegatinas quedan?`,
+        (a, b) => `El campo tiene ${fmt(a)} asientos y ${fmt(b)} están ocupados. ¿Cuántos asientos están libres?`,
+      ],
+    },
+    2: {
+      '+': [
+        (a, b) => `Hugo tenía ${fmt(a)} cromos de futbolistas y le regalan ${fmt(b)}. ¿Cuántos cromos tiene ahora?`,
+        (a, b) => `El club tenía ${fmt(a)} euros y recibe ${fmt(b)} euros de un patrocinador. ¿Cuántos euros tiene ahora?`,
+        (a, b) => `Un equipo tenía ${fmt(a)} seguidores en las redes y se suman ${fmt(b)} más. ¿Cuántos seguidores tiene ahora?`,
+        (a, b) => `La tienda tenía ${fmt(a)} bufandas y le llegan ${fmt(b)}. ¿Cuántas bufandas tiene ahora?`,
+        (a, b) => `Un jugador ha corrido ${fmt(a)} metros en el entrenamiento y ${fmt(b)} metros en el partido. ¿Cuántos metros ha corrido entre los dos?`,
+        (a, b) => `El club tenía ${fmt(a)} entradas y imprime ${fmt(b)} más. ¿Cuántas entradas tiene ahora?`,
+        (a, b) => `Para la final se han vendido ${fmt(a)} entradas y se han reservado ${fmt(b)} más. ¿Cuántas entradas están ocupadas?`,
+        (a, b) => `El equipo juvenil tiene ${fmt(a)} puntos en el torneo y el infantil tiene ${fmt(b)}. ¿Cuántos puntos tienen entre los dos?`,
+        (a, b) => `En un humedal viven ${fmt(a)} patos y hay ${fmt(b)} ranas más que patos. ¿Cuántas ranas viven?`,
+        (a, b) => `En la grada hay ${fmt(a)} aficionados locales y ${fmt(b)} visitantes más que locales. ¿Cuántos visitantes hay?`,
+        (a, b) => `Mateo tiene ${fmt(a)} cromos de futbolistas y su primo tiene ${fmt(b)} cromos más que él. ¿Cuántos cromos tiene su primo?`,
+      ],
+      '-': [
+        (a, b) => `El club tiene ${fmt(a)} socios y el club vecino tiene ${fmt(b)}. ¿Cuántos socios más tiene el primer club?`,
+        (a, b) => `Para llenar el estadio hacen falta ${fmt(a)} aficionados. Ya han llegado ${fmt(b)}. ¿Cuántos faltan para llenarlo?`,
+        (a, b) => `El club quiere reunir ${fmt(a)} euros para un campo nuevo. Ya tiene ${fmt(b)} euros. ¿Cuántos euros le faltan?`,
+        (a, b) => `El sábado hubo ${fmt(a)} aficionados en el estadio y el domingo ${fmt(b)}. ¿Cuántos aficionados más hubo el sábado?`,
+        (a, b) => `La tienda tiene ${fmt(a)} balones y el almacén tiene ${fmt(b)}. ¿Cuántos balones menos hay en el almacén que en la tienda?`,
+        (a, b) => `Para ganar el premio hacen falta ${fmt(a)} puntos. El equipo tiene ${fmt(b)}. ¿Cuántos puntos le faltan?`,
+        (a, b) => `Un equipo hizo ${fmt(a)} pases en la temporada y otro equipo hizo ${fmt(b)}. ¿Cuántos pases más hizo el primero?`,
+        (a, b) => `Un estadio tiene capacidad para ${fmt(a)} personas. Hoy hay ${fmt(b)} aficionados. ¿Cuántas personas faltan para llenarlo?`,
+        (a, b) => `En un contenedor había ${fmt(b)} pilas. Los alumnos echan algunas más y ahora hay ${fmt(a)}. ¿Cuántas pilas echaron?`,
+        (a, b) => `El club tenía ${fmt(b)} balones. Compra algunos más y ahora tiene ${fmt(a)}. ¿Cuántos balones compró?`,
+      ],
+    },
+  };
+
+  // Years: a = later year, b = earlier year.
+  const YEAR_TEMPLATES = [
+    (a, b) => `La primera vacuna se descubrió en ${fmt(b)}. En ${fmt(a)} la enfermedad desapareció. ¿Cuántos años pasaron?`,
+    (a, b) => `El club se fundó en ${fmt(b)} y el estadio nuevo se inauguró en ${fmt(a)}. ¿Cuántos años pasaron?`,
   ];
 
-  const PROBLEMS = [
-    { op: '+', es: (a, b) => `En el estadio hay ${fmt(a)} aficionados. Llegan ${fmt(b)} más. ¿Cuántos aficionados hay ahora?`, ua: 'Додай: було і прийшло ще.' },
-    { op: '-', es: (a, b) => `El club tiene ${fmt(a)} entradas a la venta. Ya ha vendido ${fmt(b)}. ¿Cuántas entradas quedan?`, ua: 'Відніми: було мінус продано.' },
-    { op: '+', es: (a, b) => `En la tienda del club hay ${fmt(a)} camisetas y llegan ${fmt(b)} más. ¿Cuántas camisetas hay en total?`, ua: 'Додай: усього футболок.' },
-    { op: '-', es: (a, b) => `El estadio tiene ${fmt(a)} asientos y hoy hay ${fmt(b)} aficionados. ¿Cuántos asientos quedan libres?`, ua: 'Відніми: місця мінус глядачі.' },
-  ];
+  const PROBLEM_HINT = {
+    1: 'Прочитай уважно. Подумай: стало більше чи менше?',
+    2: 'Прочитай уважно. Подумай: що треба знайти — скільки разом чи яка різниця?',
+  };
 
+  // Like the textbook: no separator up to 4 digits, point from 5 digits.
   function fmt(n) {
-    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const s = String(n);
+    return s.length >= 5 ? s.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : s;
   }
+
+  const WORDS_UNITS = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince',
+    'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis',
+    'veintisiete', 'veintiocho', 'veintinueve'];
+  const WORDS_TENS = ['', '', '', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+  const WORDS_HUNDREDS = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+
+  const wordsBelow100 = (n) => {
+    if (n < 30) return WORDS_UNITS[n];
+    return WORDS_TENS[Math.floor(n / 10)] + (n % 10 ? ` y ${WORDS_UNITS[n % 10]}` : '');
+  };
+
+  const wordsBelow1000 = (n) => {
+    if (n === 100) return 'cien';
+    const h = Math.floor(n / 100);
+    const rest = n % 100;
+    return [h ? WORDS_HUNDREDS[h] : '', rest || !h ? wordsBelow100(rest) : ''].filter(Boolean).join(' ');
+  };
+
+  // Spanish words for 0..9999.
+  const numberToWords = (n) => {
+    const t = Math.floor(n / 1000);
+    const rest = n % 1000;
+    const head = t ? (t === 1 ? 'mil' : `${WORDS_UNITS[t]} mil`) : '';
+    return [head, rest || !t ? wordsBelow1000(rest) : ''].filter(Boolean).join(' ');
+  };
 
   const digits = (n) => ({
     UM: Math.floor(n / 1000) % 10,
@@ -171,34 +249,36 @@
     return { op, a, b, result, steps, marks };
   };
 
+  const hasZeroDigit = (n) => String(n).includes('0');
+
   const genColumn = (level, rng) => {
-    if (level <= 3) {
+    const op = rng() < 0.5 ? '+' : '-';
+    if (op === '+') {
       return retry(() => {
-        const a = level === 1 ? int(rng, 100, 899) : int(rng, 1000, 8999);
-        const b = level === 1 ? int(rng, 100, 899) : int(rng, 100, 8999);
+        const a = int(rng, 1000, 8999);
+        const b = int(rng, 1000, 8999);
         if (a + b > 9999) return null;
         const { carries } = solveColumn('+', a, b);
-        if (level === 1 && carries === 0 && a + b <= 999) return { op: '+', a, b };
-        if (level === 2 && carries === 1) return { op: '+', a, b };
-        if (level === 3 && carries >= 2) return { op: '+', a, b };
+        if (level === 1 && carries === 1) return { op, a, b };
+        if (level === 2 && carries >= 2) return { op, a, b };
+        if (level === 3 && carries >= 2 && (hasZeroDigit(a) || hasZeroDigit(b) || hasZeroDigit(a + b))) return { op, a, b };
         return null;
       });
     }
     return retry(() => {
-      let a = level <= 5 && rng() < 0.4 ? int(rng, 300, 999) : int(rng, 1000, 9999);
-      if (level === 7) {
+      let a = int(rng, 1001, 9999);
+      if (level === 3) {
         const zero = pick(rng, [['D'], ['C'], ['C', 'D']]);
         const d = digits(a);
         zero.forEach((k) => { d[k] = 0; });
         a = packsTotal(d);
       }
-      const b = int(rng, 100, a - 1);
-      if (b >= a) return null;
+      if (a <= 1000) return null;
+      const b = int(rng, 1000, a - 1);
       const { borrows, zeroChains } = solveColumn('-', a, b);
-      if (level === 4 && borrows === 0) return { op: '-', a, b };
-      if (level === 5 && borrows === 1 && zeroChains === 0) return { op: '-', a, b };
-      if (level === 6 && borrows >= 2 && zeroChains === 0) return { op: '-', a, b };
-      if (level === 7 && zeroChains >= 1) return { op: '-', a, b };
+      if (level === 1 && borrows === 1 && zeroChains === 0) return { op, a, b };
+      if (level === 2 && borrows >= 2 && zeroChains === 0) return { op, a, b };
+      if (level === 3 && zeroChains >= 1) return { op, a, b };
       return null;
     });
   };
@@ -207,15 +287,15 @@
 
   const COLUMN_ERRORS = {
     'forgot-carry': {
-      es: 'Te has olvidado de llevar una. Cuando una columna suma 10 o más, escribe las unidades y lleva 1 a la columna de la izquierda.',
+      es: 'Te has olvidado de llevar una. Cuando los sumandos de una columna suman 10 o más, escribe las unidades y lleva 1 a la columna de la izquierda.',
       ua: 'Не забудь перенести 1 у наступний стовпчик! Якщо в стовпчику вийшло 10 або більше, пишемо одиниці, а 1 додаємо до сусіднього зліва.',
     },
     'smaller-from-larger': {
-      es: 'En cada columna has restado la cifra pequeña de la grande. Pero en una resta la cifra de arriba es la que manda: si es más pequeña, hay que pedir prestado a la de su izquierda.',
+      es: 'En cada columna has restado la cifra pequeña de la grande. Pero en una resta manda la cifra del minuendo (la de arriba): si es más pequeña que la del sustraendo, hay que pedir prestado a la de su izquierda.',
       ua: 'У кожному стовпчику віднімаємо нижню цифру від верхньої. Якщо верхня менша — позич 1 у сусіда зліва (3 стає 13).',
     },
     'forgot-decrement': {
-      es: 'Has pedido prestado muy bien, pero no has quitado 1 a la cifra de la que pediste. Táchala y escribe encima una cifra menos.',
+      es: 'Has pedido prestado muy bien, pero no has quitado 1 a la cifra del minuendo de la que pediste. Táchala y escribe encima una cifra menos.',
       ua: 'Позичити — правильно! Але в цифри, у якої позичили, треба забрати 1. Закресли її і напиши зверху на 1 менше.',
     },
     misaligned: {
@@ -228,20 +308,29 @@
     },
   };
 
+  // Typical wrong results, column by column (also used to build "find the error" tasks).
+  const MISTAKES = {
+    'forgot-carry': (A, B) => composeCols(A.map((d, i) => (d + B[i]) % 10)),
+    'smaller-from-larger': (A, B) => composeCols(A.map((d, i) => Math.abs(d - B[i]))),
+    'forgot-decrement': (A, B) => composeCols(A.map((d, i) => (d < B[i] ? d + 10 - B[i] : d - B[i]))),
+  };
+
+  const columnCols = (a, b, result) => {
+    const len = Math.max(lenOf(a), lenOf(b), lenOf(result));
+    return [digitsArr(a, len), digitsArr(b, len)];
+  };
+
   // Returns an error code for a wrong whole-column answer, or null if it is correct.
   const diagnoseColumn = (data, value) => {
     const { op, a, b, result } = data;
     if (value === result) return null;
-    const len = Math.max(lenOf(a), lenOf(b), lenOf(result));
-    const A = digitsArr(a, len);
-    const B = digitsArr(b, len);
+    const [A, B] = columnCols(a, b, result);
     if (op === '+') {
-      if (value === composeCols(A.map((d, i) => (d + B[i]) % 10))) return 'forgot-carry';
+      if (value === MISTAKES['forgot-carry'](A, B)) return 'forgot-carry';
       if (value === a + b * 10) return 'misaligned';
     } else {
-      if (value === composeCols(A.map((d, i) => Math.abs(d - B[i])))) return 'smaller-from-larger';
-      const noDec = A.map((d, i) => (d < B[i] ? d + 10 - B[i] : d - B[i]));
-      if (value === composeCols(noDec)) return 'forgot-decrement';
+      if (value === MISTAKES['smaller-from-larger'](A, B)) return 'smaller-from-larger';
+      if (value === MISTAKES['forgot-decrement'](A, B)) return 'forgot-decrement';
       if (value === a - b * 10) return 'misaligned';
     }
     return 'arith';
@@ -305,6 +394,126 @@
 
   const toChoices = (rng, values) => shuffle(rng, values.map((v) => ({ label: fmt(v), value: v })));
 
+  const genMayorMenor = (rng) => {
+    const digit = int(rng, 1, 9);
+    const which = rng() < 0.5 ? 'menor' : 'mayor';
+    const places = shuffle(rng, PLACES).slice(0, 3);
+    const nums = places.map((pl) => retry(() => {
+      const d = {};
+      PLACES.forEach((p) => { d[p.key] = p.key === pl.key ? digit : int(rng, 0, 9); });
+      if (PLACES.some((p) => p.key !== pl.key && d[p.key] === digit) || d.UM === 0) return null;
+      return packsTotal(d);
+    }));
+    const vals = places.map((p) => p.value);
+    const best = which === 'menor' ? Math.min(...vals) : Math.max(...vals);
+    return {
+      kind: 'choice',
+      es: `¿En qué número tiene la cifra ${digit} el ${which} valor?`,
+      ua: `У якому числі цифра ${digit} має ${which === 'menor' ? 'найменше' : 'найбільше'} значення?`,
+      answer: nums[vals.indexOf(best)],
+      choices: toChoices(rng, nums),
+      data: { digit, which },
+    };
+  };
+
+  const genMuro = (rng) => {
+    const n = retry(() => {
+      const x = int(rng, 1000, 9999);
+      return Object.values(digits(x)).every(Boolean) ? x : null;
+    });
+    const d = digits(n);
+    const form = pick(rng, [
+      [['UM', d.UM], ['C', d.C], ['D', d.D], ['U', d.U]],
+      [['C', d.UM * 10 + d.C], ['D', d.D], ['U', d.U]],
+      [['D', Math.floor(n / 10)], ['U', d.U]],
+      [['UM', d.UM], ['D', d.C * 10 + d.D], ['U', d.U]],
+      [['C', d.UM * 10 + d.C], ['U', d.D * 10 + d.U]],
+    ]);
+    const blank = int(rng, 0, form.length - 1);
+    const parts = form.map(([key, value], i) => ({ value: i === blank ? null : value, key }));
+    return {
+      kind: 'number',
+      es: `Completa: ${n} = ${parts.map((p) => `${p.value === null ? '__' : p.value} ${p.key}`).join(' + ')}`,
+      ua: 'Заповни пропуск: 10 одиниць = 1 десяток, 10 десятків = 1 сотня, 10 сотень = 1 тисяча.',
+      answer: form[blank][1],
+      data: { sub: 'muro', n, parts },
+    };
+  };
+
+  const genSe = (rng) => {
+    const n = int(rng, 1000, 9999);
+    const words = numberToWords(n);
+    if (rng() < 0.5) {
+      const d = String(n).split('');
+      const cands = new Set();
+      for (let i = 0; i < 4; i++) {
+        for (let j = i + 1; j < 4; j++) {
+          const x = [...d];
+          [x[i], x[j]] = [x[j], x[i]];
+          cands.add(Number(x.join('')));
+        }
+        const y = [...d];
+        y[i] = String((Number(d[i]) + 1) % 10);
+        cands.add(Number(y.join('')));
+      }
+      const fake = shuffle(rng, [...cands].filter((v) => v !== n && v >= 1000));
+      const nums = [n, ...fake.slice(0, 2)];
+      return {
+        kind: 'choice',
+        es: `¿Cómo se lee ${n}?`,
+        ua: `Як читається число ${n}?`,
+        answer: n,
+        choices: shuffle(rng, nums.map((v) => ({ label: numberToWords(v), value: v }))),
+        data: { sub: 'read', n, words },
+      };
+    }
+    return {
+      kind: 'number',
+      es: `Escribe con cifras: ${words}`,
+      ua: 'Запиши число цифрами.',
+      answer: n,
+      data: { sub: 'write', n, words },
+    };
+  };
+
+  const SERIE_STEPS = [1, 10, 100, 1000, 5];
+
+  const genAnade = (rng) => {
+    const type = pick(rng, ['add', 'sub', 'serie']);
+    if (type === 'serie') {
+      const step = pick(rng, SERIE_STEPS);
+      const sign = rng() < 0.5 ? 1 : -1;
+      const start = retry(() => {
+        const x = int(rng, 1000, 9999);
+        const last = x + sign * step * 3;
+        return last >= 1000 && last <= 9999 ? x : null;
+      });
+      const terms = [0, 1, 2, 3].map((i) => start + sign * step * i);
+      return {
+        kind: 'number',
+        es: `Continúa la serie: ${terms.slice(0, 3).join(', ')}, …`,
+        ua: 'Подивись, на скільки змінюється число, і продовж послідовність.',
+        answer: terms[3],
+        data: { sub: 'serie', terms, step: sign * step },
+      };
+    }
+    const sign = type === 'add' ? 1 : -1;
+    const { n, place, k } = retry(() => {
+      const n = int(rng, 1000, 9999);
+      const place = pick(rng, ['UM', 'C', 'D']);
+      const k = int(rng, 1, 9);
+      const r = n + sign * k * PLACE_BY_KEY[place].value;
+      return r >= 1000 && r <= 9999 ? { n, place, k } : null;
+    });
+    return {
+      kind: 'number',
+      es: `¿Qué número obtienes si ${sign > 0 ? 'añades' : 'quitas'} ${k} ${place} a ${n}?`,
+      ua: `Яке число вийде, якщо ${sign > 0 ? 'додати' : 'відняти'} ${k} ${UA_GEN[place]} ${sign > 0 ? 'до' : 'від'} ${n}?`,
+      answer: n + sign * k * PLACE_BY_KEY[place].value,
+      data: { sub: type, n, place, k },
+    };
+  };
+
   const genValor = (level, rng) => {
     if (level === 1) {
       const n = distinctNumber(rng, false);
@@ -319,6 +528,7 @@
         data: { n, place: place.key },
       };
     }
+    if (level === 3) return genMayorMenor(rng);
     if (level === 2) {
       const n = distinctNumber(rng, true);
       const place = pick(rng, PLACES);
@@ -332,7 +542,7 @@
         data: { n, digit, place: place.key },
       };
     }
-    if (level === 3) {
+    if (level === 4) {
       const target = int(rng, 100, 9999);
       return {
         kind: 'packs',
@@ -342,16 +552,19 @@
         data: { target },
       };
     }
-    if (level === 4) {
+    if (level === 5) {
       const n = int(rng, 1000, 9999);
       return {
         kind: 'decompose',
-        es: `Descompón el número ${fmt(n)}.`,
+        es: `Descompón el número ${fmt(n)} según el valor de sus cifras y la posición que ocupan.`,
         ua: `Розклади число ${fmt(n)} на тисячі, сотні, десятки й одиниці.`,
         answer: digits(n),
         data: { n },
       };
     }
+    if (level === 6) return genMuro(rng);
+    if (level === 8) return genSe(rng);
+    if (level === 9) return genAnade(rng);
     const n = int(rng, 1000, 9999);
     const packs = digits(n);
     const moves = int(rng, 1, 2);
@@ -375,72 +588,148 @@
   // ---- redondeo --------------------------------------------------------------
 
   const genRound = (level, rng) => {
-    const place = level === 1 ? 'D' : level === 2 ? 'C' : level === 3 ? 'UM' : pick(rng, ['D', 'C', 'UM']);
+    const place = pick(rng, ['D', 'C', 'UM']);
     const p = PLACE_BY_KEY[place].value;
-    const midCase = level >= 4 && rng() < 0.25;
-    const maxHigh = Math.floor(9999 / p) * p;
-    const low = int(rng, 1, maxHigh / p - 1) * p;
-    let offset = midCase ? p / 2 : int(rng, 1, p - 1);
-    if (!midCase && offset === p / 2) offset = level >= 4 ? offset : offset - 1 || offset + 1;
+    const threeDigit = place !== 'UM' && rng() < 0.15;
+    const minLow = threeDigit ? 100 : 1000;
+    const maxLow = threeDigit ? 1000 - p : 9999 - p;
+    const low = int(rng, minLow / p, Math.floor(maxLow / p)) * p;
+    const midCase = rng() < 0.2;
+    const offset = midCase ? p / 2 : pick(rng, Array.from({ length: p - 1 }, (_, i) => i + 1).filter((o) => o !== p / 2));
     const n = low + offset;
     const high = low + p;
     const mid = low + p / 2;
+    const data = { n, place, low, high, mid };
+    if (level === 2) data.hideLine = true;
     return {
       kind: 'round',
-      es: `Redondea ${fmt(n)} ${ROUND_ES[place]} ${ROUND_ES_NEXT[place]}.`,
+      es: `Redondea ${fmt(n)} ${ROUND_ES[place]}.`,
       ua: `Округли ${fmt(n)} до ${ROUND_UA[place]}.`,
       answer: roundTo(n, place),
-      data: { n, place, low, high, mid },
+      data,
     };
   };
 
-  // ---- estimacion ------------------------------------------------------------
+  // ---- problemas ---------------------------------------------------------------
 
-  const genEstimate = (level, rng) => {
-    if (level === 3) {
-      const prob = pick(rng, PROBLEMS);
-      const { a, b } = retry(() => {
-        const a = int(rng, 1000, 8999);
-        const b = int(rng, 100, prob.op === '+' ? 9999 - a : a - 1);
-        return b >= 100 && (prob.op === '+' || b < a) && (prob.op === '-' || a + b <= 9999) ? { a, b } : null;
-      });
-      return {
-        kind: 'number',
-        es: prob.es(a, b),
-        ua: prob.ua,
-        answer: prob.op === '+' ? a + b : a - b,
-        data: { problema: true, op: prob.op, a, b },
-      };
-    }
-    const place = level === 1 ? 'C' : pick(rng, ['C', 'UM']);
-    const count = level === 1 ? 2 : 3;
-    const p = PLACE_BY_KEY[place].value;
-    const lo = place === 'UM' ? 600 : 120;
-    const hi = place === 'UM' ? 3000 : level === 1 ? 2400 : 2800;
+  const genYears = (rng) => {
+    const { a, b } = retry(() => {
+      const a = int(rng, 1900, 2026);
+      const b = int(rng, 1500, a - 1);
+      return solveColumn('-', a, b).borrows >= 1 ? { a, b } : null;
+    });
+    const data = columnData('-', a, b);
+    return { kind: 'problema', es: pick(rng, YEAR_TEMPLATES)(a, b), ua: PROBLEM_HINT[2], answer: data.result, data };
+  };
+
+  const genProblem = (level, rng) => {
+    const op = rng() < 0.5 ? '+' : '-';
+    if (level === 2 && op === '-' && rng() < 0.25) return genYears(rng);
+    const { a, b } = retry(() => {
+      const a = int(rng, 1000, op === '+' ? 8999 : 9999);
+      const b = int(rng, 1000, op === '+' ? 8999 : a - 1);
+      if (b >= a && op === '-') return null;
+      if (op === '+' && a + b > 9999) return null;
+      const s = solveColumn(op, a, b);
+      return (op === '+' ? s.carries : s.borrows) >= 1 ? { a, b } : null;
+    });
+    const data = columnData(op, a, b);
+    return {
+      kind: 'problema',
+      es: pick(rng, PROBLEM_TEMPLATES[level][op])(a, b),
+      ua: PROBLEM_HINT[level],
+      answer: data.result,
+      data,
+    };
+  };
+
+  const COLUMN_SYMBOL = { '+': '+', '-': '−' };
+
+  const genFix = (rng) => {
+    const wrongTask = rng() < 0.5;
+    const op = rng() < 0.5 ? '+' : '-';
+    const errorCode = wrongTask ? (op === '+' ? 'forgot-carry' : pick(rng, ['smaller-from-larger', 'forgot-decrement'])) : null;
     return retry(() => {
-      const names = shuffle(rng, ITEMS).slice(0, count);
-      const items = names.map((name) => ({ name, price: int(rng, lo, hi) }));
-      if (items.some((it) => it.price % p === 0)) return null;
-      const rounded = items.map((it) => roundTo(it.price, place));
-      const exact = items.reduce((s, it) => s + it.price, 0);
-      const estimate = rounded.reduce((s, v) => s + v, 0);
-      if (exact > 9999 || exact === estimate) return null;
-      const fits = rng() < 0.5;
-      const delta = int(rng, 1, 30) * 100;
-      const budget = Math.round((fits ? exact + delta : exact - delta) / 100) * 100;
-      if (budget <= 0 || budget > 9999) return null;
-      const margin = (count * p) / 2;
-      if (Math.abs(budget - exact) <= margin || Math.abs(budget - estimate) <= margin) return null;
-      if ((budget >= exact) !== fits || (budget >= estimate) !== fits) return null;
-      const list = items.map((it) => `${it.name.toLowerCase()} ${fmt(it.price)} €`).join(', ');
+      const a = int(rng, 1001, op === '+' ? 8999 : 9999);
+      const b = int(rng, 1000, op === '+' ? 8999 : a - 1);
+      if (op === '+' ? a + b > 9999 : b >= a) return null;
+      const s = solveColumn(op, a, b);
+      if ((op === '+' ? s.carries : s.borrows) < 1 || s.zeroChains) return null;
+      const [A, B] = columnCols(a, b, s.result);
+      const shown = errorCode ? MISTAKES[errorCode](A, B) : s.result;
+      const data = { op, a, b, shown, result: s.result, errorCode, steps: s.steps, marks: s.marks };
+      if (errorCode && diagnoseColumn(data, shown) !== errorCode) return null;
       return {
-        kind: 'estimate',
-        es: `Tienes ${fmt(budget)} € para el club. Quieres comprar: ${list}. Estima el total redondeando cada precio ${ROUND_ES[place]} ${ROUND_ES_NEXT[place]}. ¿Te alcanza el dinero?`,
-        ua: `У тебе ${fmt(budget)} €. Округли ціни до ${ROUND_UA[place]}, оціни суму, потім порахуй точно. Чи вистачає грошей?`,
-        answer: { estimate, exact, fits },
-        data: { items, budget, place, rounded, estimate, exact, fits },
+        kind: 'fix',
+        es: 'Comprueba si está bien resuelta. Si hay un error, corrígelo.',
+        ua: 'Перевір, чи правильно розв’язано. Якщо є помилка — виправ її.',
+        answer: { ok: !errorCode, value: s.result },
+        data,
       };
     });
+  };
+
+  const genPrueba = (rng) => {
+    const bad = rng() < 0.3;
+    const { M, S, shown } = retry(() => {
+      const S = int(rng, 1000, 8999);
+      const D = int(rng, 1000, 8999);
+      const shown = bad ? D + pick(rng, [1, -1, 10, -10, 100, -100, 1000, -1000]) : D;
+      if (D + S > 9999 || shown < 1000 || shown + S > 9999) return null;
+      return solveColumn('+', shown, S).carries >= 1 ? { M: D + S, S, shown } : null;
+    });
+    const data = { ...columnData('+', shown, S), prueba: { minuendo: M, sustraendo: S, diferencia: shown, ok: shown + S === M } };
+    return {
+      kind: 'column',
+      es: `Haz la prueba de la resta ${fmt(M)} − ${fmt(S)} = ${fmt(shown)}: suma la diferencia y el sustraendo.`,
+      ua: 'Перевірка віднімання: додай різницю і від’ємник. Якщо вийде зменшуване — все правильно.',
+      answer: data.result,
+      data,
+    };
+  };
+
+  const genFalta = (rng) => {
+    const sub = pick(rng, ['minuendo', 'sumando', 'faltan', 'diferencia']);
+    const withBorrow = (gen) => retry(() => {
+      const r = gen();
+      return r && solveColumn(r.op, r.a, r.b).borrows >= 1 ? r : null;
+    });
+    let r;
+    if (sub === 'minuendo') {
+      r = retry(() => {
+        const D = int(rng, 1000, 8999);
+        const S = int(rng, 100, 8999);
+        return D + S <= 9999 && solveColumn('+', D, S).carries >= 1 ? { op: '+', a: D, b: S, wrong: Math.abs(D - S) } : null;
+      });
+      r.es = `Halla el número que falta: __ − ${fmt(r.b)} = ${fmt(r.a)}`;
+      r.ua = 'Знайди пропущене зменшуване.';
+    } else if (sub === 'sumando') {
+      r = withBorrow(() => {
+        const T = rng() < 0.5 ? int(rng, 2, 9) * 1000 : int(rng, 20, 99) * 100;
+        const A = int(rng, 1000, T - 100);
+        return { op: '-', a: T, b: A, wrong: T + A };
+      });
+      r.es = `Halla el número que falta: ${fmt(r.b)} + __ = ${fmt(r.a)}`;
+      r.ua = 'Знайди пропущений доданок.';
+    } else if (sub === 'faltan') {
+      r = withBorrow(() => {
+        const from = int(rng, 1000, 8999);
+        const to = int(rng, from + 100, 9999);
+        return { op: '-', a: to, b: from, wrong: from + to };
+      });
+      r.es = `¿Cuántas unidades le faltan a ${fmt(r.b)} para ser ${fmt(r.a)}?`;
+      r.ua = 'Скільки одиниць не вистачає?';
+    } else {
+      r = withBorrow(() => {
+        const x = int(rng, 1000, 9999);
+        const y = int(rng, 1000, 9999);
+        return x === y ? null : { op: '-', a: Math.max(x, y), b: Math.min(x, y), wrong: x + y, x, y };
+      });
+      r.es = `Calcula la diferencia entre ${fmt(r.x)} y ${fmt(r.y)}.`;
+      r.ua = 'Знайди різницю між двома числами.';
+    }
+    const data = { sub, ...columnData(r.op, r.a, r.b), wrongValue: r.wrong };
+    return { kind: 'number', es: r.es, ua: r.ua, answer: data.result, data };
   };
 
   // ---- makeTask / checkAnswer ----------------------------------------------------
@@ -448,18 +737,21 @@
   const GENERATORS = {
     valor: genValor,
     columna: (level, rng) => {
+      if (level === 4) return genFix(rng);
+      if (level === 5) return genPrueba(rng);
+      if (level === 6) return genFalta(rng);
       const { op, a, b } = genColumn(level, rng);
       const data = columnData(op, a, b);
       return {
         kind: 'column',
-        es: `Calcula: ${fmt(a)} ${op === '+' ? '+' : '−'} ${fmt(b)}`,
+        es: `Coloca en torre y ${op === '+' ? 'calcula' : 'resta'}: ${fmt(a)} ${COLUMN_SYMBOL[op]} ${fmt(b)}`,
         ua: op === '+' ? 'Додай у стовпчик, справа наліво.' : 'Відніми у стовпчик. Не вистачає — позич у сусіда зліва.',
         answer: data.result,
         data,
       };
     },
     redondeo: genRound,
-    estimacion: genEstimate,
+    problemas: genProblem,
   };
 
   const makeTask = (topic, level = 1, rng = Math.random) => {
@@ -475,6 +767,13 @@
   const checkChoice = (task, value) => {
     const v = toNum(value && typeof value === 'object' ? value.value : value);
     if (v === task.answer) return { correct: true };
+    if (task.level === 3) {
+      const { digit, which } = task.data;
+      return wrong('mayor-menor', `Cuanto más a la izquierda está una cifra, más vale. El ${which} valor de la cifra ${digit} es el del número en que está ${which === 'menor' ? 'más a la derecha' : 'más a la izquierda'}.`, `Чим лівіше цифра, тим більше вона значить. ${which === 'menor' ? 'Найменше' : 'Найбільше'} значення — там, де цифра ${digit} стоїть ${which === 'menor' ? 'правіше' : 'лівіше'} за всіх.`);
+    }
+    if (task.level === 8) {
+      return wrong('read', `${fmt(task.answer)} se lee «${task.data.words}». Lee con calma: unidades de millar, centenas, decenas y unidades.`, `Число ${fmt(task.answer)} читається «${task.data.words}». Читай спокійно: тисячі, сотні, десятки, одиниці.`);
+    }
     if (task.level === 1) {
       return wrong('place', 'Esa cifra está en otro lugar. De derecha a izquierda: unidades, decenas, centenas y unidades de millar.', 'Ця цифра стоїть на іншому місці. Справа наліво: одиниці, десятки, сотні, тисячі.');
     }
@@ -490,7 +789,7 @@
   };
 
   const checkDecompose = (task, value) => {
-    const bad = () => wrong('decompose', 'Mira cada cifra y su lugar: 4.528 = 4 UM + 5 C + 2 D + 8 U, o 4.000 + 500 + 20 + 8.', 'Подивись на кожну цифру і її місце: 4.528 = 4.000 + 500 + 20 + 8.');
+    const bad = () => wrong('decompose', 'Mira cada cifra y su lugar: 4528 = 4 UM + 5 C + 2 D + 8 U, o 4000 + 500 + 20 + 8.', 'Подивись на кожну цифру і її місце: 4528 = 4000 + 500 + 20 + 8.');
     if (Array.isArray(value)) {
       const want = PLACES.map((p) => task.answer[p.key] * p.value).filter(Boolean).sort((x, y) => x - y);
       const got = value.map(toNum).filter(Boolean).sort((x, y) => x - y);
@@ -500,14 +799,46 @@
     return bad();
   };
 
+  const FALTA_HINTS = {
+    minuendo: ['El minuendo se halla sumando: diferencia + sustraendo.', 'Зменшуване знаходимо додаванням: різниця + від’ємник.'],
+    sumando: ['Para hallar el sumando que falta, resta: suma total − sumando conocido.', 'Невідомий доданок: від суми віднімаємо відомий доданок.'],
+    faltan: ['Para saber cuánto falta, resta: el número al que quieres llegar − el que tienes.', 'Щоб дізнатись, скільки не вистачає: від потрібного числа віднімаємо те, що є.'],
+    diferencia: ['La diferencia es una resta: el número mayor − el menor.', 'Різниця — це віднімання: більше число мінус менше.'],
+  };
+
+  const numberError = (task) => {
+    const { sub } = task.data;
+    const ans = task.answer;
+    if (FALTA_HINTS[sub]) return ['wrong', ...FALTA_HINTS[sub]];
+    if (sub === 'muro') {
+      return ['muro', 'Fíjate en el valor de cada paquete: 1 UM = 10 C, 1 C = 10 D, 1 D = 10 U. Convierte para completar el muro.', 'Дивись на значення кожної пачки: 1 тисяча = 10 сотень, 1 сотня = 10 десятків, 1 десяток = 10 одиниць.'];
+    }
+    if (sub === 'write') {
+      const { n, words } = task.data;
+      const d = digits(n);
+      const sum = [d.UM * 1000, d.C * 100, n % 100].filter(Boolean).join(' + ');
+      return ['write', `«${words}» se escribe con cifras así: ${sum} = ${n}.`, `Запиши кожну частину цифрами й додай: ${sum} = ${n}.`];
+    }
+    if (sub === 'add' || sub === 'sub') {
+      const { n, place, k } = task.data;
+      const amount = k * PLACE_BY_KEY[place].value;
+      return ['shift', `${sub === 'add' ? 'Añadir' : 'Quitar'} ${k} ${place} es ${sub === 'add' ? 'sumar' : 'restar'} ${amount}: ${n} ${sub === 'add' ? '+' : '−'} ${amount} = ${ans}.`, `${k} ${UA_GEN[place]} — це ${amount}: ${n} ${sub === 'add' ? '+' : '−'} ${amount} = ${ans}.`];
+    }
+    if (sub === 'serie') {
+      const { terms, step } = task.data;
+      return ['serie', `Mira cuánto cambia de un número al siguiente: de ${terms[0]} a ${terms[1]} hay ${step > 0 ? '+' : '−'}${Math.abs(step)}. Sigue igual.`, `Подивись, на скільки змінюється число: від ${terms[0]} до ${terms[1]} це ${step > 0 ? '+' : '−'}${Math.abs(step)}. Продовжуй так само.`];
+    }
+    return ['wrong', 'Convierte los paquetes: 10 U = 1 D, 10 D = 1 C, 10 C = 1 UM. Luego suma el valor de cada paquete.', 'Перетвори пачки: 10 одиниць = 1 десяток, 10 десятків = 1 сотня, 10 сотень = 1 тисяча. Потім додай.'];
+  };
+
   const checkNumber = (task, value) => {
     const v = toNum(value);
     if (v === task.answer) return { correct: true };
-    if (task.data.op) {
-      const code = diagnoseColumn({ ...task.data, result: task.answer }, v);
-      return { correct: false, error: columnError(code) };
+    const [code, es, ua] = numberError(task);
+    if (FALTA_HINTS[task.data.sub] && v === task.data.wrongValue) {
+      return wrong('wrong-op', `Has usado la operación contraria. ${es}`, `Тут інша дія. ${ua}`);
     }
-    return wrong('wrong', 'Convierte los paquetes: 10 U = 1 D, 10 D = 1 C, 10 C = 1 UM. Luego suma el valor de cada paquete.', 'Перетвори пачки: 10 одиниць = 1 десяток, 10 десятків = 1 сотня, 10 сотень = 1 тисяча. Потім додай.');
+    return wrong(code, es, ua);
   };
 
   const checkRound = (task, value) => {
@@ -517,45 +848,81 @@
     const p = PLACE_BY_KEY[place].value;
     const next = Math.floor((n % p) / (p / 10));
     if (v === low || v === high) {
-      return wrong('direction', `Mira la cifra de las ${LOWER_ES[place]}: es ${next}. Si es 5 o más, el número sube; si es menos de 5, se queda.`, `Подивись на наступну цифру: ${next}. Якщо вона 5 або більше — число росте вгору, якщо менше 5 — залишається.`);
+      const mid = n === low + p / 2;
+      const near = n - low < high - n ? low : high;
+      return wrong(
+        'direction',
+        `${fmt(n)} está entre ${fmt(low)} y ${fmt(high)}. ${mid ? `Está justo en el medio: redondeamos hacia arriba, a ${fmt(high)}.` : `Está más cerca de ${fmt(near)}.`} (Mira la cifra de las ${LOWER_ES[place]}: es ${next}.)`,
+        `${fmt(n)} між ${fmt(low)} і ${fmt(high)}. ${mid ? `Рівно посередині: округлюємо вгору, до ${fmt(high)}.` : `Ближче до ${fmt(near)}.`} Наступна цифра: ${next}.`,
+      );
     }
     return wrong('wrong', `El resultado tiene que estar entre ${fmt(low)} y ${fmt(high)}.`, `Відповідь має бути між ${fmt(low)} і ${fmt(high)}.`);
   };
 
-  const checkEstimate = (task, value) => {
-    const d = task.data;
-    const ask = value && typeof value === 'object' ? value : {};
-    const checks = {
-      estimate: () => {
-        const v = toNum(ask.value);
-        if (v === d.estimate) return { correct: true };
-        if (v === d.exact) return wrong('estimate-exact', 'Ese es el total exacto. Para estimar, primero redondea cada precio y luego suma.', 'Це точна сума. Щоб оцінити — спочатку округли кожну ціну, потім додай.');
-        return wrong('estimate', `Redondea cada precio (${d.rounded.map(fmt).join(' + ')}) y suma los redondeados.`, `Округли кожну ціну (${d.rounded.map(fmt).join(' + ')}) і додай.`);
-      },
-      exact: () => {
-        const v = toNum(ask.value);
-        if (v === d.exact) return { correct: true };
-        if (v === d.estimate) return wrong('exact-estimate', 'Ese es el total estimado. Ahora suma los precios exactos, sin redondear.', 'Це оцінка. Тепер додай точні ціни, без округлення.');
-        return wrong('exact', 'Suma los precios exactos en columna, llevando cuando haga falta.', 'Додай точні ціни у стовпчик, не забувай переносити.');
-      },
-      fits: () => {
-        const v = ask.value === 'yes' || ask.value === 'sí' ? true : ask.value === 'no' ? false : ask.value;
-        if (v === d.fits) return { correct: true };
-        return wrong('fits', `Compara el total (${fmt(d.exact)} €) con tu dinero (${fmt(d.budget)} €): ${d.fits ? 'el total es menor, sí te alcanza' : 'el total es mayor, no te alcanza'}.`, `Порівняй суму (${fmt(d.exact)} €) з твоїми грошима (${fmt(d.budget)} €): ${d.fits ? 'сума менша, грошей вистачає' : 'сума більша, грошей не вистачає'}.`);
-      },
-    };
-    if (checks[ask.phase]) return checks[ask.phase]();
-    const all = ['estimate', 'exact', 'fits'].every((k) => d[k] === ask[k]);
-    return all ? { correct: true } : wrong('estimate', 'Revisa los tres pasos: estimar, calcular exacto y comparar con tu dinero.', 'Перевір три кроки: оцінка, точна сума, порівняння з грошима.');
+  const checkProblema = (task, value) => {
+    const v = toNum(value);
+    const { op, a, b, result } = task.data;
+    if (v === result) return { correct: true };
+    if (op === '-' && v === a + b) {
+      return wrong('wrong-op', 'Has sumado, pero en este problema hay que restar: se quita, se compara o se busca lo que falta.', 'Тут виконано додавання, а треба відняти: щось забрали, порівнюємо або шукаємо, скільки не вистачає.');
+    }
+    if (op === '+' && v === Math.abs(a - b)) {
+      return wrong('wrong-op', 'Has restado, pero en este problema hay que sumar: se juntan o se añaden cantidades.', 'Тут виконано віднімання, а треба додати: кількості об’єднуються або додаються.');
+    }
+    return { correct: false, error: columnError(diagnoseColumn(task.data, v)) };
+  };
+
+  // First step of a problem: "¿Qué operación?" op is '+' or '-' ('−' also accepted).
+  const checkOp = (task, op) => {
+    const chosen = op === '+' ? '+' : op === '-' || op === '−' ? '-' : null;
+    if (chosen === task.data.op) return { correct: true };
+    return task.data.op === '-'
+      ? wrong('wrong-op', 'No es una suma. En este problema se quita, se compara o se busca lo que falta: eso es restar.', 'Це не додавання. Тут щось забрали, порівнюємо або шукаємо, скільки не вистачає — це віднімання.')
+      : wrong('wrong-op', 'No es una resta. En este problema se juntan o se añaden cantidades: eso es sumar.', 'Це не віднімання. Тут кількості об’єднуються або додаються — це додавання.');
+  };
+
+  const FIX_SLIPS = {
+    'forgot-carry': (data) => {
+      const i = data.steps.findIndex((st) => st.carryOut);
+      const place = ORDER[i + 1];
+      return [`Se ha olvidado de llevar una en las ${PLACE_BY_KEY[place].es}: en la columna anterior los sumandos pasan de 9.`, `Забули перенести 1 у ${UA_GEN[place]}: у попередньому стовпчику сума більша за 9.`];
+    },
+    'smaller-from-larger': (data) => {
+      const st = data.steps.find((x) => x.borrowed);
+      return [`Se ha restado la cifra pequeña de la grande en las ${PLACE_BY_KEY[st.place].es}: ${st.top} es menor que ${st.bottom}, hay que pedir prestado.`, `У ${UA_GEN[st.place]} від меншої цифри відняли більшу: ${st.top} менше за ${st.bottom}, треба позичити.`];
+    },
+    'forgot-decrement': (data) => {
+      const st = data.steps.find((x) => x.borrowed);
+      return [`Se pidió prestado en las ${PLACE_BY_KEY[st.place].es}, pero no se quitó 1 a la cifra del minuendo en las ${PLACE_BY_KEY[st.lentFrom].es}.`, `У ${UA_GEN[st.place]} позичили, але в ${UA_GEN[st.lentFrom]} зменшуваного не забрали 1.`];
+    },
+  };
+
+  const checkFix = (task, value) => {
+    const { errorCode, result, shown } = task.data;
+    const ok = value && typeof value === 'object' ? value.ok : undefined;
+    if (ok === true) {
+      if (!errorCode) return { correct: true };
+      const [es, ua] = FIX_SLIPS[errorCode](task.data);
+      return wrong('missed-error', `Hay un error. ${es}`, `Тут є помилка. ${ua}`);
+    }
+    if (ok !== false) return wrong('no-judgement', 'Decide primero si está bien o mal resuelta.', 'Спочатку вирішь: правильно чи ні.');
+    if (!errorCode) {
+      return wrong('no-error', `Está bien resuelta: el resultado es ${fmt(result)}. Revisa columna por columna antes de decir que hay un error.`, `Тут усе правильно: результат ${fmt(result)}. Перевір стовпчик за стовпчиком.`);
+    }
+    const v = toNum(value.value);
+    if (v === result) return { correct: true };
+    const [es, ua] = FIX_SLIPS[errorCode](task.data);
+    return wrong(v === shown ? 'same-as-shown' : 'fix', `Sí, hay un error: ${es} El resultado correcto es ${fmt(result)}.`, `Так, помилка є: ${ua} Правильний результат: ${fmt(result)}.`);
   };
 
   const CHECKERS = {
+    fix: checkFix,
     choice: checkChoice,
     packs: checkPacks,
     decompose: checkDecompose,
     number: checkNumber,
     round: checkRound,
-    estimate: checkEstimate,
+    problema: checkProblema,
     column: (task, value) => {
       const v = toNum(value);
       const code = diagnoseColumn(task.data, v);
@@ -600,7 +967,7 @@
 
   globalThis.MathExam = {
     fmt, PLACES, TOPICS, LEVELS, digits, roundTo,
-    makeTask, checkAnswer, checkColumnStep, makeExam, weakWeights,
-    solveColumn,
+    makeTask, checkAnswer, checkColumnStep, checkOp, makeExam, weakWeights,
+    solveColumn, numberToWords,
   };
 })();

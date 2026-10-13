@@ -13,7 +13,7 @@
 ### 0. Examen de mates (3º Primaria) — у роботі, slug `math-exam`
 Підготовка до іспиту: sumas/restas con llevadas (до 9.999), redondeo, valor posicional.
 Завдання іспанською, як у школі; кнопка 🇺🇦 пояснює українською. Помилки пояснюються, не караються.
-- Числа з крапкою: 4.528. Віднімання — **pedir prestado** (як у зошиті: закреслити, −1 зверху, маленька «1» → 13).
+- Числа як у підручнику (SM «Matices» 3º, books/, не публікується): 4528 без крапки. Віднімання — **pedir prestado** (як у зошиті: закреслити, −1 зверху, маленька «1» → 13).
 - **Taquilla** — valor posicional: пачки квитків 1000/100/10/1 = UM/C/D/U; descomposición;
   agrupar (10 D → 1 C = llevar) і desagrupar (1 C → 10 D = pedir prestado).
 - **Pase a la columna** — стовпчик справа наліво, перенос летить м'ячем; розбір типових помилок

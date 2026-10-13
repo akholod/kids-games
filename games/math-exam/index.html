@@ -73,6 +73,8 @@
 
 /* Choices */
 .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px)}
+.choices.words{grid-template-columns:minmax(0,1fr)}
+.choices.words .choice{font-size:clamp(1rem,3.4vw,1.25rem);padding:12px 16px 12px 34px;line-height:1.3}
 .choice{min-height:72px;border:2px solid #c5d4c1;border-radius:18px;background:#fff;color:var(--ink);font-size:clamp(1.3rem,4vw,1.7rem);font-weight:900;font-variant-numeric:tabular-nums;box-shadow:0 5px 0 #d6e0d1;position:relative;transition:transform .16s,background-color .16s}
 .choice:hover:not(:disabled){background:#f1f8e6;transform:translateY(-2px)}
 .choice:active:not(:disabled){transform:scale(.97)}
@@ -156,24 +158,19 @@
 .track{position:relative;height:110px}
 .track-line{position:absolute;left:0;right:0;top:64px;height:4px;background:#2d5a44;border-radius:2px}
 .tick{position:absolute;top:56px;width:2px;height:20px;background:#2d5a44;transform:translateX(-1px)}
-.tick.mid{top:48px;height:36px;width:4px;background:#e5a12a;transform:translateX(-2px)}
-.tick-label{position:absolute;top:88px;transform:translateX(-50%);font-size:.8rem;font-weight:900;color:#a36d00;white-space:nowrap}
 .nl-ball{position:absolute;top:18px;transform:translateX(-50%);display:grid;justify-items:center;transition:left .6s cubic-bezier(.2,.8,.3,1)}
 .nl-ball b{font-size:.95rem;background:#fff;border:2px solid var(--green);border-radius:10px;padding:1px 8px;font-variant-numeric:tabular-nums}
 .nl-ball i{font-style:normal;font-size:30px;line-height:1}
 .rule{margin:0;padding:10px 16px;border-radius:14px;background:#fff1d1;font-weight:800}
 
-/* Mercado */
-.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:100%;max-width:640px}
-.pcard{padding:14px;border-radius:18px;background:#fff;border:1px solid var(--line);box-shadow:0 4px 0 #e2e9dc;text-align:center}
-.pcard strong{display:block;font-size:1.05rem}
-.pcard .price{font-size:1.5rem;font-weight:950;font-variant-numeric:tabular-nums}
-.pcard .rounded{display:block;margin-top:4px;color:#2f6fb0;font-weight:900}
-.budget{padding:10px 18px;border-radius:14px;background:#123d2d;color:#fff;font-weight:900;font-size:1.15rem}
-.budget b{color:var(--lime);font-variant-numeric:tabular-nums}
-.phase{margin:0;font-weight:900;color:var(--green);letter-spacing:.06em;text-transform:uppercase;font-size:.85rem}
-.yesno{display:flex;gap:12px}
-.yesno .btn{min-width:140px;font-size:1.2rem}
+/* Problemas */
+.op-choice{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.op-btn{min-width:150px;min-height:84px;border:2px solid #c5d4c1;border-radius:20px;background:#fff;color:var(--ink);font-size:1.4rem;font-weight:950;box-shadow:0 5px 0 #d6e0d1;transition:transform .16s,background-color .16s}
+.op-btn b{display:block;font-size:2.2rem;line-height:1}
+.op-btn:hover:not(:disabled){background:#f1f8e6;transform:translateY(-2px)}
+.op-btn:active:not(:disabled){transform:scale(.97)}
+.op-btn.wrong{background:#ffe5ad;border-color:#f4c563}
+.op-q{margin:0;font-size:1.2rem;font-weight:900}
 
 /* Result */
 .finish{padding:clamp(25px,6vw,50px);text-align:center}
@@ -288,7 +285,7 @@ dialog::backdrop{background:#0a2a1d99}
     { topic: 'valor', name: 'Taquilla', icon: '🎟️', ua: 'Розряди: UM, C, D, U' },
     { topic: 'columna', name: 'Pase a la columna', icon: '🧮', ua: 'Додавання й віднімання в стовпчик' },
     { topic: 'redondeo', name: '¿A qué portería?', icon: '🥅', ua: 'Округлення' },
-    { topic: 'estimacion', name: 'Mercado de fichajes', icon: '💶', ua: 'Прикидка і задачі' },
+    { topic: 'problemas', name: 'Problemas del club', icon: '📰', ua: 'Задачі з текстом' },
   ];
   const stationOf = (topic) => STATIONS.find((s) => s.topic === topic);
   const PLACE_KEYS = ['UM', 'C', 'D', 'U'];
@@ -301,26 +298,44 @@ dialog::backdrop{background:#0a2a1d99}
     ['C', 'centenas', 'сотні (100)'],
     ['D', 'decenas', 'десятки (10)'],
     ['U', 'unidades', 'одиниці (1)'],
-    ['cifra', 'una de 0–9', 'цифра (4.528 має 4 цифри)'],
-    ['valor', '¿cuánto vale?', 'скільки вона важить: 5 у 4.528 = 500'],
-    ['descomponer', '4.528 = 4.000 + 500 + 20 + 8', 'розкласти на розряди'],
+    ['cifra', 'una de 0–9', 'цифра (4528 має 4 цифри)'],
+    ['valor', '¿cuánto vale?', 'скільки вона важить: 5 у 4528 = 500'],
+    ['descomponer', '4528 = 4000 + 500 + 20 + 8', 'розкласти на розряди'],
+    ['se lee', 'dos mil trescientos veintisiete', 'так читається 2327'],
+    ['en torre', 'un número debajo del otro', 'у стовпчик'],
+    ['sumandos · suma', '2135 + 1428 = 3563', 'доданки · сума'],
+    ['minuendo · sustraendo · diferencia', '1263 − 612 = 651', 'зменшуване · від’ємник · різниця'],
+    ['prueba de la resta', 'diferencia + sustraendo = minuendo', 'перевірка віднімання додаванням'],
     ['llevarse una', 'en la suma', 'перенести 1 у наступний стовпчик'],
     ['pedir prestado', 'en la resta', 'позичити 1 у сусіда зліва (3 → 13)'],
+    ['más cercana', 'la que está más cerca', 'найближча (при округленні)'],
     ['redondear', 'a la decena / centena / millar', 'округлити до десятків / сотень / тисяч'],
     ['más próxima', 'el número más cerca', 'найближча'],
-    ['estimar', 'calcular más o menos', 'прикинути приблизно'],
-    ['presupuesto', 'dinero que tienes', 'бюджет — скільки є грошей'],
-    ['¿Te alcanza?', '¿tienes bastante?', 'чи вистачить грошей?'],
+    ['¿Cuántos hay en total?', 'suma', 'скільки всього → додаємо'],
+    ['¿Cuántos quedan?', 'resta', 'скільки залишилось → віднімаємо'],
+    ['¿Cuántos más que…?', 'resta', 'на скільки більше → віднімаємо'],
+    ['¿Cuántos faltan?', 'resta', 'скільки бракує → віднімаємо'],
+    ['… más que …', '¡cuidado!', '«на N більше, ніж» — часто додаємо'],
   ];
 
   // ---------- Saved progress ----------
+  const DATA_VERSION = 3;
   const loadData = () => {
     const d = KF.gameData(SLUG);
-    return { topics: { ...(d.topics || {}) }, levels: { ...(d.levels || {}) }, passed: { ...(d.passed || {}) } };
+    const out = { v: DATA_VERSION, topics: { ...(d.topics || {}) }, levels: { ...(d.levels || {}) }, passed: { ...(d.passed || {}) } };
+    if (d.v !== DATA_VERSION) {
+      // v3 reworked levels of these topics; old level numbers no longer match.
+      for (const t of ['valor', 'columna', 'redondeo', 'estimacion']) {
+        delete out.levels[t];
+        for (const k of Object.keys(out.passed)) if (k.startsWith(`${t}:`)) delete out.passed[k];
+      }
+      delete out.topics.estimacion;
+    }
+    return out;
   };
   let data = loadData();
   const saveData = () => KF.gameData(SLUG, data);
-  const unlocked = (topic) => Math.max(1, data.levels[topic] || 1);
+  const unlocked = (topic) => Math.min(Math.max(1, data.levels[topic] || 1), Math.max(1, (M?.LEVELS?.[topic] || []).length));
   const levelsOf = (topic) => (M.LEVELS && M.LEVELS[topic]) || [];
 
   const recordTopic = (topic, correct) => {
@@ -340,7 +355,7 @@ dialog::backdrop{background:#0a2a1d99}
       if (c) return c.label;
     }
     if (a && typeof a === 'object' && 'UM' in a) return PLACE_KEYS.map((k) => `${a[k]} ${k}`).join(' + ');
-    if (a && typeof a === 'object' && 'exact' in a) return `${fmt(a.exact)} €`;
+    if (a && typeof a === 'object' && 'ok' in a) return a.ok ? 'Está bien resuelta' : `Hay un error; el resultado es ${fmt(a.value)}`;
     return fmt(a);
   };
 
@@ -429,7 +444,7 @@ dialog::backdrop{background:#0a2a1d99}
     $('play-label').textContent = session.mode === 'exam'
       ? `Partido-examen · ${session.index + 1}/${session.tasks.length}`
       : `${st.name} · nivel ${task.level} · ${session.index + 1}/${session.tasks.length}`;
-    $('prompt-es').textContent = task.es;
+    $('prompt-es').textContent = task.es.replace(/(\d|__) (UM|C|D|U)\b/g, '$1\u00a0$2');
     $('prompt-es').classList.toggle('long', task.es.length > 110);
     $('prompt-ua').textContent = task.ua || '';
     setUa(false);
@@ -532,12 +547,13 @@ dialog::backdrop{background:#0a2a1d99}
   };
 
   // Number entry with on-screen keypad; keyboard digits / Backspace / Enter.
-  const numberInput = ({ onSubmit, unit = '', maxLen = 5, okLabel = 'OK' }) => {
+  const numberInput = ({ onSubmit, onInput, unit = '', maxLen = 5, okLabel = 'OK' }) => {
     let value = '';
     const box = h('div', { class: 'num-box empty', 'aria-live': 'polite' });
     const draw = () => {
       box.classList.toggle('empty', !value);
       box.replaceChildren(value ? M.fmt(Number(value)) : '?', unit ? h('span', { class: 'unit', text: unit }) : '');
+      onInput?.(value);
     };
     const press = (k) => {
       if (k === 'back') value = value.slice(0, -1);
@@ -581,7 +597,8 @@ dialog::backdrop{background:#0a2a1d99}
     if (kind === 'decompose') return renderDecompose(task, work);
     if (kind === 'column') return session.mode === 'exam' ? renderColumnWhole(task, work) : renderColumnSteps(task, work);
     if (kind === 'round') return renderRound(task, work);
-    if (kind === 'estimate') return renderEstimate(task, work);
+    if (kind === 'problema') return renderProblem(task, work);
+    if (kind === 'fix') return renderFix(task, work);
     return renderNumber(task, work);
   };
 
@@ -604,7 +621,8 @@ dialog::backdrop{background:#0a2a1d99}
       task.choices.forEach((c, j) => { if (c.value === task.answer) buttons[j].classList.add('right'); });
       if (!r.correct) buttons[i].classList.add('wrong');
     };
-    work.append(h('div', { class: 'choices' }, buttons), h('p', { class: 'kbd-hint', text: `Клавіші 1–${buttons.length}` }));
+    const words = task.choices.some((c) => String(c.label).length > 12);
+    work.append(h('div', { class: `choices${words ? ' words' : ''}` }, buttons), h('p', { class: 'kbd-hint', text: `Клавіші 1–${buttons.length}` }));
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
@@ -617,7 +635,17 @@ dialog::backdrop{background:#0a2a1d99}
 
   const renderNumber = (task, work) => {
     if (task.data?.packs) work.append(packsView(task.data.packs, false).el);
-    const input = numberInput({ onSubmit: (v) => { ctrl = null; submitSimple(task, v); } });
+    const wall = task.data?.parts ? wallView(task.data) : null;
+    const blank = wall?.querySelector('.slot.active');
+    const input = numberInput({
+      onSubmit: (v) => { ctrl = null; submitSimple(task, v); },
+      onInput: (v) => { if (blank) blank.textContent = v || '?'; },
+    });
+    if (wall) {
+      work.append(wall, input.pad, input.hint);
+      ctrl = { onKey: input.onKey };
+      return;
+    }
     work.append(input.box, input.pad, input.hint);
     ctrl = { onKey: input.onKey };
   };
@@ -658,7 +686,7 @@ dialog::backdrop{background:#0a2a1d99}
       const left = PLACE_KEYS[i - 1];
       const right = PLACE_KEYS[i + 1];
       const c = { count: h('div', { class: 'pack-count' }), pile: h('div', { class: 'pile', 'aria-hidden': 'true' }) };
-      const kids = [h('h3', {}, k, h('small', { text: `${PACK_VALUE[k] === 1000 ? '1.000' : PACK_VALUE[k]}` })), c.pile, c.count];
+      const kids = [h('h3', {}, k, h('small', { text: M.fmt(PACK_VALUE[k]) })), c.pile, c.count];
       if (editable) {
         c.minus = h('button', { type: 'button', 'aria-label': `Забрати пачку ${k}`, onclick: () => { counts[k]--; draw(); } }, '−');
         const plus = h('button', { type: 'button', 'aria-label': `Додати пачку ${k}`, onclick: () => { counts[k]++; draw(); } }, '+');
@@ -791,7 +819,14 @@ dialog::backdrop{background:#0a2a1d99}
     const d = task.data;
     const nb = notebook(d, columnCount(d));
     fillOperands(nb, d);
-    const input = numberInput({ onSubmit: (v) => { ctrl = null; submitSimple(task, v); } });
+    const input = numberInput({
+      onSubmit: (v) => {
+        ctrl = null;
+        const r = M.checkAnswer(task, v);
+        if (d.prueba) work.append(pruebaNote(d.prueba));
+        resolveTask(r.correct && session.mistakes === 0, r.correct && session.mistakes ? opError(task) : r.error);
+      },
+    });
     work.append(nb.el, input.box, input.pad, input.hint);
     ctrl = { onKey: input.onKey };
   };
@@ -922,6 +957,7 @@ dialog::backdrop{background:#0a2a1d99}
       pad.querySelectorAll('button').forEach((b) => { b.disabled = true; });
       ctrl = null;
       if (d.op === '-') work.insertBefore(h('p', { class: 'prueba', text: `Prueba: ${M.fmt(d.result)} + ${M.fmt(d.b)} = ${M.fmt(d.a)} ✓` }), hint);
+      if (d.prueba) work.insertBefore(pruebaNote(d.prueba), hint);
       const clean = session.mistakes === 0;
       resolveTask(clean, clean ? null : {
         es: 'Lo has terminado. ¡La próxima vez a la primera!',
@@ -949,8 +985,7 @@ dialog::backdrop{background:#0a2a1d99}
   // ---------- Rounding: which goal is closer ----------
   const renderRound = (task, work) => {
     const d = task.data;
-    const hideLine = task.level >= 5 || d.hideLine;
-    if (hideLine) {
+    if (d.hideLine) {
       const input = numberInput({ onSubmit: (v) => { ctrl = null; afterRound(submitSimple(task, v)); } });
       work.append(input.box, input.pad, input.hint);
       ctrl = { onKey: input.onKey };
@@ -958,8 +993,7 @@ dialog::backdrop{background:#0a2a1d99}
     }
     const pct = ((d.n - d.low) / (d.high - d.low)) * 100;
     const track = h('div', { class: 'track' }, h('div', { class: 'track-line' }));
-    for (let i = 0; i <= 10; i++) track.append(h('i', { class: `tick${i === 5 ? ' mid' : ''}`, style: `left:${i * 10}%` }));
-    track.append(h('span', { class: 'tick-label', style: 'left:50%', text: M.fmt(d.mid) }));
+    for (let i = 0; i <= 10; i++) track.append(h('i', { class: 'tick', style: `left:${i * 10}%` }));
     const ball = h('div', { class: 'nl-ball', style: `left:${pct}%` }, h('b', { text: M.fmt(d.n) }), h('i', { text: '⚽' }));
     track.append(ball);
     const goal = (value, side) => h('button', {
@@ -994,66 +1028,91 @@ dialog::backdrop{background:#0a2a1d99}
     if (d.n === d.mid) $('work').append(h('p', { class: 'rule', text: '¡Justo en el medio! El 5 sube → ' + M.fmt(d.high) }));
   };
 
-  // ---------- Estimation market ----------
-  const renderEstimate = (task, work) => {
+  // Book's «muro de descomposición»: 3519 = __ C + 1 D + 9 U
+  const wallView = (d) => {
+    const parts = [];
+    d.parts.forEach((p, i) => {
+      if (i) parts.push(h('span', { text: '+' }));
+      const isBlank = p.value === null || p.value === undefined;
+      parts.push(h('span', {}, h('span', { class: `slot${isBlank ? ' active' : ''}`, text: isBlank ? '?' : String(p.value) }), h('small', { text: p.key })));
+    });
+    return h('div', { class: 'decomp' }, h('span', { text: `${M.fmt(d.n)} =` }), parts);
+  };
+
+  // After «prueba de la resta»: does diferencia + sustraendo give the minuendo?
+  const pruebaNote = (pr) => h('p', { class: 'prueba' },
+    `${M.fmt(pr.diferencia)} + ${M.fmt(pr.sustraendo)} = ${M.fmt(pr.diferencia + pr.sustraendo)} `,
+    pr.ok ? `= ${M.fmt(pr.minuendo)} ✓ La resta está bien.` : `≠ ${M.fmt(pr.minuendo)} ✗ No coincide: la resta está mal.`);
+
+  // ---------- Find the mistake: a solved operation, right or wrong ----------
+  const renderFix = (task, work) => {
     const d = task.data;
-    const placeEs = d.place === 'UM' ? 'al millar' : 'a la centena';
-    const cards = d.items.map((it, i) => h('div', { class: 'pcard' },
-      h('strong', { text: it.name }),
-      h('div', { class: 'price', text: `${M.fmt(it.price)} €` }),
-      h('span', { class: 'rounded', hidden: true, 'data-i': i, text: `≈ ${M.fmt(d.rounded[i])} €` })));
-    const phaseEl = h('p', { class: 'phase' });
-    const hint = hintEl();
+    const nb = notebook(d, columnCount({ ...d, result: Math.max(d.result, d.shown) }));
+    fillOperands(nb, d);
+    const S = digitMap(d.shown);
+    for (const p of nb.places) nb.cells.result[p].textContent = S[p] ?? '';
     const area = h('div', { class: 'work', style: 'padding:0' });
-    let clean = true;
-    const showRounded = () => work.querySelectorAll('.rounded').forEach((r) => { r.hidden = false; });
-
-    const ask = (phase, title, es, ua, next) => {
-      phaseEl.textContent = title;
-      sayHint(hint, es, ua);
-      const input = numberInput({
-        unit: '€',
-        onSubmit: (v) => {
-          const r = M.checkAnswer(task, { phase, value: v });
-          if (r.correct) { next(); return; }
-          clean = false;
-          sayHint(hint, r.error?.es || 'Revísalo otra vez.', r.error?.ua || 'Перевір ще раз.');
-          shake(input.box);
-          input.reset();
-        },
-      });
-      const help = phase === 'estimate' ? h('button', { class: 'btn btn-light', type: 'button', onclick: showRounded }, '💡 Показати округлені ціни') : '';
-      area.replaceChildren(input.box, input.pad, help, input.hint);
-      ctrl = { onKey: input.onKey };
-    };
-
-    const askFits = () => {
-      phaseEl.textContent = '3 · ¿Te alcanza?';
-      sayHint(hint, `Total: ${M.fmt(d.exact)} €. Presupuesto: ${M.fmt(d.budget)} €.`, 'Чи вистачить грошей?');
-      const answer = (yes) => {
-        const r = M.checkAnswer(task, { phase: 'fits', value: yes });
-        if (!r.correct) clean = false;
+    const judge = (ok) => {
+      if (ok) {
         ctrl = null;
         area.replaceChildren();
-        resolveTask(clean, clean ? null : r.error || { es: `Total ${M.fmt(d.exact)} € y presupuesto ${M.fmt(d.budget)} €.`, ua: 'Порівняй суму з бюджетом.' });
-      };
-      area.replaceChildren(h('div', { class: 'yesno' },
-        h('button', { class: 'btn btn-dark', type: 'button', onclick: () => answer(true) }, 'Sí (S)'),
-        h('button', { class: 'btn btn-light', type: 'button', onclick: () => answer(false) }, 'No (N)')));
-      ctrl = {
-        onKey: (e) => {
-          if (e.key === 's' || e.key === 'S') { answer(true); return true; }
-          if (e.key === 'n' || e.key === 'N') { answer(false); return true; }
-          return false;
-        },
-      };
+        submitSimple(task, { ok: true });
+        return;
+      }
+      for (const p of nb.places) nb.cells.result[p].classList.add('crossed');
+      const input = numberInput({ onSubmit: (v) => { ctrl = null; submitSimple(task, { ok: false, value: v }); } });
+      area.replaceChildren(h('p', { class: 'op-q', text: 'Escribe el resultado correcto:' }), input.box, input.pad, input.hint);
+      ctrl = { onKey: input.onKey };
     };
+    area.append(h('div', { class: 'op-choice' },
+      h('button', { type: 'button', class: 'op-btn', onclick: () => judge(true) }, h('b', { text: '✓' }), 'Está bien'),
+      h('button', { type: 'button', class: 'op-btn', onclick: () => judge(false) }, h('b', { text: '✗' }), 'Hay un error')),
+    h('p', { class: 'kbd-hint', text: 'Клавіші 1 — правильно, 2 — є помилка' }));
+    work.append(nb.el, area);
+    ctrl = {
+      onKey: (e) => {
+        if (e.key === '1') { judge(true); return true; }
+        if (e.key === '2') { judge(false); return true; }
+        return false;
+      },
+    };
+  };
 
-    work.append(h('div', { class: 'budget' }, 'Presupuesto: ', h('b', { text: `${M.fmt(d.budget)} €` })), h('div', { class: 'players' }, cards), phaseEl, hint, area);
-    ask('estimate', '1 · Estima', `Redondea los precios ${placeEs} y suma.`, `Округли ціни (${d.place === 'UM' ? 'до тисяч' : 'до сотень'}) і додай.`, () => {
-      showRounded();
-      ask('exact', '2 · Calcula exacto', 'Ahora suma los precios exactos.', 'Тепер додай точні ціни.', askFits);
-    });
+  // ---------- Word problems: pick the operation, then solve in a column ----------
+  const opError = (task) => ({
+    es: task.data.op === '+' ? 'Primero elige bien: aquí hay que sumar.' : 'Primero elige bien: aquí hay que restar.',
+    ua: task.data.op === '+' ? 'Спершу треба було обрати додавання.' : 'Спершу треба було обрати віднімання.',
+  });
+
+  const renderProblem = (task, work) => {
+    const hint = hintEl();
+    const pickOp = (op) => {
+      const r = M.checkOp ? M.checkOp(task, op) : { correct: op === task.data.op };
+      if (!r.correct) {
+        session.mistakes++;
+        const btn = work.querySelector(`[data-op="${op}"]`);
+        btn.classList.add('wrong');
+        btn.disabled = true;
+        sayHint(hint, r.error?.es || 'Lee otra vez la pregunta.', r.error?.ua || 'Прочитай питання ще раз.');
+        shake(btn);
+        return;
+      }
+      work.replaceChildren();
+      if (session.mode === 'exam') renderColumnWhole(task, work);
+      else renderColumnSteps(task, work);
+    };
+    const opBtn = (op, label) => h('button', { type: 'button', class: 'op-btn', 'data-op': op, onclick: () => pickOp(op) }, h('b', { text: op === '+' ? '+' : '−' }), label);
+    work.append(h('p', { class: 'op-q', text: '¿Qué operación hay que hacer?' }),
+      h('div', { class: 'op-choice' }, opBtn('+', 'Suma'), opBtn('-', 'Resta')),
+      hint,
+      h('p', { class: 'kbd-hint', text: 'Клавіші + або −' }));
+    ctrl = {
+      onKey: (e) => {
+        if (e.key === '+') { pickOp('+'); return true; }
+        if (e.key === '-') { pickOp('-'); return true; }
+        return false;
+      },
+    };
   };
 
   // ---------- Glossary ----------
