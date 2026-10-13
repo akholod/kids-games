@@ -577,18 +577,21 @@ dialog::backdrop{background:#0a2a1d99}
   };
 
   // Number entry with on-screen keypad; keyboard digits / Backspace / Enter.
-  const numberInput = ({ onSubmit, onInput, unit = '', maxLen = 5, okLabel = 'OK' }) => {
+  // rtl: column answers are typed from the units up, so each new digit goes to the left.
+  const numberInput = ({ onSubmit, onInput, unit = '', maxLen = 5, okLabel = 'OK', rtl = false }) => {
     let value = '';
     const box = h('div', { class: 'num-box empty', 'aria-live': 'polite' });
     const draw = () => {
       box.classList.toggle('empty', !value);
-      box.replaceChildren(value ? M.fmt(Number(value)) : '?', unit ? h('span', { class: 'unit', text: unit }) : '');
+      // A leading 0 typed right to left is a real digit (tens of 9706), keep it visible.
+      const text = rtl && /^0./.test(value) ? value : M.fmt(Number(value));
+      box.replaceChildren(value ? text : '?', unit ? h('span', { class: 'unit', text: unit }) : '');
       onInput?.(value);
     };
     const press = (k) => {
-      if (k === 'back') value = value.slice(0, -1);
+      if (k === 'back') value = rtl ? value.slice(1) : value.slice(0, -1);
       else if (k === 'ok') { if (value) onSubmit(Number(value)); return; }
-      else if (value.length < maxLen) value = value === '0' ? k : value + k;
+      else if (value.length < maxLen) value = rtl ? k + value : value === '0' ? k : value + k;
       draw();
     };
     const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) => h('button', {
@@ -613,7 +616,8 @@ dialog::backdrop{background:#0a2a1d99}
       return false;
     };
     const reset = () => { value = ''; draw(); };
-    return { box, pad, onKey, reset, hint: h('p', { class: 'kbd-hint', text: 'Можна вводити з клавіатури: цифри, ⌫, Enter' }) };
+    const hintText = rtl ? 'Пиши справа наліво: спершу одиниці. Клавіатура: цифри, ⌫, Enter' : 'Можна вводити з клавіатури: цифри, ⌫, Enter';
+    return { box, pad, onKey, reset, hint: h('p', { class: 'kbd-hint', text: hintText }) };
   };
 
   // ---------- Renderers per kind ----------
@@ -847,9 +851,15 @@ dialog::backdrop{background:#0a2a1d99}
 
   const renderColumnWhole = (task, work) => {
     const d = task.data;
-    const nb = notebook(d, columnCount(d));
+    const cols = columnCount(d);
+    const nb = notebook(d, cols);
     fillOperands(nb, d);
+    const order = nb.places.slice().reverse(); // U, D, C, UM
     const input = numberInput({
+      rtl: true,
+      maxLen: cols,
+      // Typed digits also appear in the answer row, under their columns.
+      onInput: (v) => order.forEach((p, i) => { nb.cells.result[p].textContent = v[v.length - 1 - i] ?? ''; }),
       onSubmit: (v) => {
         ctrl = null;
         const r = M.checkAnswer(task, v);
@@ -909,17 +919,9 @@ dialog::backdrop{background:#0a2a1d99}
       return r && r.error ? r.error : null;
     };
 
-    const borrow = () => {
+    // Marks the borrow in the notebook (small 1, crossed digits to the left).
+    const applyBorrow = () => {
       const p = order[step];
-      const s = d.steps[step];
-      if (!s || step >= needed) return;
-      if (borrowedHere) return;
-      if (!s.borrowed) {
-        session.mistakes++;
-        sayHint(hint, `Aquí no hace falta: ${cur[p]} es mayor o igual que ${B[p] ?? 0}.`, 'Тут позичати не треба: зверху більше або стільки ж.');
-        shake(nb.el);
-        return;
-      }
       borrowedHere = true;
       cur[p] += 10;
       smallOne[p] = true;
@@ -936,6 +938,20 @@ dialog::backdrop{background:#0a2a1d99}
         drawTop(order[j]);
       }
       drawTop(p);
+    };
+
+    const borrow = () => {
+      const p = order[step];
+      const s = d.steps[step];
+      if (!s || step >= needed) return;
+      if (borrowedHere) return;
+      if (!s.borrowed) {
+        session.mistakes++;
+        sayHint(hint, `Aquí no hace falta: ${cur[p]} es mayor o igual que ${B[p] ?? 0}.`, 'Тут позичати не треба: зверху більше або стільки ж.');
+        shake(nb.el);
+        return;
+      }
+      applyBorrow();
       sayHint(hint, `Ahora: ${cur[p]} − ${B[p] ?? 0}`, `Тепер віднімай: ${cur[p]} − ${B[p] ?? 0}`);
     };
 
@@ -943,6 +959,8 @@ dialog::backdrop{background:#0a2a1d99}
       if (step >= needed) return;
       const p = order[step];
       const s = d.steps[step];
+      // Borrowed in the head and got the right digit: draw the borrow, no mistake.
+      if (d.op === '-' && s.borrowed && !borrowedHere && digit === s.digit) applyBorrow();
       if (d.op === '-' && s.borrowed && !borrowedHere) {
         session.mistakes++;
         const err = stepError(digit, false);
