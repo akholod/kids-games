@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#174d37">
+<title>Футбольний квіз — Keeper Fun Games</title>
+<link rel="stylesheet" href="../../shared/kf.css">
+<style>
+.game-shell{max-width:900px;margin:0 auto;padding:17px 0 56px}
+.game-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}
+[hidden]{display:none!important}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* Start */
+.hub{padding:clamp(22px,5vw,44px)}
+.hub-head{display:flex;gap:18px;align-items:center;margin-bottom:24px}
+.hub-icon{flex:none;width:84px;height:84px;display:grid;place-items:center;background:#fff1d1;border-radius:24px;font-size:2.8rem;transform:rotate(-7deg)}
+.hub h1{font-size:clamp(1.9rem,6vw,3rem);line-height:1.05;margin:0 0 6px}
+.hub-head p{margin:0;color:var(--muted);font-size:1.02rem;line-height:1.45}
+.hub h2{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.level{min-height:96px;padding:14px 12px;border-radius:20px;border:3px solid #d3dfcf;background:#fff;color:var(--ink);text-align:left;display:flex;flex-direction:column;gap:3px;box-shadow:0 5px 0 #dfe7da;transition:transform .16s,background-color .16s,border-color .16s}
+.level b{font-size:1.25rem;letter-spacing:-.02em}
+.level b span{margin-right:6px}
+.level small{color:var(--muted);font-weight:700;line-height:1.3}
+.level .count{margin-top:auto;font-size:.78rem;color:#7a8f82;font-weight:800}
+.level:hover:not(:disabled){border-color:#9fca6a;background:#f6fbec;transform:translateY(-2px)}
+.level:active:not(:disabled){transform:scale(.96)}
+.level[aria-checked=true]{border-color:var(--green);background:#e8f7d5;box-shadow:0 5px 0 #9fca6a}
+.level:disabled{opacity:.45}
+.rules{display:grid;gap:10px;margin:0 0 22px;padding:0;list-style:none}
+.rules li{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:16px;background:#f3f6ea;font-weight:700;line-height:1.4}
+.rules .ico{flex:none;display:flex;gap:4px;align-items:center;min-width:40px}
+.rules .ico i{display:block;width:14px;height:20px;border-radius:3px;box-shadow:0 2px 0 #0002}
+.start-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{min-width:92px;padding:9px 14px;border-radius:16px;background:#fff;border:1px solid var(--line)}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:.78rem;color:var(--muted);font-weight:800}
+.start-btn{min-width:220px;font-size:1.15rem}
+
+/* Match head (same as the exam) */
+.match-head{background:#123d2d;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap}
+.match-head strong{color:var(--lime);font-size:.92rem;letter-spacing:.08em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dot{width:14px;height:14px;border:2px solid #c6d8c6;border-radius:50%}
+.dot.ok{background:var(--lime);border-color:var(--lime)}
+.dot.miss{background:var(--gold);border-color:var(--gold)}
+.dot.now{border-color:#fff;box-shadow:0 0 0 3px #ffffff3b}
+.cards{display:flex;gap:6px;align-items:center;min-width:16px}
+.cards i{display:block;width:16px;height:22px;border-radius:3px;border:2px solid #ffffff55}
+.cards i.yellow,.rules i.yellow{background:#ffd23f;border-color:#ffd23f}
+.cards i.red,.rules i.red{background:#e2453c;border-color:#e2453c}
+
+/* Status strip: scoreboard, mini pitch, coin meter */
+.strip{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 22px;background:#0f3526;color:#fff;border-top:1px solid #ffffff14}
+.board{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;background:#081f16;box-shadow:inset 0 0 0 1px #ffffff1a;font-weight:900;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase}
+.board .sc{font-size:1.3rem;color:var(--lime);font-variant-numeric:tabular-nums;letter-spacing:.04em;min-width:3.4em;text-align:center}
+.board.goal{animation:goal 1s ease}
+@keyframes goal{20%{background:var(--lime);color:var(--ink)}20%,60%{transform:scale(1.06)}}
+.board.goal .sc{animation:goal-sc 1s ease}
+@keyframes goal-sc{20%,60%{color:var(--ink)}}
+.pitch{position:relative;flex:1 1 160px;min-width:150px;max-width:300px;height:40px;border-radius:9px;border:2px solid #ffffffa8;background:repeating-linear-gradient(90deg,#2a7a4b 0 12.5%,#257044 12.5% 25%)}
+.pitch:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;background:#ffffffa8;transform:translateX(-1px)}
+.pitch:after{content:"";position:absolute;left:50%;top:50%;width:16px;height:16px;border:2px solid #ffffffa8;border-radius:50%;transform:translate(-50%,-50%)}
+.pitch .net{position:absolute;right:-2px;top:9px;width:10px;height:18px;border:2px solid #fff;border-right:0;background:repeating-linear-gradient(45deg,#ffffff55 0 2px,transparent 2px 5px)}
+.pitch .ball{position:absolute;top:50%;z-index:1;font-size:20px;line-height:1;transform:translate(-50%,-50%);transition:left .55s cubic-bezier(.2,.8,.3,1)}
+.pitch .lab{position:absolute;inset:0;display:grid;place-items:center;font-size:.72rem;font-weight:900;letter-spacing:.14em;color:var(--ink);background:var(--lime);border-radius:7px;opacity:0;transition:opacity .2s}
+.pitch.scored .lab{opacity:1}
+.meter{margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;background:#ffffff12;font-weight:800;font-size:.86rem;white-space:nowrap}
+.meter .slots{display:inline-flex;gap:3px}
+.meter .slot{width:20px;height:20px;display:grid;place-items:center;font-size:16px;line-height:1}
+.meter .slot.empty:before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid #ffffff80}
+.meter.drop{animation:drop .9s ease}
+@keyframes drop{25%{background:var(--gold);color:var(--ink);transform:scale(1.06)}}
+
+/* Question */
+.prompt{background:#eaf5db;padding:20px 22px;display:flex;gap:14px;align-items:flex-start;justify-content:space-between}
+.tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.lang{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:8px;font-size:.78rem;font-weight:950;letter-spacing:.1em}
+.lang.uk{background:#0057b7;color:#ffd500}
+.lang.es{background:#c60b1e;color:#ffc400}
+.lang.en{background:#1d2c6b;color:#fff}
+.cat{font-size:.85rem;font-weight:800;color:var(--muted)}
+.q-text{font-size:clamp(1.35rem,4.6vw,1.95rem);font-weight:900;line-height:1.25;margin:0;letter-spacing:-.02em;text-wrap:pretty}
+.q-text.long{font-size:clamp(1.15rem,3.8vw,1.55rem);line-height:1.32}
+.q-text:focus,.q-text:focus-visible{outline:none}
+.q-ua{margin:12px 0 0;padding:10px 14px;border-radius:14px;background:#fff;font-weight:700;line-height:1.4}
+.ua-btn{flex:none;min-width:56px;min-height:56px;border:2px solid #c5d4c1;border-radius:16px;background:#fff;font-size:1.5rem;transition:background-color .16s,border-color .16s,transform .16s}
+.ua-btn:hover{background:#f1f8e6;border-color:#9fca6a}
+.ua-btn:active{transform:scale(.96)}
+.ua-btn[aria-pressed=true]{border-color:var(--green);background:#e3f4cb}
+.work{padding:22px clamp(14px,4vw,28px) 8px;display:grid;justify-items:center;gap:10px}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,640px)}
+.choice{min-height:72px;padding:12px 16px 12px 40px;border:2px solid #c5d4c1;border-radius:18px;background:#fff;color:var(--ink);font-size:clamp(1.05rem,3.4vw,1.3rem);font-weight:900;line-height:1.25;text-align:left;box-shadow:0 5px 0 #d6e0d1;position:relative;overflow-wrap:anywhere;transition:transform .16s,background-color .16s,border-color .16s}
+.choice:hover:not(:disabled){background:#f1f8e6;border-color:#9fca6a;transform:translateY(-2px)}
+.choice:active:not(:disabled){transform:scale(.96)}
+.choice:disabled{cursor:default}
+.choice kbd{position:absolute;top:50%;left:12px;transform:translateY(-50%);width:20px;height:20px;display:grid;place-items:center;border-radius:6px;background:#eef3e8;font:800 .75rem system-ui;color:var(--muted)}
+.choice.right{background:var(--lime);border-color:#9fca6a;color:var(--ink)}
+.choice.right kbd{background:#ffffff99}
+.choice.wrong{background:#ffe5ad;border-color:#f4c563}
+.choice.dim{opacity:.5}
+.kbd-hint{margin:4px 0 0;color:var(--muted);font-size:.85rem;text-align:center}
+
+/* Feedback */
+.feedback{padding:12px 22px 26px;text-align:center}
+.feedback:empty{padding:0}
+.fb-box{display:block;max-width:640px;margin:0 auto;padding:16px 20px;border-radius:18px;text-align:left;font-weight:700;line-height:1.45}
+.fb-box.ok{background:#e3f4cb}
+.fb-box.miss{background:#fff1d1}
+.fb-box p{margin:0 0 6px}
+.fb-box p:last-child{margin-bottom:0}
+.fb-title{font-size:1.25rem;font-weight:950}
+.fact{display:flex;gap:8px;align-items:flex-start;margin-top:8px!important;padding-top:10px;border-top:1px dashed #0000001f}
+.fact .lang{flex:none;min-height:22px;padding:0 7px;font-size:.68rem;margin-top:1px}
+.ref{display:flex;gap:16px;align-items:center;margin:2px 0 10px}
+.ref-card{flex:none;width:52px;height:72px;border-radius:8px;box-shadow:0 8px 18px #0003;transform:rotate(-8deg);animation:ref-in .45s cubic-bezier(.2,1.4,.4,1) both}
+.ref-card.yellow{background:#ffd23f}
+.ref-card.red{background:#e2453c}
+.ref p{margin:0}
+@keyframes ref-in{from{transform:translateY(-30px) rotate(-30deg) scale(.6);opacity:0}}
+.feedback .btn{margin-top:16px;min-width:220px}
+
+/* Finish */
+.finish{padding:clamp(25px,6vw,50px);text-align:center}
+.finish h1{font-size:clamp(2rem,6vw,3rem);margin:0 0 12px}
+.finish .score{display:inline-block;background:var(--green);color:var(--lime);padding:12px 29px;border-radius:18px;font-size:2.8rem;font-weight:950;margin-bottom:18px;font-variant-numeric:tabular-nums}
+.finish p{color:var(--muted);font-size:1.08rem;max-width:520px;margin:0 auto 20px;line-height:1.5}
+.sum{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:0 auto 22px}
+.sum .stat{text-align:center;min-width:104px}
+.sum .stat b{display:flex;justify-content:center;align-items:center;gap:4px;min-height:1.6rem}
+.sum .stat i{display:block;width:14px;height:20px;border-radius:3px}
+.sum .stat i.yellow{background:#ffd23f}
+.finish .actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.finish .actions .btn{min-width:180px}
+
+@media(max-width:600px){
+  .game-shell{padding-top:8px}
+  .panel{border-radius:22px}
+  .hub-icon{width:64px;height:64px;font-size:2.1rem}
+  .levels{grid-template-columns:minmax(0,1fr);gap:10px}
+  .level{min-height:64px;display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:12px}
+  .level small{grid-column:2}
+  .level .count{grid-column:2;margin-top:0}
+  .level b{grid-row:span 3}
+  .start-btn{width:100%}
+  .match-head,.strip{padding:12px 16px}
+  .meter{margin-left:0}
+  .pitch{max-width:none}
+  .prompt{padding:16px}
+  .choices.long{grid-template-columns:minmax(0,1fr)}
+  .feedback{padding:10px 14px 22px}
+  .sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .sum .stat{min-width:0;padding:9px 6px}
+}
+@media(hover:none){.kbd-hint,.choice kbd{display:none}.choice{padding-left:16px;text-align:center}}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></header>
+<main class="wrap game-shell">
+  <div class="game-top"><a class="back-link" href="../../">← До каталогу</a><span class="eyebrow muted">UA · ES · EN</span></div>
+  <div class="panel">
+    <section class="hub" id="start">
+      <div class="hub-head">
+        <div class="hub-icon" aria-hidden="true">🏆</div>
+        <div><h1>Футбольний квіз</h1><p>Чемпіонати, клуби, зірки й правила. Питання українською, español та English.</p></div>
+      </div>
+      <h2 id="levels-title">Рівень</h2>
+      <div class="levels" id="levels" role="radiogroup" aria-labelledby="levels-title"></div>
+      <ul class="rules">
+        <li><span class="ico" aria-hidden="true"><i class="yellow"></i><i class="red"></i></span><span>Перша помилка — жовта картка, друга — червона, і раунд починається знову.</span></li>
+        <li><span class="ico" aria-hidden="true">🪙</span><span>Кожні 5 правильних відповідей — 1 монета. <b class="tnum" id="start-meter"></b></span></li>
+      </ul>
+      <div class="start-row">
+        <div class="stats" id="stats"></div>
+        <button class="btn btn-dark start-btn" type="button" id="start-btn">Почати матч ▶</button>
+      </div>
+    </section>
+
+    <section id="play" hidden>
+      <div class="match-head"><strong id="play-label"></strong><div class="cards" id="cards" aria-label="Картки"></div><div class="dots" id="dots" aria-hidden="true"></div></div>
+      <div class="strip">
+        <div class="board" id="board" aria-live="polite"><span>Наші</span><span class="sc" id="score-board">0 : 0</span></div>
+        <div class="pitch" id="pitch" aria-hidden="true" title="3 правильні поспіль — гол!"><span class="net"></span><span class="ball" id="ball">⚽</span><span class="lab">ГОЛ!</span></div>
+        <div class="meter" id="meter"></div>
+      </div>
+      <div class="prompt">
+        <div>
+          <div class="tags"><span class="lang" id="q-lang"></span><span class="cat" id="q-cat"></span></div>
+          <p class="q-text" id="q-text" tabindex="-1"></p>
+          <p class="q-ua" id="q-ua" hidden></p>
+        </div>
+        <button class="ua-btn" type="button" id="ua-btn" aria-pressed="false" aria-label="Переклад українською" title="Переклад українською (клавіша U)">🇺🇦</button>
+      </div>
+      <div class="work">
+        <div class="choices" id="choices"></div>
+        <p class="kbd-hint" id="kbd-hint">Клавіші 1–4 · U — переклад · Esc — вийти</p>
+      </div>
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="finish" id="finish" hidden>
+      <h1 id="finish-title"></h1>
+      <div class="score" id="finish-score"></div>
+      <div class="sum" id="finish-sum"></div>
+      <p id="finish-text"></p>
+      <div class="actions"><button class="btn btn-dark" type="button" id="again-btn">Ще раунд ↺</button><a class="btn btn-light" href="../../">До каталогу</a></div>
+    </section>
+  </div>
+</main>
+
+<script src="../../shared/kf.js"></script>
+<script src="../../shared/kf-ui.js"></script>
+<script src="questions.js"></script>
+<script>
+'use strict';
+(() => {
+  const SLUG = 'football-quiz';
+  const ROUND = 12;
+  const PER_COIN = 5;
+  const GOAL_STREAK = 3;
+  const $ = (id) => document.getElementById(id);
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const h = (tag, props = {}, ...kids) => {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    el.append(...kids.flat().filter((x) => x !== null && x !== undefined && x !== false));
+    return el;
+  };
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const restart = (el, cls) => {
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+  };
+
+  const LEVELS = [
+    { id: '1', name: 'Фанат', icon: '⚽', desc: 'Для тих, хто любить футбол', has: (q) => q.level === 1 },
+    { id: '2', name: 'Експерт', icon: '🧠', desc: 'Роки, рекорди, деталі', has: (q) => q.level === 2 },
+    { id: 'mix', name: 'Мікс', icon: '🎲', desc: 'Усе разом', has: () => true },
+  ];
+  const LANG = { uk: 'UA', es: 'ES', en: 'EN' };
+  const CATS = { wc: '🏆 Турніри', clubs: '🏟️ Клуби', players: '⭐ Гравці', rules: '📏 Правила' };
+  const PRAISE = {
+    uk: ['Так! ✅', 'Гол! ⚽', 'Точно! ✅', 'Супер! ✅'],
+    es: ['¡Muy bien! ✅', '¡Golazo! ⚽', '¡Perfecto! ✅', '¡Eso es! ✅'],
+    en: ['Great! ✅', 'Goal! ⚽', 'Correct! ✅', 'Well done! ✅'],
+  };
+
+  // Only well-formed questions: 4 options, valid answer index, unique id.
+  const BANK = (() => {
+    const ids = new Set();
+    return (Array.isArray(window.QUIZ_QUESTIONS) ? window.QUIZ_QUESTIONS : []).filter((q) => {
+      const ok = q && q.id && !ids.has(q.id) && q.q && Array.isArray(q.options) && q.options.length === 4
+        && Number.isInteger(q.answer) && q.answer >= 0 && q.answer < 4 && LANG[q.lang];
+      if (ok) ids.add(q.id);
+      return ok;
+    });
+  })();
+  const poolOf = (levelId) => BANK.filter((LEVELS.find((l) => l.id === levelId) || LEVELS[2]).has);
+
+  // ---------- Saved data: { level, seen: [ids], toCoin: 0..4, goals } ----------
+  const loadData = () => {
+    const d = KF.gameData(SLUG);
+    return {
+      level: LEVELS.some((l) => l.id === d.level) ? d.level : '1',
+      seen: Array.isArray(d.seen) ? d.seen : [],
+      toCoin: Math.min(PER_COIN - 1, Math.max(0, d.toCoin | 0)),
+      goals: d.goals | 0,
+    };
+  };
+  let data = loadData();
+  const saveData = () => KF.gameData(SLUG, data);
+
+  // Draw a round: unseen first; when the pool runs out, start the seen list over.
+  const drawRound = (levelId) => {
+    const pool = poolOf(levelId);
+    const seen = new Set(data.seen);
+    let list = shuffle(pool.filter((q) => !seen.has(q.id))).slice(0, ROUND);
+    if (list.length < Math.min(ROUND, pool.length)) {
+      const taken = new Set(list.map((q) => q.id));
+      list = list.concat(shuffle(pool.filter((q) => !taken.has(q.id))).slice(0, ROUND - list.length));
+      const poolIds = new Set(pool.map((q) => q.id));
+      data.seen = data.seen.filter((id) => !poolIds.has(id));
+      saveData();
+    }
+    return list;
+  };
+  const markSeen = (q) => {
+    data.seen = data.seen.filter((id) => id !== q.id).concat(q.id);
+    saveData();
+  };
+
+  // ---------- Coin meter ----------
+  const meterSlots = (n) => Array.from({ length: PER_COIN }, (_, i) => h('span', { class: `slot${i < n ? '' : ' empty'}`, text: i < n ? '⚽' : '' }));
+  const drawMeter = () => {
+    $('meter').replaceChildren(h('span', { text: 'до монети' }), h('span', { class: 'slots' }, meterSlots(data.toCoin)));
+    $('meter').setAttribute('aria-label', `До монети: ${data.toCoin} з ${PER_COIN}`);
+    $('start-meter').textContent = data.toCoin ? `Уже ${data.toCoin} з ${PER_COIN}.` : '';
+  };
+
+  // ---------- Start screen ----------
+  let screen = 'start';
+  const show = (id) => {
+    screen = id;
+    for (const s of ['start', 'play', 'finish']) $(s).hidden = s !== id;
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  };
+
+  const levelButtons = () => [...$('levels').querySelectorAll('.level')];
+  const setLevel = (id, focus) => {
+    data.level = id;
+    saveData();
+    for (const b of levelButtons()) {
+      const on = b.dataset.level === id;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+      if (on && focus) b.focus();
+    }
+  };
+  const moveLevel = (step) => {
+    const open = levelButtons().filter((b) => !b.disabled);
+    const i = open.findIndex((b) => b.dataset.level === data.level);
+    const next = open[(i + step + open.length) % open.length];
+    if (next) setLevel(next.dataset.level, true);
+  };
+
+  const renderStart = () => {
+    data = loadData();
+    if (!poolOf(data.level).length) data.level = 'mix';
+    $('levels').replaceChildren(...LEVELS.map((l) => {
+      const n = poolOf(l.id).length;
+      return h('button', {
+        type: 'button', class: 'level', role: 'radio', 'data-level': l.id, disabled: !n,
+        onclick: () => setLevel(l.id),
+        ondblclick: () => startRound(),
+      }, h('b', {}, h('span', { 'aria-hidden': 'true', text: l.icon }), l.name), h('small', { text: l.desc }), h('span', { class: 'count tnum', text: `${n} питань` }));
+    }));
+    setLevel(data.level);
+    const g = KF.get().games[SLUG];
+    const stat = (value, label) => h('div', { class: 'stat' }, h('b', { text: value }), h('span', { text: label }));
+    $('stats').replaceChildren(
+      stat(String(g?.plays || 0), 'раундів'),
+      stat(g?.plays ? `${g.best}/${g.max || ROUND}` : '—', 'рекорд'),
+      stat(String(data.goals), 'голів'));
+    $('start-btn').disabled = !BANK.length;
+    drawMeter();
+  };
+
+  // ---------- Round ----------
+  let round = null;
+  let cur = null; // { q, options, correctIndex, answered, buttons }
+
+  const startRound = () => {
+    const list = drawRound(data.level);
+    if (!list.length) return;
+    round = { list, index: 0, score: 0, results: [], cards: 0, streak: 0, goals: 0, startCoins: KF.get().coins };
+    drawCards();
+    drawBoard();
+    moveBall(0);
+    drawMeter();
+    show('play');
+    showQuestion();
+  };
+
+  const drawCards = () => {
+    $('cards').replaceChildren(...Array.from({ length: round.cards }, (_, i) => h('i', { class: i ? 'red' : 'yellow' })));
+    $('cards').setAttribute('aria-label', round.cards ? `Картки: ${round.cards === 1 ? 'жовта' : 'жовта і червона'}` : 'Карток немає');
+  };
+  const drawDots = () => {
+    $('dots').replaceChildren(...round.list.map((_, i) => {
+      const r = round.results[i];
+      return h('span', { class: `dot ${r === true ? 'ok' : r === false ? 'miss' : i === round.index ? 'now' : ''}` });
+    }));
+  };
+  const drawBoard = () => {
+    $('score-board').textContent = `${round.goals} : 0`;
+    $('board').setAttribute('aria-label', `Рахунок: наші ${round.goals}, суперник 0`);
+  };
+  // Ball runs toward the goal with the streak: 0 → 1 → 2 → GOAL.
+  const BALL_POS = ['14%', '40%', '66%', '93%'];
+  const moveBall = (step) => { $('ball').style.left = BALL_POS[step]; };
+
+  const showQuestion = () => {
+    const q = round.list[round.index];
+    const order = shuffle([0, 1, 2, 3]);
+    const options = order.map((i) => q.options[i]);
+    cur = { q, options, correctIndex: order.indexOf(q.answer), answered: false };
+    markSeen(q);
+
+    $('play-label').textContent = `Питання ${round.index + 1}/${round.list.length}`;
+    $('q-lang').textContent = LANG[q.lang];
+    $('q-lang').className = `lang ${q.lang}`;
+    $('q-cat').textContent = CATS[q.category] || '';
+    $('q-text').textContent = q.q;
+    $('q-text').lang = q.lang;
+    $('q-text').classList.toggle('long', q.q.length > 90);
+    $('q-ua').textContent = q.uk || '';
+    $('ua-btn').hidden = q.lang === 'uk' || !q.uk;
+    setUa(false);
+    $('kbd-hint').textContent = $('ua-btn').hidden ? 'Клавіші 1–4 · Esc — вийти' : 'Клавіші 1–4 · U — переклад · Esc — вийти';
+
+    cur.buttons = options.map((text, i) => h('button', {
+      type: 'button', class: 'choice', lang: q.lang, onclick: () => choose(i),
+    }, h('kbd', { text: String(i + 1) }), text));
+    $('choices').classList.toggle('long', options.some((o) => String(o).length > 14));
+    $('choices').replaceChildren(...cur.buttons);
+    $('feedback').replaceChildren();
+    drawDots();
+    $('q-text').focus({ preventScroll: true });
+  };
+
+  const setUa = (on) => {
+    const can = !$('ua-btn').hidden;
+    $('ua-btn').setAttribute('aria-pressed', String(on && can));
+    $('q-ua').hidden = !(on && can);
+  };
+  const toggleUa = () => setUa($('ua-btn').getAttribute('aria-pressed') !== 'true');
+  $('ua-btn').addEventListener('click', toggleUa);
+
+  const choose = (i) => {
+    if (!cur || cur.answered) return;
+    cur.answered = true;
+    const correct = i === cur.correctIndex;
+    const q = cur.q;
+    cur.buttons.forEach((b, j) => {
+      b.disabled = true;
+      if (j === cur.correctIndex) b.classList.add('right');
+      else if (j === i) b.classList.add('wrong');
+      else b.classList.add('dim');
+    });
+    round.results[round.index] = correct;
+    KF.answer(SLUG, correct, { coin: false });
+
+    let goal = false;
+    let coin = false;
+    if (correct) {
+      round.score++;
+      round.streak++;
+      data.toCoin++;
+      if (data.toCoin >= PER_COIN) {
+        data.toCoin = 0;
+        coin = true;
+      }
+      if (round.streak >= GOAL_STREAK) {
+        round.streak = 0;
+        round.goals++;
+        data.goals++;
+        goal = true;
+      }
+      saveData();
+      if (coin) KF.addCoins(1);
+    } else {
+      round.streak = 0;
+      round.cards++;
+      drawCards();
+    }
+    drawDots();
+    drawMeter();
+    celebrate(goal, coin);
+
+    const red = round.cards >= 2;
+    const last = round.index >= round.list.length - 1;
+    const right = q.options[q.answer];
+    const fact = q.fact && h('p', { class: 'fact', lang: q.lang }, h('span', { class: `lang ${q.lang}`, text: LANG[q.lang] }), h('span', { text: `💡 ${q.fact}` }));
+    const box = correct
+      ? h('div', { class: 'fb-box ok' },
+        h('p', { class: 'fb-title', text: pick(PRAISE[q.lang]) }),
+        goal && h('p', { text: 'Три поспіль — це гол! ⚽🥅' }),
+        coin && h('p', { text: '5 правильних — тримай монету! 🪙' }),
+        fact)
+      : h('div', { class: 'fb-box miss' },
+        h('div', { class: 'ref' },
+          h('span', { class: `ref-card ${red ? 'red' : 'yellow'}`, 'aria-hidden': 'true' }),
+          h('div', {},
+            h('p', { class: 'fb-title', text: red ? 'Червона картка!' : 'Жовта картка!' }),
+            h('p', { text: red ? 'Друга помилка — раунд починається знову. Ти зможеш!' : 'Ще одна помилка — і буде червона картка.' }))),
+        h('p', {}, 'Правильно: ', h('b', { lang: q.lang, text: right })),
+        fact);
+    const next = red
+      ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startRound() }, 'Почати знову ↺')
+      : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? 'Результат →' : 'Далі →');
+    $('feedback').replaceChildren(box, next);
+    next.focus({ preventScroll: true });
+    $('feedback').scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
+  };
+
+  const celebrate = (goal, coin) => {
+    if (goal) {
+      moveBall(3);
+      $('pitch').classList.add('scored');
+      restart($('board'), 'goal');
+      drawBoard();
+      setTimeout(() => { $('pitch').classList.remove('scored'); moveBall(0); }, reduced() ? 900 : 1300);
+    } else {
+      moveBall(round.streak);
+    }
+    if (coin) restart($('meter'), 'drop');
+  };
+
+  const goNext = () => {
+    round.index++;
+    if (round.index >= round.list.length) finish();
+    else showQuestion();
+  };
+
+  const finish = () => {
+    cur = null;
+    const { score, list, goals, cards } = round;
+    const max = list.length;
+    const res = KF.finishGame(SLUG, { score, max });
+    const earned = KF.get().coins - round.startCoins;
+    $('finish-title').textContent = score === max ? 'Суха гра! 🧤' : score >= max - 2 ? 'Чудовий матч! 🏆' : 'Фінальний свисток!';
+    $('finish-score').textContent = `${score} / ${max}`;
+    const stat = (value, label) => h('div', { class: 'stat' }, h('b', {}, value), h('span', { text: label }));
+    $('finish-sum').replaceChildren(
+      stat(`⚽ ${goals}`, 'голів'),
+      stat(`🪙 ${earned}`, 'монет'),
+      stat(cards ? [h('i', { class: 'yellow', 'aria-hidden': 'true' }), String(cards)] : '0', cards ? 'жовта картка' : 'карток'));
+    $('finish-text').textContent = [
+      res.perfect ? 'Без жодної помилки — бонус +5 🪙!' : cards ? 'Одна жовта картка — майже ідеально!' : '',
+      data.toCoin ? `До наступної монети: ${data.toCoin} з ${PER_COIN} ⚽.` : '',
+    ].filter(Boolean).join(' ') || 'Гарна гра! Зіграємо ще?';
+    show('finish');
+    if (score >= max - 2) KFUI.confetti();
+    $('again-btn').focus({ preventScroll: true });
+  };
+
+  const toStart = () => {
+    cur = null;
+    round = null;
+    renderStart();
+    show('start');
+    levelButtons().find((b) => b.dataset.level === data.level)?.focus();
+  };
+
+  $('start-btn').addEventListener('click', startRound);
+  $('again-btn').addEventListener('click', startRound);
+
+  // ---------- Keyboard ----------
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const onButton = e.target instanceof HTMLButtonElement || e.target instanceof HTMLAnchorElement;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (screen === 'start') location.href = '../../';
+      else toStart();
+      return;
+    }
+    if (screen === 'start') {
+      const n = Number(e.key);
+      if (n >= 1 && n <= LEVELS.length && !levelButtons()[n - 1].disabled) { setLevel(LEVELS[n - 1].id, true); e.preventDefault(); return; }
+      if (['ArrowRight', 'ArrowDown'].includes(e.key)) { moveLevel(1); e.preventDefault(); return; }
+      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { moveLevel(-1); e.preventDefault(); return; }
+      if (e.key === 'Enter' && (!onButton || e.target.classList.contains('level'))) { startRound(); e.preventDefault(); }
+      return;
+    }
+    if (screen !== 'play' || !cur) return;
+    if (e.key === 'u' || e.key === 'U' || e.key === 'г' || e.key === 'Г') { toggleUa(); e.preventDefault(); return; }
+    if (!cur.answered) {
+      const n = Number(e.key);
+      if (n >= 1 && n <= 4) { choose(n - 1); e.preventDefault(); return; }
+      const step = ['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(e.key) ? -1 : 0;
+      if (step) {
+        const i = cur.buttons.indexOf(document.activeElement);
+        cur.buttons[i < 0 ? (step > 0 ? 0 : 3) : (i + step + 4) % 4].focus();
+        e.preventDefault();
+      }
+      return;
+    }
+    // Answered: Enter = next (a focused button keeps its own native click).
+    if (e.key === 'Enter' && !onButton) { $('feedback').querySelector('.btn')?.click(); e.preventDefault(); }
+  });
+
+  // Parents' test mode: expose state for automated checks.
+  if (KF.TEST_MODE) {
+    window.__quiz = {
+      get screen() { return screen; },
+      get question() { return cur?.q || null; },
+      get options() { return cur?.options || null; },
+      get correctIndex() { return cur ? cur.correctIndex : null; },
+      get data() { return KF.gameData(SLUG); },
+      get round() { return round; },
+    };
+  }
+
+  if (!BANK.length) $('stats').replaceChildren(h('p', { class: 'muted', text: 'Не вдалося завантажити питання. Онови сторінку.' }));
+  renderStart();
+})();
+</script>
+</body>
+</html>
+</output>
+</invoke>

@@ -71,8 +71,8 @@
       title: 'Футбольний квіз',
       emoji: '🏆',
       category: 'fun',
-      desc: 'Прапори, клуби та зірки футболу.',
-      status: 'soon',
+      desc: 'Чемпіонати, клуби, зірки й правила. Українською, español, English.',
+      status: 'beta',
     },
   ];
 
@@ -248,14 +248,15 @@
       };
     },
 
-    // Call on every answer. Correct answer = +1 coin.
-    answer(_slug, correct) {
+    // Call on every answer. Correct answer = +1 coin, unless { coin: false }
+    // (games with their own coin rule, e.g. the quiz: 1 coin per 5 correct).
+    answer(_slug, correct, { coin = true } = {}) {
       const st = state.stats;
       if (correct) {
         st.correct++;
         st.streak++;
         st.bestStreak = Math.max(st.bestStreak, st.streak);
-        addCoins(1);
+        if (coin) addCoins(1);
       } else {
         st.wrong++;
         st.streak = 0;
