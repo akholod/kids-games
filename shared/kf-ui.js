@@ -38,6 +38,7 @@
   KF.on('change', updateCoins);
   KF.on('coins', delta => { if (delta > 0) toast(`+${delta} 🪙`, 'coin'); });
   KF.on('achievement', a => { toast(`🏅 ${a.title} — нове досягнення!`); confetti(); });
+  KF.on('sticker', x => { if (x.isNew) { toast(`🌟 Нова наліпка: ${x.name}!`); confetti(); } });
   function testRibbon() {
     if (!KF.TEST_MODE) return;
     const bar = document.createElement('div');

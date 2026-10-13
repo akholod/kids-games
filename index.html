@@ -51,7 +51,7 @@ dialog{border:0;padding:0;border-radius:27px;background:var(--paper);color:var(-
   const rarityName = {common:'ЗВИЧАЙНА',rare:'РІДКІСНА',legend:'ЛЕГЕНДА'};
   function stickerHTML(s, missing, extra = '') {
     const count = safeCount(KF.get().stickers?.[s.id]);
-    return `<div class="sticker ${missing ? 'missing' : s.rarity}" style="--jersey:${missing ? '#9daaa1' : s.color}" ${missing ? `aria-label="Невідома наліпка"` : `aria-label="${s.name}, ${rarityName[s.rarity]}"`}><div class="sticker-top"><span>${missing ? '??' : s.pos}</span><span>${missing ? '🔒' : s.flag}</span></div><div class="sticker-player"><span class="shirt">${missing ? '?' : s.num}</span></div><div class="sticker-name">${missing ? 'Невідомий' : s.name}</div><div class="sticker-rarity">${missing ? 'Знайди мене' : rarityName[s.rarity]}</div>${!missing && count > 1 && !extra ? `<span class="duplicate">×${count}</span>` : ''}${extra}</div>`;
+    return `<div class="sticker ${missing ? 'missing' : s.rarity}" style="--jersey:${missing ? '#9daaa1' : s.color}" ${missing ? `aria-label="Невідома наліпка"` : `aria-label="${s.name}, ${rarityName[s.rarity]}"`}><div class="sticker-top"><span>${missing ? '??' : s.pos}</span><span>${missing ? '🔒' : s.flag}</span></div><div class="sticker-player"><span class="shirt">${missing ? '?' : s.num}</span></div><div class="sticker-name">${missing ? (s.exclusive ? 'Тільки у грі «Воротар»' : 'Невідомий') : s.name}</div><div class="sticker-rarity">${missing ? 'Знайди мене' : rarityName[s.rarity]}</div>${!missing && count > 1 && !extra ? `<span class="duplicate">×${count}</span>` : ''}${extra}</div>`;
   }
   function renderAlbum() {
     const collected = KF.STICKERS.filter(s => KF.get().stickers?.[s.id]).length;

@@ -35,6 +35,14 @@
   // Catalog registry. status: 'ready' | 'beta' (visible only in test mode) | 'soon'
   const GAMES = [
     {
+      slug: 'goalkeeper',
+      title: 'Воротар',
+      emoji: '🧤',
+      category: 'fun',
+      desc: 'Відбивай удари і віддавай точний пас. Футзал 5×5!',
+      status: 'ready',
+    },
+    {
       slug: 'math-exam',
       title: 'Examen de mates',
       emoji: '📝',
@@ -100,6 +108,8 @@
     { id: 'vandijk', name: 'van Dijk', flag: '🇳🇱', pos: 'DF', num: 4, color: '#f36c21', rarity: 'common' },
     { id: 'gavi', name: 'Gavi', flag: '🇪🇸', pos: 'MF', num: 6, color: '#a50044', rarity: 'common' },
     { id: 'sudakov', name: 'Sudakov', flag: '🇺🇦', pos: 'MF', num: 10, color: '#f37021', rarity: 'common' },
+    // exclusive: never drops from packs, only given by that game via KF.giveSticker().
+    { id: 'courtois-gold', name: 'Courtois ★', flag: '🇧🇪', pos: 'GK', num: 1, color: '#d4a017', rarity: 'legend', exclusive: 'goalkeeper' },
   ];
 
   const RARITY_WEIGHT = { common: 70, rare: 25, legend: 5 };
@@ -122,6 +132,8 @@
     { id: 'album-10', icon: '📒', title: 'Колекціонер', desc: 'Збери 10 різних наліпок', check: (s) => uniqueStickers(s) >= 10 },
     { id: 'album-full', icon: '🏆', title: 'Повний альбом', desc: 'Збери всі наліпки', check: (s) => uniqueStickers(s) >= STICKERS.length },
     { id: 'legend', icon: '🌟', title: 'Легенда!', desc: 'Знайди легендарну наліпку', check: (s) => STICKERS.some((x) => x.rarity === 'legend' && s.stickers[x.id]) },
+    { id: 'keeper-wall', icon: '🧱', title: 'Стіна', desc: 'Зроби 25 сейвів у грі «Воротар»', check: (s) => (s.gameData?.goalkeeper?.saves || 0) >= 25 },
+    { id: 'keeper-gloves', icon: '🧤', title: 'Нові рукавиці', desc: 'Купи нові рукавиці у грі «Воротар»', check: (s) => (s.gameData?.goalkeeper?.gloves?.owned?.length || 0) >= 2 },
     { id: 'ukraine', icon: '🇺🇦', title: 'Збірна України', desc: 'Збери всіх українців', check: (s) => STICKERS.filter((x) => x.flag === '🇺🇦').every((x) => s.stickers[x.id]) },
   ];
 
@@ -202,14 +214,16 @@
     emit('coins', n);
   };
 
+  const PACK_STICKERS = STICKERS.filter((x) => !x.exclusive);
+
   const pickSticker = () => {
-    const total = STICKERS.reduce((sum, x) => sum + RARITY_WEIGHT[x.rarity], 0);
+    const total = PACK_STICKERS.reduce((sum, x) => sum + RARITY_WEIGHT[x.rarity], 0);
     let r = Math.random() * total;
-    for (const x of STICKERS) {
+    for (const x of PACK_STICKERS) {
       r -= RARITY_WEIGHT[x.rarity];
       if (r < 0) return x;
     }
-    return STICKERS[STICKERS.length - 1];
+    return PACK_STICKERS[PACK_STICKERS.length - 1];
   };
 
   const KF = {
@@ -273,12 +287,31 @@
       commit();
     },
 
+    // Spend coins in a game shop. Returns false (and changes nothing) if not enough.
+    spendCoins(n) {
+      if (n <= 0 || state.coins < n) return false;
+      addCoins(-n);
+      commit();
+      return true;
+    },
+
+    // Give a specific (e.g. exclusive) sticker. Returns { ...sticker, isNew } or null.
+    giveSticker(id) {
+      const x = STICKERS.find((s) => s.id === id);
+      if (!x) return null;
+      const isNew = !state.stickers[id];
+      state.stickers[id] = (state.stickers[id] || 0) + 1;
+      emit('sticker', { ...x, isNew });
+      commit();
+      return { ...x, isNew };
+    },
+
     // Game-specific persistent data (plain JSON). Respects test mode.
     //   const d = KF.gameData('math-exam');  KF.gameData('math-exam', { ...d, x: 1 });
     gameData(slug, value) {
       if (value === undefined) return state.gameData[slug] || {};
       state.gameData[slug] = value;
-      save();
+      commit();
       return value;
     },
 
