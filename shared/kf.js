@@ -40,7 +40,7 @@
       emoji: '📝',
       category: 'math',
       desc: 'Готуємось до іспиту: llevadas, redondeo, valor.',
-      status: 'beta',
+      status: 'ready',
     },
     {
       slug: 'penalty-multiply',
