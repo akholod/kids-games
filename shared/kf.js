@@ -581,7 +581,8 @@
     isListed: (game) => game.status !== 'beta' || TEST_MODE,
 
     on(type, fn) {
-      (listeners[type] ||= []).push(fn);
+      if (!listeners[type]) listeners[type] = [];
+      listeners[type].push(fn);
       return () => {
         listeners[type] = listeners[type].filter((f) => f !== fn);
       };
@@ -606,7 +607,8 @@
     // Call at the end of a round. Perfect round = +5 bonus coins.
     finishGame(slug, { score = 0, max = 0 } = {}) {
       const st = state.stats;
-      const g = (state.games[slug] ||= { plays: 0, best: 0, max, lastPlayed: 0 });
+      if (!state.games[slug]) state.games[slug] = { plays: 0, best: 0, max, lastPlayed: 0 };
+      const g = state.games[slug];
       g.plays++;
       g.best = Math.max(g.best, score);
       g.max = max;
@@ -701,7 +703,8 @@
     if (e.key === USER_KEY || e.key === null) {
       user = readJSON(USER_KEY);
       state = load();
-      authStatus = user ? (authStatus === 'guest' ? 'pending' : authStatus) : 'guest';
+      if (!user) authStatus = 'guest';
+      else if (authStatus === 'guest') authStatus = 'pending';
       emit('change', state);
       emit('auth', { user, status: authStatus });
     } else if (e.key === (user ? slotKey(user.id) : KEY)) {
