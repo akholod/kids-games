@@ -6,6 +6,9 @@ const MAX_BODY = 256 * 1024;
 const MAX_RESULTS = 100;
 const MAX_FAILS = 5;
 const LOCK_MS = 5 * 60 * 1000;
+const MAX_USERS = 40;
+const MAX_SIGNUPS = 3;
+const AVATARS = ['⚽', '🧤', '🥅', '🏆', '⭐', '🔥', '🦁', '🐯', '🦊', '🐼', '🚀', '⚡'];
 
 const enc = new TextEncoder();
 
@@ -30,6 +33,11 @@ async function verifyPin(pin, stored) {
   if (parts.length !== 4 || parts[0] !== 'pbkdf2') return false;
   const hash = await pbkdf2(pin, unb64(parts[2]), Number(parts[1]));
   return safeEqual(hash, unb64(parts[3]));
+}
+
+async function hashPin(pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  return `pbkdf2$${ITER}$${b64(salt)}$${b64(await pbkdf2(pin, salt, ITER))}`;
 }
 
 async function sha256(s) {
@@ -116,14 +124,52 @@ async function login(request, env, now) {
     return err('bad_pin', 401, { attemptsLeft: MAX_FAILS - failed });
   }
 
-  const raw = crypto.getRandomValues(new Uint8Array(32));
-  const token = b64url(raw);
+  return startSession(env, u, now, [env.DB.prepare('UPDATE users SET failed = 0, locked_until = 0 WHERE id = ?').bind(u.id)]);
+}
+
+// Creates the session row (in one batch with `before`) and answers with the user + cookie.
+async function startSession(env, u, now, before = [], status = 200) {
+  const token = b64url(crypto.getRandomValues(new Uint8Array(32)));
   await env.DB.batch([
-    env.DB.prepare('UPDATE users SET failed = 0, locked_until = 0 WHERE id = ?').bind(u.id),
+    ...before,
     env.DB.prepare('INSERT INTO sessions (token_hash, user_id, created_at, last_seen) VALUES (?, ?, ?, ?)')
       .bind(await sha256(token), u.id, now, now),
   ]);
-  return json({ user: { id: u.id, name: u.name, avatar: u.avatar } }, 200, { 'Set-Cookie': cookie(token, YEAR) });
+  return json({ user: { id: u.id, name: u.name, avatar: u.avatar } }, status, { 'Set-Cookie': cookie(token, YEAR) });
+}
+
+async function register(request, env, now) {
+  const body = await readJson(request);
+  if (!isObj(body)) return err('bad_request', 400);
+  // NFC keeps й/ї as single letters; every apostrophe becomes ʼ, so Мар'яна and Марʼяна are one name.
+  const name = typeof body.name === 'string' ? body.name.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim() : '';
+  if (!/^[\p{L} '’ʼ-]{1,30}$/u.test(name) || !/\p{L}/u.test(name)) return err('bad_name', 400);
+  if (typeof body.pin !== 'string' || !/^\d{4}$/.test(body.pin)) return err('bad_pin_format', 400);
+  const avatar = body.avatar == null || body.avatar === '' ? AVATARS[0] : body.avatar;
+  if (!AVATARS.includes(avatar)) return err('bad_avatar', 400);
+
+  const total = await env.DB.prepare('SELECT count(*) AS n FROM users').first();
+  if (total.n >= MAX_USERS) return err('full', 403);
+
+  const key = await sha256(request.headers.get('CF-Connecting-IP') || 'unknown');
+  const recent = await env.DB.prepare('SELECT count(*) AS n, min(created_at) AS oldest FROM users WHERE signup_key = ? AND created_at > ?')
+    .bind(key, now - DAY_MS).first();
+  if (recent.n >= MAX_SIGNUPS) return err('too_many', 429, { retryAfter: Math.max(1, Math.ceil((recent.oldest + DAY_MS - now) / 1000)) });
+
+  const taken = await env.DB.prepare('SELECT 1 FROM users WHERE name = ? COLLATE NOCASE').bind(name).first();
+  if (taken) return err('name_taken', 409);
+
+  const pinHash = await hashPin(body.pin);
+  let id;
+  try {
+    const r = await env.DB.prepare('INSERT INTO users (name, avatar, pin_hash, created_at, signup_key) VALUES (?, ?, ?, ?, ?)')
+      .bind(name, avatar, pinHash, now, key).run();
+    id = r.meta.last_row_id;
+  } catch (e) {
+    if (/UNIQUE/i.test(String(e && (e.message || e)))) return err('name_taken', 409);
+    throw e;
+  }
+  return startSession(env, { id, name, avatar }, now, [], 201);
 }
 
 function validateResults(results) {
@@ -175,6 +221,7 @@ async function handle(request, env, url, now) {
     return json({ users: results });
   }
   if (pathname === '/api/login' && method === 'POST') return login(request, env, now);
+  if (pathname === '/api/register' && method === 'POST') return register(request, env, now);
 
   const known = ['/api/logout', '/api/me', '/api/progress'];
   if (!known.includes(pathname)) return err('not_found', 404);

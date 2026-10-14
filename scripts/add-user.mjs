@@ -10,11 +10,12 @@ const flags = args.filter((a) => a.startsWith('--'));
 const pos = args.filter((a) => !a.startsWith('--'));
 const local = flags.includes('--local');
 const update = flags.includes('--update');
-const [name, pin, avatar = '⚽'] = pos;
+const [rawName = '', pin, avatar = '⚽'] = pos;
+const name = rawName.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim(); // same as the server
 
 const die = (m) => { console.error(m); process.exit(1); };
 if (!name || !pin) die('Usage: node scripts/add-user.mjs <name> <pin> [avatar] [--local] [--update]');
-if (!/^[\p{L} -]{1,30}$/u.test(name)) die('Name: letters, spaces, hyphen, up to 30 chars');
+if (!/^[\p{L} '’ʼ-]{1,30}$/u.test(name)) die('Name: letters, spaces, hyphen, apostrophe, up to 30 chars');
 if (!/^\d{4}$/.test(pin)) die('PIN must be exactly 4 digits');
 if (avatar.length > 16 || /['"\\;]/.test(avatar)) die('Bad avatar');
 

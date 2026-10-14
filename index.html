@@ -64,6 +64,19 @@ dialog.stage{width:100%;height:100%;max-width:none;max-height:none;margin:0;bord
 dialog{border:0;padding:0;border-radius:27px;background:var(--paper);color:var(--ink);width:min(92vw,690px);box-shadow:0 24px 80px #001c17a8}dialog::backdrop{background:#07291fc9;backdrop-filter:blur(5px)}
 @media(max-width:750px){#games-list{grid-template-columns:1fr}.hero-inner{grid-template-columns:1fr}.hero{padding:33px 0 59px}.hero-art{height:165px;max-width:450px;width:100%;justify-self:center}.hero-ball{font-size:4rem}.hero-art:before{inset:12px 18px 0}.game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.hero h1{font-size:2.9rem}.hero-art{height:125px}.hero-ball{font-size:3rem}.art-tag{font-size:.75rem}.main{margin-top:-21px}.tabs{width:100%;gap:2px}.tab{flex:1;padding:8px 6px;font-size:.85rem}.game-grid{grid-template-columns:1fr}.game-card{min-height:0;padding:18px}.game-icon{margin-bottom:10px}.achievement-grid{grid-template-columns:1fr}}
+/* Login: new player (add tile, name + avatar step, step pips) */
+.player-add{border:3px dashed #ffffff80;background:#ffffff0d;color:#fff;box-shadow:none}.player-add:hover{border-color:var(--lime);background:#ffffff1f;box-shadow:none}.player-add:active{box-shadow:none}.add-plus{width:72px;height:72px;display:grid;place-items:center;padding-bottom:4px;border-radius:50%;background:var(--lime);color:var(--ink);font-size:3rem;font-weight:800;line-height:1;box-shadow:0 5px 0 #85ad3d;transition:transform .16s ease}.player-add:hover .add-plus{transform:rotate(90deg)}
+.new-steps{display:flex;gap:6px}.new-steps[hidden]{display:none}.new-steps i{width:24px;height:6px;border-radius:3px;background:#ffffff33;transition:background-color .2s}.new-steps i.on{background:var(--lime)}
+.new-head{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 20px;margin:14px 0 0}
+.new-card{width:128px;min-height:150px;margin-left:4px;gap:10px;padding:16px 8px 14px;rotate:-3deg;pointer-events:none}.new-card .kit{width:64px;height:70px;padding-top:8px;font-size:1.8rem}.new-card b{max-width:100%;font-size:1rem}.new-card b.empty{color:#8a9b90}.new-card.pop .kit{animation:kit-pop .24s ease-out}
+.new-name{width:100%;min-width:0;min-height:64px;padding:8px 18px;border:3px solid transparent;border-radius:18px;background:var(--paper);color:var(--ink);font-size:1.45rem;font-weight:850;box-shadow:0 5px 0 #0b3021;transition:border-color .15s}.new-name::placeholder{color:#8a9b90;font-weight:700}.new-name:focus-visible{outline:3px solid #e69b10;outline-offset:3px}.new-name[aria-invalid=true]{border-color:#ffd77f}
+.new-hint{grid-column:1/-1;min-height:1.4em;margin:8px 0 0;color:#ffd77f;font-weight:850;line-height:1.4;text-align:center}
+.new-label{margin:16px 0 10px;color:#dcebdd;font-size:1.05rem;font-weight:850;text-align:center}
+.avatars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;max-width:440px;margin:0 auto}.avatars button{aspect-ratio:1;min-height:48px;border:0;border-radius:16px;background:#ffffff1a;font-size:1.75rem;line-height:1;display:grid;place-items:center;transition:background-color .15s,transform .15s,box-shadow .15s}.avatars button:hover{background:#ffffff33}.avatars button:active{transform:scale(.96)}.avatars button[aria-checked=true]{background:var(--paper);box-shadow:0 0 0 3px var(--lime),0 5px 0 3px #0b3021}
+.new-next{width:100%;margin-top:24px;font-size:1.15rem}
+@keyframes kit-pop{50%{transform:scale(1.15) rotate(4deg)}}
+@media(max-width:600px){.new-head{gap:6px 14px}.new-card{width:108px;min-height:134px}.new-card .kit{width:56px;height:61px;font-size:1.55rem}.new-name{min-height:58px;padding:8px 14px;font-size:1.25rem}.avatars{gap:8px}.avatars button{font-size:1.5rem;border-radius:14px}.add-plus{width:64px;height:64px;font-size:2.6rem}}
+@media(prefers-reduced-motion:reduce){.new-card.pop .kit{animation:none}.player-add:hover .add-plus{transform:none}}
 </style></head><body class="games-view">
 <header class="site-header"><div class="wrap header-inner"><a class="brand" href="./" aria-label="Keeper Fun Games, головна"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="header-right"><div class="who kf-auth" id="who" data-kf-sync="dot" hidden></div><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></div></header>
 <section class="hero"><div class="wrap hero-inner"><div><div class="eyebrow" id="hero-eyebrow">⚡ Виходь на поле</div><h1>Грай. Забивай.<br><em>Збирай команду.</em></h1><p>Короткі ігри, голи й картки футболістів. Обирай гру та починай матч!</p></div><div class="hero-art" aria-hidden="true"><span class="art-tag one">+1 🪙 за гол</span><span class="hero-ball">⚽</span><span class="art-tag two">🏆 Твоя команда</span></div></div></section>
@@ -82,8 +95,9 @@ dialog{border:0;padding:0;border-radius:27px;background:var(--paper);color:var(-
 <dialog id="card-dialog" class="stage detail-stage" aria-labelledby="detail-name"><div class="stage-glow" aria-hidden="true"></div><div class="stage-top"><span class="stage-step" id="detail-pos"></span><span class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></span><button type="button" class="stage-btn" id="detail-close" aria-label="Закрити">✕</button></div>
 <div class="detail"><button type="button" class="nav-btn prev" id="detail-prev" aria-label="Попередня картка">←</button><div class="detail-card" id="detail-card" tabindex="-1"></div><button type="button" class="nav-btn next" id="detail-next" aria-label="Наступна картка">→</button><div class="detail-info"><span class="cat-tag" id="detail-cat"></span><h2 id="detail-name"></h2><p id="detail-count"></p><button type="button" class="btn btn-gold" id="detail-sell"></button><p class="detail-note" id="detail-note">Одна картка завжди залишається в альбомі.</p></div></div></dialog>
 <dialog id="login-dialog" class="login kf-auth" aria-labelledby="pick-title">
-<div class="login-step" id="step-pick"><div class="login-top"><span class="eyebrow">⚽ Роздягальня</span><button type="button" class="login-x" id="login-close" aria-label="Закрити">✕</button></div><h2 id="pick-title">Хто грає?</h2><p>Натисни на своє імʼя.</p><div class="players" id="players"></div><p class="login-msg" id="pick-msg" role="status"></p><div class="login-retry" id="pick-retry" hidden><button type="button" class="btn" id="retry-users">Спробувати ще</button></div><button type="button" class="login-guest" id="play-guest">Грати як гість</button></div>
-<div class="login-step" id="step-pin" hidden><div class="login-top"><button type="button" class="login-back" id="pin-back">← Назад</button><button type="button" class="login-x" id="pin-close" aria-label="Закрити">✕</button></div><div class="pin-who"><span id="pin-face"></span><h2 id="pin-title">Привіт!</h2><p>Введи свій PIN: 4 цифри.</p></div><div class="pin-dots" id="pin-dots" role="img" tabindex="-1" aria-label="PIN: введено 0 з 4"><i></i><i></i><i></i><i></i></div><p class="login-msg" id="pin-msg" role="status"></p><span class="pin-clock" id="pin-clock" aria-hidden="true" hidden></span><div class="keypad" id="keypad"><button type="button" data-digit="1">1</button><button type="button" data-digit="2">2</button><button type="button" data-digit="3">3</button><button type="button" data-digit="4">4</button><button type="button" data-digit="5">5</button><button type="button" data-digit="6">6</button><button type="button" data-digit="7">7</button><button type="button" data-digit="8">8</button><button type="button" data-digit="9">9</button><span></span><button type="button" data-digit="0">0</button><button type="button" class="key-erase" id="key-erase" aria-label="Стерти">⌫</button></div></div>
+<div class="login-step" id="step-pick"><div class="login-top"><span class="eyebrow">⚽ Роздягальня</span><button type="button" class="login-x" id="login-close" aria-label="Закрити">✕</button></div><h2 id="pick-title">Хто грає?</h2><p id="pick-text">Натисни на своє імʼя.</p><div class="players" id="players"></div><p class="login-msg" id="pick-msg" role="status"></p><div class="login-retry" id="pick-retry" hidden><button type="button" class="btn" id="retry-users">Спробувати ще</button></div><button type="button" class="login-guest" id="play-guest">Грати як гість</button></div>
+<div class="login-step" id="step-new" hidden><div class="login-top"><button type="button" class="login-back" id="new-back">← Назад</button><span class="new-steps" role="img"></span><button type="button" class="login-x" id="new-close" aria-label="Закрити">✕</button></div><h2 id="new-title">Як тебе звати?</h2><div class="new-head"><div class="player new-card" id="new-card" aria-hidden="true"><span class="kit" id="new-kit"></span><b id="new-card-name"></b></div><input class="new-name" id="new-name" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" maxlength="30" enterkeyhint="next" placeholder="Твоє імʼя" aria-labelledby="new-title" aria-describedby="new-hint"><p class="new-hint" id="new-hint" role="status"></p></div><p class="new-label" id="new-av-label">Обери значок</p><div class="avatars" id="new-avatars" role="radiogroup" aria-labelledby="new-av-label"></div><button type="button" class="btn new-next" id="new-next">Далі →</button></div>
+<div class="login-step" id="step-pin" hidden><div class="login-top"><button type="button" class="login-back" id="pin-back">← Назад</button><span class="new-steps" id="pin-steps" role="img" hidden></span><button type="button" class="login-x" id="pin-close" aria-label="Закрити">✕</button></div><div class="pin-who"><span id="pin-face"></span><h2 id="pin-title">Привіт!</h2><p id="pin-text">Введи свій PIN: 4 цифри.</p></div><div class="pin-dots" id="pin-dots" role="img" tabindex="-1" aria-label="PIN: введено 0 з 4"><i></i><i></i><i></i><i></i></div><p class="login-msg" id="pin-msg" role="status"></p><span class="pin-clock" id="pin-clock" aria-hidden="true" hidden></span><div class="keypad" id="keypad"><button type="button" data-digit="1">1</button><button type="button" data-digit="2">2</button><button type="button" data-digit="3">3</button><button type="button" data-digit="4">4</button><button type="button" data-digit="5">5</button><button type="button" data-digit="6">6</button><button type="button" data-digit="7">7</button><button type="button" data-digit="8">8</button><button type="button" data-digit="9">9</button><span></span><button type="button" data-digit="0">0</button><button type="button" class="key-erase" id="key-erase" aria-label="Стерти">⌫</button></div></div>
 </dialog>
 <dialog id="ask-dialog" class="ask" aria-labelledby="ask-title"><form method="dialog"><div class="ask-icon" id="ask-icon" aria-hidden="true"></div><h2 id="ask-title"></h2><p id="ask-text"></p><div class="ask-actions"><button class="btn btn-light" value="secondary" id="ask-no"></button><button class="btn" value="primary" id="ask-yes"></button></div></form></dialog>
 <script src="shared/cards.js"></script><script src="shared/kf.js"></script><script src="shared/kf-ui.js"></script><script>
@@ -695,40 +709,55 @@ function askDialog({ icon, title, text, primary, secondary }) {
   const dots = $('pin-dots');
   const keys = [...$('keypad').querySelectorAll('button')];
   const lockedUntil = {};
-  let users = [], current = null, pin = '', busy = false, direct = false, lockTimer = 0, loadToken = 0;
+  // mode: which PIN the keypad is for — 'login', or a new player's 'create' / 'confirm'
+  let users = [], current = null, pin = '', busy = false, direct = false, lockTimer = 0, loadToken = 0, mode = 'login';
   const onPin = () => !$('step-pin').hidden;
+  const onNew = () => !$('step-new').hidden;
+  function showStep(id) {
+    for (const s of ['step-pick', 'step-new', 'step-pin']) $(s).hidden = s !== id;
+  }
 
   function openLogin(user) {
     toggleMenu(false, false);
     direct = !!user;
+    draft.name = '';
+    draft.avatar = AVATARS[0];
+    signupClosed = '';
     if (!dlg.open) dlg.showModal();
     if (user) showPin(user); else showPick();
   }
   function closeLogin() {
     stopLock();
     current = null;
+    mode = 'login';
+    regToken++;
     dlg.close();
     $('who-btn')?.focus();
   }
   function goBack() {
-    if (onPin() && !direct) showPick(); else closeLogin();
+    if (onPin() && mode === 'confirm') { if (!busy) showNewPin(false); } // busy: the player is being created
+    else if (onPin() && mode === 'create') showNew();
+    else if (onNew() || (onPin() && !direct)) showPick();
+    else closeLogin();
   }
 
   async function showPick(message = '') {
     stopLock();
     current = null;
     direct = false;
-    $('step-pin').hidden = true;
-    $('step-pick').hidden = false;
+    mode = 'login';
+    showStep('step-pick');
     dlg.setAttribute('aria-labelledby', 'pick-title');
     $('pick-retry').hidden = true;
+    $('pick-text').textContent = 'Натисни на своє імʼя.';
+    $('pick-msg').dataset.kind = message ? 'net' : '';
     $('pick-msg').textContent = message;
     $('players').replaceChildren(...[0, 1].map(() => { const s = h('div', { className: 'player skeleton' }, h('i'), h('u')); s.setAttribute('aria-hidden', 'true'); return s; }));
     $('play-guest').focus();
     const token = ++loadToken;
     let list;
     try { list = await auth.users(); } catch { list = null; }
-    if (token !== loadToken || !dlg.open || onPin()) return;
+    if (token !== loadToken || !dlg.open || $('step-pick').hidden) return;
     list = Array.isArray(list) ? list : list?.users;
     if (!Array.isArray(list)) {
       $('players').replaceChildren();
@@ -740,12 +769,12 @@ function askDialog({ icon, title, text, primary, secondary }) {
       return;
     }
     users = list;
-    if (!users.length) {
+    if (!users.length && signupClosed) {
       $('players').replaceChildren();
-      $('pick-msg').dataset.kind = 'net';
-      $('pick-msg').textContent = 'Тут ще немає гравців. Попроси батьків додати тебе.';
+      $('pick-text').textContent = 'Тут ще нікого немає.';
       return;
     }
+    if (!users.length) $('pick-text').textContent = 'Тут ще нікого немає. Створи свого гравця!';
     $('players').replaceChildren(...users.map((u, i) => {
       const kit = h('span', { className: 'kit', textContent: face(u) });
       const card = h('button', { type: 'button', className: 'player' }, ...(i < 9 ? [h('kbd', { textContent: i + 1 })] : []), kit, h('b', { textContent: u.name }));
@@ -753,24 +782,38 @@ function askDialog({ icon, title, text, primary, secondary }) {
       kit.setAttribute('aria-hidden', 'true');
       card.addEventListener('click', () => showPin(u));
       return card;
-    }));
+    }), ...(signupClosed ? [] : [addTile()]));
     $('players').firstElementChild.focus();
+  }
+  function addTile() {
+    const plus = h('span', { className: 'add-plus', textContent: '+' });
+    plus.setAttribute('aria-hidden', 'true');
+    const tile = h('button', { type: 'button', className: 'player player-add', id: 'add-player' }, plus, h('b', { textContent: 'Новий гравець' }));
+    tile.addEventListener('click', () => showNew());
+    return tile;
   }
 
   function showPin(u) {
+    mode = 'login';
     current = u;
+    pinStep(u, `Привіт, ${u.name}!`, 'Введи свій PIN: 4 цифри.', direct ? '← Інший гравець' : '← Назад');
+    setMsg(direct ? 'Введи PIN ще раз, щоб прогрес зберігався.' : '');
+    if (lockLeft() > 0) startLock(); else { stopLock(); setKeys(true); }
+  }
+  // The PIN screen is shared by login and by a new player's "make up a PIN" / "repeat it".
+  function pinStep(u, title, text, back, face = avatar(u, 'xl')) {
     pin = '';
     busy = false;
-    $('step-pick').hidden = true;
-    $('step-pin').hidden = false;
+    showStep('step-pin');
     dlg.setAttribute('aria-labelledby', 'pin-title');
-    $('pin-face').replaceChildren(avatar(u, 'xl'));
-    $('pin-title').textContent = `Привіт, ${u.name}!`;
-    $('pin-back').textContent = direct ? '← Інший гравець' : '← Назад';
+    $('pin-face').replaceChildren(face);
+    $('pin-title').textContent = title;
+    $('pin-text').textContent = text;
+    $('pin-back').textContent = back;
+    $('pin-steps').hidden = mode === 'login';
+    drawSteps($('pin-steps'), mode === 'confirm' ? 3 : 2);
     dots.className = 'pin-dots';
-    setMsg(direct ? 'Введи PIN ще раз, щоб прогрес зберігався.' : '');
     drawDots();
-    if (lockLeft() > 0) startLock(); else { stopLock(); setKeys(true); }
     dots.focus();
   }
   function setMsg(text, kind = '') {
@@ -797,6 +840,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
   }
 
   async function submit() {
+    if (mode !== 'login') return submitNew();
     if (busy || pin.length < 4 || lockLeft() || !current) return;
     const user = current;
     busy = true;
@@ -854,16 +898,145 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('pin-clock').hidden = true;
   }
 
-  async function loggedIn(user, guestHint) {
+  // ---- New player: name + avatar → make up a PIN → repeat it → KF.auth.register ----
+  const AVATARS = Array.isArray(KF.AVATARS) && KF.AVATARS.length ? KF.AVATARS : ['⚽', '🧤', '🥅', '🏆', '⭐', '🔥', '🦁', '🐯', '🦊', '🐼', '🚀', '⚡'];
+  const draft = { name: '', avatar: AVATARS[0] };
+  let firstPin = '', regToken = 0, signupClosed = '';
+  const TAKEN = 'Таке імʼя вже є. Додай першу літеру прізвища або обери інше.';
+  const BAD_NAME = 'Тільки літери, пробіл, дефіс або апостроф';
+  // Same rule as the server: letters, spaces, hyphens and apostrophes (Мар'яна), at least one letter.
+  const cleanName = s => s.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim(); // same as the server
+  const nameOk = s => /^[\p{L} '’ʼ-]{1,30}$/u.test(s) && /\p{L}/u.test(s);
+  const sameName = (a, b) => cleanName(String(a)).toLocaleLowerCase('uk') === b.toLocaleLowerCase('uk');
+  // Shirt colour of the id the server will most likely give (SQLite: max + 1), so it stays the same after sign-up.
+  const draftKit = () => kitColor({ id: users.reduce((m, u) => Math.max(m, parseInt(u.id, 10) || 0), 0) + 1 });
+  const nameInput = $('new-name');
+  const avatarBtns = AVATARS.map((a, i) => {
+    const b = h('button', { type: 'button', textContent: a });
+    b.setAttribute('role', 'radio');
+    b.addEventListener('click', () => pickAvatar(i));
+    return b;
+  });
+  $('new-avatars').append(...avatarBtns);
+
+  function drawSteps(el, at) {
+    el.replaceChildren(...[1, 2, 3].map(n => h('i', { className: n <= at ? 'on' : '' })));
+    el.setAttribute('aria-label', `Крок ${at} з 3`);
+  }
+  function showNew(hint = '') {
+    mode = 'login';
+    current = null;
+    firstPin = '';
+    busy = false;
+    stopLock();
+    showStep('step-new');
+    dlg.setAttribute('aria-labelledby', 'new-title');
+    drawSteps($('step-new').querySelector('.new-steps'), 1);
+    nameInput.value = draft.name;
+    drawAvatars();
+    drawPreview();
+    setHint(hint);
+    nameInput.focus();
+    nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length); // caret at the end: «додай першу літеру прізвища»
+  }
+  function setHint(text) {
+    $('new-hint').textContent = text;
+    nameInput.setAttribute('aria-invalid', String(!!text));
+  }
+  function drawPreview(pop = false) {
+    const name = cleanName(nameInput.value);
+    const card = $('new-card');
+    card.style.setProperty('--kit', draftKit());
+    $('new-kit').textContent = draft.avatar;
+    $('new-card-name').textContent = name || 'Твоє імʼя';
+    $('new-card-name').classList.toggle('empty', !name);
+    if (pop) { card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
+  }
+  function drawAvatars() {
+    avatarBtns.forEach(b => {
+      const on = b.textContent === draft.avatar;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+  }
+  function pickAvatar(i, focus = false) {
+    draft.avatar = AVATARS[i];
+    drawAvatars();
+    drawPreview(true);
+    if (focus) avatarBtns[i].focus();
+  }
+  function nameNext() {
+    const name = cleanName(nameInput.value);
+    nameInput.value = draft.name = name;
+    drawPreview();
+    if (!name) return showNew('Напиши своє імʼя 🙂');
+    if (!nameOk(name)) return showNew(BAD_NAME);
+    if (users.some(u => sameName(u.name, name))) return showNew(TAKEN); // save typing two PINs for nothing
+    showNewPin(false);
+  }
+  function showNewPin(confirm, msg = '') {
+    mode = confirm ? 'confirm' : 'create';
+    if (!confirm) firstPin = '';
+    const face = avatar(draft, 'xl');
+    face.style.setProperty('--kit', draftKit());
+    pinStep(draft, confirm ? 'Повтори PIN' : 'Придумай PIN',
+      confirm ? 'Набери ті самі 4 цифри ще раз.' : '4 цифри. Запиши або запамʼятай PIN — його попросять на іншому пристрої.',
+      '← Назад', face);
+    stopLock();
+    setKeys(true);
+    setMsg(msg, msg ? 'bad' : '');
+  }
+
+  async function submitNew() {
+    if (busy || pin.length < 4) return;
+    if (mode === 'create') { firstPin = pin; return showNewPin(true); }
+    if (pin !== firstPin) {
+      showNewPin(false, 'PIN не збігся, придумай ще раз 🙂');
+      dots.classList.add('is-bad');
+      return;
+    }
+    busy = true;
+    setKeys(false);
+    dots.classList.add('is-busy');
+    setMsg('Створюю гравця…');
+    const token = ++regToken;
+    let r;
+    try { r = typeof auth.register === 'function' ? await auth.register(draft.name, pin, draft.avatar) : { ok: false, error: 'network' }; } catch { r = { ok: false, error: 'network' }; }
+    const ok = r && !r.error && r.ok !== false;
+    if (token !== regToken) { if (ok) KFUI.toast(`Вітаємо в команді, ${draft.name}! 🎉`); return; } // dialog was closed meanwhile
+    busy = false;
+    dots.classList.remove('is-busy');
+    pin = '';
+    if (ok) return loggedIn(r.user || auth.user || draft, r.hasGuestProgress, true);
+    const err = r?.error;
+    if (err === 'name_taken') return showNew(TAKEN);
+    if (err === 'bad_name') return showNew(BAD_NAME);
+    const stop = {
+      too_many: 'Сьогодні вже створили кілька гравців. Спробуй завтра або попроси батьків.',
+      full: 'Місць для нових гравців немає. Попроси батьків.',
+      test_mode: 'У тест-режимі нових гравців не створюють.',
+    }[err];
+    if (stop) { signupClosed = err; return showPick(stop); }
+    // Network: stay on "repeat the PIN" — typing it again is the retry.
+    setKeys(true);
+    drawDots();
+    setMsg(navigator.onLine === false
+      ? '📶 Немає інтернету. Перевір Wi‑Fi і набери PIN ще раз.'
+      : '📶 Не вдалося зʼєднатися. Набери PIN ще раз трохи згодом.', 'net');
+  }
+
+  async function loggedIn(user, guestHint, isNew = false) {
     dots.classList.add('is-ok');
     [...dots.children].forEach(d => d.classList.add('on'));
-    setMsg('Готово! ⚽', 'ok');
-    await wait(500);
+    setMsg(isNew ? 'Гравця створено! ⚽' : 'Готово! ⚽', 'ok');
+    await wait(isNew ? 700 : 500);
     current = null;
+    mode = 'login';
     dlg.close();
     renderWho();
     $('who-btn').focus();
-    KFUI.toast(`Привіт, ${user.name}! ⚽`);
+    if (isNew) { KFUI.toast(`Вітаємо в команді, ${user.name}! 🎉`); KFUI.confetti(); }
+    else KFUI.toast(`Привіт, ${user.name}! ⚽`);
     await offerGuestMerge(user, guestHint);
   }
 
@@ -894,9 +1067,26 @@ function askDialog({ icon, title, text, primary, secondary }) {
   }
 
   keys.forEach(k => k.addEventListener('click', () => (k.dataset.digit ? press(k.dataset.digit) : erase())));
-  $('pin-back').addEventListener('click', () => showPick());
+  $('pin-back').addEventListener('click', () => (mode === 'login' ? showPick() : goBack()));
   $('pin-close').addEventListener('click', closeLogin);
   $('login-close').addEventListener('click', closeLogin);
+  $('new-back').addEventListener('click', () => showPick());
+  $('new-close').addEventListener('click', closeLogin);
+  $('new-next').addEventListener('click', nameNext);
+  nameInput.addEventListener('input', () => {
+    const name = cleanName(nameInput.value);
+    draft.name = name;
+    setHint(name && !nameOk(name) ? BAD_NAME : '');
+    drawPreview();
+  });
+  $('new-avatars').addEventListener('keydown', e => {
+    const cols = getComputedStyle($('new-avatars')).gridTemplateColumns.split(' ').length;
+    const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const n = AVATARS.length;
+    pickAvatar((AVATARS.indexOf(draft.avatar) + step + n) % n, true);
+  });
   $('play-guest').addEventListener('click', closeLogin);
   $('retry-users').addEventListener('click', () => showPick());
   dlg.addEventListener('cancel', e => { e.preventDefault(); goBack(); });
@@ -909,8 +1099,14 @@ function askDialog({ icon, title, text, primary, secondary }) {
       else if (e.key === 'Enter' && !e.target.matches('.login-top button')) { e.preventDefault(); submit(); }
       return;
     }
+    if (onNew()) {
+      if (e.key === 'Enter' && !e.target.matches('.login-top button')) { e.preventDefault(); nameNext(); }
+      return;
+    }
     const cards = [...$('players').querySelectorAll('.player:not(.skeleton)')];
-    if (/^[1-9]$/.test(e.key) && cards[e.key - 1]) { e.preventDefault(); cards[e.key - 1].click(); return; }
+    const players = cards.filter(c => c.id !== 'add-player');
+    if (/^[1-9]$/.test(e.key) && players[e.key - 1]) { e.preventDefault(); players[e.key - 1].click(); return; }
+    if ((e.key === '+' || e.code === 'NumpadAdd' || e.code === 'KeyN') && $('add-player')) { e.preventDefault(); showNew(); return; }
     const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
     const at = cards.indexOf(document.activeElement);
     if (step && cards.length) { e.preventDefault(); cards[at < 0 ? 0 : (at + step + cards.length) % cards.length].focus(); }

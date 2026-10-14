@@ -15,6 +15,7 @@
   const TEST_FLAG = 'kf-test-mode';
   const TEST_COINS = 100;
   const PACK_PRICE = 10;
+  const AVATARS = ['⚽', '🧤', '🥅', '🏆', '⭐', '🔥', '🦁', '🐯', '🦊', '🐼', '🚀', '⚡'];
   const PACK_SIZE = 3;
   const USER_KEY = 'kf-user';
   const slotKey = (id) => `kf-sync-u${id}`;
@@ -546,6 +547,24 @@
     return data ? merge(fresh(), data) : fresh();
   };
 
+  // Shared by login() and register(): the server session is already set.
+  const startSession = async (u, hasGuestProgress) => {
+    user = u;
+    try {
+      store.setItem(USER_KEY, JSON.stringify(user));
+    } catch {
+      // memory only
+    }
+    state = load();
+    persist();
+    failures = 0;
+    authStatus = 'pending';
+    emit('change', state);
+    emit('auth', { user, status: authStatus });
+    await syncNow();
+    return { ok: true, user, hasGuestProgress };
+  };
+
   const auth = {
     get user() {
       return user;
@@ -568,20 +587,19 @@
         const { error, attemptsLeft, retryAfter } = r.data;
         return { ok: false, error: error || 'network', attemptsLeft, retryAfter, hasGuestProgress };
       }
-      user = r.data.user;
-      try {
-        store.setItem(USER_KEY, JSON.stringify(user));
-      } catch {
-        // memory only
+      return startSession(r.data.user, hasGuestProgress);
+    },
+
+    // Self-registration: creates the account and logs in.
+    async register(name, pin, avatar) {
+      if (TEST_MODE) return { ok: false, error: 'test_mode' };
+      const hasGuestProgress = auth.hasGuestProgress();
+      const r = await api('POST', '/register', { name, pin, avatar });
+      if (r.status !== 201) {
+        const { error, retryAfter } = r.data;
+        return { ok: false, error: error || 'network', retryAfter, hasGuestProgress };
       }
-      state = load();
-      persist();
-      failures = 0;
-      authStatus = 'pending';
-      emit('change', state);
-      emit('auth', { user, status: authStatus });
-      await syncNow();
-      return { ok: true, user, hasGuestProgress };
+      return startSession(r.data.user, hasGuestProgress);
     },
 
     // Guest state differs from a fresh one.
@@ -636,6 +654,7 @@
     PACK_PRICE,
     PACK_SIZE,
     TEST_MODE,
+    AVATARS,
     auth,
     _merge3: merge3,
 
