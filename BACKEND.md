@@ -61,7 +61,8 @@ Offline-first: games always read and write a local copy; the server is a backup 
 - 409 → three-way merge `merge3(base, local, server)` then push again with the server rev:
   numbers = `server + (local − base)`, except "max" fields (`stats.bestStreak`, `games.*.best`, `games.*.max`,
   `games.*.lastPlayed`) = max; `stats.streak`, `stats.dayStreak`, `stats.lastDay` taken from the side with the later
-  `lastDay`; maps (`stickers`, `achievements`, `games`, `gameData.*`) merged key by key with the same rules;
+  `lastDay`; maps (`cards`, `achievements`, `games`, `gameData.*`) merged key by key with the same rules;
+  `cards` counts never drop below 1 if the card was owned in base, local or server (two devices selling the same duplicate);
   arrays = union; other values = local if changed since base, else server. Coins never below 0.
 - 401 → session gone: keep local data, `KF.auth.status = 'expired'`, catalog asks for the PIN again.
 - Test mode (`?parent`) never logs in and never syncs.

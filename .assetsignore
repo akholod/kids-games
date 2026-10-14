@@ -13,3 +13,4 @@ deploy.sh
 .gitignore
 *.test.js
 .wrangler/
+images/cards/*.zip

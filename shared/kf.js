@@ -1,4 +1,4 @@
-// Keeper Fun Games — shared progress core (coins, sticker album, achievements).
+// Keeper Fun Games — shared progress core (coins, football cards, achievements).
 // Storage: localStorage (same origin for all games => shared progress).
 // Usage in a game:  <script src="../../shared/kf.js"></script>
 //   KF.answer('penalty-multiply', true)          // per answer
@@ -85,39 +85,77 @@
     fun: { title: 'Футбол-розваги', emoji: '🎉' },
   };
 
-  // rarity: common | rare | legend
-  const STICKERS = [
-    { id: 'messi', name: 'Messi', flag: '🇦🇷', pos: 'FW', num: 10, color: '#75aadb', rarity: 'legend' },
-    { id: 'ronaldo', name: 'Ronaldo', flag: '🇵🇹', pos: 'FW', num: 7, color: '#c8102e', rarity: 'legend' },
-    { id: 'shevchenko', name: 'Shevchenko', flag: '🇺🇦', pos: 'FW', num: 7, color: '#ffd500', rarity: 'legend' },
-    { id: 'yamal', name: 'Lamine Yamal', flag: '🇪🇸', pos: 'FW', num: 19, color: '#a50044', rarity: 'rare' },
-    { id: 'mbappe', name: 'Mbappé', flag: '🇫🇷', pos: 'FW', num: 10, color: '#1d3f8f', rarity: 'rare' },
-    { id: 'haaland', name: 'Haaland', flag: '🇳🇴', pos: 'FW', num: 9, color: '#6cabdd', rarity: 'rare' },
-    { id: 'mudryk', name: 'Mudryk', flag: '🇺🇦', pos: 'FW', num: 10, color: '#034694', rarity: 'rare' },
-    { id: 'vinicius', name: 'Vinícius Jr', flag: '🇧🇷', pos: 'FW', num: 7, color: '#febe10', rarity: 'rare' },
-    { id: 'bellingham', name: 'Bellingham', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', pos: 'MF', num: 5, color: '#ffffff', rarity: 'rare' },
-    { id: 'pedri', name: 'Pedri', flag: '🇪🇸', pos: 'MF', num: 8, color: '#004d98', rarity: 'common' },
-    { id: 'dovbyk', name: 'Dovbyk', flag: '🇺🇦', pos: 'FW', num: 11, color: '#8e1f2f', rarity: 'common' },
-    { id: 'zinchenko', name: 'Zinchenko', flag: '🇺🇦', pos: 'DF', num: 17, color: '#ffd500', rarity: 'common' },
-    { id: 'lunin', name: 'Lunin', flag: '🇺🇦', pos: 'GK', num: 13, color: '#0057b7', rarity: 'common' },
-    { id: 'courtois', name: 'Courtois', flag: '🇧🇪', pos: 'GK', num: 1, color: '#e30613', rarity: 'common' },
-    { id: 'terstegen', name: 'ter Stegen', flag: '🇩🇪', pos: 'GK', num: 1, color: '#a50044', rarity: 'common' },
-    { id: 'kane', name: 'Kane', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', pos: 'FW', num: 9, color: '#dc052d', rarity: 'common' },
-    { id: 'salah', name: 'Salah', flag: '🇪🇬', pos: 'FW', num: 11, color: '#c8102e', rarity: 'common' },
-    { id: 'lewandowski', name: 'Lewandowski', flag: '🇵🇱', pos: 'FW', num: 9, color: '#004d98', rarity: 'common' },
-    { id: 'debruyne', name: 'De Bruyne', flag: '🇧🇪', pos: 'MF', num: 17, color: '#6cabdd', rarity: 'common' },
-    { id: 'modric', name: 'Modrić', flag: '🇭🇷', pos: 'MF', num: 10, color: '#ffffff', rarity: 'common' },
-    { id: 'rodri', name: 'Rodri', flag: '🇪🇸', pos: 'MF', num: 16, color: '#c60b1e', rarity: 'common' },
-    { id: 'vandijk', name: 'van Dijk', flag: '🇳🇱', pos: 'DF', num: 4, color: '#f36c21', rarity: 'common' },
-    { id: 'gavi', name: 'Gavi', flag: '🇪🇸', pos: 'MF', num: 6, color: '#a50044', rarity: 'common' },
-    { id: 'sudakov', name: 'Sudakov', flag: '🇺🇦', pos: 'MF', num: 10, color: '#f37021', rarity: 'common' },
-    // exclusive: never drops from packs, only given by that game via KF.giveSticker().
-    { id: 'courtois-gold', name: 'Courtois ★', flag: '🇧🇪', pos: 'GK', num: 1, color: '#d4a017', rarity: 'legend', exclusive: 'goalkeeper' },
-  ];
+  // Football cards. Manifest comes from shared/cards.js (window.KF_CARDS), loaded before kf.js;
+  // without it the collection is simply empty. cat: common | futsal | rare | legend.
+  const CARDS = Array.isArray(window.KF_CARDS) ? window.KF_CARDS : [];
+  const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));
+  // weight = chance (%) that a pack card is from this category; the card is then uniform within it.
+  // sell = coins for selling one duplicate.
+  const CARD_CATS = {
+    common: { label: 'Звичайна', weight: 75, sell: 2 },
+    futsal: { label: 'Футзал', weight: 13, sell: 3 },
+    rare: { label: 'Рідкісна', weight: 10, sell: 5 },
+    legend: { label: 'Легенда', weight: 2, sell: 15 },
+  };
+  const catOf = (c) => (c && CARD_CATS[c.cat]) || CARD_CATS.common;
 
-  const RARITY_WEIGHT = { common: 70, rare: 25, legend: 5 };
+  const SCRIPT_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
+  const cardImg = (id, thumb) => {
+    const rel = `../images/cards/${thumb ? 'thumb/' : ''}${id}.webp`;
+    try {
+      return SCRIPT_SRC ? new URL(rel, SCRIPT_SRC).href : rel.slice(1);
+    } catch {
+      return rel.slice(1);
+    }
+  };
 
-  const uniqueStickers = (s) => Object.keys(s.stickers).length;
+  // Old emoji stickers -> cards (by player, first existing id wins). Others are refunded in coins.
+  const STICKER_CARDS = {
+    messi: ['lionel-messi'],
+    ronaldo: ['cristiano-ronaldo'],
+    yamal: ['lamine-yamal'],
+    mbappe: ['kylian-mbappe'],
+    haaland: ['erling-haaland'],
+    vinicius: ['vinicius-junior', 'vinicius-jr', 'vinicius'],
+    bellingham: ['jude-bellingham'],
+    pedri: ['pedri'],
+    courtois: ['thibaut-courtois'],
+    'courtois-gold': ['thibaut-courtois'],
+    terstegen: ['marc-andre-ter-stegen', 'ter-stegen'],
+    kane: ['harry-kane'],
+    salah: ['mohamed-salah'],
+    lewandowski: ['robert-lewandowski'],
+    debruyne: ['kevin-de-bruyne'],
+    modric: ['luka-modric'],
+    rodri: ['rodri'],
+    vandijk: ['virgil-van-dijk'],
+    gavi: ['gavi'],
+  };
+  const STICKER_REFUND = {
+    messi: 10, ronaldo: 10, shevchenko: 10, 'courtois-gold': 10,
+    yamal: 5, mbappe: 5, haaland: 5, mudryk: 5, vinicius: 5, bellingham: 5,
+  };
+  const REFUND_DEFAULT = 3;
+
+  // Convert state.stickers once (idempotent: the key is deleted). Skipped while the manifest is missing.
+  const migrateStickers = (s) => {
+    const isMap = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+    if (!CARDS.length || !isMap(s.stickers)) return s;
+    s.cards = { ...(isMap(s.cards) ? s.cards : {}) };
+    let refund = 0;
+    for (const [id, n] of Object.entries(s.stickers)) {
+      const count = Number(n) || 0;
+      const card = (STICKER_CARDS[id] || []).find((c) => CARD_BY_ID.has(c));
+      if (card) s.cards[card] = (s.cards[card] || 0) + count;
+      else refund += count * (STICKER_REFUND[id] || REFUND_DEFAULT);
+    }
+    s.coins = (s.coins || 0) + refund;
+    delete s.stickers;
+    return s;
+  };
+
+  const uniqueCards = (s) => Object.keys(s.cards).filter((id) => s.cards[id] > 0).length;
+  const ownedOfCat = (s, cat) => CARDS.filter((c) => c.cat === cat && s.cards[c.id] > 0).length;
   const totalCorrect = (s) => s.stats.correct;
   const playedGames = (s) => s.stats.games;
 
@@ -131,19 +169,21 @@
     { id: 'streak-15', icon: '⚡', title: 'Нестримний', desc: '15 правильних відповідей поспіль', check: (s) => s.stats.bestStreak >= 15 },
     { id: 'games-10', icon: '📅', title: 'Сезон', desc: 'Зіграй 10 ігор', check: (s) => playedGames(s) >= 10 },
     { id: 'days-3', icon: '🗓️', title: 'Тренування 3 дні', desc: 'Грай 3 дні поспіль', check: (s) => s.stats.dayStreak >= 3 },
-    { id: 'first-pack', icon: '🎁', title: 'Перший пакунок', desc: 'Відкрий пакунок наліпок', check: (s) => s.stats.packs >= 1 },
-    { id: 'album-10', icon: '📒', title: 'Колекціонер', desc: 'Збери 10 різних наліпок', check: (s) => uniqueStickers(s) >= 10 },
-    { id: 'album-full', icon: '🏆', title: 'Повний альбом', desc: 'Збери всі наліпки', check: (s) => uniqueStickers(s) >= STICKERS.length },
-    { id: 'legend', icon: '🌟', title: 'Легенда!', desc: 'Знайди легендарну наліпку', check: (s) => STICKERS.some((x) => x.rarity === 'legend' && s.stickers[x.id]) },
+    { id: 'first-pack', icon: '🎁', title: 'Перший пакунок', desc: 'Відкрий пакунок карток', check: (s) => s.stats.packs >= 1 },
+    { id: 'album-10', icon: '📒', title: 'Колекціонер', desc: 'Збери 10 різних карток', check: (s) => uniqueCards(s) >= 10 },
+    { id: 'album-50', icon: '📚', title: 'Великий колекціонер', desc: 'Збери 50 різних карток', check: (s) => uniqueCards(s) >= 50 },
+    { id: 'album-full', icon: '🏆', title: 'Повний альбом', desc: 'Збери всі картки', check: (s) => CARDS.length > 0 && CARDS.every((c) => s.cards[c.id] > 0) },
+    { id: 'legend', icon: '🌟', title: 'Легенда!', desc: 'Знайди легенду', check: (s) => ownedOfCat(s, 'legend') >= 1 },
+    { id: 'rare', icon: '💎', title: 'Зірка', desc: 'Знайди рідкісну картку', check: (s) => ownedOfCat(s, 'rare') >= 1 },
+    { id: 'futsal', icon: '🥅', title: 'Футзаліст', desc: 'Збери 5 футзалістів', check: (s) => ownedOfCat(s, 'futsal') >= 5 },
     { id: 'keeper-wall', icon: '🧱', title: 'Стіна', desc: 'Зроби 25 сейвів у грі «Воротар»', check: (s) => (s.gameData?.goalkeeper?.saves || 0) >= 25 },
     { id: 'keeper-gloves', icon: '🧤', title: 'Нові рукавиці', desc: 'Купи нові рукавиці у грі «Воротар»', check: (s) => (s.gameData?.goalkeeper?.gloves?.owned?.length || 0) >= 2 },
-    { id: 'ukraine', icon: '🇺🇦', title: 'Збірна України', desc: 'Збери всіх українців', check: (s) => STICKERS.filter((x) => x.flag === '🇺🇦').every((x) => s.stickers[x.id]) },
   ];
 
   const fresh = () => ({
     v: 1,
     coins: 0,
-    stickers: {}, // id -> count
+    cards: {}, // card id -> count
     achievements: {}, // id -> timestamp
     games: {}, // slug -> { plays, best, max, lastPlayed }
     gameData: {}, // slug -> game-specific saved data (KF.gameData)
@@ -153,7 +193,7 @@
   const merge = (base, data) => {
     const s = { ...base, ...data };
     s.stats = { ...base.stats, ...(data.stats || {}) };
-    return s;
+    return migrateStickers(s);
   };
 
   const initial = () => {
@@ -255,16 +295,36 @@
     emit('coins', n);
   };
 
-  const PACK_STICKERS = STICKERS.filter((x) => !x.exclusive);
-
-  const pickSticker = () => {
-    const total = PACK_STICKERS.reduce((sum, x) => sum + RARITY_WEIGHT[x.rarity], 0);
-    let r = Math.random() * total;
-    for (const x of PACK_STICKERS) {
-      r -= RARITY_WEIGHT[x.rarity];
-      if (r < 0) return x;
+  const pickCard = () => {
+    const byCat = {};
+    for (const c of CARDS) (byCat[c.cat] ||= []).push(c);
+    const cats = Object.keys(CARD_CATS).filter((k) => byCat[k]?.length);
+    if (!cats.length) return null;
+    let r = Math.random() * cats.reduce((sum, k) => sum + CARD_CATS[k].weight, 0);
+    let cat = cats[cats.length - 1];
+    for (const k of cats) {
+      r -= CARD_CATS[k].weight;
+      if (r < 0) {
+        cat = k;
+        break;
+      }
     }
-    return PACK_STICKERS[PACK_STICKERS.length - 1];
+    const list = byCat[cat];
+    return list[Math.floor(Math.random() * list.length)];
+  };
+
+  const addCard = (c) => {
+    const isNew = !state.cards[c.id];
+    state.cards[c.id] = (state.cards[c.id] || 0) + 1;
+    return { ...c, isNew };
+  };
+
+  const sellOne = (c) => {
+    if ((state.cards[c.id] || 0) < 2) return 0;
+    state.cards[c.id]--;
+    const gain = catOf(c).sell;
+    addCoins(gain);
+    return gain;
   };
 
   // ---- Server sync (logged-in users only; all network work is in the background) ----
@@ -328,6 +388,10 @@
     const pick = ld > sd || (ld === sd && l.stats.streak >= s.stats.streak) ? l.stats : s.stats;
     for (const k of ['streak', 'dayStreak', 'lastDay']) out.stats[k] = pick[k];
     out.coins = Math.max(0, out.coins);
+    // a card owned on any side is never lost (two devices may sell the same duplicate)
+    for (const id of new Set([...Object.keys(b.cards), ...Object.keys(l.cards), ...Object.keys(s.cards)])) {
+      if ((b.cards[id] >= 1 || l.cards[id] >= 1 || s.cards[id] >= 1) && !(out.cards[id] >= 1)) out.cards[id] = 1;
+    }
     return out;
   };
 
@@ -566,7 +630,8 @@
   const KF = {
     GAMES,
     CATEGORIES,
-    STICKERS,
+    CARDS,
+    CARD_CATS,
     ACHIEVEMENTS,
     PACK_PRICE,
     PACK_SIZE,
@@ -638,16 +703,18 @@
       return true;
     },
 
-    // Give a specific (e.g. exclusive) sticker. Returns { ...sticker, isNew } or null.
-    giveSticker(id) {
-      const x = STICKERS.find((s) => s.id === id);
-      if (!x) return null;
-      const isNew = !state.stickers[id];
-      state.stickers[id] = (state.stickers[id] || 0) + 1;
-      emit('sticker', { ...x, isNew });
+    // Give a specific card (e.g. a game reward). Returns { ...card, isNew } or null for an unknown id.
+    // Emits 'card' with the same object.
+    giveCard(id) {
+      const c = CARD_BY_ID.get(id);
+      if (!c) return null;
+      const got = addCard(c);
+      emit('card', got);
       commit();
-      return { ...x, isNew };
+      return got;
     },
+
+    cardImg,
 
     // Game-specific persistent data (plain JSON). Respects test mode.
     //   const d = KF.gameData('math-exam');  KF.gameData('math-exam', { ...d, x: 1 });
@@ -660,20 +727,36 @@
 
     canBuyPack: () => state.coins >= PACK_PRICE,
 
-    // Returns [{ ...sticker, isNew }] or null if not enough coins.
+    // Returns [{ ...card, isNew }] (PACK_SIZE cards) or null if not enough coins / no cards.
+    // Emits one 'pack' event with that array (no per-card 'card' events).
     openPack() {
-      if (state.coins < PACK_PRICE) return null;
+      if (state.coins < PACK_PRICE || !CARDS.length) return null;
       addCoins(-PACK_PRICE);
       const got = [];
-      for (let i = 0; i < PACK_SIZE; i++) {
-        const x = pickSticker();
-        const isNew = !state.stickers[x.id];
-        state.stickers[x.id] = (state.stickers[x.id] || 0) + 1;
-        got.push({ ...x, isNew });
-      }
+      for (let i = 0; i < PACK_SIZE; i++) got.push(addCard(pickCard()));
       state.stats.packs++;
+      emit('pack', got);
       commit();
       return got;
+    },
+
+    // Total extra copies (count - 1 for every owned card).
+    duplicates: () => Object.values(state.cards).reduce((sum, n) => sum + Math.max(0, n - 1), 0),
+
+    // Sell ONE extra copy (never the last one). Returns coins gained (0 if no duplicate).
+    sellDuplicate(id) {
+      const c = CARD_BY_ID.get(id);
+      const gain = c ? sellOne(c) : 0;
+      if (gain) commit();
+      return gain;
+    },
+
+    // Sell all extra copies. Returns total coins gained.
+    sellAllDuplicates() {
+      let total = 0;
+      for (const c of CARDS) while ((state.cards[c.id] || 0) > 1) total += sellOne(c);
+      if (total) commit();
+      return total;
     },
 
     // Progress transfer between devices: short base64 code.

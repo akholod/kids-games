@@ -7,7 +7,14 @@
   stack.setAttribute('role', 'status');
   stack.setAttribute('aria-live', 'polite');
   document.body.append(stack);
+  // A modal <dialog> sits in the top layer, above anything in <body>: show feedback inside it instead.
+  function host(el) {
+    const modal = [...document.querySelectorAll('dialog[open]')].reverse().find(d => { try { return d.matches(':modal'); } catch { return false; } });
+    const target = modal || document.body;
+    if (el.parentNode !== target) target.append(el);
+  }
   function toast(message, kind = '') {
+    host(stack);
     const node = document.createElement('div');
     node.className = `kf-toast ${kind}`;
     node.textContent = message;
@@ -29,7 +36,7 @@
       bit.style.animationDelay = `${Math.random() * .55}s`;
       layer.append(bit);
     }
-    document.body.append(layer);
+    host(layer);
     setTimeout(() => layer.remove(), 2600);
   }
   function updateCoins() {
@@ -38,7 +45,7 @@
   KF.on('change', updateCoins);
   KF.on('coins', delta => { if (delta > 0) toast(`+${delta} 🪙`, 'coin'); });
   KF.on('achievement', a => { toast(`🏅 ${a.title} — нове досягнення!`); confetti(); });
-  KF.on('sticker', x => { if (x.isNew) { toast(`🌟 Нова наліпка: ${x.name}!`); confetti(); } });
+  KF.on('card', x => { if (x.isNew) { toast(`🌟 Нова картка: ${x.name}!`); confetti(); } });
   // Sync state of the logged-in player. Any element with data-kf-sync gets data-state;
   // data-kf-sync="" shows the short label, ="long" the explanation, ="dot" only the state.
   const SYNC = {
