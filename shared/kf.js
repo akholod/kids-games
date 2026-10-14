@@ -33,10 +33,154 @@
   };
 
   const TEST_MODE = detectTestMode();
+
+  // Site language: 'uk' (main site) or 'es' (Spanish site), from shared/site.js.
+  // ?lang=es / ?lang=uk overrides it for this tab (for testing), ?lang=off drops the override.
+  const LANGS = ['uk', 'es'];
+  const LANG_FLAG = 'kf-lang';
+  const detectLang = () => {
+    const site = LANGS.includes(window.KF_SITE?.lang) ? window.KF_SITE.lang : 'uk';
+    try {
+      const param = new URLSearchParams(location.search).get('lang');
+      if (param === 'off') sessionStorage.removeItem(LANG_FLAG);
+      else if (LANGS.includes(param)) sessionStorage.setItem(LANG_FLAG, param);
+      const forced = sessionStorage.getItem(LANG_FLAG);
+      return LANGS.includes(forced) ? forced : site;
+    } catch {
+      return site;
+    }
+  };
+  const LANG = detectLang();
+  if (typeof document !== 'undefined' && document.documentElement) document.documentElement.lang = LANG;
+
+  // T = i18n({ uk: {...}, es: {...} }); T('key', { n: 3 }) — missing keys fall back to uk, then to the key.
+  // Values are strings with {var} placeholders or functions (vars) => string (plurals).
+  // T.apply(root) fills [data-i18n] text and [data-i18n-placeholder|-aria-label|-title] attributes.
+  const i18n = (dicts) => {
+    const dict = { ...dicts.uk, ...dicts[LANG] };
+    const T = (key, vars = {}) => {
+      const v = dict[key];
+      if (typeof v === 'function') return v(vars);
+      if (typeof v !== 'string') return key;
+      return v.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+    };
+    T.has = (key) => key in dict;
+    T.apply = (root = document) => {
+      for (const el of root.querySelectorAll('[data-i18n]')) el.textContent = T(el.dataset.i18n);
+      for (const attr of ['placeholder', 'aria-label', 'title']) {
+        for (const el of root.querySelectorAll(`[data-i18n-${attr}]`)) el.setAttribute(attr, T(el.getAttribute(`data-i18n-${attr}`)));
+      }
+    };
+    return T;
+  };
   const KEY = TEST_MODE ? TEST_KEY : REAL_KEY;
   const store = TEST_MODE ? sessionStorage : localStorage;
 
+  // Texts of the core (catalog titles, achievements, card categories). Games have their own dictionaries.
+  const T = i18n({
+    uk: {
+      'cat.math': 'Математика',
+      'cat.english': 'Англійська',
+      'cat.fun': 'Футбол-розваги',
+      'card.common': 'Звичайна',
+      'card.futsal': 'Футзал',
+      'card.rare': 'Рідкісна',
+      'card.legend': 'Легенда',
+      'first-game.title': 'Перший матч',
+      'first-game.desc': 'Зіграй першу гру',
+      'goals-10.title': '10 голів',
+      'goals-10.desc': 'Дай 10 правильних відповідей',
+      'goals-50.title': 'Бомбардир',
+      'goals-50.desc': '50 правильних відповідей',
+      'goals-200.title': 'Золота бутса',
+      'goals-200.desc': '200 правильних відповідей',
+      'perfect.title': 'Сухий матч',
+      'perfect.desc': 'Пройди гру без жодної помилки',
+      'streak-5.title': 'Серія 5',
+      'streak-5.desc': '5 правильних відповідей поспіль',
+      'streak-15.title': 'Нестримний',
+      'streak-15.desc': '15 правильних відповідей поспіль',
+      'games-10.title': 'Сезон',
+      'games-10.desc': 'Зіграй 10 ігор',
+      'days-3.title': 'Тренування 3 дні',
+      'days-3.desc': 'Грай 3 дні поспіль',
+      'first-pack.title': 'Перший пакунок',
+      'first-pack.desc': 'Відкрий пакунок карток',
+      'album-10.title': 'Колекціонер',
+      'album-10.desc': 'Збери 10 різних карток',
+      'album-50.title': 'Великий колекціонер',
+      'album-50.desc': 'Збери 50 різних карток',
+      'album-full.title': 'Повний альбом',
+      'album-full.desc': 'Збери всі картки',
+      'legend.title': 'Легенда!',
+      'legend.desc': 'Знайди легенду',
+      'rare.title': 'Зірка',
+      'rare.desc': 'Знайди рідкісну картку',
+      'futsal.title': 'Футзаліст',
+      'futsal.desc': 'Збери 5 футзалістів',
+      'ukraine-5.title': 'Синьо-жовті',
+      'ukraine-5.desc': 'Збери 5 українців',
+      'ukraine.title': 'Збірна України',
+      'ukraine.desc': 'Збери всіх українців',
+      'keeper-wall.title': 'Стіна',
+      'keeper-wall.desc': 'Зроби 25 сейвів у грі «Воротар»',
+      'keeper-gloves.title': 'Нові рукавиці',
+      'keeper-gloves.desc': 'Купи нові рукавиці у грі «Воротар»',
+    },
+    es: {
+      'cat.math': 'Matemáticas',
+      'cat.english': 'Inglés',
+      'cat.fun': 'Fútbol y diversión',
+      'card.common': 'Común',
+      'card.futsal': 'Fútbol sala',
+      'card.rare': 'Rara',
+      'card.legend': 'Leyenda',
+      'first-game.title': 'Primer partido',
+      'first-game.desc': 'Juega tu primera partida',
+      'goals-10.title': '10 goles',
+      'goals-10.desc': 'Da 10 respuestas correctas',
+      'goals-50.title': 'Goleador',
+      'goals-50.desc': '50 respuestas correctas',
+      'goals-200.title': 'Bota de Oro',
+      'goals-200.desc': '200 respuestas correctas',
+      'perfect.title': 'Portería a cero',
+      'perfect.desc': 'Termina una partida sin ningún fallo',
+      'streak-5.title': 'Racha de 5',
+      'streak-5.desc': '5 respuestas correctas seguidas',
+      'streak-15.title': 'Imparable',
+      'streak-15.desc': '15 respuestas correctas seguidas',
+      'games-10.title': 'Temporada',
+      'games-10.desc': 'Juega 10 partidas',
+      'days-3.title': 'Entrenamiento de 3 días',
+      'days-3.desc': 'Juega 3 días seguidos',
+      'first-pack.title': 'Primer sobre',
+      'first-pack.desc': 'Abre un sobre de cartas',
+      'album-10.title': 'Coleccionista',
+      'album-10.desc': 'Consigue 10 cartas distintas',
+      'album-50.title': 'Gran coleccionista',
+      'album-50.desc': 'Consigue 50 cartas distintas',
+      'album-full.title': 'Álbum completo',
+      'album-full.desc': 'Consigue todas las cartas',
+      'legend.title': '¡Leyenda!',
+      'legend.desc': 'Encuentra una leyenda',
+      'rare.title': 'Estrella',
+      'rare.desc': 'Encuentra una carta rara',
+      'futsal.title': 'Jugador de sala',
+      'futsal.desc': 'Consigue 5 jugadores de fútbol sala',
+      'ukraine-5.title': 'Azul y amarillo',
+      'ukraine-5.desc': 'Consigue 5 ucranianos',
+      'ukraine.title': 'Selección de Ucrania',
+      'ukraine.desc': 'Consigue a todos los ucranianos',
+      'keeper-wall.title': 'El muro',
+      'keeper-wall.desc': 'Haz 25 paradas en el juego «Portero»',
+      'keeper-gloves.title': 'Guantes nuevos',
+      'keeper-gloves.desc': 'Compra guantes nuevos en el juego «Portero»',
+    },
+  });
+
   // Catalog registry. status: 'ready' | 'beta' (visible only in test mode) | 'soon'
+  // sites: where the game is shown ('uk' = main site, 'es' = Spanish site). title/desc are the Ukrainian texts
+  // (kept for compatibility); es: { title, desc } are the Spanish ones. KF.siteGames() resolves both.
   const GAMES = [
     {
       slug: 'goalkeeper',
@@ -45,6 +189,8 @@
       category: 'fun',
       desc: 'Відбивай удари і віддавай точний пас. Футзал 5×5!',
       status: 'ready',
+      sites: ['uk'],
+      es: { title: 'Portero', desc: 'Para los tiros y da un pase preciso. ¡Fútbol sala 5×5!' },
     },
     {
       slug: 'math-exam',
@@ -53,6 +199,8 @@
       category: 'math',
       desc: 'Готуємось до іспиту: llevadas, redondeo, valor.',
       status: 'ready',
+      sites: ['uk', 'es'],
+      es: { title: 'Examen de mates', desc: 'Prepárate para el examen: llevadas, redondeo y valor posicional.' },
     },
     {
       slug: 'penalty-multiply',
@@ -61,6 +209,8 @@
       category: 'math',
       desc: 'Розв’яжи приклад і забий гол!',
       status: 'ready',
+      sites: ['uk'],
+      es: { title: 'Penaltis de multiplicar', desc: 'Resuelve la operación y ¡marca gol!' },
     },
     {
       slug: 'word-match',
@@ -69,6 +219,8 @@
       category: 'english',
       desc: 'М’яч, balón, ball — з’єднай переклади.',
       status: 'soon',
+      sites: ['uk'],
+      es: { title: 'Palabras ES–EN', desc: 'Balón, ball… ¡une las traducciones!' },
     },
     {
       slug: 'football-quiz',
@@ -77,13 +229,15 @@
       category: 'fun',
       desc: 'Чемпіонати, клуби, зірки й правила. Українською, español, English.',
       status: 'ready',
+      sites: ['uk', 'es'],
+      es: { title: 'Quiz de fútbol', desc: 'Campeonatos, clubes, estrellas y reglas. ¡A ver cuánto sabes!' },
     },
   ];
 
   const CATEGORIES = {
-    math: { title: 'Математика', emoji: '🔢' },
-    english: { title: 'Англійська', emoji: '🇬🇧' },
-    fun: { title: 'Футбол-розваги', emoji: '🎉' },
+    math: { title: T('cat.math'), emoji: '🔢' },
+    english: { title: T('cat.english'), emoji: '🇬🇧' },
+    fun: { title: T('cat.fun'), emoji: '🎉' },
   };
 
   // Football cards. Manifest comes from shared/cards.js (window.KF_CARDS), loaded before kf.js;
@@ -93,10 +247,10 @@
   // weight = chance (%) that a pack card is from this category; the card is then uniform within it.
   // sell = coins for selling one duplicate.
   const CARD_CATS = {
-    common: { label: 'Звичайна', weight: 75, sell: 2 },
-    futsal: { label: 'Футзал', weight: 13, sell: 3 },
-    rare: { label: 'Рідкісна', weight: 10, sell: 5 },
-    legend: { label: 'Легенда', weight: 2, sell: 15 },
+    common: { label: T('card.common'), weight: 75, sell: 2 },
+    futsal: { label: T('card.futsal'), weight: 13, sell: 3 },
+    rare: { label: T('card.rare'), weight: 10, sell: 5 },
+    legend: { label: T('card.legend'), weight: 2, sell: 15 },
   };
   const catOf = (c) => (c && CARD_CATS[c.cat]) || CARD_CATS.common;
 
@@ -161,26 +315,26 @@
   const playedGames = (s) => s.stats.games;
 
   const ACHIEVEMENTS = [
-    { id: 'first-game', icon: '🎽', title: 'Перший матч', desc: 'Зіграй першу гру', check: (s) => playedGames(s) >= 1 },
-    { id: 'goals-10', icon: '⚽', title: '10 голів', desc: 'Дай 10 правильних відповідей', check: (s) => totalCorrect(s) >= 10 },
-    { id: 'goals-50', icon: '🥅', title: 'Бомбардир', desc: '50 правильних відповідей', check: (s) => totalCorrect(s) >= 50 },
-    { id: 'goals-200', icon: '👟', title: 'Золота бутса', desc: '200 правильних відповідей', check: (s) => totalCorrect(s) >= 200 },
-    { id: 'perfect', icon: '💯', title: 'Сухий матч', desc: 'Пройди гру без жодної помилки', check: (s) => s.stats.perfect >= 1 },
-    { id: 'streak-5', icon: '🔥', title: 'Серія 5', desc: '5 правильних відповідей поспіль', check: (s) => s.stats.bestStreak >= 5 },
-    { id: 'streak-15', icon: '⚡', title: 'Нестримний', desc: '15 правильних відповідей поспіль', check: (s) => s.stats.bestStreak >= 15 },
-    { id: 'games-10', icon: '📅', title: 'Сезон', desc: 'Зіграй 10 ігор', check: (s) => playedGames(s) >= 10 },
-    { id: 'days-3', icon: '🗓️', title: 'Тренування 3 дні', desc: 'Грай 3 дні поспіль', check: (s) => s.stats.dayStreak >= 3 },
-    { id: 'first-pack', icon: '🎁', title: 'Перший пакунок', desc: 'Відкрий пакунок карток', check: (s) => s.stats.packs >= 1 },
-    { id: 'album-10', icon: '📒', title: 'Колекціонер', desc: 'Збери 10 різних карток', check: (s) => uniqueCards(s) >= 10 },
-    { id: 'album-50', icon: '📚', title: 'Великий колекціонер', desc: 'Збери 50 різних карток', check: (s) => uniqueCards(s) >= 50 },
-    { id: 'album-full', icon: '🏆', title: 'Повний альбом', desc: 'Збери всі картки', check: (s) => CARDS.length > 0 && CARDS.every((c) => s.cards[c.id] > 0) },
-    { id: 'legend', icon: '🌟', title: 'Легенда!', desc: 'Знайди легенду', check: (s) => ownedOfCat(s, 'legend') >= 1 },
-    { id: 'rare', icon: '💎', title: 'Зірка', desc: 'Знайди рідкісну картку', check: (s) => ownedOfCat(s, 'rare') >= 1 },
-    { id: 'futsal', icon: '🥅', title: 'Футзаліст', desc: 'Збери 5 футзалістів', check: (s) => ownedOfCat(s, 'futsal') >= 5 },
-    { id: 'ukraine-5', icon: '🟦', title: 'Синьо-жовті', desc: 'Збери 5 українців', check: (s) => CARDS.filter((c) => c.ua && s.cards[c.id] > 0).length >= 5 },
-    { id: 'ukraine', icon: '🇺🇦', title: 'Збірна України', desc: 'Збери всіх українців', check: (s) => CARDS.some((c) => c.ua) && CARDS.filter((c) => c.ua).every((c) => s.cards[c.id] > 0) },
-    { id: 'keeper-wall', icon: '🧱', title: 'Стіна', desc: 'Зроби 25 сейвів у грі «Воротар»', check: (s) => (s.gameData?.goalkeeper?.saves || 0) >= 25 },
-    { id: 'keeper-gloves', icon: '🧤', title: 'Нові рукавиці', desc: 'Купи нові рукавиці у грі «Воротар»', check: (s) => (s.gameData?.goalkeeper?.gloves?.owned?.length || 0) >= 2 },
+    { id: 'first-game', icon: '🎽', title: T('first-game.title'), desc: T('first-game.desc'), check: (s) => playedGames(s) >= 1 },
+    { id: 'goals-10', icon: '⚽', title: T('goals-10.title'), desc: T('goals-10.desc'), check: (s) => totalCorrect(s) >= 10 },
+    { id: 'goals-50', icon: '🥅', title: T('goals-50.title'), desc: T('goals-50.desc'), check: (s) => totalCorrect(s) >= 50 },
+    { id: 'goals-200', icon: '👟', title: T('goals-200.title'), desc: T('goals-200.desc'), check: (s) => totalCorrect(s) >= 200 },
+    { id: 'perfect', icon: '💯', title: T('perfect.title'), desc: T('perfect.desc'), check: (s) => s.stats.perfect >= 1 },
+    { id: 'streak-5', icon: '🔥', title: T('streak-5.title'), desc: T('streak-5.desc'), check: (s) => s.stats.bestStreak >= 5 },
+    { id: 'streak-15', icon: '⚡', title: T('streak-15.title'), desc: T('streak-15.desc'), check: (s) => s.stats.bestStreak >= 15 },
+    { id: 'games-10', icon: '📅', title: T('games-10.title'), desc: T('games-10.desc'), check: (s) => playedGames(s) >= 10 },
+    { id: 'days-3', icon: '🗓️', title: T('days-3.title'), desc: T('days-3.desc'), check: (s) => s.stats.dayStreak >= 3 },
+    { id: 'first-pack', icon: '🎁', title: T('first-pack.title'), desc: T('first-pack.desc'), check: (s) => s.stats.packs >= 1 },
+    { id: 'album-10', icon: '📒', title: T('album-10.title'), desc: T('album-10.desc'), check: (s) => uniqueCards(s) >= 10 },
+    { id: 'album-50', icon: '📚', title: T('album-50.title'), desc: T('album-50.desc'), check: (s) => uniqueCards(s) >= 50 },
+    { id: 'album-full', icon: '🏆', title: T('album-full.title'), desc: T('album-full.desc'), check: (s) => CARDS.length > 0 && CARDS.every((c) => s.cards[c.id] > 0) },
+    { id: 'legend', icon: '🌟', title: T('legend.title'), desc: T('legend.desc'), check: (s) => ownedOfCat(s, 'legend') >= 1 },
+    { id: 'rare', icon: '💎', title: T('rare.title'), desc: T('rare.desc'), check: (s) => ownedOfCat(s, 'rare') >= 1 },
+    { id: 'futsal', icon: '🥅', title: T('futsal.title'), desc: T('futsal.desc'), check: (s) => ownedOfCat(s, 'futsal') >= 5 },
+    { id: 'ukraine-5', icon: '🟦', title: T('ukraine-5.title'), desc: T('ukraine-5.desc'), check: (s) => CARDS.filter((c) => c.ua && s.cards[c.id] > 0).length >= 5 },
+    { id: 'ukraine', icon: '🇺🇦', title: T('ukraine.title'), desc: T('ukraine.desc'), check: (s) => CARDS.some((c) => c.ua) && CARDS.filter((c) => c.ua).every((c) => s.cards[c.id] > 0) },
+    { id: 'keeper-wall', icon: '🧱', title: T('keeper-wall.title'), desc: T('keeper-wall.desc'), check: (s) => (s.gameData?.goalkeeper?.saves || 0) >= 25 },
+    { id: 'keeper-gloves', icon: '🧤', title: T('keeper-gloves.title'), desc: T('keeper-gloves.desc'), check: (s) => (s.gameData?.goalkeeper?.gloves?.owned?.length || 0) >= 2 },
   ];
 
   const fresh = () => ({
@@ -648,6 +802,8 @@
   };
 
   const KF = {
+    lang: LANG,
+    i18n,
     GAMES,
     CATEGORIES,
     CARDS,
@@ -665,6 +821,14 @@
     // 'ready' games for everyone, 'beta' only in test mode.
     isPlayable: (game) => game.status === 'ready' || (TEST_MODE && game.status === 'beta'),
     isListed: (game) => game.status !== 'beta' || TEST_MODE,
+
+    // Games of the current site (KF.lang) that are listed, with title/desc in the site language.
+    siteGames: () =>
+      GAMES.filter((g) => g.sites.includes(LANG) && (g.status !== 'beta' || TEST_MODE)).map((g) => ({
+        ...g,
+        title: g.es && LANG === 'es' ? g.es.title : g.title,
+        desc: g.es && LANG === 'es' ? g.es.desc : g.desc,
+      })),
 
     on(type, fn) {
       if (!listeners[type]) listeners[type] = [];

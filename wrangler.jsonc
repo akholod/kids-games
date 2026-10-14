@@ -4,9 +4,10 @@
   "compatibility_date": "2026-10-01",
   "main": "worker/index.js",
   "workers_dev": true,
+  "vars": { "SITE_LANG": "uk" },
   "assets": {
     "directory": ".",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/shared/site.js"]
   },
   "d1_databases": [
     {
@@ -15,5 +16,25 @@
       "database_id": "5f07272a-a7bc-4293-8cfb-527a22a1357a",
       "migrations_dir": "migrations"
     }
-  ]
+  ],
+  // Spanish site: same code, same assets and the same D1 database. Envs do not inherit bindings/vars.
+  "env": {
+    "es": {
+      "name": "keeper-fun-games-es",
+      "workers_dev": true,
+      "vars": { "SITE_LANG": "es" },
+      "assets": {
+        "directory": ".",
+        "run_worker_first": ["/api/*", "/shared/site.js"]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "keeper-fun-games",
+          "database_id": "5f07272a-a7bc-4293-8cfb-527a22a1357a",
+          "migrations_dir": "migrations"
+        }
+      ]
+    }
+  }
 }

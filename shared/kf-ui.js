@@ -1,6 +1,36 @@
 // Shared progress feedback. Load after kf.js.
 'use strict';
 (() => {
+  const T = KF.i18n({
+    uk: {
+      achievement: '🏅 {title} — нове досягнення!',
+      card: '🌟 Нова картка: {name}!',
+      'sync.synced.short': 'Збережено ✓',
+      'sync.synced.long': 'Усе збережено. Прогрес однаковий на всіх пристроях.',
+      'sync.pending.short': 'Зберігаю',
+      'sync.pending.long': 'Зберігаю прогрес… Це кілька секунд.',
+      'sync.offline.short': 'Без інтернету',
+      'sync.offline.long': 'Немає інтернету. Прогрес чекає тут і збережеться, коли інтернет повернеться.',
+      'sync.expired.short': 'Введи PIN',
+      'sync.expired.long': 'Введи PIN ще раз, щоб прогрес зберігався.',
+      'test.label': '🧪 Тест-режим · прогрес не зберігається',
+      'test.exit': 'Вийти',
+    },
+    es: {
+      achievement: '🏅 {title} — ¡nuevo logro!',
+      card: '🌟 ¡Carta nueva: {name}!',
+      'sync.synced.short': 'Guardado ✓',
+      'sync.synced.long': 'Todo guardado. Tu progreso es el mismo en todos los dispositivos.',
+      'sync.pending.short': 'Guardando',
+      'sync.pending.long': 'Guardando tu progreso… Son unos segundos.',
+      'sync.offline.short': 'Sin internet',
+      'sync.offline.long': 'No hay internet. Tu progreso espera aquí y se guardará cuando vuelva la conexión.',
+      'sync.expired.short': 'Escribe tu PIN',
+      'sync.expired.long': 'Escribe tu PIN otra vez para que tu progreso se guarde.',
+      'test.label': '🧪 Modo de prueba · el progreso no se guarda',
+      'test.exit': 'Salir',
+    },
+  });
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const stack = document.createElement('div');
   stack.className = 'kf-toast-stack';
@@ -44,16 +74,12 @@
   }
   KF.on('change', updateCoins);
   KF.on('coins', delta => { if (delta > 0) toast(`+${delta} 🪙`, 'coin'); });
-  KF.on('achievement', a => { toast(`🏅 ${a.title} — нове досягнення!`); confetti(); });
-  KF.on('card', x => { if (x.isNew) { toast(`🌟 Нова картка: ${x.name}!`); confetti(); } });
+  KF.on('achievement', a => { toast(T('achievement', { title: a.title })); confetti(); });
+  KF.on('card', x => { if (x.isNew) { toast(T('card', { name: x.name })); confetti(); } });
   // Sync state of the logged-in player. Any element with data-kf-sync gets data-state;
   // data-kf-sync="" shows the short label, ="long" the explanation, ="dot" only the state.
-  const SYNC = {
-    synced: { short: 'Збережено ✓', long: 'Усе збережено. Прогрес однаковий на всіх пристроях.' },
-    pending: { short: 'Зберігаю', long: 'Зберігаю прогрес… Це кілька секунд.' },
-    offline: { short: 'Без інтернету', long: 'Немає інтернету. Прогрес чекає тут і збережеться, коли інтернет повернеться.' },
-    expired: { short: 'Введи PIN', long: 'Введи PIN ще раз, щоб прогрес зберігався.' },
-  };
+  const SYNC = Object.fromEntries(['synced', 'pending', 'offline', 'expired'].map(k => [k, { short: T(`sync.${k}.short`), long: T(`sync.${k}.long`) }]));
+
   function updateSync() {
     const status = KF.auth?.status || 'guest';
     document.querySelectorAll('[data-kf-sync]').forEach(el => {
@@ -69,10 +95,10 @@
     bar.className = 'kf-test-ribbon';
     bar.setAttribute('role', 'note');
     const label = document.createElement('span');
-    label.textContent = '🧪 Тест-режим · прогрес не зберігається';
+    label.textContent = T('test.label');
     const exit = document.createElement('a');
     exit.href = `${location.pathname}?parent=off`;
-    exit.textContent = 'Вийти';
+    exit.textContent = T('test.exit');
     bar.append(label, exit);
     document.body.prepend(bar);
   }

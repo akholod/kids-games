@@ -1,20 +1,23 @@
 # Backend: Cloudflare Worker + D1
 
-The site is one Cloudflare Worker (personal account `20e6b39c875856725537b92999c1b53a`, URL `*.workers.dev`).
+The site is a Cloudflare Worker (personal account `20e6b39c875856725537b92999c1b53a`, URL `*.workers.dev`).
+A second Worker `keeper-fun-games-es` (wrangler `env.es`, `SITE_LANG=es`) serves the Spanish site from the same code,
+assets and the same D1 database (users, progress, results are shared; sessions/cookies are per host).
 Static files are served as Workers Static Assets straight from the project root (exclusions in `.assetsignore`);
-the Worker code only handles `/api/*`. Storage is one D1 database. No build step, no npm dependencies.
+the Worker code handles `/api/*` and `/shared/site.js` (answers `window.KF_SITE = { lang }` from the `SITE_LANG` var: `uk` | `es`, default `uk`). Storage is one D1 database. No build step, no npm dependencies.
 
 ## Files
 
-- `wrangler.jsonc` — worker name `keeper-fun-games`, `account_id`, assets (`directory: "."`, `run_worker_first: ["/api/*"]`),
-  D1 binding `DB` (database `keeper-fun-games`).
+- `wrangler.jsonc` — worker name `keeper-fun-games` (var `SITE_LANG: "uk"`), `account_id`, assets (`directory: "."`,
+  `run_worker_first: ["/api/*", "/shared/site.js"]`), D1 binding `DB` (database `keeper-fun-games`).
+  `env.es` → worker `keeper-fun-games-es`, `SITE_LANG: "es"`; envs do not inherit bindings/vars, so assets and D1 are repeated there.
 - `.assetsignore` — never upload: `books/`, `.pi/`, `.git/`, `node_modules/`, `.omc/`, `worker/`, `migrations/`, `scripts/`,
   `*.md`, `wrangler.jsonc`, `deploy.sh`, `CNAME`, `.surgeignore`, `.assetsignore`, `.gitignore`, `*.test.js`, `.wrangler/`.
 - `worker/index.js` — ES module Worker, plain JS.
 - `migrations/0001_init.sql` — D1 schema (applied with `wrangler d1 migrations apply`).
 - `migrations/0002_signup.sql` — `users.signup_key` (self-registration abuse guard) + index.
 - `scripts/add-user.mjs` — add a user by hand: `node scripts/add-user.mjs <name> <pin> [avatar] [--local]`.
-- `deploy.sh` — apply remote migrations, then `wrangler deploy`.
+- `deploy.sh` — apply remote migrations once (retried up to 3×; same DB), then `wrangler deploy` and `wrangler deploy --env es`.
 
 ## Schema
 

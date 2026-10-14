@@ -4,6 +4,14 @@
 (works in browser via `<script src="engine.js">` and in Node via `require`/import side effect).
 All user-facing strings: `es` = Spanish exactly as in a Spanish 3º Primaria exam, `ua` = short Ukrainian explanation.
 
+## Language (uk / es)
+`makeTask(topic, level, rng, lang = 'uk')` and `makeExam({ …, lang })`; `lang` is `'uk'` (default) or `'es'`. Same rng → identical numbers, answers, `data`, `id` in both.
+- `uk`: as described below (`es` Spanish prompt + `ua` Ukrainian explanation; error objects `{ code, es, ua }`).
+- `es`: Spanish only — no `ua` field, error objects are `{ code, es }`; the task carries `lang: 'es'`.
+- Both: `task.hint` = the optional short explanation of the task (`ua` on uk, Spanish pista on es). The UI should read `hint`.
+- `checkAnswer`, `checkColumnStep`, `checkOp` follow `task.lang`. The Spanish texts (`es`) are identical in both languages; only the explanations differ.
+- Number format (`fmt`) is the same in both: no separator up to 4 digits, point from 5 digits.
+
 ## Numbers
 - `fmt(n)` → like the textbook: no separator up to 4 digits, point from 5 digits: `4528 → "4528"`, `1000 → "1000"`, `987 → "987"`, `10000 → "10.000"`. All prompts/messages use it.
 - `numberToWords(n)` → Spanish words for 0..9999: `2327 → "dos mil trescientos veintisiete"`, `1100 → "mil cien"`, `21 → "veintiuno"`.

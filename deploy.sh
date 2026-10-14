@@ -1,6 +1,6 @@
 #!/bin/sh
-# Build card images if missing, apply remote D1 migrations, then deploy the Worker + static assets
-# (exclusions in .assetsignore).
+# Build card images if missing, apply remote D1 migrations (one DB for both sites), then deploy both Workers
+# (uk: keeper-fun-games, es: keeper-fun-games-es) + static assets (exclusions in .assetsignore).
 set -e
 cd "$(dirname "$0")"
 
@@ -24,5 +24,14 @@ if ! node -e "global.window={};require('./shared/cards.js');const fs=require('fs
   rm -rf "$build"
 fi
 
-wrangler d1 migrations apply keeper-fun-games --remote
+# The first remote call sometimes fails with a transient Cloudflare API error: retry.
+tries=0
+until wrangler d1 migrations apply keeper-fun-games --remote; do
+  tries=$((tries + 1))
+  [ "$tries" -lt 3 ] || { echo "Migrations failed after $tries tries" >&2; exit 1; }
+  echo "Migrations failed, retrying in 5 s ($tries/3)..." >&2
+  sleep 5
+done
+
 wrangler deploy
+wrangler deploy --env es

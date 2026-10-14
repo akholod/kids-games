@@ -219,29 +219,29 @@ dialog::backdrop{background:#0a2a1d99}
 </style>
 </head>
 <body>
-<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></header>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети" data-i18n-aria-label="coins">🪙 <span data-kf-coins>0</span></div></div></header>
 <main class="wrap game-shell">
-  <div class="game-top"><a class="back-link" href="../../">← До каталогу</a><span class="eyebrow muted">Matemáticas · 3º Primaria</span></div>
+  <div class="game-top"><a class="back-link" href="../../" data-i18n="back">← До каталогу</a><span class="eyebrow muted">Matemáticas · 3º Primaria</span></div>
   <div class="panel">
     <section class="hub" id="hub">
       <div class="hub-head">
         <div class="hub-icon" aria-hidden="true">📝</div>
-        <div><h1>Examen de mates</h1><p>Тренуємось до іспиту. Завдання іспанською, як у школі. Кнопка 🇺🇦 пояснить українською.</p></div>
+        <div><h1>Examen de mates</h1><p data-i18n="hubIntro">Тренуємось до іспиту. Завдання іспанською, як у школі. Кнопка 🇺🇦 пояснить українською.</p></div>
       </div>
       <div class="stations" id="stations"></div>
       <div class="exam-card">
-        <div><strong>⚽ Partido-examen</strong><p>12 завдань з усіх тем, як справжня контрольна. Перша помилка — 🟨 жовта картка, друга — 🟥 червона, і матч починається знову.</p></div>
-        <button class="btn" type="button" id="exam-btn">Почати іспит</button>
+        <div><strong>⚽ Partido-examen</strong><p data-i18n="examInfo">12 завдань з усіх тем, як справжня контрольна. Перша помилка — 🟨 жовта картка, друга — 🟥 червона, і матч починається знову.</p></div>
+        <button class="btn" type="button" id="exam-btn" data-i18n="examStart">Почати іспит</button>
       </div>
-      <div class="hub-tools"><button class="btn btn-light" type="button" id="gloss-btn">📖 Слова для іспиту</button></div>
-      <div class="report" id="report" hidden><h2>Для батьків: точність за темами</h2><div id="report-rows"></div></div>
+      <div class="hub-tools"><button class="btn btn-light" type="button" id="gloss-btn" data-i18n="glossBtn">📖 Слова для іспиту</button></div>
+      <div class="report" id="report" hidden><h2 data-i18n="reportTitle">Для батьків: точність за темами</h2><div id="report-rows"></div></div>
     </section>
 
     <section id="play" hidden>
-      <div class="match-head"><strong id="play-label"></strong><div class="cards" id="cards" aria-label="Картки"></div><div class="dots" id="dots"></div></div>
+      <div class="match-head"><strong id="play-label"></strong><div class="cards" id="cards" aria-label="Картки" data-i18n-aria-label="cardsLabel"></div><div class="dots" id="dots"></div></div>
       <div class="prompt">
         <div><p class="prompt-text" id="prompt-es"></p><p class="prompt-ua" id="prompt-ua" hidden></p></div>
-        <button class="ua-btn" type="button" id="ua-btn" aria-pressed="false" aria-label="Пояснення українською" title="Пояснення українською (клавіша U)">🇺🇦</button>
+        <button class="ua-btn" type="button" id="ua-btn" aria-pressed="false" aria-label="Пояснення українською" title="Пояснення українською (клавіша U)" data-i18n-aria-label="hintLabel" data-i18n-title="hintTitle" data-i18n="hintBtn">🇺🇦</button>
       </div>
       <div class="work" id="work"></div>
       <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
@@ -252,7 +252,7 @@ dialog::backdrop{background:#0a2a1d99}
       <div class="score" id="finish-score"></div>
       <p id="finish-text"></p>
       <div class="report" id="finish-report" hidden></div>
-      <div class="actions"><button class="btn btn-dark" type="button" id="again-btn">Ще раз</button><button class="btn btn-light" type="button" id="hub-btn">До станцій</button></div>
+      <div class="actions"><button class="btn btn-dark" type="button" id="again-btn" data-i18n="again">Ще раз</button><button class="btn btn-light" type="button" id="hub-btn" data-i18n="toStations">До станцій</button></div>
     </section>
   </div>
 </main>
@@ -261,11 +261,11 @@ dialog::backdrop{background:#0a2a1d99}
   <div class="gloss">
     <h2 id="gloss-title">📖 Palabras del examen</h2>
     <table id="gloss-table"></table>
-    <button class="btn btn-dark" type="button" id="gloss-close">Зрозуміло</button>
+    <button class="btn btn-dark" type="button" id="gloss-close" data-i18n="glossClose">Зрозуміло</button>
   </div>
 </dialog>
 
-<script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
+<script src="../../shared/site.js"></script><script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
 <script src="../../shared/kf-ui.js"></script>
 <script src="engine.js"></script>
 <script>
@@ -276,6 +276,43 @@ dialog::backdrop{background:#0a2a1d99}
   const EXAM = 12;
   const PASS = 6;
   const M = window.MathExam;
+  const ES = KF.lang === 'es';
+  const L = (uk, es) => (ES ? es : uk); // one-off texts: Ukrainian site keeps today's strings
+  const T = KF.i18n({
+    uk: {
+      coins: 'Монети',
+      back: '← До каталогу',
+      hubIntro: 'Тренуємось до іспиту. Завдання іспанською, як у школі. Кнопка 🇺🇦 пояснить українською.',
+      examInfo: '12 завдань з усіх тем, як справжня контрольна. Перша помилка — 🟨 жовта картка, друга — 🟥 червона, і матч починається знову.',
+      examStart: 'Почати іспит',
+      glossBtn: '📖 Слова для іспиту',
+      reportTitle: 'Для батьків: точність за темами',
+      cardsLabel: 'Картки',
+      hintLabel: 'Пояснення українською',
+      hintTitle: 'Пояснення українською (клавіша U)',
+      hintBtn: '🇺🇦',
+      again: 'Ще раз',
+      toStations: 'До станцій',
+      glossClose: 'Зрозуміло',
+    },
+    es: {
+      coins: 'Monedas',
+      back: '← Volver al catálogo',
+      hubIntro: 'Vamos a entrenar para el examen. Los ejercicios son como los del cole. El botón 💡 te da una pista.',
+      examInfo: '12 ejercicios de todos los temas, como un examen de verdad. El primer fallo es 🟨 tarjeta amarilla, el segundo 🟥 tarjeta roja y el partido empieza otra vez.',
+      examStart: 'Empezar el examen',
+      glossBtn: '📖 Palabras del examen',
+      reportTitle: 'Para los padres: aciertos por tema',
+      cardsLabel: 'Tarjetas',
+      hintLabel: 'Pista',
+      hintTitle: 'Pista (tecla A)',
+      hintBtn: '💡',
+      again: 'Otra vez',
+      toStations: 'A las estaciones',
+      glossClose: 'Entendido',
+    },
+  });
+  T.apply();
   const $ = (id) => document.getElementById(id);
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -293,10 +330,10 @@ dialog::backdrop{background:#0a2a1d99}
   };
 
   const STATIONS = [
-    { topic: 'valor', name: 'Taquilla', icon: '🎟️', ua: 'Розряди: UM, C, D, U' },
-    { topic: 'columna', name: 'Pase a la columna', icon: '🧮', ua: 'Додавання й віднімання в стовпчик' },
-    { topic: 'redondeo', name: '¿A qué portería?', icon: '🥅', ua: 'Округлення' },
-    { topic: 'problemas', name: 'Problemas del club', icon: '📰', ua: 'Задачі з текстом' },
+    { topic: 'valor', name: 'Taquilla', icon: '🎟️', ua: L('Розряди: UM, C, D, U', 'Valor de las cifras: UM, C, D, U') },
+    { topic: 'columna', name: 'Pase a la columna', icon: '🧮', ua: L('Додавання й віднімання в стовпчик', 'Sumas y restas en columna') },
+    { topic: 'redondeo', name: '¿A qué portería?', icon: '🥅', ua: L('Округлення', 'Redondeo') },
+    { topic: 'problemas', name: 'Problemas del club', icon: '📰', ua: L('Задачі з текстом', 'Problemas con texto') },
   ];
   const stationOf = (topic) => STATIONS.find((s) => s.topic === topic);
   const PLACE_KEYS = ['UM', 'C', 'D', 'U'];
@@ -304,7 +341,29 @@ dialog::backdrop{background:#0a2a1d99}
   const PRAISE = ['¡Muy bien!', '¡Golazo!', '¡Perfecto!', '¡Paradón!', '¡Eso es!'];
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-  const GLOSSARY = [
+  const GLOSSARY_ES = [
+    ['UM', 'unidades de millar (1000)'],
+    ['C', 'centenas (100)'],
+    ['D', 'decenas (10)'],
+    ['U', 'unidades (1)'],
+    ['cifra', 'cada uno de los signos del 0 al 9. El 4528 tiene 4 cifras'],
+    ['valor', 'lo que vale una cifra según el lugar que ocupa: el 5 de 4528 vale 500'],
+    ['descomponer', '4528 = 4000 + 500 + 20 + 8'],
+    ['se lee', '2327 se lee «dos mil trescientos veintisiete»'],
+    ['en torre', 'un número debajo del otro'],
+    ['sumandos · suma', '2135 + 1428 = 3563'],
+    ['minuendo · sustraendo · diferencia', '1263 − 612 = 651'],
+    ['prueba de la resta', 'diferencia + sustraendo = minuendo'],
+    ['llevarse una', 'en la suma, pasamos 1 a la columna de la izquierda'],
+    ['pedir prestado', 'en la resta, cogemos 1 de la cifra de la izquierda (3 → 13)'],
+    ['redondear', 'cambiar un número por el más cercano en decenas, centenas o unidades de millar'],
+    ['¿Cuántos hay en total?', 'es una suma'],
+    ['¿Cuántos quedan?', 'es una resta'],
+    ['¿Cuántos más que…?', 'es una resta'],
+    ['¿Cuántos faltan?', 'es una resta'],
+    ['… más que …', '¡Cuidado! «Tiene 20 más que yo» suele ser una suma'],
+  ];
+  const GLOSSARY = ES ? GLOSSARY_ES : [
     ['UM', 'unidades de millar', 'одиниці тисяч (1.000)'],
     ['C', 'centenas', 'сотні (100)'],
     ['D', 'decenas', 'десятки (10)'],
@@ -376,7 +435,8 @@ dialog::backdrop{background:#0a2a1d99}
     const cards = STATIONS.map((s) => {
       const levels = levelsOf(s.topic);
       const open = unlocked(s.topic);
-      const hint = h('p', { class: 'level-hint', text: levels[open - 1] ? `Рівень ${open}: ${levels[open - 1].ua}` : '' });
+      const lvText = (lv) => (ES ? `Nivel ${lv.level}: ${lv.es}` : `Рівень ${lv.level}: ${lv.ua}`);
+      const hint = h('p', { class: 'level-hint', text: levels[open - 1] ? lvText(levels[open - 1]) : '' });
       const buttons = levels.map((lv) => {
         const n = lv.level;
         const locked = n > open;
@@ -384,11 +444,11 @@ dialog::backdrop{background:#0a2a1d99}
           type: 'button',
           class: `level${data.passed[`${s.topic}:${n}`] ? ' done' : ''}`,
           disabled: locked,
-          'aria-label': `${s.name}, рівень ${n}${locked ? ' (закрито)' : ''}`,
-          title: `${lv.es} — ${lv.ua}`,
+          'aria-label': ES ? `${s.name}, nivel ${n}${locked ? ' (bloqueado)' : ''}` : `${s.name}, рівень ${n}${locked ? ' (закрито)' : ''}`,
+          title: ES ? lv.es : `${lv.es} — ${lv.ua}`,
           onclick: () => startTraining(s.topic, n),
-          onmouseenter: () => { hint.textContent = `Рівень ${n}: ${lv.ua}`; },
-          onfocus: () => { hint.textContent = `Рівень ${n}: ${lv.ua}`; },
+          onmouseenter: () => { hint.textContent = lvText(lv); },
+          onfocus: () => { hint.textContent = lvText(lv); },
         }, locked ? '🔒' : String(n));
       });
       return h('div', { class: 'station' },
@@ -423,12 +483,12 @@ dialog::backdrop{background:#0a2a1d99}
   };
 
   const startTraining = (topic, level) => {
-    const tasks = Array.from({ length: ROUND }, () => M.makeTask(topic, level));
+    const tasks = Array.from({ length: ROUND }, () => M.makeTask(topic, level, Math.random, KF.lang));
     begin({ mode: 'train', topic, level, tasks });
   };
 
   const startExam = () => {
-    const tasks = M.makeExam({ count: EXAM, weights: M.weakWeights(data.topics) });
+    const tasks = M.makeExam({ count: EXAM, weights: M.weakWeights(data.topics), lang: KF.lang });
     begin({ mode: 'exam', tasks });
   };
 
@@ -464,7 +524,7 @@ dialog::backdrop{background:#0a2a1d99}
       : `${st.name} · nivel ${task.level} · ${session.index + 1}/${session.tasks.length}`;
     $('prompt-es').textContent = task.es.replace(/(\d|__) (UM|C|D|U)\b/g, '$1\u00a0$2');
     $('prompt-es').classList.toggle('long', task.es.length > 110);
-    $('prompt-ua').textContent = task.ua || '';
+    $('prompt-ua').textContent = task.hint || '';
     setUa(false);
     $('feedback').replaceChildren();
     drawDots();
@@ -497,20 +557,22 @@ dialog::backdrop{background:#0a2a1d99}
     const card = session.mode === 'exam' && !correct && h('div', { class: 'ref' },
       h('span', { class: `ref-card ${red ? 'red' : 'yellow'}`, 'aria-hidden': 'true' }),
       h('div', {},
-        h('p', { class: 'fb-title', text: red ? 'Червона картка!' : 'Жовта картка!' }),
-        h('p', { text: red ? 'Друга помилка — матч починається знову. Ти зможеш!' : 'Ще одна помилка — і буде червона картка.' })));
+        h('p', { class: 'fb-title', text: red ? L('Червона картка!', '¡Tarjeta roja!') : L('Жовта картка!', '¡Tarjeta amarilla!') }),
+        h('p', { text: red
+          ? L('Друга помилка — матч починається знову. Ти зможеш!', 'Segundo error: el partido empieza otra vez. ¡Tú puedes!')
+          : L('Ще одна помилка — і буде червона картка.', 'Un error más y habrá tarjeta roja.') })));
 
     const box = correct
       ? h('div', { class: 'fb-box ok' }, h('p', { class: 'fb-title', text: `${pick(PRAISE)} ✅` }))
       : h('div', { class: 'fb-box miss' },
         card || h('p', { class: 'fb-title', text: 'Casi… 🧤' }),
         error?.es && h('p', { text: error.es }),
-        error?.ua && h('p', { class: 'fb-ua', text: `🇺🇦 ${error.ua}` }),
+        !ES && error?.ua && h('p', { class: 'fb-ua', text: `🇺🇦 ${error.ua}` }),
         h('p', { text: `Respuesta correcta: ${answerText(task)}` }));
     const last = session.index === session.tasks.length - 1;
     const next = red
-      ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startExam() }, 'Почати знову ↺')
-      : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? 'Результат →' : 'Далі →');
+      ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startExam() }, L('Почати знову ↺', 'Empezar de nuevo ↺'))
+      : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? L('Результат →', 'Ver resultado →') : L('Далі →', 'Siguiente →'));
     $('feedback').replaceChildren(box, h('br'), next);
     ctrl = { onKey: (e) => (e.key === 'Enter' || e.key === ' ') && (next.click(), true) };
     next.focus({ preventScroll: true });
@@ -538,20 +600,26 @@ dialog::backdrop{background:#0a2a1d99}
         saveData();
       }
       text = passed
-        ? (level < levelsOf(topic).length ? `Рівень пройдено! Відкрито рівень ${level + 1}.` : 'Усі рівні цієї станції пройдено!')
-        : `Для наступного рівня треба ${PASS} з ${max}. Спробуй ще раз — вийде!`;
+        ? (level < levelsOf(topic).length
+          ? L(`Рівень пройдено! Відкрито рівень ${level + 1}.`, `¡Nivel superado! Has desbloqueado el nivel ${level + 1}.`)
+          : L('Усі рівні цієї станції пройдено!', '¡Has superado todos los niveles de esta estación!'))
+        : L(`Для наступного рівня треба ${PASS} з ${max}. Спробуй ще раз — вийде!`, `Para pasar al siguiente nivel necesitas ${PASS} de ${max}. ¡Inténtalo otra vez, tú puedes!`);
     } else {
-      text = session.cards === 0 ? 'Чиста гра, жодної картки! Ти готовий до іспиту! 💪' : 'Іспит пройдено з однією жовтою карткою. Майже ідеально!';
+      text = session.cards === 0
+        ? L('Чиста гра, жодної картки! Ти готовий до іспиту! 💪', '¡Partido limpio, sin tarjetas! ¡Estás listo para el examen! 💪')
+        : L('Іспит пройдено з однією жовтою карткою. Майже ідеально!', 'Examen superado con una tarjeta amarilla. ¡Casi perfecto!');
     }
     $('finish-title').textContent = mode === 'exam' ? 'Fin del partido' : '¡Entrenamiento terminado!';
     $('finish-score').textContent = `${score} / ${max}`;
-    $('finish-text').textContent = `${text} Зароблено ${earned} 🪙${res.perfect ? ' (з бонусом за ідеальний раунд!)' : '.'}`;
+    $('finish-text').textContent = ES
+      ? `${text} Has ganado ${earned} 🪙${res.perfect ? ' (¡con bonus por ronda perfecta!)' : '.'}`
+      : `${text} Зароблено ${earned} 🪙${res.perfect ? ' (з бонусом за ідеальний раунд!)' : '.'}`;
     if (mode === 'exam') {
       const rows = Object.entries(session.byTopic).map(([t, v]) => h('div', { class: 'report-row' },
         h('span', { text: stationOf(t).name }),
         h('span', { class: `bar${v.right / v.total < 0.7 ? ' low' : ''}` }, h('i', { style: `width:${Math.round((v.right / v.total) * 100)}%` })),
         h('b', { text: `${v.right}/${v.total}` })));
-      $('finish-report').replaceChildren(h('h2', { text: 'По темах' }), ...rows);
+      $('finish-report').replaceChildren(h('h2', { text: L('По темах', 'Por temas') }), ...rows);
       $('finish-report').hidden = false;
     } else {
       $('finish-report').hidden = true;
@@ -568,7 +636,7 @@ dialog::backdrop{background:#0a2a1d99}
   // ---------- Shared widgets ----------
   const hintEl = () => h('p', { class: 'inline-hint', role: 'status' });
   const sayHint = (el, es, ua) => {
-    el.replaceChildren(h('span', { text: es || '' }), ua ? h('span', { class: 'fb-ua', text: `🇺🇦 ${ua}` }) : '');
+    el.replaceChildren(h('span', { text: es || '' }), ua && !ES ? h('span', { class: 'fb-ua', text: `🇺🇦 ${ua}` }) : '');
   };
   const shake = (el) => {
     el.classList.remove('shake');
@@ -598,7 +666,7 @@ dialog::backdrop{background:#0a2a1d99}
       type: 'button',
       class: `key${k === 'ok' ? ' ok' : k === 'back' ? ' back' : ''}`,
       'data-key': k,
-      'aria-label': k === 'back' ? 'Стерти' : k === 'ok' ? 'Перевірити' : k,
+      'aria-label': k === 'back' ? L('Стерти', 'Borrar') : k === 'ok' ? L('Перевірити', 'Comprobar') : k,
       onclick: () => press(k),
     }, k === 'back' ? '⌫' : k === 'ok' ? okLabel : k));
     const pad = h('div', { class: 'keypad' }, keys);
@@ -616,7 +684,9 @@ dialog::backdrop{background:#0a2a1d99}
       return false;
     };
     const reset = () => { value = ''; draw(); };
-    const hintText = rtl ? 'Пиши справа наліво: спершу одиниці. Клавіатура: цифри, ⌫, Enter' : 'Можна вводити з клавіатури: цифри, ⌫, Enter';
+    const hintText = rtl
+      ? L('Пиши справа наліво: спершу одиниці. Клавіатура: цифри, ⌫, Enter', 'Escribe de derecha a izquierda: primero las unidades. Teclado: cifras, ⌫, Enter')
+      : L('Можна вводити з клавіатури: цифри, ⌫, Enter', 'También puedes usar el teclado: cifras, ⌫, Enter');
     return { box, pad, onKey, reset, hint: h('p', { class: 'kbd-hint', text: hintText }) };
   };
 
@@ -656,7 +726,7 @@ dialog::backdrop{background:#0a2a1d99}
       if (!r.correct) buttons[i].classList.add('wrong');
     };
     const words = task.choices.some((c) => String(c.label).length > 12);
-    work.append(h('div', { class: `choices${words ? ' words' : ''}` }, buttons), h('p', { class: 'kbd-hint', text: `Клавіші 1–${buttons.length}` }));
+    work.append(h('div', { class: `choices${words ? ' words' : ''}` }, buttons), h('p', { class: 'kbd-hint', text: L(`Клавіші 1–${buttons.length}`, `Teclas 1–${buttons.length}`) }));
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
@@ -722,8 +792,8 @@ dialog::backdrop{background:#0a2a1d99}
       const c = { count: h('div', { class: 'pack-count' }), pile: h('div', { class: 'pile', 'aria-hidden': 'true' }) };
       const kids = [h('h3', {}, k, h('small', { text: M.fmt(PACK_VALUE[k]) })), c.pile, c.count];
       if (editable) {
-        c.minus = h('button', { type: 'button', 'aria-label': `Забрати пачку ${k}`, onclick: () => { counts[k]--; draw(); } }, '−');
-        const plus = h('button', { type: 'button', 'aria-label': `Додати пачку ${k}`, onclick: () => { counts[k]++; draw(); } }, '+');
+        c.minus = h('button', { type: 'button', 'aria-label': L(`Забрати пачку ${k}`, `Quitar un paquete de ${k}`), onclick: () => { counts[k]--; draw(); } }, '−');
+        const plus = h('button', { type: 'button', 'aria-label': L(`Додати пачку ${k}`, `Añadir un paquete de ${k}`), onclick: () => { counts[k]++; draw(); } }, '+');
         kids.push(h('div', { class: 'pm' }, c.minus, plus));
         if (left) {
           c.group = h('button', {
@@ -758,7 +828,7 @@ dialog::backdrop{background:#0a2a1d99}
       ctrl = null;
       submitSimple(task, { ...view.counts });
     };
-    work.append(view.el, h('div', { class: 'pack-total' }, 'Total: ', view.total), check, h('p', { class: 'kbd-hint', text: 'Tab — між кнопками, Enter — натиснути. Ctrl+Enter — перевірити' }));
+    work.append(view.el, h('div', { class: 'pack-total' }, 'Total: ', view.total), check, h('p', { class: 'kbd-hint', text: L('Tab — між кнопками, Enter — натиснути. Ctrl+Enter — перевірити', 'Tab: moverte entre botones. Enter: pulsar. Ctrl+Enter: comprobar') }));
     ctrl = { onKey: (e) => (e.key === 'Enter' && (e.ctrlKey || e.metaKey) ? (submit(), true) : false) };
   };
 
@@ -766,7 +836,7 @@ dialog::backdrop{background:#0a2a1d99}
     const vals = { UM: '', C: '', D: '', U: '' };
     let active = 0;
     const slots = PLACE_KEYS.map((k, i) => h('button', {
-      type: 'button', class: 'slot', 'aria-label': `${k}: ${PLACE_UA[k]}`,
+      type: 'button', class: 'slot', 'aria-label': `${k}: ${ES ? M.PLACES.find((p) => p.key === k).es : PLACE_UA[k]}`,
       onclick: () => { active = i; draw(); },
     }));
     const parts = [];
@@ -798,11 +868,11 @@ dialog::backdrop{background:#0a2a1d99}
     };
     const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) => h('button', {
       type: 'button', class: `key${k === 'ok' ? ' ok' : k === 'back' ? ' back' : ''}`,
-      'aria-label': k === 'back' ? 'Стерти' : k === 'ok' ? 'Перевірити' : k,
+      'aria-label': k === 'back' ? L('Стерти', 'Borrar') : k === 'ok' ? L('Перевірити', 'Comprobar') : k,
       onclick: () => press(k),
     }, k === 'back' ? '⌫' : k === 'ok' ? 'OK' : k));
     const hint = hintEl();
-    work.append(h('div', { class: 'decomp' }, parts), hint, h('div', { class: 'keypad' }, keys), h('p', { class: 'kbd-hint', text: 'Цифри, ⌫, ←/→ між клітинками, Enter' }));
+    work.append(h('div', { class: 'decomp' }, parts), hint, h('div', { class: 'keypad' }, keys), h('p', { class: 'kbd-hint', text: L('Цифри, ⌫, ←/→ між клітинками, Enter', 'Cifras, ⌫, ←/→ entre casillas, Enter') }));
     draw();
     ctrl = {
       onKey: (e) => {
@@ -1020,7 +1090,9 @@ dialog::backdrop{background:#0a2a1d99}
     for (const p of nb.places) drawTop(p);
     highlight();
     work.append(nb.el, hint, borrowBtn ? h('div', { class: 'col-actions' }, borrowBtn) : '', pad,
-      h('p', { class: 'kbd-hint', text: d.op === '-' ? 'Цифри — відповідь у стовпчику, P — pedir prestado' : 'Цифри — відповідь у стовпчику, справа наліво' }));
+      h('p', { class: 'kbd-hint', text: d.op === '-'
+        ? L('Цифри — відповідь у стовпчику, P — pedir prestado', 'Cifras: la respuesta de cada columna. P: pedir prestado')
+        : L('Цифри — відповідь у стовпчику, справа наліво', 'Cifras: la respuesta de cada columna, de derecha a izquierda') }));
     ctrl = {
       onKey: (e) => {
         if (/^[0-9]$/.test(e.key)) { enter(Number(e.key)); return true; }
@@ -1045,7 +1117,7 @@ dialog::backdrop{background:#0a2a1d99}
     const ball = h('div', { class: 'nl-ball', style: `left:${pct}%` }, h('b', { text: M.fmt(d.n) }), h('i', { text: '⚽' }));
     track.append(ball);
     const goal = (value, side) => h('button', {
-      type: 'button', class: 'goal-btn', 'aria-label': `Ворота ${M.fmt(value)}`,
+      type: 'button', class: 'goal-btn', 'aria-label': L(`Ворота ${M.fmt(value)}`, `Portería ${M.fmt(value)}`),
       onclick: () => shoot(value),
     }, h('span', { text: side === 'L' ? '← 1' : '2 →' }), M.fmt(value));
     const left = goal(d.low, 'L');
@@ -1062,7 +1134,7 @@ dialog::backdrop{background:#0a2a1d99}
       resolveTask(r.correct, r.error);
       afterRound(r);
     };
-    work.append(h('div', { class: 'nline' }, left, track, right), h('p', { class: 'kbd-hint', text: '← / → або 1 / 2 — обрати ворота' }));
+    work.append(h('div', { class: 'nline' }, left, track, right), h('p', { class: 'kbd-hint', text: L('← / → або 1 / 2 — обрати ворота', '← / → o 1 / 2: elige la portería') }));
     ctrl = {
       onKey: (e) => {
         if (e.key === 'ArrowLeft' || e.key === '1') { shoot(d.low); return true; }
@@ -1115,7 +1187,7 @@ dialog::backdrop{background:#0a2a1d99}
     area.append(h('div', { class: 'op-choice' },
       h('button', { type: 'button', class: 'op-btn', onclick: () => judge(true) }, h('b', { text: '✓' }), 'Está bien'),
       h('button', { type: 'button', class: 'op-btn', onclick: () => judge(false) }, h('b', { text: '✗' }), 'Hay un error')),
-    h('p', { class: 'kbd-hint', text: 'Клавіші 1 — правильно, 2 — є помилка' }));
+    h('p', { class: 'kbd-hint', text: L('Клавіші 1 — правильно, 2 — є помилка', 'Teclas: 1 = está bien, 2 = hay un error') }));
     work.append(nb.el, area);
     ctrl = {
       onKey: (e) => {
@@ -1153,7 +1225,7 @@ dialog::backdrop{background:#0a2a1d99}
     work.append(h('p', { class: 'op-q', text: '¿Qué operación hay que hacer?' }),
       h('div', { class: 'op-choice' }, opBtn('+', 'Suma'), opBtn('-', 'Resta')),
       hint,
-      h('p', { class: 'kbd-hint', text: 'Клавіші + або −' }));
+      h('p', { class: 'kbd-hint', text: L('Клавіші + або −', 'Teclas + o −') }));
     ctrl = {
       onKey: (e) => {
         if (e.key === '+') { pickOp('+'); return true; }
@@ -1164,7 +1236,7 @@ dialog::backdrop{background:#0a2a1d99}
   };
 
   // ---------- Glossary ----------
-  $('gloss-table').replaceChildren(...GLOSSARY.map(([a, b, c]) => h('tr', {}, h('td', { text: a }), h('td', {}, b, h('br'), h('span', { class: 'muted', text: c })))));
+  $('gloss-table').replaceChildren(...GLOSSARY.map(([a, b, c]) => h('tr', {}, h('td', { text: a }), h('td', {}, b, c ? [h('br'), h('span', { class: 'muted', text: c })] : ''))));
   $('gloss-btn').addEventListener('click', () => $('gloss').showModal());
   $('gloss-close').addEventListener('click', () => $('gloss').close());
 
@@ -1172,7 +1244,7 @@ dialog::backdrop{background:#0a2a1d99}
   document.addEventListener('keydown', (e) => {
     if ($('gloss').open || e.altKey) return;
     if (e.key === 'Escape' && !$('play').hidden) { ctrl = null; renderHub(); show('hub'); return; }
-    if ((e.key === 'u' || e.key === 'U') && !$('play').hidden) { setUa($('ua-btn').getAttribute('aria-pressed') !== 'true'); return; }
+    if (e.key.toLowerCase() === (ES ? 'a' : 'u') && !$('play').hidden) { setUa($('ua-btn').getAttribute('aria-pressed') !== 'true'); return; }
     // Enter/Space on a focused button keeps its native click (Tab users), except Ctrl/Cmd+Enter.
     const onButton = e.target instanceof HTMLButtonElement && (e.key === 'Enter' || e.key === ' ') && !e.ctrlKey && !e.metaKey;
     if (ctrl && !onButton && ctrl.onKey(e)) e.preventDefault();
@@ -1183,7 +1255,7 @@ dialog::backdrop{background:#0a2a1d99}
   });
 
   if (!M) {
-    $('stations').replaceChildren(h('p', { text: 'Не вдалося завантажити завдання. Онови сторінку.' }));
+    $('stations').replaceChildren(h('p', { text: L('Не вдалося завантажити завдання. Онови сторінку.', 'No se han podido cargar los ejercicios. Recarga la página.') }));
     return;
   }
   // Parents' test mode: expose the current session for automated checks.

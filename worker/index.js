@@ -262,6 +262,13 @@ async function handle(request, env, url, now) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/shared/site.js') {
+      // One codebase, two sites: the Worker's SITE_LANG var tells the pages which language they are in.
+      const lang = env.SITE_LANG === 'es' ? 'es' : 'uk';
+      return new Response(`window.KF_SITE = { lang: '${lang}' };\n`, {
+        headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' },
+      });
+    }
     if (!url.pathname.startsWith('/api/')) return err('not_found', 404);
     try {
       return await handle(request, env, url, Date.now());

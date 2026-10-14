@@ -160,32 +160,32 @@
 </style>
 </head>
 <body>
-<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети">🪙 <span data-kf-coins>0</span></div></div></header>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети" data-i18n-aria-label="coins">🪙 <span data-kf-coins>0</span></div></div></header>
 <main class="wrap game-shell">
-  <div class="game-top"><a class="back-link" href="../../">← До каталогу</a><span class="eyebrow muted">UA · ES · EN</span></div>
+  <div class="game-top"><a class="back-link" href="../../" data-i18n="back">← До каталогу</a><span class="eyebrow muted" data-i18n="eyebrow">UA · ES · EN</span></div>
   <div class="panel">
     <section class="hub" id="start">
       <div class="hub-head">
         <div class="hub-icon" aria-hidden="true">🏆</div>
-        <div><h1>Футбольний квіз</h1><p>Чемпіонати, клуби, зірки й правила. Питання українською, español та English.</p></div>
+        <div><h1 data-i18n="h1">Футбольний квіз</h1><p data-i18n="sub">Чемпіонати, клуби, зірки й правила. Питання українською, español та English.</p></div>
       </div>
-      <h2 id="levels-title">Рівень</h2>
+      <h2 id="levels-title" data-i18n="level">Рівень</h2>
       <div class="levels" id="levels" role="radiogroup" aria-labelledby="levels-title"></div>
       <ul class="rules">
-        <li><span class="ico" aria-hidden="true"><i class="yellow"></i><i class="red"></i></span><span>Перша помилка — жовта картка, друга — червона, і раунд починається знову.</span></li>
-        <li><span class="ico" aria-hidden="true">🪙</span><span>Кожні 5 правильних відповідей — 1 монета. <b class="tnum" id="start-meter"></b></span></li>
+        <li><span class="ico" aria-hidden="true"><i class="yellow"></i><i class="red"></i></span><span data-i18n="rule1">Перша помилка — жовта картка, друга — червона, і раунд починається знову.</span></li>
+        <li><span class="ico" aria-hidden="true">🪙</span><span><span data-i18n="rule2">Кожні 5 правильних відповідей — 1 монета.</span> <b class="tnum" id="start-meter"></b></span></li>
       </ul>
       <div class="start-row">
         <div class="stats" id="stats"></div>
-        <button class="btn btn-dark start-btn" type="button" id="start-btn">Почати матч ▶</button>
+        <button class="btn btn-dark start-btn" type="button" id="start-btn" data-i18n="start">Почати матч ▶</button>
       </div>
     </section>
 
     <section id="play" hidden>
-      <div class="match-head"><strong id="play-label"></strong><div class="cards" id="cards" aria-label="Картки"></div><div class="dots" id="dots" aria-hidden="true"></div></div>
+      <div class="match-head"><strong id="play-label"></strong><div class="cards" id="cards" aria-label="Картки" data-i18n-aria-label="cards.aria"></div><div class="dots" id="dots" aria-hidden="true"></div></div>
       <div class="strip">
-        <div class="board" id="board" aria-live="polite"><span>Наші</span><span class="sc" id="score-board">0 : 0</span></div>
-        <div class="pitch" id="pitch" aria-hidden="true" title="3 правильні поспіль — гол!"><span class="net"></span><span class="ball" id="ball">⚽</span><span class="lab">ГОЛ!</span></div>
+        <div class="board" id="board" aria-live="polite"><span data-i18n="board">Наші</span><span class="sc" id="score-board">0 : 0</span></div>
+        <div class="pitch" id="pitch" aria-hidden="true" title="3 правильні поспіль — гол!" data-i18n-title="pitch.title"><span class="net"></span><span class="ball" id="ball">⚽</span><span class="lab" data-i18n="goal">ГОЛ!</span></div>
         <div class="meter" id="meter"></div>
       </div>
       <div class="prompt">
@@ -194,11 +194,11 @@
           <p class="q-text" id="q-text" tabindex="-1"></p>
           <p class="q-ua" id="q-ua" hidden></p>
         </div>
-        <button class="ua-btn" type="button" id="ua-btn" aria-pressed="false" aria-label="Переклад українською" title="Переклад українською (клавіша U)">🇺🇦</button>
+        <button class="ua-btn" type="button" id="ua-btn" aria-pressed="false" aria-label="Переклад українською" title="Переклад українською (клавіша U)" data-i18n-aria-label="ua.aria" data-i18n-title="ua.title">🇺🇦</button>
       </div>
       <div class="work">
         <div class="choices" id="choices"></div>
-        <p class="kbd-hint" id="kbd-hint">Клавіші 1–4 · U — переклад · Esc — вийти</p>
+        <p class="kbd-hint" id="kbd-hint"></p>
       </div>
       <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
     </section>
@@ -208,12 +208,12 @@
       <div class="score" id="finish-score"></div>
       <div class="sum" id="finish-sum"></div>
       <p id="finish-text"></p>
-      <div class="actions"><button class="btn btn-dark" type="button" id="again-btn">Ще раунд ↺</button><a class="btn btn-light" href="../../">До каталогу</a></div>
+      <div class="actions"><button class="btn btn-dark" type="button" id="again-btn" data-i18n="again">Ще раунд ↺</button><a class="btn btn-light" href="../../" data-i18n="catalog">До каталогу</a></div>
     </section>
   </div>
 </main>
 
-<script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
+<script src="../../shared/site.js"></script><script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
 <script src="../../shared/kf-ui.js"></script>
 <script src="questions.js"></script>
 <script>
@@ -223,6 +223,121 @@
   const ROUND = 12;
   const PER_COIN = 5;
   const GOAL_STREAK = 3;
+  const ES = KF.lang === 'es';
+  const T = KF.i18n({
+    uk: {
+      title: 'Футбольний квіз — Keeper Fun Games',
+      coins: 'Монети',
+      back: '← До каталогу',
+      eyebrow: 'UA · ES · EN',
+      h1: 'Футбольний квіз',
+      sub: 'Чемпіонати, клуби, зірки й правила. Питання українською, español та English.',
+      level: 'Рівень',
+      'lvl.1.name': 'Фанат', 'lvl.1.desc': 'Для тих, хто любить футбол',
+      'lvl.2.name': 'Експерт', 'lvl.2.desc': 'Роки, рекорди, деталі',
+      'lvl.mix.name': 'Мікс', 'lvl.mix.desc': 'Усе разом',
+      count: '{n} питань',
+      rule1: 'Перша помилка — жовта картка, друга — червона, і раунд починається знову.',
+      rule2: 'Кожні 5 правильних відповідей — 1 монета.',
+      'meter.have': 'Уже {n} з {max}.',
+      'stat.plays': 'раундів', 'stat.best': 'рекорд', 'stat.goals': 'голів',
+      start: 'Почати матч ▶',
+      board: 'Наші',
+      'board.aria': 'Рахунок: наші {n}, суперник 0',
+      'pitch.title': '3 правильні поспіль — гол!',
+      goal: 'ГОЛ!',
+      'cards.aria': 'Картки',
+      'cards.none': 'Карток немає',
+      'cards.yellow': 'Картки: жовта',
+      'cards.both': 'Картки: жовта і червона',
+      'ua.aria': 'Переклад українською',
+      'ua.title': 'Переклад українською (клавіша U)',
+      'hint.ua': 'Клавіші 1–4 · U — переклад · Esc — вийти',
+      'hint.plain': 'Клавіші 1–4 · Esc — вийти',
+      meter: 'до монети',
+      'meter.aria': 'До монети: {n} з {max}',
+      'cat.wc': '🏆 Турніри', 'cat.clubs': '🏟️ Клуби', 'cat.players': '⭐ Гравці', 'cat.rules': '📏 Правила',
+      question: 'Питання {n}/{max}',
+      goalMsg: 'Три поспіль — це гол! ⚽🥅',
+      coinMsg: '5 правильних — тримай монету! 🪙',
+      red: 'Червона картка!',
+      yellow: 'Жовта картка!',
+      'red.text': 'Друга помилка — раунд починається знову. Ти зможеш!',
+      'yellow.text': 'Ще одна помилка — і буде червона картка.',
+      right: 'Правильно: ',
+      restart: 'Почати знову ↺',
+      result: 'Результат →',
+      next: 'Далі →',
+      'fin.perfect': 'Суха гра! 🧤',
+      'fin.good': 'Чудовий матч! 🏆',
+      'fin.end': 'Фінальний свисток!',
+      'sum.goals': 'голів', 'sum.coins': 'монет', 'sum.yellow': 'жовта картка', 'sum.none': 'карток',
+      'fin.bonus': 'Без жодної помилки — бонус +5 🪙!',
+      'fin.almost': 'Одна жовта картка — майже ідеально!',
+      'fin.toCoin': 'До наступної монети: {n} з {max} ⚽.',
+      'fin.default': 'Гарна гра! Зіграємо ще?',
+      again: 'Ще раунд ↺',
+      catalog: 'До каталогу',
+      loadFail: 'Не вдалося завантажити питання. Онови сторінку.',
+    },
+    es: {
+      title: 'Quiz de fútbol — Keeper Fun Games',
+      coins: 'Monedas',
+      back: '← Al catálogo',
+      eyebrow: 'ES',
+      h1: 'Quiz de fútbol',
+      sub: 'Mundiales, clubes, estrellas y reglas del fútbol. ¡Demuestra cuánto sabes!',
+      level: 'Nivel',
+      'lvl.1.name': 'Aficionado', 'lvl.1.desc': 'Para quien ama el fútbol',
+      'lvl.2.name': 'Experto', 'lvl.2.desc': 'Años, récords y detalles',
+      'lvl.mix.name': 'Mezcla', 'lvl.mix.desc': 'Todo junto',
+      count: '{n} preguntas',
+      rule1: 'El primer fallo es tarjeta amarilla, el segundo roja, y la ronda empieza de nuevo.',
+      rule2: 'Cada 5 respuestas correctas, 1 moneda.',
+      'meter.have': 'Ya llevas {n} de {max}.',
+      'stat.plays': 'rondas', 'stat.best': 'récord', 'stat.goals': 'goles',
+      start: 'Empezar partido ▶',
+      board: 'Nosotros',
+      'board.aria': 'Marcador: nosotros {n}, rival 0',
+      'pitch.title': '¡3 aciertos seguidos: gol!',
+      goal: '¡GOL!',
+      'cards.aria': 'Tarjetas',
+      'cards.none': 'Sin tarjetas',
+      'cards.yellow': 'Tarjetas: amarilla',
+      'cards.both': 'Tarjetas: amarilla y roja',
+      'ua.aria': 'Traducción',
+      'ua.title': 'Traducción',
+      'hint.ua': 'Teclas 1–4 · Esc — salir',
+      'hint.plain': 'Teclas 1–4 · Esc — salir',
+      meter: 'para moneda',
+      'meter.aria': 'Para la moneda: {n} de {max}',
+      'cat.wc': '🏆 Torneos', 'cat.clubs': '🏟️ Clubes', 'cat.players': '⭐ Jugadores', 'cat.rules': '📏 Reglas',
+      question: 'Pregunta {n}/{max}',
+      goalMsg: '¡Tres seguidas, es gol! ⚽🥅',
+      coinMsg: '¡5 aciertos, toma una moneda! 🪙',
+      red: '¡Tarjeta roja!',
+      yellow: '¡Tarjeta amarilla!',
+      'red.text': 'Segundo fallo: la ronda empieza de nuevo. ¡Tú puedes!',
+      'yellow.text': 'Otro fallo más y llega la tarjeta roja.',
+      right: 'Correcto: ',
+      restart: 'Empezar otra vez ↺',
+      result: 'Resultado →',
+      next: 'Siguiente →',
+      'fin.perfect': '¡Portería a cero! 🧤',
+      'fin.good': '¡Gran partido! 🏆',
+      'fin.end': '¡Pitido final!',
+      'sum.goals': 'goles', 'sum.coins': 'monedas', 'sum.yellow': 'tarjeta amarilla', 'sum.none': 'tarjetas',
+      'fin.bonus': '¡Sin ningún fallo: bonus de +5 🪙!',
+      'fin.almost': 'Una tarjeta amarilla: ¡casi perfecto!',
+      'fin.toCoin': 'Para la próxima moneda: {n} de {max} ⚽.',
+      'fin.default': '¡Buen partido! ¿Jugamos otra vez?',
+      again: 'Otra ronda ↺',
+      catalog: 'Al catálogo',
+      loadFail: 'No se pudieron cargar las preguntas. Actualiza la página.',
+    },
+  });
+  document.title = T('title');
+  T.apply();
   const $ = (id) => document.getElementById(id);
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -254,22 +369,31 @@
   };
 
   const LEVELS = [
-    { id: '1', name: 'Фанат', icon: '⚽', desc: 'Для тих, хто любить футбол', has: (q) => q.level === 1 },
-    { id: '2', name: 'Експерт', icon: '🧠', desc: 'Роки, рекорди, деталі', has: (q) => q.level === 2 },
-    { id: 'mix', name: 'Мікс', icon: '🎲', desc: 'Усе разом', has: () => true },
+    { id: '1', name: T('lvl.1.name'), icon: '⚽', desc: T('lvl.1.desc'), has: (q) => q.level === 1 },
+    { id: '2', name: T('lvl.2.name'), icon: '🧠', desc: T('lvl.2.desc'), has: (q) => q.level === 2 },
+    { id: 'mix', name: T('lvl.mix.name'), icon: '🎲', desc: T('lvl.mix.desc'), has: () => true },
   ];
   const LANG = { uk: 'UA', es: 'ES', en: 'EN' };
-  const CATS = { wc: '🏆 Турніри', clubs: '🏟️ Клуби', players: '⭐ Гравці', rules: '📏 Правила' };
+  const CATS = { wc: T('cat.wc'), clubs: T('cat.clubs'), players: T('cat.players'), rules: T('cat.rules') };
   const PRAISE = {
     uk: ['Так! ✅', 'Гол! ⚽', 'Точно! ✅', 'Супер! ✅'],
     es: ['¡Muy bien! ✅', '¡Golazo! ⚽', '¡Perfecto! ✅', '¡Eso es! ✅'],
     en: ['Great! ✅', 'Goal! ⚽', 'Correct! ✅', 'Well done! ✅'],
   };
 
+  // On the Spanish site every question is shown in Spanish: uk/en questions use their `es` text
+  // (same option order, so `answer` stays valid); a question without it is dropped.
+  const forSite = (q) => {
+    if (!ES || !q || q.lang === 'es') return q;
+    const e = q.es;
+    if (!e || !e.q || !Array.isArray(e.options)) return null;
+    return { ...q, lang: 'es', q: e.q, options: e.options, fact: e.fact, uk: null };
+  };
+
   // Only well-formed questions: 4 options, valid answer index, unique id.
   const BANK = (() => {
     const ids = new Set();
-    return (Array.isArray(window.QUIZ_QUESTIONS) ? window.QUIZ_QUESTIONS : []).filter((q) => {
+    return (Array.isArray(window.QUIZ_QUESTIONS) ? window.QUIZ_QUESTIONS : []).map(forSite).filter((q) => {
       const ok = q && q.id && !ids.has(q.id) && q.q && Array.isArray(q.options) && q.options.length === 4
         && Number.isInteger(q.answer) && q.answer >= 0 && q.answer < 4 && LANG[q.lang];
       if (ok) ids.add(q.id);
@@ -313,9 +437,9 @@
   // ---------- Coin meter ----------
   const meterSlots = (n) => Array.from({ length: PER_COIN }, (_, i) => h('span', { class: `slot${i < n ? '' : ' empty'}`, text: i < n ? '⚽' : '' }));
   const drawMeter = () => {
-    $('meter').replaceChildren(h('span', { text: 'до монети' }), h('span', { class: 'slots' }, meterSlots(data.toCoin)));
-    $('meter').setAttribute('aria-label', `До монети: ${data.toCoin} з ${PER_COIN}`);
-    $('start-meter').textContent = data.toCoin ? `Уже ${data.toCoin} з ${PER_COIN}.` : '';
+    $('meter').replaceChildren(h('span', { text: T('meter') }), h('span', { class: 'slots' }, meterSlots(data.toCoin)));
+    $('meter').setAttribute('aria-label', T('meter.aria', { n: data.toCoin, max: PER_COIN }));
+    $('start-meter').textContent = data.toCoin ? T('meter.have', { n: data.toCoin, max: PER_COIN }) : '';
   };
 
   // ---------- Start screen ----------
@@ -353,15 +477,15 @@
         type: 'button', class: 'level', role: 'radio', 'data-level': l.id, disabled: !n,
         onclick: () => setLevel(l.id),
         ondblclick: () => startRound(),
-      }, h('b', {}, h('span', { 'aria-hidden': 'true', text: l.icon }), l.name), h('small', { text: l.desc }), h('span', { class: 'count tnum', text: `${n} питань` }));
+      }, h('b', {}, h('span', { 'aria-hidden': 'true', text: l.icon }), l.name), h('small', { text: l.desc }), h('span', { class: 'count tnum', text: T('count', { n }) }));
     }));
     setLevel(data.level);
     const g = KF.get().games[SLUG];
     const stat = (value, label) => h('div', { class: 'stat' }, h('b', { text: value }), h('span', { text: label }));
     $('stats').replaceChildren(
-      stat(String(g?.plays || 0), 'раундів'),
-      stat(g?.plays ? `${g.best}/${g.max || ROUND}` : '—', 'рекорд'),
-      stat(String(data.goals), 'голів'));
+      stat(String(g?.plays || 0), T('stat.plays')),
+      stat(g?.plays ? `${g.best}/${g.max || ROUND}` : '—', T('stat.best')),
+      stat(String(data.goals), T('stat.goals')));
     $('start-btn').disabled = !BANK.length;
     drawMeter();
   };
@@ -384,7 +508,7 @@
 
   const drawCards = () => {
     $('cards').replaceChildren(...Array.from({ length: round.cards }, (_, i) => h('i', { class: i ? 'red' : 'yellow' })));
-    $('cards').setAttribute('aria-label', round.cards ? `Картки: ${round.cards === 1 ? 'жовта' : 'жовта і червона'}` : 'Карток немає');
+    $('cards').setAttribute('aria-label', round.cards ? T(round.cards === 1 ? 'cards.yellow' : 'cards.both') : T('cards.none'));
   };
   const drawDots = () => {
     $('dots').replaceChildren(...round.list.map((_, i) => {
@@ -394,7 +518,7 @@
   };
   const drawBoard = () => {
     $('score-board').textContent = `${round.goals} : 0`;
-    $('board').setAttribute('aria-label', `Рахунок: наші ${round.goals}, суперник 0`);
+    $('board').setAttribute('aria-label', T('board.aria', { n: round.goals }));
   };
   // Ball runs toward the goal with the streak: 0 → 1 → 2 → GOAL.
   const BALL_POS = ['14%', '40%', '66%', '93%'];
@@ -407,17 +531,18 @@
     cur = { q, options, correctIndex: order.indexOf(q.answer), answered: false };
     markSeen(q);
 
-    $('play-label').textContent = `Питання ${round.index + 1}/${round.list.length}`;
+    $('play-label').textContent = T('question', { n: round.index + 1, max: round.list.length });
     $('q-lang').textContent = LANG[q.lang];
     $('q-lang').className = `lang ${q.lang}`;
+    $('q-lang').hidden = ES;
     $('q-cat').textContent = CATS[q.category] || '';
     $('q-text').textContent = q.q;
     $('q-text').lang = q.lang;
     $('q-text').classList.toggle('long', q.q.length > 90);
     $('q-ua').textContent = q.uk || '';
-    $('ua-btn').hidden = q.lang === 'uk' || !q.uk;
+    $('ua-btn').hidden = ES || q.lang === 'uk' || !q.uk;
     setUa(false);
-    $('kbd-hint').textContent = $('ua-btn').hidden ? 'Клавіші 1–4 · Esc — вийти' : 'Клавіші 1–4 · U — переклад · Esc — вийти';
+    $('kbd-hint').textContent = T($('ua-btn').hidden ? 'hint.plain' : 'hint.ua');
 
     cur.buttons = options.map((text, i) => h('button', {
       type: 'button', class: 'choice', lang: q.lang, onclick: () => choose(i),
@@ -481,24 +606,24 @@
     const red = round.cards >= 2;
     const last = round.index >= round.list.length - 1;
     const right = q.options[q.answer];
-    const fact = q.fact && h('p', { class: 'fact', lang: q.lang }, h('span', { class: `lang ${q.lang}`, text: LANG[q.lang] }), h('span', { text: `💡 ${q.fact}` }));
+    const fact = q.fact && h('p', { class: 'fact', lang: q.lang }, !ES && h('span', { class: `lang ${q.lang}`, text: LANG[q.lang] }), h('span', { text: `💡 ${q.fact}` }));
     const box = correct
       ? h('div', { class: 'fb-box ok' },
-        h('p', { class: 'fb-title', text: pick(PRAISE[q.lang]) }),
-        goal && h('p', { text: 'Три поспіль — це гол! ⚽🥅' }),
-        coin && h('p', { text: '5 правильних — тримай монету! 🪙' }),
+        h('p', { class: 'fb-title', text: pick(PRAISE[ES ? 'es' : q.lang]) }),
+        goal && h('p', { text: T('goalMsg') }),
+        coin && h('p', { text: T('coinMsg') }),
         fact)
       : h('div', { class: 'fb-box miss' },
         h('div', { class: 'ref' },
           h('span', { class: `ref-card ${red ? 'red' : 'yellow'}`, 'aria-hidden': 'true' }),
           h('div', {},
-            h('p', { class: 'fb-title', text: red ? 'Червона картка!' : 'Жовта картка!' }),
-            h('p', { text: red ? 'Друга помилка — раунд починається знову. Ти зможеш!' : 'Ще одна помилка — і буде червона картка.' }))),
-        h('p', {}, 'Правильно: ', h('b', { lang: q.lang, text: right })),
+            h('p', { class: 'fb-title', text: T(red ? 'red' : 'yellow') }),
+            h('p', { text: T(red ? 'red.text' : 'yellow.text') }))),
+        h('p', {}, T('right'), h('b', { lang: q.lang, text: right })),
         fact);
     const next = red
-      ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startRound() }, 'Почати знову ↺')
-      : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? 'Результат →' : 'Далі →');
+      ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startRound() }, T('restart'))
+      : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, T(last ? 'result' : 'next'));
     $('feedback').replaceChildren(box, next);
     next.focus({ preventScroll: true });
     $('feedback').scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
@@ -529,17 +654,17 @@
     const max = list.length;
     const res = KF.finishGame(SLUG, { score, max });
     const earned = KF.get().coins - round.startCoins;
-    $('finish-title').textContent = score === max ? 'Суха гра! 🧤' : score >= max - 2 ? 'Чудовий матч! 🏆' : 'Фінальний свисток!';
+    $('finish-title').textContent = T(score === max ? 'fin.perfect' : score >= max - 2 ? 'fin.good' : 'fin.end');
     $('finish-score').textContent = `${score} / ${max}`;
     const stat = (value, label) => h('div', { class: 'stat' }, h('b', {}, value), h('span', { text: label }));
     $('finish-sum').replaceChildren(
-      stat(`⚽ ${goals}`, 'голів'),
-      stat(`🪙 ${earned}`, 'монет'),
-      stat(cards ? [h('i', { class: 'yellow', 'aria-hidden': 'true' }), String(cards)] : '0', cards ? 'жовта картка' : 'карток'));
+      stat(`⚽ ${goals}`, T('sum.goals')),
+      stat(`🪙 ${earned}`, T('sum.coins')),
+      stat(cards ? [h('i', { class: 'yellow', 'aria-hidden': 'true' }), String(cards)] : '0', T(cards ? 'sum.yellow' : 'sum.none')));
     $('finish-text').textContent = [
-      res.perfect ? 'Без жодної помилки — бонус +5 🪙!' : cards ? 'Одна жовта картка — майже ідеально!' : '',
-      data.toCoin ? `До наступної монети: ${data.toCoin} з ${PER_COIN} ⚽.` : '',
-    ].filter(Boolean).join(' ') || 'Гарна гра! Зіграємо ще?';
+      res.perfect ? T('fin.bonus') : cards ? T('fin.almost') : '',
+      data.toCoin ? T('fin.toCoin', { n: data.toCoin, max: PER_COIN }) : '',
+    ].filter(Boolean).join(' ') || T('fin.default');
     show('finish');
     if (score >= max - 2) KFUI.confetti();
     $('again-btn').focus({ preventScroll: true });
@@ -575,7 +700,7 @@
       return;
     }
     if (screen !== 'play' || !cur) return;
-    if (e.key === 'u' || e.key === 'U' || e.key === 'г' || e.key === 'Г') { toggleUa(); e.preventDefault(); return; }
+    if (!ES && (e.key === 'u' || e.key === 'U' || e.key === 'г' || e.key === 'Г')) { toggleUa(); e.preventDefault(); return; }
     if (!cur.answered) {
       const n = Number(e.key);
       if (n >= 1 && n <= 4) { choose(n - 1); e.preventDefault(); return; }
@@ -603,7 +728,7 @@
     };
   }
 
-  if (!BANK.length) $('stats').replaceChildren(h('p', { class: 'muted', text: 'Не вдалося завантажити питання. Онови сторінку.' }));
+  if (!BANK.length) $('stats').replaceChildren(h('p', { class: 'muted', text: T('loadFail') }));
   renderStart();
 })();
 </script>

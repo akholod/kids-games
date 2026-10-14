@@ -614,3 +614,99 @@ test('weakWeights ordering', () => {
   assert.ok(M.weakWeights({ valor: { right: 10, total: 10 } }).valor > 0);
   assert.ok(Object.values(M.weakWeights()).every((x) => x > 0));
 });
+
+// ---- Spanish site: same numbers, Spanish-only text -----------------------------------
+
+const CYR = /[\u0400-\u04FF]/;
+const everyLevel = (fn) => {
+  for (const { key } of M.TOPICS) for (const { level } of M.LEVELS[key]) fn(key, level);
+};
+
+// A few deliberately wrong inputs for any kind, to collect the error objects.
+const wrongInputs = (t) => [
+  0, t.answer + 10, -1, 1000, { UM: 0, C: 0, D: 0, U: 1 }, [1, 2], { ok: true }, { ok: false, value: 1 },
+  ...(t.choices ? t.choices.map((c) => c.value) : []),
+  ...(t.data && t.data.low !== undefined ? [t.data.low, t.data.high] : []),
+];
+
+test('es: same seed gives identical numbers and answers as uk', () => {
+  everyLevel((topic, level) => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const uk = M.makeTask(topic, level, seeded(seed));
+      const es = M.makeTask(topic, level, seeded(seed), 'es');
+      assert.equal(es.id, uk.id);
+      assert.equal(es.kind, uk.kind);
+      assert.deepEqual(es.answer, uk.answer);
+      assert.deepEqual(es.data, uk.data);
+      assert.deepEqual(es.choices && es.choices.map((c) => c.value), uk.choices && uk.choices.map((c) => c.value));
+      if (!uk.choices || uk.data.sub !== 'read') assert.deepEqual(es.choices, uk.choices);
+      if (uk.kind !== 'choice' || !/^¿Cómo se lee/.test(uk.es)) assert.equal(es.es, uk.es);
+      assert.equal(es.lang, 'es');
+      assert.equal(uk.lang, 'uk');
+      assert.equal(uk.hint, uk.ua);
+    }
+  });
+  const a = M.makeExam({ count: 24, rng: seeded(5) });
+  const b = M.makeExam({ count: 24, rng: seeded(5), lang: 'es' });
+  assert.deepEqual(b.map((t) => [t.id, t.answer]), a.map((t) => [t.id, t.answer]));
+});
+
+test('es: no Cyrillic in tasks, hints and error messages of any task type', () => {
+  everyLevel((topic, level) => {
+    for (let seed = 1; seed <= 120; seed++) {
+      const t = M.makeTask(topic, level, seeded(seed), 'es');
+      assert.ok(!('ua' in t), `${topic}${level}: es task has no ua`);
+      assert.ok(t.es && t.hint, `${topic}${level}: es and hint present`);
+      assert.ok(!CYR.test(JSON.stringify(t)), `${topic}${level}: ${JSON.stringify(t)}`);
+      for (const v of wrongInputs(t)) {
+        const r = M.checkAnswer(t, v);
+        if (r.error) {
+          assert.ok(r.error.es && !('ua' in r.error), `${topic}${level}`);
+          assert.ok(!CYR.test(JSON.stringify(r.error)), `${topic}${level}: ${JSON.stringify(r.error)}`);
+        }
+      }
+      if (t.data && t.data.steps) {
+        for (let i = 0; i < t.data.steps.length; i++) {
+          for (const flag of [undefined, true, false, 0, 1]) {
+            for (const d of [0, 5, 7]) {
+              const r = M.checkColumnStep(t, i, d, flag);
+              if (r.error) assert.ok(r.error.es && !CYR.test(JSON.stringify(r.error)));
+            }
+          }
+        }
+      }
+      if (t.kind === 'problema') {
+        for (const op of ['+', '-']) {
+          const r = M.checkOp(t, op);
+          if (r.error) assert.ok(!CYR.test(JSON.stringify(r.error)) && !('ua' in r.error));
+        }
+      }
+      if (t.kind === 'fix') {
+        for (const v of [{ ok: true }, { ok: false, value: 1 }, { ok: false, value: t.data.result }, {}]) {
+          const r = M.checkAnswer(t, v);
+          if (r.error) assert.ok(!CYR.test(JSON.stringify(r.error)));
+        }
+      }
+    }
+  });
+  assert.ok(M.checkColumnStep(M.makeTask('columna', 1, seeded(3), 'es'), 99, 1).error.es);
+});
+
+test('uk: tasks and errors keep the Ukrainian explanation', () => {
+  everyLevel((topic, level) => {
+    const t = M.makeTask(topic, level, seeded(9));
+    assert.ok(CYR.test(t.ua), `${topic}${level}`);
+    const r = M.checkAnswer(t, t.kind === 'choice' ? t.choices.find((c) => c.value !== t.answer).value : { ok: !t.answer.ok, value: 1 });
+    if (t.kind === 'choice') assert.ok(CYR.test(r.error.ua));
+  });
+});
+
+test('es: texts per task type (printed with MATH_ES_DUMP=1)', () => {
+  const dump = [];
+  everyLevel((topic, level) => {
+    const t = M.makeTask(topic, level, seeded(21), 'es');
+    dump.push(`${topic} ${level} [${t.kind}] ${t.es}\n    💡 ${t.hint}`);
+  });
+  if (process.env.MATH_ES_DUMP) console.log(dump.join('\n'));
+  assert.equal(dump.length, 9 + 6 + 2 + 2);
+});
