@@ -9,7 +9,7 @@
 .meter{display:block;height:8px;border-radius:10px;background:#e1e8d8;overflow:hidden}.meter i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--f2,var(--pitch)),var(--f1,var(--lime)));transition:width .5s ease}.album-total .meter i{background:linear-gradient(90deg,var(--pitch),var(--lime))}
 .pack-bar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px 22px;padding:16px 22px 16px 24px;margin-bottom:22px;border-radius:24px;color:#fff;background:radial-gradient(circle at 7% 50%,#c9f26938,transparent 34%),repeating-linear-gradient(90deg,transparent 0 60px,#ffffff07 60px 120px),var(--green);box-shadow:var(--shadow)}.pack-bar .pack{width:56px;rotate:-8deg}.pack-bar strong{display:block;font-size:1.2rem}.pack-bar p{margin:3px 0 0;color:#dcebdd;line-height:1.4}.pack-bar .btn{min-width:210px;font-size:1.08rem}.pack-hint{grid-column:1/-1;margin:0;padding:10px 14px;border-radius:14px;background:#ffffff14;color:#ffe7a6;font-weight:800}.pack-hint[hidden]{display:none}
 .album-tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:26px}.cat-filter{display:flex;flex-wrap:wrap;gap:8px;width:100%}
-.cat-chip{position:relative;flex:1 1 0;min-width:max-content;min-height:56px;padding:8px 14px 12px;border:2px solid transparent;border-radius:16px;background:var(--paper);color:var(--ink);box-shadow:0 3px 0 #dbe3d3;display:flex;align-items:center;justify-content:space-between;gap:10px;overflow:hidden;transition:border-color .15s,background-color .15s,transform .15s}.cat-chip b{display:flex;align-items:center;gap:8px;font-size:.98rem}.cat-chip b:before{content:"";width:13px;height:13px;border-radius:4px;flex:none;background:linear-gradient(135deg,var(--f1,var(--lime)),var(--f2,var(--pitch)) 55%,var(--f3,var(--green)))}.cat-chip small{font-weight:850;color:var(--muted);font-variant-numeric:tabular-nums}.cat-chip .meter{position:absolute;left:14px;right:14px;bottom:5px;height:4px}.cat-chip:hover{border-color:#bccdb2}.cat-chip:active{transform:scale(.96)}.cat-chip[aria-pressed=true]{border-color:var(--green);background:#fff;box-shadow:0 3px 0 var(--green)}
+.cat-chip{position:relative;flex:1 1 0;min-width:max-content;min-height:56px;padding:8px 14px 12px;border:2px solid transparent;border-radius:16px;background:var(--paper);color:var(--ink);box-shadow:0 3px 0 #dbe3d3;display:flex;align-items:center;justify-content:space-between;gap:10px;overflow:hidden;transition:border-color .15s,background-color .15s,transform .15s}.cat-chip b{display:flex;align-items:center;gap:8px;font-size:.98rem}.cat-chip b:before{content:"";width:13px;height:13px;border-radius:4px;flex:none;background:linear-gradient(135deg,var(--f1,var(--lime)),var(--f2,var(--pitch)) 55%,var(--f3,var(--green)))}.cat-chip small{font-weight:850;color:var(--muted);font-variant-numeric:tabular-nums}.cat-chip .meter{position:absolute;left:14px;right:14px;bottom:5px;height:4px}.cat-chip:hover{border-color:#bccdb2}.cat-chip:active{transform:scale(.96)}.cat-chip[aria-pressed=true]{border-color:var(--green);background:#fff;box-shadow:0 3px 0 var(--green)}.cat-chip.cat-ua{--f1:#ffd500;--f2:#0057b7}.cat-chip.cat-ua b:before{background:linear-gradient(#0057b7 50%,#ffd500 50%);box-shadow:inset 0 0 0 1px oklch(0 0 0 / .1)}
 .seg{display:inline-flex;gap:2px;padding:4px;border-radius:16px;background:#e5ebdc}.seg button{min-height:46px;padding:6px 16px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-weight:850;transition:background-color .15s,color .15s}.seg button:hover{color:var(--ink)}.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 2px 0 #cfd9c7}
 .sell-all{margin-left:auto;min-height:52px;padding:8px 18px;border:2px dashed #e0b54a;border-radius:16px;background:#fff6dc;color:var(--ink);font-weight:900;font-variant-numeric:tabular-nums;transition:background-color .15s,transform .15s}.sell-all:hover{background:#ffefc2}.sell-all:active{transform:scale(.96)}.sell-all[hidden]{display:none}
 .album-sec{margin-bottom:34px}.album-sec[hidden]{display:none}.sec-head{display:flex;align-items:center;gap:12px;margin:0 0 14px}.sec-head h3{margin:0;font-size:1.25rem;display:flex;align-items:center;gap:9px}.sec-head h3:before{content:"";width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,var(--f1),var(--f2) 55%,var(--f3))}.sec-head small{font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums}.sec-head .meter{flex:1;max-width:200px}
@@ -176,7 +176,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
 })();
 
 // Card album, pack opening and the big card view. The album grid is built once; KF changes only
-// update tiles in place, so 264 images are not re-created on every coin change.
+// update tiles in place, so hundreds of images are not re-created on every coin change.
 (() => {
   const $ = id => document.getElementById(id);
   const h = (tag, props = {}, ...kids) => { const el = Object.assign(document.createElement(tag), props); el.append(...kids); return el; };
@@ -239,14 +239,26 @@ function askDialog({ icon, title, text, primary, secondary }) {
     secs[cat] = { list, sec, count, fill };
     $('album').append(sec);
   }
-  for (const key of ['all', ...Object.keys(secs)]) {
+  // Ukrainian players (ua: true) are a cross-category chip: their tiles stay in the common / futsal sections.
+  const UA = KF.CARDS.filter(c => c.ua);
+  for (const key of ['all', ...Object.keys(secs), ...(UA.length ? ['ua'] : [])]) {
     const n = h('small'), [bar, fill] = meter();
-    const b = h('button', { type: 'button', className: `cat-chip${key === 'all' ? '' : ` ${catClass(key)}`}` }, h('b', { textContent: key === 'all' ? 'Усі' : GROUP[key] }), n, bar);
+    const cls = key === 'all' ? '' : key === 'ua' ? ' cat-ua' : ` ${catClass(key)}`;
+    const b = h('button', { type: 'button', className: `cat-chip${cls}` }, h('b', { textContent: key === 'all' ? 'Усі' : key === 'ua' ? 'Україна' : GROUP[key] }), n, bar);
     b.dataset.cat = key;
     b.addEventListener('click', () => { catFilter = key; applyFilter(); });
     chips[key] = { b, n, fill };
     $('cat-filter').append(b);
   }
+  $('cat-filter').addEventListener('keydown', e => {
+    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    const list = Object.values(chips).map(c => c.b), i = list.indexOf(e.target);
+    if (!step || i < 0) return;
+    e.preventDefault();
+    const next = list[(i + step + list.length) % list.length];
+    next.focus();
+    next.click();
+  });
   $('own-filter').addEventListener('click', e => {
     const b = e.target.closest('[data-own]');
     if (b) { ownFilter = b.dataset.own; applyFilter(); }
@@ -288,9 +300,14 @@ function askDialog({ icon, title, text, primary, secondary }) {
     for (const [cat, s] of Object.entries(secs)) {
       const got = s.list.filter(c => tiles.get(c.id).owned).length;
       total += got;
-      s.count.textContent = `${got} / ${s.list.length}`;
-      s.fill.style.width = chips[cat].fill.style.width = pct(got, s.list.length);
+      chips[cat].fill.style.width = pct(got, s.list.length);
       chips[cat].n.textContent = `${got}/${s.list.length}`;
+    }
+    updateHeads();
+    if (chips.ua) {
+      const got = UA.filter(c => tiles.get(c.id)?.owned).length;
+      chips.ua.n.textContent = `${got}/${UA.length}`;
+      chips.ua.fill.style.width = pct(got, UA.length);
     }
     const all = KF.CARDS.length;
     chips.all.n.textContent = `${total}/${all}`;
@@ -308,6 +325,16 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (changed) applyFilter();
   }
 
+  // Section headers count the whole category, or only its Ukrainian players while «Україна» is on.
+  function updateHeads() {
+    for (const s of Object.values(secs)) {
+      const list = catFilter === 'ua' ? s.list.filter(c => c.ua) : s.list;
+      const got = list.filter(c => tiles.get(c.id).owned).length;
+      s.count.textContent = `${got} / ${list.length}`;
+      s.fill.style.width = pct(got, list.length);
+    }
+  }
+
   const shownOwned = () => [...$('album').querySelectorAll('button.tile:not([hidden])')];
   function rove(target) { for (const b of $('album').querySelectorAll('button.tile')) b.tabIndex = b === target ? 0 : -1; }
 
@@ -317,7 +344,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
       let any = 0;
       for (const c of s.list) {
         const t = tiles.get(c.id);
-        const ok = (catFilter === 'all' || catFilter === cat) && (ownFilter === 'all' || (ownFilter === 'mine') === t.owned);
+        const ok = (catFilter === 'all' || catFilter === cat || (catFilter === 'ua' && c.ua)) && (ownFilter === 'all' || (ownFilter === 'mine') === t.owned);
         t.el.hidden = !ok;
         if (ok) any++;
       }
@@ -325,6 +352,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
       shown += any;
     }
     for (const [key, c] of Object.entries(chips)) c.b.setAttribute('aria-pressed', key === catFilter);
+    updateHeads();
     for (const b of $('own-filter').querySelectorAll('[data-own]')) b.setAttribute('aria-pressed', b.dataset.own === ownFilter);
     $('album-empty').hidden = !!shown;
     $('album-empty').textContent = ownFilter === 'mine' ? 'Тут поки порожньо. Відкрий пакунок — і тут зʼявляться твої картки!' : 'Ти зібрав тут усі картки! 🏆';

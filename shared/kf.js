@@ -177,6 +177,8 @@
     { id: 'legend', icon: '🌟', title: 'Легенда!', desc: 'Знайди легенду', check: (s) => ownedOfCat(s, 'legend') >= 1 },
     { id: 'rare', icon: '💎', title: 'Зірка', desc: 'Знайди рідкісну картку', check: (s) => ownedOfCat(s, 'rare') >= 1 },
     { id: 'futsal', icon: '🥅', title: 'Футзаліст', desc: 'Збери 5 футзалістів', check: (s) => ownedOfCat(s, 'futsal') >= 5 },
+    { id: 'ukraine-5', icon: '🟦', title: 'Синьо-жовті', desc: 'Збери 5 українців', check: (s) => CARDS.filter((c) => c.ua && s.cards[c.id] > 0).length >= 5 },
+    { id: 'ukraine', icon: '🇺🇦', title: 'Збірна України', desc: 'Збери всіх українців', check: (s) => CARDS.some((c) => c.ua) && CARDS.filter((c) => c.ua).every((c) => s.cards[c.id] > 0) },
     { id: 'keeper-wall', icon: '🧱', title: 'Стіна', desc: 'Зроби 25 сейвів у грі «Воротар»', check: (s) => (s.gameData?.goalkeeper?.saves || 0) >= 25 },
     { id: 'keeper-gloves', icon: '🧤', title: 'Нові рукавиці', desc: 'Купи нові рукавиці у грі «Воротар»', check: (s) => (s.gameData?.goalkeeper?.gloves?.owned?.length || 0) >= 2 },
   ];

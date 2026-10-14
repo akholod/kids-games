@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build football-card assets + shared/cards.js. Usage: python3 -I scripts/build-cards.py <source dir>"""
+"""Build football-card assets + shared/cards.js. Usage: python3 -I scripts/build-cards.py <source dir> [<source dir>...]"""
 import os
 import re
 import subprocess
@@ -84,6 +84,20 @@ M = {
 'Шумахер_футзал': 'Schumacher', 'Эдер_Милитао': 'Éder Militão', 'Эдерсон': 'Ederson', 'Эдуардо_Камавинга': 'Eduardo Camavinga',
 'Эндрик': 'Endrick', 'Энцо': 'Enzo Fernández', 'Эрик_Кантонa': 'Eric Cantona', 'Юи_Хасэгава': 'Yui Hasegawa',
 'Ямаль': 'Lamine Yamal', 'Яя_Туре': 'Yaya Touré', 'Эусебио': 'Eusébio',
+# second archive: legends
+'Рууд_Гуллит': 'Ruud Gullit', 'Лотар_Маттеус': 'Lothar Matthäus', 'Зико': 'Zico', 'Сократес': 'Sócrates',
+'Паоло_Росси': 'Paolo Rossi', 'Лев_Яшин': 'Lev Yashin', 'Бобби_Мур': 'Bobby Moore', 'Стэнли_Мэттьюз': 'Stanley Matthews',
+'Джузеппе_Меацца': 'Giuseppe Meazza', 'Раймон_Копа': 'Raymond Kopa', 'Жюст_Фонтен': 'Just Fontaine', 'Диди': 'Didi',
+# second archive: Ukrainians (_золото; category comes from the md section, there is no _футзал suffix)
+'Андрей_Шевченко': 'Andriy Shevchenko', 'Олег_Блохин': 'Oleh Blokhin', 'Сергей_Ребров': 'Serhiy Rebrov',
+'Анатолий_Тимощук': 'Anatoliy Tymoshchuk', 'Андрей_Ярмоленко': 'Andriy Yarmolenko', 'Александр_Зинченко': 'Oleksandr Zinchenko',
+'Андрей_Пятов': 'Andriy Pyatov', 'Андрей_Воронин': 'Andriy Voronin', 'Руслан_Ротань': 'Ruslan Rotan',
+'Дмитрий_Чигринский': 'Dmytro Chygrynskyi', 'Евгений_Коноплянка': 'Yevhen Konoplyanka', 'Михаил_Мудрик': 'Mykhailo Mudryk',
+'Артем_Довбик': 'Artem Dovbyk', 'Илья_Забарный': 'Illia Zabarnyi', 'Сергей_Сидорчук': 'Serhiy Sydorchuk',
+'Виктор_Цыганков': 'Viktor Tsyhankov', 'Александр_Шовковский': 'Oleksandr Shovkovskyi', 'Олег_Лужный': 'Oleh Luzhny',
+'Игорь_Беланов': 'Igor Belanov', 'Александр_Сухов': 'Oleksandr Sukhov', 'Игорь_Корсун': 'Ihor Korsun',
+'Даниил_Абакшин': 'Danyil Abakshyn', 'Петр_Шотурма': 'Petro Shoturma', 'Андрей_Мельник': 'Andrii Melnyk',
+'Николай_Микитюк': 'Mykola Mykytiuk',
 }
 
 # Files whose player is absent from the md list (name confirmed by hand)
@@ -97,35 +111,48 @@ def slug(n):
 
 
 def parse_md(path):
-    sec, order = None, []  # (cat, name)
+    sec, ua, order, uas = None, False, [], set()  # order: (cat, name); uas: Ukrainian names
     with open(path, encoding='utf-8') as fh:
         lines = [line.rstrip() for line in fh]
     for line in lines:
         if line.startswith('#'):
             h = line.lstrip('# ')
+            if h.startswith('Золотая рамка') and 'украинск' in h:
+                ua, sec = True, None  # subsections below pick the category
+                continue
+            if line.startswith('###') and ua:
+                sec = 'common' if h.startswith('Футбол') else 'futsal' if h.startswith('Футзал') else None
+                continue
+            ua = False
             sec = ('common' if h.startswith(('Мужской', 'Женский')) else
                    'futsal' if h.startswith('Мировой футзал') else
                    'rare' if h.startswith('Розовая') else
                    'legend' if h.startswith('Платиновая') else None)
             continue
-        if sec and line and not line.startswith('---'):
+        if line.startswith('---'):
+            sec = None  # the closing note is not a name list
+        elif sec and line:
             for n in line.rstrip('.').split(';'):
                 if n.strip():
                     order.append((sec, n.strip()))
-    return order
+                    if ua:
+                        uas.add(n.strip())
+    return order, uas
 
 
 def main():
-    src = sys.argv[1]
-    md = parse_md(os.path.join(src, 'список_300_футболистов.md'))
+    srcs = sys.argv[1:]
+    mds = [os.path.join(d, f) for d in srcs for f in sorted(os.listdir(d)) if f.endswith('.md')]
+    if not mds:
+        sys.exit('build-cards: no md list in the source dirs')
+    md, uas = parse_md(mds[0])
     md_cat = {}
     for c, n in md:
         assert n not in md_cat, n
         md_cat[n] = c
     entries, bad = {}, []
-    for f in sorted(os.listdir(src)):
-        if not f.endswith('.png'):
-            continue
+    pngs = [(d, f) for d in srcs for f in sorted(os.listdir(d)) if f.endswith('.png')]
+    for src, f in pngs:
         stem = f[:-4]
         key, _, suf = stem.rpartition('_')
         if suf in SUFFIX_CAT:
@@ -135,6 +162,8 @@ def main():
         if key.endswith('_футзал'):
             cat = 'futsal'
         name = M.get(key)
+        if name in uas:  # Ukrainian cards are all _золото: the category comes from the md section
+            cat = md_cat.get(name, cat)
         if name in EXTRA:  # not in the md list: appended after the md-ordered names of its category
             md.append((cat, name))
             md_cat[name] = cat
@@ -144,7 +173,7 @@ def main():
         if name in entries:
             bad.append((f, name, 'duplicate', None))
             continue
-        entries[name] = (cat, f)
+        entries[name] = (cat, os.path.join(src, f))
     if bad:
         print('UNMATCHED:')
         for b in bad:
@@ -154,18 +183,19 @@ def main():
     assert len(set(ids)) == len(ids), 'duplicate ids'
     ordered = []
     for c in ('legend', 'rare', 'futsal', 'common'):
-        ordered += [(n, c) for cc, n in md if cc == c and n in entries]
+        # Ukrainians go after the world players of their category
+        ordered += [(n, c) for cc, n in sorted(md, key=lambda t: t[1] in uas) if cc == c and n in entries]
     assert len(ordered) == len(entries)
     os.makedirs(os.path.join(ROOT, 'images/cards/thumb'), exist_ok=True)
     lines = []
     for n, c in ordered:
         i = slug(n)
-        s = os.path.join(src, entries[n][1])
+        s = entries[n][1]
         full, th = (os.path.join(ROOT, 'images/cards', i + '.webp'), os.path.join(ROOT, 'images/cards/thumb', i + '.webp'))
         for out, w, h, q in ((full, 512, 1024, 78), (th, 256, 512, 62)):
             if not os.path.exists(out) or os.path.getmtime(out) < os.path.getmtime(s):
                 subprocess.run(['cwebp', '-quiet', '-q', str(q), '-resize', str(w), str(h), s, '-o', out], check=True)
-        lines.append("  { id: '%s', name: '%s', cat: '%s' }," % (i, n.replace("'", "\\'"), c))
+        lines.append("  { id: '%s', name: '%s', cat: '%s'%s }," % (i, n.replace("'", "\\'"), c, ', ua: true' if n in uas else ''))
     with open(os.path.join(ROOT, 'shared/cards.js'), 'w', encoding='utf-8') as fh:
         fh.write("// Football cards collection (generated by scripts/build-cards.py — do not edit by hand).\n"
                  "// cat: common | futsal | rare | legend. Images: images/cards/<id>.webp, thumbs in images/cards/thumb/.\n"
@@ -180,7 +210,7 @@ def main():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         sys.exit(__doc__)
     try:
         main()
