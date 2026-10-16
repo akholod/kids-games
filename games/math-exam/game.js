@@ -222,7 +222,13 @@
   let session = null;
   let ctrl = null; // current input controller: { onKey(e) => handled }
 
-  const show = KFG.screens(['hub', 'play', 'finish'], { scroll: 'smooth' });
+  // body.playing compacts the page chrome so a task fits on a laptop screen.
+  const show = KFG.screens(['hub', 'play', 'finish'], {
+    scroll: 'smooth',
+    onShow: (id) => document.body.classList.toggle('playing', id === 'play'),
+  });
+  // The feedback box moves into the controls column of split tasks (see split()), so keep a reference.
+  const FB = $('feedback');
 
   const startTraining = (topic, level) => {
     const tasks = Array.from({ length: ROUND }, () => M.makeTask(topic, level, Math.random, KF.lang));
@@ -262,7 +268,7 @@
     $('prompt-es').classList.toggle('long', task.es.length > 110);
     $('prompt-ua').textContent = task.hint || '';
     setUa(false);
-    $('feedback').replaceChildren();
+    FB.replaceChildren();
     drawDots();
     renderTask(task);
   };
@@ -328,7 +334,9 @@
           last ? L('Результат →', 'Ver resultado →') : L('Далі →', 'Siguiente →'),
         );
     ctrl = { onKey: (e) => (e.key === 'Enter' || e.key === ' ') && (next.click(), true) };
-    KFG.feedback($('feedback'), box, h('br'), next, { scroll: 'animated' });
+    // .resolved hides the used-up controls: the feedback takes their place.
+    $('work').classList.add('resolved');
+    KFG.feedback(FB, box, next, { scroll: 'animated' });
   };
 
   const goNext = () => {
@@ -414,6 +422,9 @@
     el.replaceChildren(h('span', { text: es || '' }), ua && !ES ? h('span', { class: 'fb-ua', text: `🇺🇦 ${ua}` }) : '');
   };
 
+  // Keypad of five columns: 1–5, 6–0, then ⌫ and OK (wide and short enough for a laptop screen).
+  const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'back', 'ok'];
+
   // Number entry with on-screen keypad; keyboard digits / Backspace / Enter.
   // rtl: column answers are typed from the units up, so each new digit goes to the left.
   /** @param {{ onSubmit: (v: number) => void, onInput?: (v: string) => void, unit?: string, maxLen?: number, okLabel?: string, rtl?: boolean }} opts */
@@ -435,7 +446,7 @@
       } else if (value.length < maxLen) value = rtl ? k + value : value === '0' ? k : value + k;
       draw();
     };
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) =>
+    const keys = KEYPAD.map((k) =>
       h(
         'button',
         {
@@ -488,9 +499,22 @@
   };
 
   // ---------- Renderers per kind ----------
+  // Task area of two parts: the figure (stage) and the controls (side). Side by side on wide screens,
+  // one under the other on narrow ones; the feedback box goes to the end of the side.
+  /** @param {HTMLElement} work @param {any[]} stage @param {any[]} side */
+  const split = (work, stage, side) => {
+    const st = h('div', { class: 'stage' }, stage);
+    const sd = h('div', { class: 'side' }, side, FB);
+    work.classList.add('split');
+    work.append(st, sd);
+    return { stage: st, side: sd };
+  };
+
   const renderTask = (task) => {
     const work = $('work');
+    work.after(FB);
     work.replaceChildren();
+    work.className = 'work';
     ctrl = null;
     const kind = task.kind;
     if (kind === 'choice') return renderChoice(task, work);
@@ -534,10 +558,11 @@
       if (!r.correct) buttons[i].classList.add('wrong');
     };
     const words = task.choices.some((c) => String(c.label).length > 12);
-    work.append(
-      h('div', { class: `choices${words ? ' words' : ''}` }, buttons),
-      h('p', { class: 'kbd-hint', text: L(`Клавіші 1–${buttons.length}`, `Teclas 1–${buttons.length}`) }),
-    );
+    const list = h('div', { class: `choices${words ? ' words' : ''}` }, buttons);
+    const keysHint = h('p', { class: 'kbd-hint', text: L(`Клавіші 1–${buttons.length}`, `Teclas 1–${buttons.length}`) });
+    // Long word answers take more height: their feedback goes beside them on wide screens.
+    if (words) split(work, [list, keysHint], []);
+    else work.append(list, keysHint);
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
@@ -552,7 +577,6 @@
   };
 
   const renderNumber = (task, work) => {
-    if (task.data?.packs) work.append(packsView(task.data.packs, false).el);
     const wall = task.data?.parts ? wallView(task.data) : null;
     const blank = wall?.querySelector('.slot.active');
     const input = numberInput({
@@ -564,12 +588,8 @@
         if (blank) blank.textContent = v || '?';
       },
     });
-    if (wall) {
-      work.append(wall, input.pad, input.hint);
-      ctrl = { onKey: input.onKey };
-      return;
-    }
-    work.append(input.box, input.pad, input.hint);
+    const figure = task.data?.packs ? [packsView(task.data.packs, false).el] : [];
+    split(work, wall ? [wall] : [...figure, input.box], [input.pad, input.hint]);
     ctrl = { onKey: input.onKey };
   };
 
@@ -639,7 +659,7 @@
             'button',
             {
               type: 'button',
-              class: 'trade',
+              class: 'trade trade-up',
               title: `10 ${k} → 1 ${left}`,
               onclick: () => {
                 counts[k] -= 10;
@@ -657,7 +677,7 @@
             'button',
             {
               type: 'button',
-              class: 'trade',
+              class: 'trade trade-down',
               title: `1 ${k} → 10 ${right}`,
               onclick: () => {
                 counts[k]--;
@@ -691,17 +711,20 @@
       ctrl = null;
       submitSimple(task, { ...view.counts });
     };
-    work.append(
-      view.el,
-      h('div', { class: 'pack-total' }, 'Total: ', view.total),
-      check,
-      h('p', {
-        class: 'kbd-hint',
-        text: L(
-          'Tab — між кнопками, Enter — натиснути. Ctrl+Enter — перевірити',
-          'Tab: moverte entre botones. Enter: pulsar. Ctrl+Enter: comprobar',
-        ),
-      }),
+    split(
+      work,
+      [view.el],
+      [
+        h('div', { class: 'pack-total' }, 'Total: ', view.total),
+        check,
+        h('p', {
+          class: 'kbd-hint',
+          text: L(
+            'Tab — між кнопками, Enter — натиснути. Ctrl+Enter — перевірити',
+            'Tab: moverte entre botones. Enter: pulsar. Ctrl+Enter: comprobar',
+          ),
+        }),
+      ],
     );
     ctrl = { onKey: (e) => (e.key === 'Enter' && (e.ctrlKey || e.metaKey) ? (submit(), true) : false) };
   };
@@ -753,7 +776,7 @@
       }
       draw();
     };
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) =>
+    const keys = KEYPAD.map((k) =>
       h(
         'button',
         {
@@ -766,11 +789,14 @@
       ),
     );
     const hint = hintEl();
-    work.append(
-      h('div', { class: 'decomp' }, parts),
-      hint,
-      h('div', { class: 'keypad' }, keys),
-      h('p', { class: 'kbd-hint', text: L('Цифри, ⌫, ←/→ між клітинками, Enter', 'Cifras, ⌫, ←/→ entre casillas, Enter') }),
+    split(
+      work,
+      [h('div', { class: 'decomp' }, parts)],
+      [
+        h('div', { class: 'keypad' }, keys),
+        hint,
+        h('p', { class: 'kbd-hint', text: L('Цифри, ⌫, ←/→ між клітинками, Enter', 'Cifras, ⌫, ←/→ entre casillas, Enter') }),
+      ],
     );
     draw();
     ctrl = {
@@ -851,19 +877,21 @@
     const input = numberInput({
       rtl: true,
       maxLen: cols,
-      // Typed digits also appear in the answer row, under their columns.
+      // Typed digits appear in the answer row, under their columns; «?» marks the next one.
       onInput: (v) =>
         order.forEach((p, i) => {
           nb.cells.result[p].textContent = v[v.length - 1 - i] ?? '';
+          nb.cells.result[p].classList.toggle('slot-now', i === v.length);
         }),
       onSubmit: (v) => {
         ctrl = null;
         const r = M.checkAnswer(task, v);
-        if (d.prueba) work.append(pruebaNote(d.prueba));
+        for (const p of order) nb.cells.result[p].classList.remove('slot-now');
+        if (d.prueba) nb.el.after(pruebaNote(d.prueba));
         resolveTask(r.correct && session.mistakes === 0, r.correct && session.mistakes ? opError(task) : r.error);
       },
     });
-    work.append(nb.el, input.box, input.pad, input.hint);
+    split(work, [nb.el], [input.pad, input.hint]);
     ctrl = { onKey: input.onKey };
   };
 
@@ -1018,9 +1046,11 @@
         b.disabled = true;
       });
       ctrl = null;
-      if (d.op === '-')
-        work.insertBefore(h('p', { class: 'prueba', text: `Prueba: ${M.fmt(d.result)} + ${M.fmt(d.b)} = ${M.fmt(d.a)} ✓` }), hint);
-      if (d.prueba) work.insertBefore(pruebaNote(d.prueba), hint);
+      // Checks go under the notebook, the controls column is for the feedback.
+      nb.el.after(
+        d.op === '-' ? h('p', { class: 'prueba', text: `Prueba: ${M.fmt(d.result)} + ${M.fmt(d.b)} = ${M.fmt(d.a)} ✓` }) : '',
+        d.prueba ? pruebaNote(d.prueba) : '',
+      );
       const clean = session.mistakes === 0;
       resolveTask(
         clean,
@@ -1047,18 +1077,22 @@
     const pad = h('div', { class: 'keypad' }, keys);
     for (const p of nb.places) drawTop(p);
     highlight();
-    work.append(
-      nb.el,
-      hint,
-      borrowBtn ? h('div', { class: 'col-actions' }, borrowBtn) : '',
-      pad,
-      h('p', {
-        class: 'kbd-hint',
-        text:
-          d.op === '-'
-            ? L('Цифри — відповідь у стовпчику, P — pedir prestado', 'Cifras: la respuesta de cada columna. P: pedir prestado')
-            : L('Цифри — відповідь у стовпчику, справа наліво', 'Cifras: la respuesta de cada columna, de derecha a izquierda'),
-      }),
+    split(
+      work,
+      [nb.el],
+      [
+        borrowBtn ? h('div', { class: 'col-actions' }, borrowBtn) : '',
+        pad,
+        // Under the keypad, so a new hint never moves the keys.
+        hint,
+        h('p', {
+          class: 'kbd-hint',
+          text:
+            d.op === '-'
+              ? L('Цифри — відповідь у стовпчику, P — pedir prestado', 'Cifras: la respuesta de cada columna. P: pedir prestado')
+              : L('Цифри — відповідь у стовпчику, справа наліво', 'Cifras: la respuesta de cada columna, de derecha a izquierda'),
+        }),
+      ],
     );
     ctrl = {
       onKey: (e) => {
@@ -1086,7 +1120,7 @@
           afterRound();
         },
       });
-      work.append(input.box, input.pad, input.hint);
+      split(work, [input.box], [input.pad, input.hint]);
       ctrl = { onKey: input.onKey };
       return;
     }
@@ -1141,7 +1175,9 @@
   };
   const afterRound = () => {
     const d = session.task.data;
-    if (d.n === d.mid) $('work').append(h('p', { class: 'rule', text: '¡Justo en el medio! El 5 sube → ' + M.fmt(d.high) }));
+    // Inside the feedback box: one block less to fit on the screen.
+    if (d.n === d.mid)
+      FB.querySelector('.fb-box')?.append(h('p', { class: 'rule', text: '¡Justo en el medio! El 5 sube → ' + M.fmt(d.high) }));
   };
 
   // Book's «muro de descomposición»: 3519 = __ C + 1 D + 9 U
@@ -1178,7 +1214,8 @@
     fillOperands(nb, d);
     const S = digitMap(d.shown);
     for (const p of nb.places) nb.cells.result[p].textContent = S[p] ?? '';
-    const area = h('div', { class: 'work', style: 'padding:0' });
+    const area = h('div', { class: 'stack' });
+    const ask = h('div', { class: 'stack' });
     const judge = (ok) => {
       if (ok) {
         ctrl = null;
@@ -1193,7 +1230,8 @@
           submitSimple(task, { ok: false, value: v });
         },
       });
-      area.replaceChildren(h('p', { class: 'op-q', text: 'Escribe el resultado correcto:' }), input.box, input.pad, input.hint);
+      ask.replaceChildren(h('p', { class: 'op-q', text: 'Escribe el resultado correcto:' }), input.box);
+      area.replaceChildren(input.pad, input.hint);
       ctrl = { onKey: input.onKey };
     };
     area.append(
@@ -1205,7 +1243,7 @@
       ),
       h('p', { class: 'kbd-hint', text: L('Клавіші 1 — правильно, 2 — є помилка', 'Teclas: 1 = está bien, 2 = hay un error') }),
     );
-    work.append(nb.el, area);
+    split(work, [nb.el, ask], [area]).stage.classList.add('stage-row');
     ctrl = {
       onKey: (e) => {
         if (e.key === '1') {

@@ -8,17 +8,20 @@
 <link rel="stylesheet" href="../../shared/kf.css">
 <style>
 .game-shell{max-width:900px;margin:0 auto;padding:17px 0 56px}
+/* During a task the page chrome is compact: prompt + work + keypad + feedback fit a laptop screen. */
+.playing .game-shell{padding:4px 0 12px}
+.playing .game-top .back-link{min-height:48px}
 .game-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}
 [hidden]{display:none!important}
 
 /* Hub */
-.hub{padding:clamp(22px,5vw,44px)}
+.hub{padding:clamp(22px,4vw,36px)}
 .hub-head{display:flex;gap:18px;align-items:center;margin-bottom:22px}
 .hub-icon{flex:none;width:84px;height:84px;display:grid;place-items:center;background:#e8f7d5;border-radius:24px;font-size:2.8rem;transform:rotate(-7deg)}
 .hub h1{font-size:clamp(1.9rem,6vw,3rem);line-height:1.05;margin:0 0 6px}
 .hub-head p{margin:0;color:var(--muted);font-size:1.02rem;line-height:1.45}
-.stations{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.stations{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
 .station{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:22px;background:#fff;border:1px solid var(--line);box-shadow:0 4px 0 #e2e9dc}
 .station-title{display:flex;gap:12px;align-items:center}
 .station-title span{font-size:2rem}
@@ -32,6 +35,7 @@
 .level:disabled{background:#eef1ea;border-color:#e0e5dc;color:#9aa89e}
 .level-hint{margin:0;color:var(--muted);font-size:.9rem;min-height:1.3em}
 .exam-card{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px;border-radius:22px;background:var(--green);color:#fff}
+.exam-card>div{flex:1 1 380px}
 .exam-card strong{font-size:1.3rem;display:block}
 .exam-card p{margin:4px 0 0;color:#d6ecd9}
 .hub-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
@@ -44,24 +48,29 @@
 .report-row b{font-variant-numeric:tabular-nums;min-width:4.5em;text-align:right}
 
 /* Play */
-.match-head{background:#123d2d;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.match-head{background:#123d2d;color:#fff;padding:10px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .match-head strong{color:var(--lime);font-size:.92rem;letter-spacing:.08em;text-transform:uppercase}
 .dots{display:flex;gap:6px;flex-wrap:wrap}
 .dot{width:16px;height:16px;border:2px solid #c6d8c6;border-radius:50%}
 .dot.ok{background:var(--lime);border-color:var(--lime)}
 .dot.miss{background:var(--gold);border-color:var(--gold)}
 .dot.now{border-color:#fff;box-shadow:0 0 0 3px #ffffff3b}
-.prompt{background:#eaf5db;padding:20px 22px;display:flex;gap:14px;align-items:flex-start;justify-content:space-between}
-.prompt-text{font-size:clamp(1.3rem,4.4vw,1.9rem);font-weight:900;line-height:1.25;margin:0;letter-spacing:-.02em}
+.prompt{background:#eaf5db;padding:14px 22px;display:flex;gap:14px;align-items:flex-start;justify-content:space-between}
+.prompt-text{font-size:clamp(1.3rem,min(4.4vw,4vh),1.9rem);font-weight:900;line-height:1.25;margin:0;letter-spacing:-.02em}
 .prompt-ua{margin:10px 0 0;padding:10px 14px;border-radius:14px;background:#fff;color:var(--ink);font-weight:700;line-height:1.4}
-.ua-btn{flex:none;min-width:56px;min-height:56px;border:2px solid #c5d4c1;border-radius:16px;background:#fff;font-size:1.5rem}
+.ua-btn{flex:none;min-width:52px;min-height:52px;border:2px solid #c5d4c1;border-radius:16px;background:#fff;font-size:1.5rem}
 .ua-btn[aria-pressed=true]{border-color:var(--green);background:#e3f4cb}
-.work{padding:22px clamp(14px,4vw,28px);display:grid;grid-template-columns:minmax(0,1fr);gap:18px;justify-items:center}
-.work>*{max-width:100%}
-.prompt-text.long{font-size:clamp(1.05rem,3.6vw,1.4rem);line-height:1.35}
-.feedback{padding:0 22px 24px;text-align:center}
+.work{padding:16px clamp(14px,3vw,28px) 18px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;justify-items:center}
+.work>*,.stage>*,.side>*,.stack>*{max-width:100%}
+.prompt-text.long{font-size:clamp(1.05rem,min(3.6vw,3.2vh),1.4rem);line-height:1.35}
+/* Split task: figure (stage) + controls (side); side by side from 900px, stacked below. */
+.stage,.side,.stack{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;justify-items:center;align-content:start;width:100%;min-width:0}
+/* After the answer the used controls go away and the feedback takes their place. */
+.resolved .side>:not(.feedback),.resolved .kbd-hint{display:none}
+.feedback{padding:0 22px 18px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
 .feedback:empty{padding:0}
-.fb-box{display:inline-block;max-width:640px;padding:16px 20px;border-radius:18px;text-align:left;font-weight:700;line-height:1.45}
+.side .feedback{padding:0;width:100%;align-items:stretch}
+.fb-box{display:block;max-width:640px;padding:14px 18px;border-radius:18px;text-align:left;font-weight:700;line-height:1.45}
 .fb-box.ok{background:#e3f4cb}
 .fb-box.miss{background:#fff1d1}
 .cards{display:flex;gap:6px;align-items:center}
@@ -75,12 +84,15 @@
 .ref p{margin:0}
 .ref .fb-title{font-size:1.35rem}
 @keyframes ref-in{from{transform:translateY(-30px) rotate(-30deg) scale(.6);opacity:0}}
-.fb-box p{margin:0 0 6px}
+.fb-box p{margin:0 0 4px}
+.fb-box p:last-child{margin:0}
 .fb-box .fb-title{font-size:1.25rem;font-weight:950}
 .fb-box .fb-ua{color:var(--muted)}
-.feedback .btn{margin-top:14px;min-width:200px}
+.feedback .btn{min-width:200px}
 .inline-hint{min-height:1.5em;margin:0;text-align:center;font-weight:800;color:#8a5a00;max-width:560px}
 .inline-hint .fb-ua{display:block;color:var(--muted);font-weight:700}
+/* A step hint under the keypad stands in for the keyboard hint. */
+.inline-hint:not(:empty)+.kbd-hint{display:none}
 
 /* Choices */
 .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px)}
@@ -95,15 +107,16 @@
 .choice kbd{position:absolute;top:6px;left:9px;font:700 .72rem system-ui;color:var(--muted)}
 
 /* Number entry + keypad */
-.num-box{min-width:min(100%,300px);min-height:72px;padding:8px 20px;border-radius:18px;border:3px solid var(--green);background:#fff;font-size:clamp(2rem,7vw,2.8rem);font-weight:950;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:.02em}
+.num-box{min-width:min(100%,300px);min-height:68px;padding:8px 20px;border-radius:18px;border:3px solid var(--green);background:#fff;font-size:clamp(2rem,7vw,2.8rem);font-weight:950;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:.02em}
 .num-box .unit{font-size:.6em;color:var(--muted);margin-left:6px}
 .num-box.empty{color:#b5c2b8}
-.keypad{display:grid;grid-template-columns:repeat(3,72px);gap:9px}
-.key{min-height:62px;border:0;border-radius:16px;background:#fff;color:var(--ink);font-size:1.6rem;font-weight:900;box-shadow:0 4px 0 #cdd7c8,inset 0 0 0 2px #dfe6d9;transition:transform .12s,background-color .12s}
+.work .keypad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:min(100%,312px);max-width:none;margin:0}
+.key{min-height:56px;border:0;border-radius:16px;background:#fff;color:var(--ink);font-size:1.6rem;font-weight:900;box-shadow:0 4px 0 #cdd7c8,inset 0 0 0 2px #dfe6d9;transition:transform .12s,background-color .12s}
 .key:hover{background:#f1f8e6}
 .key:active,.key.pressed{transform:translateY(3px);box-shadow:0 1px 0 #cdd7c8,inset 0 0 0 2px #dfe6d9}
-.key.ok{background:var(--lime);font-size:1.1rem}
-.key.back{font-size:1.3rem}
+.work .keypad .key{min-height:56px;font-size:1.55rem}
+.work .keypad .key.ok{grid-column:span 3;background:var(--lime);font-size:1.2rem}
+.work .keypad .key.back{grid-column:span 2;font-size:1.3rem}
 .kbd-hint{margin:0;color:var(--muted);font-size:.85rem;text-align:center}
 
 /* Taquilla packs */
@@ -138,7 +151,7 @@
 .decomp small{font-size:1.1rem;color:var(--muted);margin-left:2px}
 
 /* Notebook column operation */
-.notebook{--cell:clamp(52px,13vw,68px);padding:14px 18px 18px;border-radius:16px;background:#fffef8;background-image:linear-gradient(#cfe0f066 1px,transparent 1px),linear-gradient(90deg,#cfe0f066 1px,transparent 1px);background-size:calc(var(--cell)/2) calc(var(--cell)/2);border:1px solid #d5dfe8;box-shadow:0 6px 18px #12302012}
+.notebook{--cell:clamp(46px,min(13vw,8.6vh),68px);padding:14px 18px 18px;border-radius:16px;background:#fffef8;background-image:linear-gradient(#cfe0f066 1px,transparent 1px),linear-gradient(90deg,#cfe0f066 1px,transparent 1px);background-size:calc(var(--cell)/2) calc(var(--cell)/2);border:1px solid #d5dfe8;box-shadow:0 6px 18px #12302012}
 .nb-grid{display:grid;grid-template-columns:calc(var(--cell)*.7) repeat(var(--cols),var(--cell));align-items:end}
 .nb-head{font-size:.95rem;font-weight:900;color:#5272a0;text-align:center;padding-bottom:4px}
 .nb-cell{height:var(--cell);display:grid;place-items:center;font-size:calc(var(--cell)*.62);font-weight:800;font-variant-numeric:tabular-nums;position:relative;font-family:ui-rounded,system-ui,sans-serif}
@@ -173,6 +186,7 @@
 .nl-ball b{font-size:.95rem;background:#fff;border:2px solid var(--green);border-radius:10px;padding:1px 8px;font-variant-numeric:tabular-nums}
 .nl-ball i{font-style:normal;font-size:30px;line-height:1}
 .rule{margin:0;padding:10px 16px;border-radius:14px;background:#fff1d1;font-weight:800}
+.fb-box .rule{display:inline-block;margin:4px 0 0;padding:4px 10px;border-radius:10px;background:#fff8e6}
 
 /* Problemas */
 .op-choice{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
@@ -205,15 +219,58 @@ dialog::backdrop{background:#0a2a1d99}
   .game-shell{padding-top:8px}
   .panel{border-radius:22px}
   .hub-icon{width:64px;height:64px;font-size:2.1rem}
-  .prompt{padding:16px}
-  .work{padding:18px 10px}
+  .prompt{padding:12px 14px}
+  .match-head{padding:10px 16px}
+  .work{padding:14px 10px 16px}
+  .feedback{padding:0 12px 16px}
   .packs{gap:6px}
   .pack-col{padding:10px 3px}
-  .pm button{min-width:44px;min-height:52px}
+  .pile{min-height:64px}
+  /* + over −, full column width: side by side they spilled into the next column. */
+  .pm{flex-direction:column-reverse;width:100%}
+  .pm button{min-width:0;width:100%;min-height:48px}
+  .playing .game-top .eyebrow{display:none}
   .trade{font-size:.72rem}
   .goal-btn{min-width:78px;min-height:84px;font-size:1rem}
-  .keypad{grid-template-columns:repeat(3,68px)}
   .report-row{grid-template-columns:1fr 1fr auto}
+}
+@media(min-width:900px){
+  .playing .game-shell{max-width:980px}
+  .work.split{grid-template-columns:minmax(0,1fr) clamp(300px,39%,360px);column-gap:28px;align-items:start}
+  .work+.feedback{flex-direction:row;justify-content:center}
+  /* Number choices in one row; long word choices one under the other, the feedback beside them. */
+  .choices{grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-columns:none;width:min(100%,760px)}
+  .choices.words{grid-auto-flow:row;grid-template-columns:minmax(0,1fr);width:100%}
+  /* Find the mistake: the corrected answer goes beside the notebook. */
+  .stage-row{grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:20px}
+  .stage-row .num-box{min-width:200px}
+  .split .notebook{padding-bottom:12px}
+  .stage .prueba{padding:6px 14px;font-size:.95rem}
+  .stage:has(.prueba){gap:8px}
+  .split .decomp{gap:6px}
+  .split .decomp .slot{min-width:56px}
+  /* Packs: count next to the label and fixed rows, so the four columns stay short and line up. */
+  .split .pack-col{display:grid;grid-template-columns:1fr auto;align-items:center;justify-items:center;gap:6px;padding:10px 6px}
+  .split .pack-col>*{grid-column:1/-1}
+  .split .pack-col h3{grid-column:1;justify-self:start;padding-left:4px}
+  .split .pack-col .pack-count{grid-column:2;grid-row:1;justify-self:end;padding-right:4px;font-size:1.7rem}
+  .split .packs:not(.readonly) .pack-col{grid-template-rows:auto minmax(56px,1fr) 52px 48px 48px}
+  .split .packs:not(.readonly) .pile{min-height:0;height:100%}
+  .split .pack-col .pm{grid-row:3}
+  .split .pack-col .trade-up{grid-row:4}
+  .split .pack-col .trade-down{grid-row:5}
+  .split .trade{font-size:.76rem;line-height:1.15}
+  .split .pm button{min-width:48px}
+  .split .packs{gap:8px}
+  /* Feedback in the narrow controls column: a bit smaller type. */
+  .side .fb-box{padding:12px 14px;font-size:.95rem;line-height:1.38}
+  .side .fb-box .fb-title{font-size:1.15rem}
+  .side .ref{gap:12px;margin:0 0 6px}
+  .side .ref-card{width:40px;height:56px}
+  .ref-card{width:46px;height:64px}
+  .work+.feedback .fb-box{padding:12px 16px;max-width:720px}
+  .side .inline-hint{font-size:.95rem;line-height:1.35}
+  .side .kbd-hint{font-size:.8rem}
 }
 @media(hover:none){.kbd-hint,.choice kbd{display:none}}
 </style>
