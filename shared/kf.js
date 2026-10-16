@@ -82,6 +82,7 @@
       'cat.math': 'Математика',
       'cat.english': 'Англійська',
       'cat.fun': 'Футбол-розваги',
+      'cat.sociales': 'Світ навколо нас',
       'card.common': 'Звичайна',
       'card.futsal': 'Футзал',
       'card.rare': 'Рідкісна',
@@ -131,6 +132,7 @@
       'cat.math': 'Matemáticas',
       'cat.english': 'Inglés',
       'cat.fun': 'Fútbol y diversión',
+      'cat.sociales': 'Ciencias Sociales',
       'card.common': 'Común',
       'card.futsal': 'Fútbol sala',
       'card.rare': 'Rara',
@@ -232,12 +234,23 @@
       sites: ['uk', 'es'],
       es: { title: 'Quiz de fútbol', desc: 'Campeonatos, clubes, estrellas y reglas. ¡A ver cuánto sabes!' },
     },
+    {
+      slug: 'sociales-planeta',
+      title: 'El planeta donde vivimos',
+      emoji: '🌍',
+      category: 'sociales',
+      desc: 'Готуємось до іспиту з Ciencias Sociales: Unidad 1 — шари Землі, карти, сторони світу.',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: { title: 'El planeta donde vivimos', desc: 'Prepárate para el examen de la Unidad 1: capas de la Tierra, mapas y orientación.' },
+    },
   ];
 
   const CATEGORIES = {
     math: { title: T('cat.math'), emoji: '🔢' },
     english: { title: T('cat.english'), emoji: '🇬🇧' },
     fun: { title: T('cat.fun'), emoji: '🎉' },
+    sociales: { title: T('cat.sociales'), emoji: '🌍' },
   };
 
   // Football cards. Manifest comes from shared/cards.js (window.KF_CARDS), loaded before kf.js;
