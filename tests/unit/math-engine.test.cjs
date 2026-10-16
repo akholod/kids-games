@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-require('./engine.js');
+require('../../games/math-exam/engine.js');
 const M = globalThis.MathExam;
 
 const seeded = (seed) => {

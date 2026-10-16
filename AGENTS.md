@@ -37,14 +37,21 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 - Language: `KF.lang` (`'uk' | 'es'`, from `KF_SITE`; never use hostname/`navigator.language`). `?lang=es` / `?lang=uk` forces it in the tab (like `?parent`), `?lang=off` drops it.
   Texts: `const T = KF.i18n({ uk: {...}, es: {...} })`, `T('key', { n })`, `T.apply()` for `[data-i18n*]`; missing es key → uk. The uk dictionary keeps today's exact text. Spanish site: Spain Spanish, «tú», no Cyrillic.
 - `GAMES` entries have `sites: ['uk']` or `['uk','es']` and `es: { title, desc }`; catalog uses `KF.siteGames()` (filtered by `KF.lang`, title/desc in that language).
-- Move a game to the Spanish site: translate its dictionary (`KF.i18n({ uk, es })`, no Cyrillic on `?lang=es`), add `'es'` to its `sites`, check `.pi/check/i18n.test.mjs`.
+- Move a game to the Spanish site: translate its dictionary (`KF.i18n({ uk, es })`, no Cyrillic on `?lang=es`), add `'es'` to its `sites`, check `tests/unit/i18n.test.mjs`.
 - Test mode for parents: any page with `?parent` (off: `?parent=off`) — per-tab sandbox progress (100 coins), real progress untouched.
 - Progress: guest = localStorage only; logged-in user = local copy synced to D1 in the background (offline-first).
   Games keep using the synchronous `KF` API and never call the network themselves.
 - Users are added by hand: `node scripts/add-user.mjs <name> <pin> [avatar]` (`--update` changes the PIN).
 
+## Tests
+- `pnpm install` once, then `pnpm test` = unit (`node --test`, `tests/unit/`) + Playwright e2e (`tests/e2e/`, system Chrome, `playwright.config.mjs`; `tests/serve.mjs` serves the repo on :8795).
+  Parts: `pnpm test:unit`, `pnpm test:e2e [spec] [--project=laptop|phone]`. Every run is in `?parent` mode with a seeded `Math.random`; any console/page error fails a test.
+- Unit: kf.js (i18n, sync/merge, daily coin budget), math-exam engine. E2E: catalog, one spec per game, `keyboard` (laptop), `rewards`, `screenshots` (phone; refresh with `--update-snapshots` after an intended UI change).
+- `deploy.sh` runs `pnpm test` first and aborts on failure.
+- New game → add an e2e spec that plays one full round to the finish screen (plus `?lang=es` if it is on the Spanish site) and a keyboard test; known keyboard gap: penalty-multiply (`test.fixme`).
+
 ## Publish
-- `./deploy.sh` — remote D1 migrations (retried up to 3×) + `wrangler deploy` + `wrangler deploy --env es` (both sites) (static files from the root, exclusions in `.assetsignore`;
+- `./deploy.sh` — `pnpm test`, remote D1 migrations (retried up to 3×) + `wrangler deploy` + `wrangler deploy --env es` (both sites) (static files from the root, exclusions in `.assetsignore`;
   `books/` must never be uploaded). Needs `wrangler login` to the personal account (`account_id` in `wrangler.jsonc`).
 - Local: `wrangler dev --local --persist-to ~/.cache/kf-wrangler-state --port 8790 > ~/.cache/kf-dev.log 2>&1` (Spanish: add `--env es`, other port)
   (logs must go outside the project, otherwise the asset watcher reload-loops).

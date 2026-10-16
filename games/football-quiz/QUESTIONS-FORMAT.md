@@ -36,4 +36,4 @@ Spanish site (`KF.lang === 'es'`)
 - Spelling: usual Spanish press forms («Bayern de Múnich», «Atlético de Madrid», «Países Bajos»); Ukrainian clubs/players in
   Latin transliteration as in the es questions («Dynamo Kyiv», «Shakhtar Donetsk»). Questions only meaningful to Ukrainians
   are phrased clearly («el club ucraniano …»).
-- Check: `node .pi/check/quiz-es.mjs` (bank check + scripted rounds at `?lang=es`).
+- Check: `pnpm test:e2e football-quiz` (scripted rounds, also at `?lang=es`).

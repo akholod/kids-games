@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build card images if missing, apply remote D1 migrations (one DB for both sites), then deploy both Workers
+# Build card images if missing, run the tests, apply remote D1 migrations (one DB for both sites), then deploy both Workers
 # (uk: keeper-fun-games, es: keeper-fun-games-es) + static assets (exclusions in .assetsignore).
 set -e
 cd "$(dirname "$0")"
@@ -23,6 +23,10 @@ if ! node -e "global.window={};require('./shared/cards.js');const fs=require('fs
   python3 -I scripts/build-cards.py $dirs
   rm -rf "$build"
 fi
+
+# Safety net: unit + Playwright e2e tests must pass before anything is published (set -e aborts on failure).
+[ -d node_modules ] || pnpm install --frozen-lockfile
+pnpm test
 
 # The first remote call sometimes fails with a transient Cloudflare API error: retry.
 tries=0

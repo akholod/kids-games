@@ -11,8 +11,8 @@ the Worker code handles `/api/*` and `/shared/site.js` (answers `window.KF_SITE 
 - `wrangler.jsonc` — worker name `keeper-fun-games` (var `SITE_LANG: "uk"`), `account_id`, assets (`directory: "."`,
   `run_worker_first: ["/api/*", "/shared/site.js"]`), D1 binding `DB` (database `keeper-fun-games`).
   `env.es` → worker `keeper-fun-games-es`, `SITE_LANG: "es"`; envs do not inherit bindings/vars, so assets and D1 are repeated there.
-- `.assetsignore` — never upload: `books/`, `.pi/`, `.git/`, `node_modules/`, `.omc/`, `worker/`, `migrations/`, `scripts/`,
-  `*.md`, `wrangler.jsonc`, `deploy.sh`, `CNAME`, `.surgeignore`, `.assetsignore`, `.gitignore`, `*.test.js`, `.wrangler/`.
+- `.assetsignore` — never upload: `books/`, `.pi/`, `.git/`, `node_modules/`, `worker/`, `migrations/`, `scripts/`, `tests/`,
+  `*.md`, `wrangler.jsonc`, `deploy.sh`, dotfiles, tooling configs (`package.json`, lockfile, `playwright.config.mjs`), test output.
 - `worker/index.js` — ES module Worker, plain JS.
 - `migrations/0001_init.sql` — D1 schema (applied with `wrangler d1 migrations apply`).
 - `migrations/0002_signup.sql` — `users.signup_key` (self-registration abuse guard) + index.
