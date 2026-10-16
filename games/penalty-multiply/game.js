@@ -61,7 +61,7 @@
   function drawDots() {
     KFG.dots($('dots'), results, round, {
       total,
-      cls: { ok: 'goal', miss: 'saved', now: 'current' },
+      cls: { ok: 'scored', miss: 'saved', now: 'current' },
       attrs: (i, r) => ({ 'aria-label': `Удар ${i + 1}: ${r === true ? 'гол' : r === false ? 'сейв' : 'ще попереду'}` }),
     });
   }
