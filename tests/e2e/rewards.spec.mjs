@@ -13,7 +13,10 @@ test('penalty-multiply: only table ×2, perfect round = +2 coins and a hint abou
   await expect(page.locator('#final-message')).toContainText('таблицю 6, 7, 8 чи 9');
 });
 
-test('penalty-multiply: only table ×7, perfect round = +10 coins (5 goals at a coin each + the +5 bonus of a hard table)', async ({ page, tap }) => {
+test('penalty-multiply: only table ×7, perfect round = +10 coins (5 goals at a coin each + the +5 bonus of a hard table)', async ({
+  page,
+  tap,
+}) => {
   await open(page, '/games/penalty-multiply/');
   await chooseTables(page, [7]);
   const c0 = await coins(page);

@@ -52,8 +52,7 @@ function json(data, status = 200, headers = {}) {
 }
 const err = (code, status, extra = {}, headers) => json({ error: code, ...extra }, status, headers);
 
-const cookie = (value, maxAge) =>
-  `${COOKIE}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+const cookie = (value, maxAge) => `${COOKIE}=${value}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
 
 function getCookie(request, name) {
   const h = request.headers.get('Cookie') || '';
@@ -94,8 +93,10 @@ async function auth(request, env, now) {
   if (!token || token.length > 100) return null;
   const hash = await sha256(token);
   const row = await env.DB.prepare(
-    'SELECT u.id, u.name, u.avatar, s.last_seen FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?'
-  ).bind(hash).first();
+    'SELECT u.id, u.name, u.avatar, s.last_seen FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?',
+  )
+    .bind(hash)
+    .first();
   if (!row) return null;
   let setCookie = null;
   if (now - row.last_seen > DAY_MS) {
@@ -109,7 +110,8 @@ async function login(request, env, now) {
   const body = await readJson(request);
   if (!isObj(body) || !isInt(body.userId) || typeof body.pin !== 'string') return err('bad_request', 400);
   const u = await env.DB.prepare('SELECT id, name, avatar, pin_hash, failed, locked_until FROM users WHERE id = ?')
-    .bind(body.userId).first();
+    .bind(body.userId)
+    .first();
   if (!u) return err('no_user', 404);
   if (u.locked_until > now) return err('locked', 429, { retryAfter: Math.ceil((u.locked_until - now) / 1000) });
 
@@ -117,7 +119,9 @@ async function login(request, env, now) {
   if (!ok) {
     const failed = (u.failed || 0) + 1;
     if (failed >= MAX_FAILS) {
-      await env.DB.prepare('UPDATE users SET failed = 0, locked_until = ? WHERE id = ?').bind(now + LOCK_MS, u.id).run();
+      await env.DB.prepare('UPDATE users SET failed = 0, locked_until = ? WHERE id = ?')
+        .bind(now + LOCK_MS, u.id)
+        .run();
       return err('locked', 429, { retryAfter: LOCK_MS / 1000 });
     }
     await env.DB.prepare('UPDATE users SET failed = ? WHERE id = ?').bind(failed, u.id).run();
@@ -132,8 +136,12 @@ async function startSession(env, u, now, before = [], status = 200) {
   const token = b64url(crypto.getRandomValues(new Uint8Array(32)));
   await env.DB.batch([
     ...before,
-    env.DB.prepare('INSERT INTO sessions (token_hash, user_id, created_at, last_seen) VALUES (?, ?, ?, ?)')
-      .bind(await sha256(token), u.id, now, now),
+    env.DB.prepare('INSERT INTO sessions (token_hash, user_id, created_at, last_seen) VALUES (?, ?, ?, ?)').bind(
+      await sha256(token),
+      u.id,
+      now,
+      now,
+    ),
   ]);
   return json({ user: { id: u.id, name: u.name, avatar: u.avatar } }, status, { 'Set-Cookie': cookie(token, YEAR) });
 }
@@ -153,7 +161,8 @@ async function register(request, env, now) {
 
   const key = await sha256(request.headers.get('CF-Connecting-IP') || 'unknown');
   const recent = await env.DB.prepare('SELECT count(*) AS n, min(created_at) AS oldest FROM users WHERE signup_key = ? AND created_at > ?')
-    .bind(key, now - DAY_MS).first();
+    .bind(key, now - DAY_MS)
+    .first();
   if (recent.n >= MAX_SIGNUPS) return err('too_many', 429, { retryAfter: Math.max(1, Math.ceil((recent.oldest + DAY_MS - now) / 1000)) });
 
   const taken = await env.DB.prepare('SELECT 1 FROM users WHERE name = ? COLLATE NOCASE').bind(name).first();
@@ -163,7 +172,8 @@ async function register(request, env, now) {
   let id;
   try {
     const r = await env.DB.prepare('INSERT INTO users (name, avatar, pin_hash, created_at, signup_key) VALUES (?, ?, ?, ?, ?)')
-      .bind(name, avatar, pinHash, now, key).run();
+      .bind(name, avatar, pinHash, now, key)
+      .run();
     id = r.meta.last_row_id;
   } catch (e) {
     if (/UNIQUE/i.test(String(e && (e.message || e)))) return err('name_taken', 409);
@@ -194,15 +204,25 @@ async function putProgress(request, env, session, now) {
   const uid = session.user.id;
   const stateJson = JSON.stringify(body.state);
   const resultStmts = results.map((r) =>
-    env.DB.prepare('INSERT OR IGNORE INTO results (id, user_id, slug, score, max, at) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(r.id, uid, r.slug, r.score, r.max, r.at)
+    env.DB.prepare('INSERT OR IGNORE INTO results (id, user_id, slug, score, max, at) VALUES (?, ?, ?, ?, ?, ?)').bind(
+      r.id,
+      uid,
+      r.slug,
+      r.score,
+      r.max,
+      r.at,
+    ),
   );
 
-  const save = body.baseRev === 0
-    ? env.DB.prepare('INSERT OR IGNORE INTO progress (user_id, state, rev, updated_at) VALUES (?, ?, 1, ?)')
-        .bind(uid, stateJson, now)
-    : env.DB.prepare('UPDATE progress SET state = ?, rev = rev + 1, updated_at = ? WHERE user_id = ? AND rev = ?')
-        .bind(stateJson, now, uid, body.baseRev);
+  const save =
+    body.baseRev === 0
+      ? env.DB.prepare('INSERT OR IGNORE INTO progress (user_id, state, rev, updated_at) VALUES (?, ?, 1, ?)').bind(uid, stateJson, now)
+      : env.DB.prepare('UPDATE progress SET state = ?, rev = rev + 1, updated_at = ? WHERE user_id = ? AND rev = ?').bind(
+          stateJson,
+          now,
+          uid,
+          body.baseRev,
+        );
 
   // Results are history: stored regardless of the outcome. Single batch = one transaction.
   const out = await env.DB.batch([save, ...resultStmts]);
@@ -230,7 +250,10 @@ async function handle(request, env, url, now) {
     const ct = (request.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
     if (ct !== 'application/json') return err('unsupported_media_type', 415);
     const token = getCookie(request, COOKIE);
-    if (token) await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await sha256(token)).run();
+    if (token)
+      await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?')
+        .bind(await sha256(token))
+        .run();
     return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store', 'Set-Cookie': cookie('', 0) } });
   }
 
@@ -248,10 +271,8 @@ async function handle(request, env, url, now) {
   if (pathname === '/api/me') {
     res = json({ user: session.user });
   } else if (method === 'GET') {
-    const row = await env.DB.prepare('SELECT state, rev, updated_at FROM progress WHERE user_id = ?')
-      .bind(session.user.id).first();
-    res = json(row ? { rev: row.rev, state: JSON.parse(row.state), updatedAt: row.updated_at }
-                   : { rev: 0, state: null, updatedAt: 0 });
+    const row = await env.DB.prepare('SELECT state, rev, updated_at FROM progress WHERE user_id = ?').bind(session.user.id).first();
+    res = json(row ? { rev: row.rev, state: JSON.parse(row.state), updatedAt: row.updated_at } : { rev: 0, state: null, updatedAt: 0 });
   } else {
     res = await putProgress(request, env, session, now);
   }

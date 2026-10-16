@@ -14,14 +14,19 @@
       h1: 'Футбольний квіз',
       sub: 'Чемпіонати, клуби, зірки й правила. Питання українською, español та English.',
       level: 'Рівень',
-      'lvl.1.name': 'Фанат', 'lvl.1.desc': 'Для тих, хто любить футбол',
-      'lvl.2.name': 'Експерт', 'lvl.2.desc': 'Роки, рекорди, деталі',
-      'lvl.mix.name': 'Мікс', 'lvl.mix.desc': 'Усе разом',
+      'lvl.1.name': 'Фанат',
+      'lvl.1.desc': 'Для тих, хто любить футбол',
+      'lvl.2.name': 'Експерт',
+      'lvl.2.desc': 'Роки, рекорди, деталі',
+      'lvl.mix.name': 'Мікс',
+      'lvl.mix.desc': 'Усе разом',
       count: '{n} питань',
       rule1: 'Перша помилка — жовта картка, друга — червона, і раунд починається знову.',
       rule2: 'Кожні 5 правильних відповідей — 1 монета.',
       'meter.have': 'Уже {n} з {max}.',
-      'stat.plays': 'раундів', 'stat.best': 'рекорд', 'stat.goals': 'голів',
+      'stat.plays': 'раундів',
+      'stat.best': 'рекорд',
+      'stat.goals': 'голів',
       start: 'Почати матч ▶',
       board: 'Наші',
       'board.aria': 'Рахунок: наші {n}, суперник 0',
@@ -37,7 +42,10 @@
       'hint.plain': 'Клавіші 1–4 · Esc — вийти',
       meter: 'до монети',
       'meter.aria': 'До монети: {n} з {max}',
-      'cat.wc': '🏆 Турніри', 'cat.clubs': '🏟️ Клуби', 'cat.players': '⭐ Гравці', 'cat.rules': '📏 Правила',
+      'cat.wc': '🏆 Турніри',
+      'cat.clubs': '🏟️ Клуби',
+      'cat.players': '⭐ Гравці',
+      'cat.rules': '📏 Правила',
       question: 'Питання {n}/{max}',
       goalMsg: 'Три поспіль — це гол! ⚽🥅',
       coinMsg: '5 правильних — тримай монету! 🪙',
@@ -52,7 +60,10 @@
       'fin.perfect': 'Суха гра! 🧤',
       'fin.good': 'Чудовий матч! 🏆',
       'fin.end': 'Фінальний свисток!',
-      'sum.goals': 'голів', 'sum.coins': 'монет', 'sum.yellow': 'жовта картка', 'sum.none': 'карток',
+      'sum.goals': 'голів',
+      'sum.coins': 'монет',
+      'sum.yellow': 'жовта картка',
+      'sum.none': 'карток',
       'fin.bonus': 'Без жодної помилки — бонус +5 🪙!',
       'fin.almost': 'Одна жовта картка — майже ідеально!',
       'fin.toCoin': 'До наступної монети: {n} з {max} ⚽.',
@@ -69,14 +80,19 @@
       h1: 'Quiz de fútbol',
       sub: 'Mundiales, clubes, estrellas y reglas del fútbol. ¡Demuestra cuánto sabes!',
       level: 'Nivel',
-      'lvl.1.name': 'Aficionado', 'lvl.1.desc': 'Para quien ama el fútbol',
-      'lvl.2.name': 'Experto', 'lvl.2.desc': 'Años, récords y detalles',
-      'lvl.mix.name': 'Mezcla', 'lvl.mix.desc': 'Todo junto',
+      'lvl.1.name': 'Aficionado',
+      'lvl.1.desc': 'Para quien ama el fútbol',
+      'lvl.2.name': 'Experto',
+      'lvl.2.desc': 'Años, récords y detalles',
+      'lvl.mix.name': 'Mezcla',
+      'lvl.mix.desc': 'Todo junto',
       count: '{n} preguntas',
       rule1: 'El primer fallo es tarjeta amarilla, el segundo roja, y la ronda empieza de nuevo.',
       rule2: 'Cada 5 respuestas correctas, 1 moneda.',
       'meter.have': 'Ya llevas {n} de {max}.',
-      'stat.plays': 'rondas', 'stat.best': 'récord', 'stat.goals': 'goles',
+      'stat.plays': 'rondas',
+      'stat.best': 'récord',
+      'stat.goals': 'goles',
       start: 'Empezar partido ▶',
       board: 'Nosotros',
       'board.aria': 'Marcador: nosotros {n}, rival 0',
@@ -92,7 +108,10 @@
       'hint.plain': 'Teclas 1–4 · Esc — salir',
       meter: 'para moneda',
       'meter.aria': 'Para la moneda: {n} de {max}',
-      'cat.wc': '🏆 Torneos', 'cat.clubs': '🏟️ Clubes', 'cat.players': '⭐ Jugadores', 'cat.rules': '📏 Reglas',
+      'cat.wc': '🏆 Torneos',
+      'cat.clubs': '🏟️ Clubes',
+      'cat.players': '⭐ Jugadores',
+      'cat.rules': '📏 Reglas',
       question: 'Pregunta {n}/{max}',
       goalMsg: '¡Tres seguidas, es gol! ⚽🥅',
       coinMsg: '¡5 aciertos, toma una moneda! 🪙',
@@ -107,7 +126,10 @@
       'fin.perfect': '¡Portería a cero! 🧤',
       'fin.good': '¡Gran partido! 🏆',
       'fin.end': '¡Pitido final!',
-      'sum.goals': 'goles', 'sum.coins': 'monedas', 'sum.yellow': 'tarjeta amarilla', 'sum.none': 'tarjetas',
+      'sum.goals': 'goles',
+      'sum.coins': 'monedas',
+      'sum.yellow': 'tarjeta amarilla',
+      'sum.none': 'tarjetas',
       'fin.bonus': '¡Sin ningún fallo: bonus de +5 🪙!',
       'fin.almost': 'Una tarjeta amarilla: ¡casi perfecto!',
       'fin.toCoin': 'Para la próxima moneda: {n} de {max} ⚽.',
@@ -175,8 +197,17 @@
   const BANK = (() => {
     const ids = new Set();
     return (Array.isArray(window.QUIZ_QUESTIONS) ? window.QUIZ_QUESTIONS : []).map(forSite).filter((q) => {
-      const ok = q && q.id && !ids.has(q.id) && q.q && Array.isArray(q.options) && q.options.length === 4
-        && Number.isInteger(q.answer) && q.answer >= 0 && q.answer < 4 && LANG[q.lang];
+      const ok =
+        q &&
+        q.id &&
+        !ids.has(q.id) &&
+        q.q &&
+        Array.isArray(q.options) &&
+        q.options.length === 4 &&
+        Number.isInteger(q.answer) &&
+        q.answer >= 0 &&
+        q.answer < 4 &&
+        LANG[q.lang];
       if (ok) ids.add(q.id);
       return ok;
     });
@@ -216,7 +247,8 @@
   };
 
   // ---------- Coin meter ----------
-  const meterSlots = (n) => Array.from({ length: PER_COIN }, (_, i) => h('span', { class: `slot${i < n ? '' : ' empty'}`, text: i < n ? '⚽' : '' }));
+  const meterSlots = (n) =>
+    Array.from({ length: PER_COIN }, (_, i) => h('span', { class: `slot${i < n ? '' : ' empty'}`, text: i < n ? '⚽' : '' }));
   const drawMeter = () => {
     $('meter').replaceChildren(h('span', { text: T('meter') }), h('span', { class: 'slots' }, meterSlots(data.toCoin)));
     $('meter').setAttribute('aria-label', T('meter.aria', { n: data.toCoin, max: PER_COIN }));
@@ -252,21 +284,34 @@
   const renderStart = () => {
     data = loadData();
     if (!poolOf(data.level).length) data.level = 'mix';
-    $('levels').replaceChildren(...LEVELS.map((l) => {
-      const n = poolOf(l.id).length;
-      return h('button', {
-        type: 'button', class: 'level', role: 'radio', 'data-level': l.id, disabled: !n,
-        onclick: () => setLevel(l.id),
-        ondblclick: () => startRound(),
-      }, h('b', {}, h('span', { 'aria-hidden': 'true', text: l.icon }), l.name), h('small', { text: l.desc }), h('span', { class: 'count tnum', text: T('count', { n }) }));
-    }));
+    $('levels').replaceChildren(
+      ...LEVELS.map((l) => {
+        const n = poolOf(l.id).length;
+        return h(
+          'button',
+          {
+            type: 'button',
+            class: 'level',
+            role: 'radio',
+            'data-level': l.id,
+            disabled: !n,
+            onclick: () => setLevel(l.id),
+            ondblclick: () => startRound(),
+          },
+          h('b', {}, h('span', { 'aria-hidden': 'true', text: l.icon }), l.name),
+          h('small', { text: l.desc }),
+          h('span', { class: 'count tnum', text: T('count', { n }) }),
+        );
+      }),
+    );
     setLevel(data.level);
     const g = KF.get().games[SLUG];
     const stat = (value, label) => h('div', { class: 'stat' }, h('b', { text: value }), h('span', { text: label }));
     $('stats').replaceChildren(
       stat(String(g?.plays || 0), T('stat.plays')),
       stat(g?.plays ? `${g.best}/${g.max || ROUND}` : '—', T('stat.best')),
-      stat(String(data.goals), T('stat.goals')));
+      stat(String(data.goals), T('stat.goals')),
+    );
     $('start-btn').disabled = !BANK.length;
     drawMeter();
   };
@@ -292,10 +337,12 @@
     $('cards').setAttribute('aria-label', round.cards ? T(round.cards === 1 ? 'cards.yellow' : 'cards.both') : T('cards.none'));
   };
   const drawDots = () => {
-    $('dots').replaceChildren(...round.list.map((_, i) => {
-      const r = round.results[i];
-      return h('span', { class: `dot ${r === true ? 'ok' : r === false ? 'miss' : i === round.index ? 'now' : ''}` });
-    }));
+    $('dots').replaceChildren(
+      ...round.list.map((_, i) => {
+        const r = round.results[i];
+        return h('span', { class: `dot ${r === true ? 'ok' : r === false ? 'miss' : i === round.index ? 'now' : ''}` });
+      }),
+    );
   };
   const drawBoard = () => {
     $('score-board').textContent = `${round.goals} : 0`;
@@ -303,7 +350,9 @@
   };
   // Ball runs toward the goal with the streak: 0 → 1 → 2 → GOAL.
   const BALL_POS = ['14%', '40%', '66%', '93%'];
-  const moveBall = (step) => { $('ball').style.left = BALL_POS[step]; };
+  const moveBall = (step) => {
+    $('ball').style.left = BALL_POS[step];
+  };
 
   const showQuestion = () => {
     const q = round.list[round.index];
@@ -325,10 +374,23 @@
     setUa(false);
     $('kbd-hint').textContent = T($('ua-btn').hidden ? 'hint.plain' : 'hint.ua');
 
-    cur.buttons = options.map((text, i) => h('button', {
-      type: 'button', class: 'choice', lang: q.lang, onclick: () => choose(i),
-    }, h('kbd', { text: String(i + 1) }), text));
-    $('choices').classList.toggle('long', options.some((o) => String(o).length > 14));
+    cur.buttons = options.map((text, i) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'choice',
+          lang: q.lang,
+          onclick: () => choose(i),
+        },
+        h('kbd', { text: String(i + 1) }),
+        text,
+      ),
+    );
+    $('choices').classList.toggle(
+      'long',
+      options.some((o) => String(o).length > 14),
+    );
     $('choices').replaceChildren(...cur.buttons);
     $('feedback').replaceChildren();
     drawDots();
@@ -387,21 +449,40 @@
     const red = round.cards >= 2;
     const last = round.index >= round.list.length - 1;
     const right = q.options[q.answer];
-    const fact = q.fact && h('p', { class: 'fact', lang: q.lang }, !ES && h('span', { class: `lang ${q.lang}`, text: LANG[q.lang] }), h('span', { text: `💡 ${q.fact}` }));
+    const fact =
+      q.fact &&
+      h(
+        'p',
+        { class: 'fact', lang: q.lang },
+        !ES && h('span', { class: `lang ${q.lang}`, text: LANG[q.lang] }),
+        h('span', { text: `💡 ${q.fact}` }),
+      );
     const box = correct
-      ? h('div', { class: 'fb-box ok' },
-        h('p', { class: 'fb-title', text: pick(PRAISE[ES ? 'es' : q.lang]) }),
-        goal && h('p', { text: T('goalMsg') }),
-        coin && h('p', { text: T('coinMsg') }),
-        fact)
-      : h('div', { class: 'fb-box miss' },
-        h('div', { class: 'ref' },
-          h('span', { class: `ref-card ${red ? 'red' : 'yellow'}`, 'aria-hidden': 'true' }),
-          h('div', {},
-            h('p', { class: 'fb-title', text: T(red ? 'red' : 'yellow') }),
-            h('p', { text: T(red ? 'red.text' : 'yellow.text') }))),
-        h('p', {}, T('right'), h('b', { lang: q.lang, text: right })),
-        fact);
+      ? h(
+          'div',
+          { class: 'fb-box ok' },
+          h('p', { class: 'fb-title', text: pick(PRAISE[ES ? 'es' : q.lang]) }),
+          goal && h('p', { text: T('goalMsg') }),
+          coin && h('p', { text: T('coinMsg') }),
+          fact,
+        )
+      : h(
+          'div',
+          { class: 'fb-box miss' },
+          h(
+            'div',
+            { class: 'ref' },
+            h('span', { class: `ref-card ${red ? 'red' : 'yellow'}`, 'aria-hidden': 'true' }),
+            h(
+              'div',
+              {},
+              h('p', { class: 'fb-title', text: T(red ? 'red' : 'yellow') }),
+              h('p', { text: T(red ? 'red.text' : 'yellow.text') }),
+            ),
+          ),
+          h('p', {}, T('right'), h('b', { lang: q.lang, text: right })),
+          fact,
+        );
     const next = red
       ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startRound() }, T('restart'))
       : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, T(last ? 'result' : 'next'));
@@ -416,7 +497,13 @@
       $('pitch').classList.add('scored');
       restart($('board'), 'goal');
       drawBoard();
-      setTimeout(() => { $('pitch').classList.remove('scored'); moveBall(0); }, reduced() ? 900 : 1300);
+      setTimeout(
+        () => {
+          $('pitch').classList.remove('scored');
+          moveBall(0);
+        },
+        reduced() ? 900 : 1300,
+      );
     } else {
       moveBall(round.streak);
     }
@@ -441,11 +528,12 @@
     $('finish-sum').replaceChildren(
       stat(`⚽ ${goals}`, T('sum.goals')),
       stat(`🪙 ${earned}`, T('sum.coins')),
-      stat(cards ? [h('i', { class: 'yellow', 'aria-hidden': 'true' }), String(cards)] : '0', T(cards ? 'sum.yellow' : 'sum.none')));
-    $('finish-text').textContent = [
-      res.perfect ? T('fin.bonus') : cards ? T('fin.almost') : '',
-      data.toCoin ? T('fin.toCoin', { n: data.toCoin, max: PER_COIN }) : '',
-    ].filter(Boolean).join(' ') || T('fin.default');
+      stat(cards ? [h('i', { class: 'yellow', 'aria-hidden': 'true' }), String(cards)] : '0', T(cards ? 'sum.yellow' : 'sum.none')),
+    );
+    $('finish-text').textContent =
+      [res.perfect ? T('fin.bonus') : cards ? T('fin.almost') : '', data.toCoin ? T('fin.toCoin', { n: data.toCoin, max: PER_COIN }) : '']
+        .filter(Boolean)
+        .join(' ') || T('fin.default');
     show('finish');
     if (score >= max - 2) KFUI.confetti();
     $('again-btn').focus({ preventScroll: true });
@@ -456,7 +544,9 @@
     round = null;
     renderStart();
     show('start');
-    levelButtons().find((b) => b.dataset.level === data.level)?.focus();
+    levelButtons()
+      .find((b) => b.dataset.level === data.level)
+      ?.focus();
   };
 
   $('start-btn').addEventListener('click', startRound);
@@ -474,17 +564,40 @@
     }
     if (screen === 'start') {
       const n = Number(e.key);
-      if (n >= 1 && n <= LEVELS.length && !levelButtons()[n - 1].disabled) { setLevel(LEVELS[n - 1].id, true); e.preventDefault(); return; }
-      if (['ArrowRight', 'ArrowDown'].includes(e.key)) { moveLevel(1); e.preventDefault(); return; }
-      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { moveLevel(-1); e.preventDefault(); return; }
-      if (e.key === 'Enter' && (!onButton || e.target.classList.contains('level'))) { startRound(); e.preventDefault(); }
+      if (n >= 1 && n <= LEVELS.length && !levelButtons()[n - 1].disabled) {
+        setLevel(LEVELS[n - 1].id, true);
+        e.preventDefault();
+        return;
+      }
+      if (['ArrowRight', 'ArrowDown'].includes(e.key)) {
+        moveLevel(1);
+        e.preventDefault();
+        return;
+      }
+      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
+        moveLevel(-1);
+        e.preventDefault();
+        return;
+      }
+      if (e.key === 'Enter' && (!onButton || e.target.classList.contains('level'))) {
+        startRound();
+        e.preventDefault();
+      }
       return;
     }
     if (screen !== 'play' || !cur) return;
-    if (!ES && (e.key === 'u' || e.key === 'U' || e.key === 'г' || e.key === 'Г')) { toggleUa(); e.preventDefault(); return; }
+    if (!ES && (e.key === 'u' || e.key === 'U' || e.key === 'г' || e.key === 'Г')) {
+      toggleUa();
+      e.preventDefault();
+      return;
+    }
     if (!cur.answered) {
       const n = Number(e.key);
-      if (n >= 1 && n <= 4) { choose(n - 1); e.preventDefault(); return; }
+      if (n >= 1 && n <= 4) {
+        choose(n - 1);
+        e.preventDefault();
+        return;
+      }
       const step = ['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(e.key) ? -1 : 0;
       if (step) {
         const i = cur.buttons.indexOf(document.activeElement);
@@ -494,18 +607,33 @@
       return;
     }
     // Answered: Enter = next (a focused button keeps its own native click).
-    if (e.key === 'Enter' && !onButton) { $('feedback').querySelector('.btn')?.click(); e.preventDefault(); }
+    if (e.key === 'Enter' && !onButton) {
+      $('feedback').querySelector('.btn')?.click();
+      e.preventDefault();
+    }
   });
 
   // Parents' test mode: expose state for automated checks.
   if (KF.TEST_MODE) {
     window.__quiz = {
-      get screen() { return screen; },
-      get question() { return cur?.q || null; },
-      get options() { return cur?.options || null; },
-      get correctIndex() { return cur ? cur.correctIndex : null; },
-      get data() { return KF.gameData(SLUG); },
-      get round() { return round; },
+      get screen() {
+        return screen;
+      },
+      get question() {
+        return cur?.q || null;
+      },
+      get options() {
+        return cur?.options || null;
+      },
+      get correctIndex() {
+        return cur ? cur.correctIndex : null;
+      },
+      get data() {
+        return KF.gameData(SLUG);
+      },
+      get round() {
+        return round;
+      },
     };
   }
 

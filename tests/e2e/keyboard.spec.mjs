@@ -79,7 +79,17 @@ test('sociales-planeta: choices with 1–4 / V F, Esc closes dialogs and goes ba
       await page.keyboard.press(t.truth ? 'v' : 'f');
     } else {
       const text = t.options[t.answer];
-      const i = await page.evaluate((want) => [...document.querySelectorAll('#work .choice')].findIndex((b) => [...b.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('') === want), text);
+      const i = await page.evaluate(
+        (want) =>
+          [...document.querySelectorAll('#work .choice')].findIndex(
+            (b) =>
+              [...b.childNodes]
+                .filter((n) => n.nodeType === 3)
+                .map((n) => n.textContent)
+                .join('') === want,
+          ),
+        text,
+      );
       await page.keyboard.press(String(i + 1));
     }
     await expect(page.locator('#feedback .fb-actions .btn').first()).toBeVisible();

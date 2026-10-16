@@ -12,7 +12,8 @@
       coins: 'Монети',
       back: '← До каталогу',
       hubIntro: 'Тренуємось до іспиту. Завдання іспанською, як у школі. Кнопка 🇺🇦 пояснить українською.',
-      examInfo: '12 завдань з усіх тем, як справжня контрольна. Перша помилка — 🟨 жовта картка, друга — 🟥 червона, і матч починається знову.',
+      examInfo:
+        '12 завдань з усіх тем, як справжня контрольна. Перша помилка — 🟨 жовта картка, друга — 🟥 червона, і матч починається знову.',
       examStart: 'Почати іспит',
       glossBtn: '📖 Слова для іспиту',
       reportTitle: 'Для батьків: точність за темами',
@@ -28,7 +29,8 @@
       coins: 'Monedas',
       back: '← Volver al catálogo',
       hubIntro: 'Vamos a entrenar para el examen. Los ejercicios son como los del cole. El botón 💡 te da una pista.',
-      examInfo: '12 ejercicios de todos los temas, como un examen de verdad. El primer fallo es 🟨 tarjeta amarilla, el segundo 🟥 tarjeta roja y el partido empieza otra vez.',
+      examInfo:
+        '12 ejercicios de todos los temas, como un examen de verdad. El primer fallo es 🟨 tarjeta amarilla, el segundo 🟥 tarjeta roja y el partido empieza otra vez.',
       examStart: 'Empezar el examen',
       glossBtn: '📖 Palabras del examen',
       reportTitle: 'Para los padres: aciertos por tema',
@@ -92,36 +94,44 @@
     ['¿Cuántos faltan?', 'es una resta'],
     ['… más que …', '¡Cuidado! «Tiene 20 más que yo» suele ser una suma'],
   ];
-  const GLOSSARY = ES ? GLOSSARY_ES : [
-    ['UM', 'unidades de millar', 'одиниці тисяч (1.000)'],
-    ['C', 'centenas', 'сотні (100)'],
-    ['D', 'decenas', 'десятки (10)'],
-    ['U', 'unidades', 'одиниці (1)'],
-    ['cifra', 'una de 0–9', 'цифра (4528 має 4 цифри)'],
-    ['valor', '¿cuánto vale?', 'скільки вона важить: 5 у 4528 = 500'],
-    ['descomponer', '4528 = 4000 + 500 + 20 + 8', 'розкласти на розряди'],
-    ['se lee', 'dos mil trescientos veintisiete', 'так читається 2327'],
-    ['en torre', 'un número debajo del otro', 'у стовпчик'],
-    ['sumandos · suma', '2135 + 1428 = 3563', 'доданки · сума'],
-    ['minuendo · sustraendo · diferencia', '1263 − 612 = 651', 'зменшуване · від’ємник · різниця'],
-    ['prueba de la resta', 'diferencia + sustraendo = minuendo', 'перевірка віднімання додаванням'],
-    ['llevarse una', 'en la suma', 'перенести 1 у наступний стовпчик'],
-    ['pedir prestado', 'en la resta', 'позичити 1 у сусіда зліва (3 → 13)'],
-    ['más cercana', 'la que está más cerca', 'найближча (при округленні)'],
-    ['redondear', 'a la decena / centena / millar', 'округлити до десятків / сотень / тисяч'],
-    ['más próxima', 'el número más cerca', 'найближча'],
-    ['¿Cuántos hay en total?', 'suma', 'скільки всього → додаємо'],
-    ['¿Cuántos quedan?', 'resta', 'скільки залишилось → віднімаємо'],
-    ['¿Cuántos más que…?', 'resta', 'на скільки більше → віднімаємо'],
-    ['¿Cuántos faltan?', 'resta', 'скільки бракує → віднімаємо'],
-    ['… más que …', '¡cuidado!', '«на N більше, ніж» — часто додаємо'],
-  ];
+  const GLOSSARY = ES
+    ? GLOSSARY_ES
+    : [
+        ['UM', 'unidades de millar', 'одиниці тисяч (1.000)'],
+        ['C', 'centenas', 'сотні (100)'],
+        ['D', 'decenas', 'десятки (10)'],
+        ['U', 'unidades', 'одиниці (1)'],
+        ['cifra', 'una de 0–9', 'цифра (4528 має 4 цифри)'],
+        ['valor', '¿cuánto vale?', 'скільки вона важить: 5 у 4528 = 500'],
+        ['descomponer', '4528 = 4000 + 500 + 20 + 8', 'розкласти на розряди'],
+        ['se lee', 'dos mil trescientos veintisiete', 'так читається 2327'],
+        ['en torre', 'un número debajo del otro', 'у стовпчик'],
+        ['sumandos · suma', '2135 + 1428 = 3563', 'доданки · сума'],
+        ['minuendo · sustraendo · diferencia', '1263 − 612 = 651', 'зменшуване · від’ємник · різниця'],
+        ['prueba de la resta', 'diferencia + sustraendo = minuendo', 'перевірка віднімання додаванням'],
+        ['llevarse una', 'en la suma', 'перенести 1 у наступний стовпчик'],
+        ['pedir prestado', 'en la resta', 'позичити 1 у сусіда зліва (3 → 13)'],
+        ['más cercana', 'la que está más cerca', 'найближча (при округленні)'],
+        ['redondear', 'a la decena / centena / millar', 'округлити до десятків / сотень / тисяч'],
+        ['más próxima', 'el número más cerca', 'найближча'],
+        ['¿Cuántos hay en total?', 'suma', 'скільки всього → додаємо'],
+        ['¿Cuántos quedan?', 'resta', 'скільки залишилось → віднімаємо'],
+        ['¿Cuántos más que…?', 'resta', 'на скільки більше → віднімаємо'],
+        ['¿Cuántos faltan?', 'resta', 'скільки бракує → віднімаємо'],
+        ['… más que …', '¡cuidado!', '«на N більше, ніж» — часто додаємо'],
+      ];
 
   // ---------- Saved progress ----------
   const DATA_VERSION = 3;
   const loadData = () => {
     const d = KF.gameData(SLUG);
-    const out = { v: DATA_VERSION, topics: { ...(d.topics || {}) }, levels: { ...(d.levels || {}) }, passed: { ...(d.passed || {}) }, perfect: { ...(d.perfect || {}) } };
+    const out = {
+      v: DATA_VERSION,
+      topics: { ...(d.topics || {}) },
+      levels: { ...(d.levels || {}) },
+      passed: { ...(d.passed || {}) },
+      perfect: { ...(d.perfect || {}) },
+    };
     if (d.v !== DATA_VERSION) {
       // v3 reworked levels of these topics; old level numbers no longer match.
       for (const t of ['valor', 'columna', 'redondeo', 'estimacion']) {
@@ -169,21 +179,39 @@
       const buttons = levels.map((lv) => {
         const n = lv.level;
         const locked = n > open;
-        return h('button', {
-          type: 'button',
-          class: `level${data.passed[`${s.topic}:${n}`] ? ' done' : ''}`,
-          disabled: locked,
-          'aria-label': ES ? `${s.name}, nivel ${n}${locked ? ' (bloqueado)' : ''}` : `${s.name}, рівень ${n}${locked ? ' (закрито)' : ''}`,
-          title: ES ? lv.es : `${lv.es} — ${lv.ua}`,
-          onclick: () => startTraining(s.topic, n),
-          onmouseenter: () => { hint.textContent = lvText(lv); },
-          onfocus: () => { hint.textContent = lvText(lv); },
-        }, locked ? '🔒' : String(n));
+        return h(
+          'button',
+          {
+            type: 'button',
+            class: `level${data.passed[`${s.topic}:${n}`] ? ' done' : ''}`,
+            disabled: locked,
+            'aria-label': ES
+              ? `${s.name}, nivel ${n}${locked ? ' (bloqueado)' : ''}`
+              : `${s.name}, рівень ${n}${locked ? ' (закрито)' : ''}`,
+            title: ES ? lv.es : `${lv.es} — ${lv.ua}`,
+            onclick: () => startTraining(s.topic, n),
+            onmouseenter: () => {
+              hint.textContent = lvText(lv);
+            },
+            onfocus: () => {
+              hint.textContent = lvText(lv);
+            },
+          },
+          locked ? '🔒' : String(n),
+        );
       });
-      return h('div', { class: 'station' },
-        h('div', { class: 'station-title' }, h('span', { 'aria-hidden': 'true', text: s.icon }), h('div', {}, h('strong', { text: s.name }), h('small', { text: s.ua }))),
+      return h(
+        'div',
+        { class: 'station' },
+        h(
+          'div',
+          { class: 'station-title' },
+          h('span', { 'aria-hidden': 'true', text: s.icon }),
+          h('div', {}, h('strong', { text: s.name }), h('small', { text: s.ua })),
+        ),
         h('div', { class: 'levels' }, buttons),
-        hint);
+        hint,
+      );
     });
     $('stations').replaceChildren(...cards);
     renderReport($('report-rows'), $('report'));
@@ -193,10 +221,13 @@
     const rows = STATIONS.filter((s) => data.topics[s.topic]?.total).map((s) => {
       const t = data.topics[s.topic];
       const pct = Math.round((t.right / t.total) * 100);
-      return h('div', { class: 'report-row' },
+      return h(
+        'div',
+        { class: 'report-row' },
         h('span', { text: s.name }),
         h('span', { class: `bar${pct < 70 ? ' low' : ''}` }, h('i', { style: `width:${pct}%` })),
-        h('b', { text: `${pct}% · ${t.right}/${t.total}` }));
+        h('b', { text: `${pct}% · ${t.right}/${t.total}` }),
+      );
     });
     rowsEl.replaceChildren(...rows);
     wrapEl.hidden = rows.length === 0;
@@ -248,9 +279,10 @@
     session.task = task;
     session.mistakes = 0;
     const st = stationOf(task.topic);
-    $('play-label').textContent = session.mode === 'exam'
-      ? `Partido-examen · ${session.index + 1}/${session.tasks.length}`
-      : `${st.name} · nivel ${task.level} · ${session.index + 1}/${session.tasks.length}`;
+    $('play-label').textContent =
+      session.mode === 'exam'
+        ? `Partido-examen · ${session.index + 1}/${session.tasks.length}`
+        : `${st.name} · nivel ${task.level} · ${session.index + 1}/${session.tasks.length}`;
     $('prompt-es').textContent = task.es.replace(/(\d|__) (UM|C|D|U)\b/g, '$1\u00a0$2');
     $('prompt-es').classList.toggle('long', task.es.length > 110);
     $('prompt-ua').textContent = task.hint || '';
@@ -283,25 +315,43 @@
       drawCards();
     }
     const red = session.mode === 'exam' && session.cards >= 2;
-    const card = session.mode === 'exam' && !correct && h('div', { class: 'ref' },
-      h('span', { class: `ref-card ${red ? 'red' : 'yellow'}`, 'aria-hidden': 'true' }),
-      h('div', {},
-        h('p', { class: 'fb-title', text: red ? L('Червона картка!', '¡Tarjeta roja!') : L('Жовта картка!', '¡Tarjeta amarilla!') }),
-        h('p', { text: red
-          ? L('Друга помилка — матч починається знову. Ти зможеш!', 'Segundo error: el partido empieza otra vez. ¡Tú puedes!')
-          : L('Ще одна помилка — і буде червона картка.', 'Un error más y habrá tarjeta roja.') })));
+    const card =
+      session.mode === 'exam' &&
+      !correct &&
+      h(
+        'div',
+        { class: 'ref' },
+        h('span', { class: `ref-card ${red ? 'red' : 'yellow'}`, 'aria-hidden': 'true' }),
+        h(
+          'div',
+          {},
+          h('p', { class: 'fb-title', text: red ? L('Червона картка!', '¡Tarjeta roja!') : L('Жовта картка!', '¡Tarjeta amarilla!') }),
+          h('p', {
+            text: red
+              ? L('Друга помилка — матч починається знову. Ти зможеш!', 'Segundo error: el partido empieza otra vez. ¡Tú puedes!')
+              : L('Ще одна помилка — і буде червона картка.', 'Un error más y habrá tarjeta roja.'),
+          }),
+        ),
+      );
 
     const box = correct
       ? h('div', { class: 'fb-box ok' }, h('p', { class: 'fb-title', text: `${pick(PRAISE)} ✅` }))
-      : h('div', { class: 'fb-box miss' },
-        card || h('p', { class: 'fb-title', text: 'Casi… 🧤' }),
-        error?.es && h('p', { text: error.es }),
-        !ES && error?.ua && h('p', { class: 'fb-ua', text: `🇺🇦 ${error.ua}` }),
-        h('p', { text: `Respuesta correcta: ${answerText(task)}` }));
+      : h(
+          'div',
+          { class: 'fb-box miss' },
+          card || h('p', { class: 'fb-title', text: 'Casi… 🧤' }),
+          error?.es && h('p', { text: error.es }),
+          !ES && error?.ua && h('p', { class: 'fb-ua', text: `🇺🇦 ${error.ua}` }),
+          h('p', { text: `Respuesta correcta: ${answerText(task)}` }),
+        );
     const last = session.index === session.tasks.length - 1;
     const next = red
       ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startExam() }, L('Почати знову ↺', 'Empezar de nuevo ↺'))
-      : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? L('Результат →', 'Ver resultado →') : L('Далі →', 'Siguiente →'));
+      : h(
+          'button',
+          { class: 'btn btn-dark', type: 'button', onclick: goNext },
+          last ? L('Результат →', 'Ver resultado →') : L('Далі →', 'Siguiente →'),
+        );
     $('feedback').replaceChildren(box, h('br'), next);
     ctrl = { onKey: (e) => (e.key === 'Enter' || e.key === ' ') && (next.click(), true) };
     next.focus({ preventScroll: true });
@@ -335,14 +385,18 @@
         saveData();
       }
       text = passed
-        ? (level < levelsOf(topic).length
+        ? level < levelsOf(topic).length
           ? L(`Рівень пройдено! Відкрито рівень ${level + 1}.`, `¡Nivel superado! Has desbloqueado el nivel ${level + 1}.`)
-          : L('Усі рівні цієї станції пройдено!', '¡Has superado todos los niveles de esta estación!'))
-        : L(`Для наступного рівня треба ${PASS} з ${max}. Спробуй ще раз — вийде!`, `Para pasar al siguiente nivel necesitas ${PASS} de ${max}. ¡Inténtalo otra vez, tú puedes!`);
+          : L('Усі рівні цієї станції пройдено!', '¡Has superado todos los niveles de esta estación!')
+        : L(
+            `Для наступного рівня треба ${PASS} з ${max}. Спробуй ще раз — вийде!`,
+            `Para pasar al siguiente nivel necesitas ${PASS} de ${max}. ¡Inténtalo otra vez, tú puedes!`,
+          );
     } else {
-      text = session.cards === 0
-        ? L('Чиста гра, жодної картки! Ти готовий до іспиту! 💪', '¡Partido limpio, sin tarjetas! ¡Estás listo para el examen! 💪')
-        : L('Іспит пройдено з однією жовтою карткою. Майже ідеально!', 'Examen superado con una tarjeta amarilla. ¡Casi perfecto!');
+      text =
+        session.cards === 0
+          ? L('Чиста гра, жодної картки! Ти готовий до іспиту! 💪', '¡Partido limpio, sin tarjetas! ¡Estás listo para el examen! 💪')
+          : L('Іспит пройдено з однією жовтою карткою. Майже ідеально!', 'Examen superado con una tarjeta amarilla. ¡Casi perfecto!');
     }
     $('finish-title').textContent = mode === 'exam' ? 'Fin del partido' : '¡Entrenamiento terminado!';
     $('finish-score').textContent = `${score} / ${max}`;
@@ -350,10 +404,19 @@
       ? `${text} Has ganado ${earned} 🪙${res.bonus ? ' (¡con bonus por ronda perfecta!)' : '.'}`
       : `${text} Зароблено ${earned} 🪙${res.bonus ? ' (з бонусом за ідеальний раунд!)' : '.'}`;
     if (mode === 'exam') {
-      const rows = Object.entries(session.byTopic).map(([t, v]) => h('div', { class: 'report-row' },
-        h('span', { text: stationOf(t).name }),
-        h('span', { class: `bar${v.right / v.total < 0.7 ? ' low' : ''}` }, h('i', { style: `width:${Math.round((v.right / v.total) * 100)}%` })),
-        h('b', { text: `${v.right}/${v.total}` })));
+      const rows = Object.entries(session.byTopic).map(([t, v]) =>
+        h(
+          'div',
+          { class: 'report-row' },
+          h('span', { text: stationOf(t).name }),
+          h(
+            'span',
+            { class: `bar${v.right / v.total < 0.7 ? ' low' : ''}` },
+            h('i', { style: `width:${Math.round((v.right / v.total) * 100)}%` }),
+          ),
+          h('b', { text: `${v.right}/${v.total}` }),
+        ),
+      );
       $('finish-report').replaceChildren(h('h2', { text: L('По темах', 'Por temas') }), ...rows);
       $('finish-report').hidden = false;
     } else {
@@ -365,7 +428,11 @@
   };
 
   $('again-btn').addEventListener('click', () => (session.mode === 'exam' ? startExam() : startTraining(session.topic, session.level)));
-  $('hub-btn').addEventListener('click', () => { ctrl = null; renderHub(); show('hub'); });
+  $('hub-btn').addEventListener('click', () => {
+    ctrl = null;
+    renderHub();
+    show('hub');
+  });
   $('exam-btn').addEventListener('click', startExam);
 
   // ---------- Shared widgets ----------
@@ -393,17 +460,25 @@
     };
     const press = (k) => {
       if (k === 'back') value = rtl ? value.slice(1) : value.slice(0, -1);
-      else if (k === 'ok') { if (value) onSubmit(Number(value)); return; }
-      else if (value.length < maxLen) value = rtl ? k + value : value === '0' ? k : value + k;
+      else if (k === 'ok') {
+        if (value) onSubmit(Number(value));
+        return;
+      } else if (value.length < maxLen) value = rtl ? k + value : value === '0' ? k : value + k;
       draw();
     };
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) => h('button', {
-      type: 'button',
-      class: `key${k === 'ok' ? ' ok' : k === 'back' ? ' back' : ''}`,
-      'data-key': k,
-      'aria-label': k === 'back' ? L('Стерти', 'Borrar') : k === 'ok' ? L('Перевірити', 'Comprobar') : k,
-      onclick: () => press(k),
-    }, k === 'back' ? '⌫' : k === 'ok' ? okLabel : k));
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: `key${k === 'ok' ? ' ok' : k === 'back' ? ' back' : ''}`,
+          'data-key': k,
+          'aria-label': k === 'back' ? L('Стерти', 'Borrar') : k === 'ok' ? L('Перевірити', 'Comprobar') : k,
+          onclick: () => press(k),
+        },
+        k === 'back' ? '⌫' : k === 'ok' ? okLabel : k,
+      ),
+    );
     const pad = h('div', { class: 'keypad' }, keys);
     draw();
     const flashKey = (k) => {
@@ -413,14 +488,32 @@
       setTimeout(() => b.classList.remove('pressed'), 120);
     };
     const onKey = (e) => {
-      if (/^[0-9]$/.test(e.key)) { press(e.key); flashKey(e.key); return true; }
-      if (e.key === 'Backspace') { press('back'); flashKey('back'); return true; }
-      if (e.key === 'Enter') { press('ok'); flashKey('ok'); return true; }
+      if (/^[0-9]$/.test(e.key)) {
+        press(e.key);
+        flashKey(e.key);
+        return true;
+      }
+      if (e.key === 'Backspace') {
+        press('back');
+        flashKey('back');
+        return true;
+      }
+      if (e.key === 'Enter') {
+        press('ok');
+        flashKey('ok');
+        return true;
+      }
       return false;
     };
-    const reset = () => { value = ''; draw(); };
+    const reset = () => {
+      value = '';
+      draw();
+    };
     const hintText = rtl
-      ? L('Пиши справа наліво: спершу одиниці. Клавіатура: цифри, ⌫, Enter', 'Escribe de derecha a izquierda: primero las unidades. Teclado: cifras, ⌫, Enter')
+      ? L(
+          'Пиши справа наліво: спершу одиниці. Клавіатура: цифри, ⌫, Enter',
+          'Escribe de derecha a izquierda: primero las unidades. Teclado: cifras, ⌫, Enter',
+        )
       : L('Можна вводити з клавіатури: цифри, ⌫, Enter', 'También puedes usar el teclado: cifras, ⌫, Enter');
     return { box, pad, onKey, reset, hint: h('p', { class: 'kbd-hint', text: hintText }) };
   };
@@ -448,24 +541,41 @@
   };
 
   const renderChoice = (task, work) => {
-    const buttons = task.choices.map((c, i) => h('button', {
-      type: 'button',
-      class: 'choice',
-      onclick: () => choose(i),
-    }, h('kbd', { text: String(i + 1) }), c.label));
+    const buttons = task.choices.map((c, i) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'choice',
+          onclick: () => choose(i),
+        },
+        h('kbd', { text: String(i + 1) }),
+        c.label,
+      ),
+    );
     const choose = (i) => {
       if (buttons[0].disabled) return;
-      buttons.forEach((b) => { b.disabled = true; });
+      buttons.forEach((b) => {
+        b.disabled = true;
+      });
       const r = submitSimple(task, task.choices[i].value);
-      task.choices.forEach((c, j) => { if (c.value === task.answer) buttons[j].classList.add('right'); });
+      task.choices.forEach((c, j) => {
+        if (c.value === task.answer) buttons[j].classList.add('right');
+      });
       if (!r.correct) buttons[i].classList.add('wrong');
     };
     const words = task.choices.some((c) => String(c.label).length > 12);
-    work.append(h('div', { class: `choices${words ? ' words' : ''}` }, buttons), h('p', { class: 'kbd-hint', text: L(`Клавіші 1–${buttons.length}`, `Teclas 1–${buttons.length}`) }));
+    work.append(
+      h('div', { class: `choices${words ? ' words' : ''}` }, buttons),
+      h('p', { class: 'kbd-hint', text: L(`Клавіші 1–${buttons.length}`, `Teclas 1–${buttons.length}`) }),
+    );
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
-        if (n >= 1 && n <= buttons.length) { choose(n - 1); return true; }
+        if (n >= 1 && n <= buttons.length) {
+          choose(n - 1);
+          return true;
+        }
         return false;
       },
     };
@@ -477,8 +587,13 @@
     const wall = task.data?.parts ? wallView(task.data) : null;
     const blank = wall?.querySelector('.slot.active');
     const input = numberInput({
-      onSubmit: (v) => { ctrl = null; submitSimple(task, v); },
-      onInput: (v) => { if (blank) blank.textContent = v || '?'; },
+      onSubmit: (v) => {
+        ctrl = null;
+        submitSimple(task, v);
+      },
+      onInput: (v) => {
+        if (blank) blank.textContent = v || '?';
+      },
     });
     if (wall) {
       work.append(wall, input.pad, input.hint);
@@ -527,21 +642,65 @@
       const c = { count: h('div', { class: 'pack-count' }), pile: h('div', { class: 'pile', 'aria-hidden': 'true' }) };
       const kids = [h('h3', {}, k, h('small', { text: M.fmt(PACK_VALUE[k]) })), c.pile, c.count];
       if (editable) {
-        c.minus = h('button', { type: 'button', 'aria-label': L(`Забрати пачку ${k}`, `Quitar un paquete de ${k}`), onclick: () => { counts[k]--; draw(); } }, '−');
-        const plus = h('button', { type: 'button', 'aria-label': L(`Додати пачку ${k}`, `Añadir un paquete de ${k}`), onclick: () => { counts[k]++; draw(); } }, '+');
+        c.minus = h(
+          'button',
+          {
+            type: 'button',
+            'aria-label': L(`Забрати пачку ${k}`, `Quitar un paquete de ${k}`),
+            onclick: () => {
+              counts[k]--;
+              draw();
+            },
+          },
+          '−',
+        );
+        const plus = h(
+          'button',
+          {
+            type: 'button',
+            'aria-label': L(`Додати пачку ${k}`, `Añadir un paquete de ${k}`),
+            onclick: () => {
+              counts[k]++;
+              draw();
+            },
+          },
+          '+',
+        );
         kids.push(h('div', { class: 'pm' }, c.minus, plus));
         if (left) {
-          c.group = h('button', {
-            type: 'button', class: 'trade', title: `10 ${k} → 1 ${left}`,
-            onclick: () => { counts[k] -= 10; counts[left]++; draw(); flash(left); },
-          }, `Agrupar 10 → 1 ${left}`);
+          c.group = h(
+            'button',
+            {
+              type: 'button',
+              class: 'trade',
+              title: `10 ${k} → 1 ${left}`,
+              onclick: () => {
+                counts[k] -= 10;
+                counts[left]++;
+                draw();
+                flash(left);
+              },
+            },
+            `Agrupar 10 → 1 ${left}`,
+          );
           kids.push(c.group);
         }
         if (right) {
-          c.split = h('button', {
-            type: 'button', class: 'trade', title: `1 ${k} → 10 ${right}`,
-            onclick: () => { counts[k]--; counts[right] += 10; draw(); flash(right); },
-          }, `Desagrupar 1 → 10 ${right}`);
+          c.split = h(
+            'button',
+            {
+              type: 'button',
+              class: 'trade',
+              title: `1 ${k} → 10 ${right}`,
+              onclick: () => {
+                counts[k]--;
+                counts[right] += 10;
+                draw();
+                flash(right);
+              },
+            },
+            `Desagrupar 1 → 10 ${right}`,
+          );
           kids.push(c.split);
         }
       }
@@ -559,34 +718,60 @@
     const submit = () => {
       if (check.disabled) return;
       check.disabled = true;
-      work.querySelectorAll('.packs button').forEach((b) => { b.disabled = true; });
+      work.querySelectorAll('.packs button').forEach((b) => {
+        b.disabled = true;
+      });
       ctrl = null;
       submitSimple(task, { ...view.counts });
     };
-    work.append(view.el, h('div', { class: 'pack-total' }, 'Total: ', view.total), check, h('p', { class: 'kbd-hint', text: L('Tab — між кнопками, Enter — натиснути. Ctrl+Enter — перевірити', 'Tab: moverte entre botones. Enter: pulsar. Ctrl+Enter: comprobar') }));
+    work.append(
+      view.el,
+      h('div', { class: 'pack-total' }, 'Total: ', view.total),
+      check,
+      h('p', {
+        class: 'kbd-hint',
+        text: L(
+          'Tab — між кнопками, Enter — натиснути. Ctrl+Enter — перевірити',
+          'Tab: moverte entre botones. Enter: pulsar. Ctrl+Enter: comprobar',
+        ),
+      }),
+    );
     ctrl = { onKey: (e) => (e.key === 'Enter' && (e.ctrlKey || e.metaKey) ? (submit(), true) : false) };
   };
 
   const renderDecompose = (task, work) => {
     const vals = { UM: '', C: '', D: '', U: '' };
     let active = 0;
-    const slots = PLACE_KEYS.map((k, i) => h('button', {
-      type: 'button', class: 'slot', 'aria-label': `${k}: ${ES ? M.PLACES.find((p) => p.key === k).es : PLACE_UA[k]}`,
-      onclick: () => { active = i; draw(); },
-    }));
+    const slots = PLACE_KEYS.map((k, i) =>
+      h('button', {
+        type: 'button',
+        class: 'slot',
+        'aria-label': `${k}: ${ES ? M.PLACES.find((p) => p.key === k).es : PLACE_UA[k]}`,
+        onclick: () => {
+          active = i;
+          draw();
+        },
+      }),
+    );
     const parts = [];
     PLACE_KEYS.forEach((k, i) => {
       if (i) parts.push(h('span', { text: '+' }));
       parts.push(h('span', {}, slots[i], h('small', { text: k })));
     });
-    const draw = () => slots.forEach((s, i) => {
-      s.textContent = vals[PLACE_KEYS[i]] || '';
-      s.classList.toggle('active', i === active);
-    });
+    const draw = () =>
+      slots.forEach((s, i) => {
+        s.textContent = vals[PLACE_KEYS[i]] || '';
+        s.classList.toggle('active', i === active);
+      });
     const submit = () => {
-      if (PLACE_KEYS.some((k) => vals[k] === '')) { sayHint(hint, 'Rellena las cuatro casillas.', 'Заповни всі чотири клітинки.'); return; }
+      if (PLACE_KEYS.some((k) => vals[k] === '')) {
+        sayHint(hint, 'Rellena las cuatro casillas.', 'Заповни всі чотири клітинки.');
+        return;
+      }
       ctrl = null;
-      slots.forEach((s) => { s.disabled = true; });
+      slots.forEach((s) => {
+        s.disabled = true;
+      });
       submitSimple(task, Object.fromEntries(PLACE_KEYS.map((k) => [k, Number(vals[k])])));
     };
     const press = (k) => {
@@ -601,21 +786,50 @@
       }
       draw();
     };
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) => h('button', {
-      type: 'button', class: `key${k === 'ok' ? ' ok' : k === 'back' ? ' back' : ''}`,
-      'aria-label': k === 'back' ? L('Стерти', 'Borrar') : k === 'ok' ? L('Перевірити', 'Comprobar') : k,
-      onclick: () => press(k),
-    }, k === 'back' ? '⌫' : k === 'ok' ? 'OK' : k));
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'ok'].map((k) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: `key${k === 'ok' ? ' ok' : k === 'back' ? ' back' : ''}`,
+          'aria-label': k === 'back' ? L('Стерти', 'Borrar') : k === 'ok' ? L('Перевірити', 'Comprobar') : k,
+          onclick: () => press(k),
+        },
+        k === 'back' ? '⌫' : k === 'ok' ? 'OK' : k,
+      ),
+    );
     const hint = hintEl();
-    work.append(h('div', { class: 'decomp' }, parts), hint, h('div', { class: 'keypad' }, keys), h('p', { class: 'kbd-hint', text: L('Цифри, ⌫, ←/→ між клітинками, Enter', 'Cifras, ⌫, ←/→ entre casillas, Enter') }));
+    work.append(
+      h('div', { class: 'decomp' }, parts),
+      hint,
+      h('div', { class: 'keypad' }, keys),
+      h('p', { class: 'kbd-hint', text: L('Цифри, ⌫, ←/→ між клітинками, Enter', 'Cifras, ⌫, ←/→ entre casillas, Enter') }),
+    );
     draw();
     ctrl = {
       onKey: (e) => {
-        if (/^[0-9]$/.test(e.key)) { press(e.key); return true; }
-        if (e.key === 'Backspace') { press('back'); return true; }
-        if (e.key === 'Enter') { press('ok'); return true; }
-        if (e.key === 'ArrowLeft') { active = Math.max(0, active - 1); draw(); return true; }
-        if (e.key === 'ArrowRight') { active = Math.min(3, active + 1); draw(); return true; }
+        if (/^[0-9]$/.test(e.key)) {
+          press(e.key);
+          return true;
+        }
+        if (e.key === 'Backspace') {
+          press('back');
+          return true;
+        }
+        if (e.key === 'Enter') {
+          press('ok');
+          return true;
+        }
+        if (e.key === 'ArrowLeft') {
+          active = Math.max(0, active - 1);
+          draw();
+          return true;
+        }
+        if (e.key === 'ArrowRight') {
+          active = Math.min(3, active + 1);
+          draw();
+          return true;
+        }
         return false;
       },
     };
@@ -625,7 +839,11 @@
   const digitMap = (n) => {
     const s = String(n);
     const m = {};
-    PLACE_KEYS.slice().reverse().forEach((k, i) => { m[k] = i < s.length ? Number(s[s.length - 1 - i]) : null; });
+    PLACE_KEYS.slice()
+      .reverse()
+      .forEach((k, i) => {
+        m[k] = i < s.length ? Number(s[s.length - 1 - i]) : null;
+      });
     return m;
   };
 
@@ -636,7 +854,10 @@
     grid.append(h('span'), ...places.map((p) => h('div', { class: 'nb-head', text: p })));
     grid.append(h('span'), ...places.map((p) => (cells.mark[p] = h('div', { class: 'nb-mark' }))));
     grid.append(h('span'), ...places.map((p) => (cells.top[p] = h('div', { class: 'nb-cell' }))));
-    grid.append(h('div', { class: 'nb-sign', text: d.op === '-' ? '−' : '+' }), ...places.map((p) => (cells.bottom[p] = h('div', { class: 'nb-cell' }))));
+    grid.append(
+      h('div', { class: 'nb-sign', text: d.op === '-' ? '−' : '+' }),
+      ...places.map((p) => (cells.bottom[p] = h('div', { class: 'nb-cell' }))),
+    );
     grid.append(h('div', { class: 'nb-line' }));
     grid.append(h('span'), ...places.map((p) => (cells.result[p] = h('div', { class: 'nb-cell nb-result' }))));
     return { el: h('div', { class: 'notebook' }, grid), cells, places };
@@ -664,7 +885,10 @@
       rtl: true,
       maxLen: cols,
       // Typed digits also appear in the answer row, under their columns.
-      onInput: (v) => order.forEach((p, i) => { nb.cells.result[p].textContent = v[v.length - 1 - i] ?? ''; }),
+      onInput: (v) =>
+        order.forEach((p, i) => {
+          nb.cells.result[p].textContent = v[v.length - 1 - i] ?? '';
+        }),
       onSubmit: (v) => {
         ctrl = null;
         const r = M.checkAnswer(task, v);
@@ -692,7 +916,10 @@
 
     const drawTop = (p) => {
       const cell = nb.cells.top[p];
-      if (A[p] === null) { cell.textContent = ''; return; }
+      if (A[p] === null) {
+        cell.textContent = '';
+        return;
+      }
       const digit = h('span', { class: crossed[p] ? 'crossed' : '', text: String(A[p]) });
       cell.replaceChildren(h('span', { class: 'digit-wrap' }, smallOne[p] ? h('span', { class: 'small-one', text: '1' }) : '', digit));
       if (crossed[p]) {
@@ -708,14 +935,17 @@
       }
     };
 
-    const borrowBtn = d.op === '-' ? h('button', { class: 'btn btn-light', type: 'button', onclick: () => borrow() }, '🤝 Pedir prestado') : null;
+    const borrowBtn =
+      d.op === '-' ? h('button', { class: 'btn btn-light', type: 'button', onclick: () => borrow() }, '🤝 Pedir prestado') : null;
     const flyBall = (from, to) => {
       if (reduced()) return;
       const a = from.getBoundingClientRect();
       const b = to.getBoundingClientRect();
       const ball = h('span', { class: 'fly', text: '⚽', style: `left:${a.left + a.width / 2 - 11}px;top:${a.top}px` });
       document.body.append(ball);
-      requestAnimationFrame(() => { ball.style.transform = `translate(${b.left - a.left}px,${b.top - a.top}px)`; });
+      requestAnimationFrame(() => {
+        ball.style.transform = `translate(${b.left - a.left}px,${b.top - a.top}px)`;
+      });
       setTimeout(() => ball.remove(), 650);
     };
 
@@ -752,7 +982,11 @@
       if (borrowedHere) return;
       if (!s.borrowed) {
         session.mistakes++;
-        sayHint(hint, `Aquí no hace falta: ${cur[p]} es mayor o igual que ${B[p] ?? 0}.`, 'Тут позичати не треба: зверху більше або стільки ж.');
+        sayHint(
+          hint,
+          `Aquí no hace falta: ${cur[p]} es mayor o igual que ${B[p] ?? 0}.`,
+          'Тут позичати не треба: зверху більше або стільки ж.',
+        );
         shake(nb.el);
         return;
       }
@@ -769,7 +1003,11 @@
       if (d.op === '-' && s.borrowed && !borrowedHere) {
         session.mistakes++;
         const err = stepError(digit, false);
-        sayHint(hint, err?.es || `Arriba hay ${cur[p]} y abajo ${B[p]}: no se puede. Pulsa «Pedir prestado».`, err?.ua || `Зверху ${cur[p]}, знизу ${B[p]} — так не можна. Натисни «Pedir prestado».`);
+        sayHint(
+          hint,
+          err?.es || `Arriba hay ${cur[p]} y abajo ${B[p]}: no se puede. Pulsa «Pedir prestado».`,
+          err?.ua || `Зверху ${cur[p]}, знизу ${B[p]} — так не можна. Натисни «Pedir prestado».`,
+        );
         shake(nb.el);
         return;
       }
@@ -777,12 +1015,11 @@
         session.mistakes++;
         const err = stepError(digit, d.op === '-' ? borrowedHere : undefined);
         const carryIn = d.op === '+' && step > 0 && d.steps[step - 1].carryOut;
-        const fallbackEs = d.op === '+'
-          ? `Suma otra vez: ${A[p] ?? 0} + ${B[p] ?? 0}${carryIn ? ' + 1 (la que te llevas)' : ''}.`
-          : `Resta otra vez: ${cur[p]} − ${B[p] ?? 0}.`;
-        const fallbackUa = d.op === '+'
-          ? `Додай ще раз${carryIn ? ' і не забудь 1, яку переносили' : ''}.`
-          : 'Відніми ще раз уважно.';
+        const fallbackEs =
+          d.op === '+'
+            ? `Suma otra vez: ${A[p] ?? 0} + ${B[p] ?? 0}${carryIn ? ' + 1 (la que te llevas)' : ''}.`
+            : `Resta otra vez: ${cur[p]} − ${B[p] ?? 0}.`;
+        const fallbackUa = d.op === '+' ? `Додай ще раз${carryIn ? ' і не забудь 1, яку переносили' : ''}.` : 'Відніми ще раз уважно.';
         sayHint(hint, err?.es || fallbackEs, err?.ua || fallbackUa);
         shake(nb.cells.result[p]);
         return;
@@ -792,10 +1029,13 @@
       if (d.op === '+' && s.carryOut && step + 1 < order.length) {
         const nextP = order[step + 1];
         flyBall(nb.cells.result[p], nb.cells.mark[nextP]);
-        setTimeout(() => {
-          nb.cells.mark[nextP].textContent = '1';
-          nb.cells.mark[nextP].className = 'nb-mark carry';
-        }, reduced() ? 0 : 500);
+        setTimeout(
+          () => {
+            nb.cells.mark[nextP].textContent = '1';
+            nb.cells.mark[nextP].className = 'nb-mark carry';
+          },
+          reduced() ? 0 : 500,
+        );
         sayHint(hint, 'Me llevo una ⚽', 'Переносимо 1 у наступний стовпчик');
       }
       step++;
@@ -807,31 +1047,62 @@
     const done = () => {
       for (const p of nb.places) for (const row of ['top', 'bottom', 'result']) nb.cells[row][p].classList.remove('nb-col-on', 'slot-now');
       if (borrowBtn) borrowBtn.disabled = true;
-      pad.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+      pad.querySelectorAll('button').forEach((b) => {
+        b.disabled = true;
+      });
       ctrl = null;
-      if (d.op === '-') work.insertBefore(h('p', { class: 'prueba', text: `Prueba: ${M.fmt(d.result)} + ${M.fmt(d.b)} = ${M.fmt(d.a)} ✓` }), hint);
+      if (d.op === '-')
+        work.insertBefore(h('p', { class: 'prueba', text: `Prueba: ${M.fmt(d.result)} + ${M.fmt(d.b)} = ${M.fmt(d.a)} ✓` }), hint);
       if (d.prueba) work.insertBefore(pruebaNote(d.prueba), hint);
       const clean = session.mistakes === 0;
-      resolveTask(clean, clean ? null : {
-        es: 'Lo has terminado. ¡La próxima vez a la primera!',
-        ua: 'Готово! Наступного разу — з першої спроби.',
-      });
+      resolveTask(
+        clean,
+        clean
+          ? null
+          : {
+              es: 'Lo has terminado. ¡La próxima vez a la primera!',
+              ua: 'Готово! Наступного разу — з першої спроби.',
+            },
+      );
     };
 
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((k) => h('button', {
-      type: 'button', class: 'key', onclick: () => enter(Number(k)),
-    }, k));
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((k) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'key',
+          onclick: () => enter(Number(k)),
+        },
+        k,
+      ),
+    );
     const pad = h('div', { class: 'keypad' }, keys);
     for (const p of nb.places) drawTop(p);
     highlight();
-    work.append(nb.el, hint, borrowBtn ? h('div', { class: 'col-actions' }, borrowBtn) : '', pad,
-      h('p', { class: 'kbd-hint', text: d.op === '-'
-        ? L('Цифри — відповідь у стовпчику, P — pedir prestado', 'Cifras: la respuesta de cada columna. P: pedir prestado')
-        : L('Цифри — відповідь у стовпчику, справа наліво', 'Cifras: la respuesta de cada columna, de derecha a izquierda') }));
+    work.append(
+      nb.el,
+      hint,
+      borrowBtn ? h('div', { class: 'col-actions' }, borrowBtn) : '',
+      pad,
+      h('p', {
+        class: 'kbd-hint',
+        text:
+          d.op === '-'
+            ? L('Цифри — відповідь у стовпчику, P — pedir prestado', 'Cifras: la respuesta de cada columna. P: pedir prestado')
+            : L('Цифри — відповідь у стовпчику, справа наліво', 'Cifras: la respuesta de cada columna, de derecha a izquierda'),
+      }),
+    );
     ctrl = {
       onKey: (e) => {
-        if (/^[0-9]$/.test(e.key)) { enter(Number(e.key)); return true; }
-        if ((e.key === 'p' || e.key === 'P') && borrowBtn) { borrow(); return true; }
+        if (/^[0-9]$/.test(e.key)) {
+          enter(Number(e.key));
+          return true;
+        }
+        if ((e.key === 'p' || e.key === 'P') && borrowBtn) {
+          borrow();
+          return true;
+        }
         return false;
       },
     };
@@ -841,7 +1112,12 @@
   const renderRound = (task, work) => {
     const d = task.data;
     if (d.hideLine) {
-      const input = numberInput({ onSubmit: (v) => { ctrl = null; afterRound(submitSimple(task, v)); } });
+      const input = numberInput({
+        onSubmit: (v) => {
+          ctrl = null;
+          afterRound(submitSimple(task, v));
+        },
+      });
       work.append(input.box, input.pad, input.hint);
       ctrl = { onKey: input.onKey };
       return;
@@ -851,10 +1127,18 @@
     for (let i = 0; i <= 10; i++) track.append(h('i', { class: 'tick', style: `left:${i * 10}%` }));
     const ball = h('div', { class: 'nl-ball', style: `left:${pct}%` }, h('b', { text: M.fmt(d.n) }), h('i', { text: '⚽' }));
     track.append(ball);
-    const goal = (value, side) => h('button', {
-      type: 'button', class: 'goal-btn', 'aria-label': L(`Ворота ${M.fmt(value)}`, `Portería ${M.fmt(value)}`),
-      onclick: () => shoot(value),
-    }, h('span', { text: side === 'L' ? '← 1' : '2 →' }), M.fmt(value));
+    const goal = (value, side) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'goal-btn',
+          'aria-label': L(`Ворота ${M.fmt(value)}`, `Portería ${M.fmt(value)}`),
+          onclick: () => shoot(value),
+        },
+        h('span', { text: side === 'L' ? '← 1' : '2 →' }),
+        M.fmt(value),
+      );
     const left = goal(d.low, 'L');
     const right = goal(d.high, 'R');
     const shoot = (value) => {
@@ -869,11 +1153,20 @@
       resolveTask(r.correct, r.error);
       afterRound(r);
     };
-    work.append(h('div', { class: 'nline' }, left, track, right), h('p', { class: 'kbd-hint', text: L('← / → або 1 / 2 — обрати ворота', '← / → o 1 / 2: elige la portería') }));
+    work.append(
+      h('div', { class: 'nline' }, left, track, right),
+      h('p', { class: 'kbd-hint', text: L('← / → або 1 / 2 — обрати ворота', '← / → o 1 / 2: elige la portería') }),
+    );
     ctrl = {
       onKey: (e) => {
-        if (e.key === 'ArrowLeft' || e.key === '1') { shoot(d.low); return true; }
-        if (e.key === 'ArrowRight' || e.key === '2') { shoot(d.high); return true; }
+        if (e.key === 'ArrowLeft' || e.key === '1') {
+          shoot(d.low);
+          return true;
+        }
+        if (e.key === 'ArrowRight' || e.key === '2') {
+          shoot(d.high);
+          return true;
+        }
         return false;
       },
     };
@@ -889,15 +1182,26 @@
     d.parts.forEach((p, i) => {
       if (i) parts.push(h('span', { text: '+' }));
       const isBlank = p.value === null || p.value === undefined;
-      parts.push(h('span', {}, h('span', { class: `slot${isBlank ? ' active' : ''}`, text: isBlank ? '?' : String(p.value) }), h('small', { text: p.key })));
+      parts.push(
+        h(
+          'span',
+          {},
+          h('span', { class: `slot${isBlank ? ' active' : ''}`, text: isBlank ? '?' : String(p.value) }),
+          h('small', { text: p.key }),
+        ),
+      );
     });
     return h('div', { class: 'decomp' }, h('span', { text: `${M.fmt(d.n)} =` }), parts);
   };
 
   // After «prueba de la resta»: does diferencia + sustraendo give the minuendo?
-  const pruebaNote = (pr) => h('p', { class: 'prueba' },
-    `${M.fmt(pr.diferencia)} + ${M.fmt(pr.sustraendo)} = ${M.fmt(pr.diferencia + pr.sustraendo)} `,
-    pr.ok ? `= ${M.fmt(pr.minuendo)} ✓ La resta está bien.` : `≠ ${M.fmt(pr.minuendo)} ✗ No coincide: la resta está mal.`);
+  const pruebaNote = (pr) =>
+    h(
+      'p',
+      { class: 'prueba' },
+      `${M.fmt(pr.diferencia)} + ${M.fmt(pr.sustraendo)} = ${M.fmt(pr.diferencia + pr.sustraendo)} `,
+      pr.ok ? `= ${M.fmt(pr.minuendo)} ✓ La resta está bien.` : `≠ ${M.fmt(pr.minuendo)} ✗ No coincide: la resta está mal.`,
+    );
 
   // ---------- Find the mistake: a solved operation, right or wrong ----------
   const renderFix = (task, work) => {
@@ -915,19 +1219,35 @@
         return;
       }
       for (const p of nb.places) nb.cells.result[p].classList.add('crossed');
-      const input = numberInput({ onSubmit: (v) => { ctrl = null; submitSimple(task, { ok: false, value: v }); } });
+      const input = numberInput({
+        onSubmit: (v) => {
+          ctrl = null;
+          submitSimple(task, { ok: false, value: v });
+        },
+      });
       area.replaceChildren(h('p', { class: 'op-q', text: 'Escribe el resultado correcto:' }), input.box, input.pad, input.hint);
       ctrl = { onKey: input.onKey };
     };
-    area.append(h('div', { class: 'op-choice' },
-      h('button', { type: 'button', class: 'op-btn', onclick: () => judge(true) }, h('b', { text: '✓' }), 'Está bien'),
-      h('button', { type: 'button', class: 'op-btn', onclick: () => judge(false) }, h('b', { text: '✗' }), 'Hay un error')),
-    h('p', { class: 'kbd-hint', text: L('Клавіші 1 — правильно, 2 — є помилка', 'Teclas: 1 = está bien, 2 = hay un error') }));
+    area.append(
+      h(
+        'div',
+        { class: 'op-choice' },
+        h('button', { type: 'button', class: 'op-btn', onclick: () => judge(true) }, h('b', { text: '✓' }), 'Está bien'),
+        h('button', { type: 'button', class: 'op-btn', onclick: () => judge(false) }, h('b', { text: '✗' }), 'Hay un error'),
+      ),
+      h('p', { class: 'kbd-hint', text: L('Клавіші 1 — правильно, 2 — є помилка', 'Teclas: 1 = está bien, 2 = hay un error') }),
+    );
     work.append(nb.el, area);
     ctrl = {
       onKey: (e) => {
-        if (e.key === '1') { judge(true); return true; }
-        if (e.key === '2') { judge(false); return true; }
+        if (e.key === '1') {
+          judge(true);
+          return true;
+        }
+        if (e.key === '2') {
+          judge(false);
+          return true;
+        }
         return false;
       },
     };
@@ -956,30 +1276,56 @@
       if (session.mode === 'exam') renderColumnWhole(task, work);
       else renderColumnSteps(task, work);
     };
-    const opBtn = (op, label) => h('button', { type: 'button', class: 'op-btn', 'data-op': op, onclick: () => pickOp(op) }, h('b', { text: op === '+' ? '+' : '−' }), label);
-    work.append(h('p', { class: 'op-q', text: '¿Qué operación hay que hacer?' }),
+    const opBtn = (op, label) =>
+      h(
+        'button',
+        { type: 'button', class: 'op-btn', 'data-op': op, onclick: () => pickOp(op) },
+        h('b', { text: op === '+' ? '+' : '−' }),
+        label,
+      );
+    work.append(
+      h('p', { class: 'op-q', text: '¿Qué operación hay que hacer?' }),
       h('div', { class: 'op-choice' }, opBtn('+', 'Suma'), opBtn('-', 'Resta')),
       hint,
-      h('p', { class: 'kbd-hint', text: L('Клавіші + або −', 'Teclas + o −') }));
+      h('p', { class: 'kbd-hint', text: L('Клавіші + або −', 'Teclas + o −') }),
+    );
     ctrl = {
       onKey: (e) => {
-        if (e.key === '+') { pickOp('+'); return true; }
-        if (e.key === '-') { pickOp('-'); return true; }
+        if (e.key === '+') {
+          pickOp('+');
+          return true;
+        }
+        if (e.key === '-') {
+          pickOp('-');
+          return true;
+        }
         return false;
       },
     };
   };
 
   // ---------- Glossary ----------
-  $('gloss-table').replaceChildren(...GLOSSARY.map(([a, b, c]) => h('tr', {}, h('td', { text: a }), h('td', {}, b, c ? [h('br'), h('span', { class: 'muted', text: c })] : ''))));
+  $('gloss-table').replaceChildren(
+    ...GLOSSARY.map(([a, b, c]) =>
+      h('tr', {}, h('td', { text: a }), h('td', {}, b, c ? [h('br'), h('span', { class: 'muted', text: c })] : '')),
+    ),
+  );
   $('gloss-btn').addEventListener('click', () => $('gloss').showModal());
   $('gloss-close').addEventListener('click', () => $('gloss').close());
 
   // ---------- Keyboard ----------
   document.addEventListener('keydown', (e) => {
     if ($('gloss').open || e.altKey) return;
-    if (e.key === 'Escape' && !$('play').hidden) { ctrl = null; renderHub(); show('hub'); return; }
-    if (e.key.toLowerCase() === (ES ? 'a' : 'u') && !$('play').hidden) { setUa($('ua-btn').getAttribute('aria-pressed') !== 'true'); return; }
+    if (e.key === 'Escape' && !$('play').hidden) {
+      ctrl = null;
+      renderHub();
+      show('hub');
+      return;
+    }
+    if (e.key.toLowerCase() === (ES ? 'a' : 'u') && !$('play').hidden) {
+      setUa($('ua-btn').getAttribute('aria-pressed') !== 'true');
+      return;
+    }
     // Enter/Space on a focused button keeps its native click (Tab users), except Ctrl/Cmd+Enter.
     const onButton = e.target instanceof HTMLButtonElement && (e.key === 'Enter' || e.key === ' ') && !e.ctrlKey && !e.metaKey;
     if (ctrl && !onButton && ctrl.onKey(e)) e.preventDefault();
@@ -990,10 +1336,17 @@
   });
 
   if (!M) {
-    $('stations').replaceChildren(h('p', { text: L('Не вдалося завантажити завдання. Онови сторінку.', 'No se han podido cargar los ejercicios. Recarga la página.') }));
+    $('stations').replaceChildren(
+      h('p', { text: L('Не вдалося завантажити завдання. Онови сторінку.', 'No se han podido cargar los ejercicios. Recarga la página.') }),
+    );
     return;
   }
   // Parents' test mode: expose the current session for automated checks.
-  if (KF.TEST_MODE) window.__mathExam = { get session() { return session; } };
+  if (KF.TEST_MODE)
+    window.__mathExam = {
+      get session() {
+        return session;
+      },
+    };
   renderHub();
 })();

@@ -5,7 +5,11 @@ import { expect } from './helpers.mjs';
 
 // Leaves exactly `tables` selected (the last selected chip can't be switched off, so add first).
 export const chooseTables = async (page, tables) => {
-  const pressed = (n) => page.locator(`.chip[data-table="${n}"]`).getAttribute('aria-pressed').then((v) => v === 'true');
+  const pressed = (n) =>
+    page
+      .locator(`.chip[data-table="${n}"]`)
+      .getAttribute('aria-pressed')
+      .then((v) => v === 'true');
   for (const n of tables) if (!(await pressed(n))) await page.click(`.chip[data-table="${n}"]`);
   for (let n = 2; n <= 10; n++) if (!tables.includes(n) && (await pressed(n))) await page.click(`.chip[data-table="${n}"]`);
 };
@@ -34,7 +38,17 @@ export const openStation = async (page, tap, id) => {
 
 // Index of the choice button whose own text is exactly `text` (the <kbd> number is not part of it).
 const choiceIndex = (page, text) =>
-  page.evaluate((want) => [...document.querySelectorAll('#work .choice')].findIndex((b) => [...b.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('') === want), text);
+  page.evaluate(
+    (want) =>
+      [...document.querySelectorAll('#work .choice')].findIndex(
+        (b) =>
+          [...b.childNodes]
+            .filter((n) => n.nodeType === 3)
+            .map((n) => n.textContent)
+            .join('') === want,
+      ),
+    text,
+  );
 
 // Taps choice / true-false number `i` (tf: 0 = true, 1 = false).
 const tapChoice = (page, tap, i) => tap(page.locator('#work .choice').nth(i));
@@ -82,7 +96,8 @@ export const solveMathTask = async (page, tap, lang = 'uk', { keyboard = false }
       return typeNum(t.answer);
     case 'packs':
       if (keyboard) throw new Error('packs task needs the mouse');
-      for (const k of ['UM', 'C', 'D', 'U']) for (let i = 0; i < t.answer[k]; i++) await tap(page.getByRole('button', { name: `${PACK_ADD[lang]} ${k}`, exact: true }));
+      for (const k of ['UM', 'C', 'D', 'U'])
+        for (let i = 0; i < t.answer[k]; i++) await tap(page.getByRole('button', { name: `${PACK_ADD[lang]} ${k}`, exact: true }));
       return key('Control+Enter');
     case 'decompose':
       for (const k of ['UM', 'C', 'D', 'U']) await key(String(t.answer[k]));
@@ -130,10 +145,20 @@ const gkState = (page) => page.evaluate(() => window.__goalkeeper);
 
 // Waits until the match needs the player: a telegraphed shot, a pass / call question, a feedback button or the end screen.
 const waitGoalkeeperTurn = (page) =>
-  page.waitForFunction(() => {
-    const s = window.__goalkeeper;
-    return s.screen === 'end' || (s.phase === 'shot' && s.target) || s.phase === 'pass' || s.phase === 'call' || !document.getElementById('feedback').hidden;
-  }, null, { timeout: 15_000 });
+  page.waitForFunction(
+    () => {
+      const s = window.__goalkeeper;
+      return (
+        s.screen === 'end' ||
+        (s.phase === 'shot' && s.target) ||
+        s.phase === 'pass' ||
+        s.phase === 'call' ||
+        !document.getElementById('feedback').hidden
+      );
+    },
+    null,
+    { timeout: 15_000 },
+  );
 
 // Plays a whole match: saves every shot (reads the target from the game's test-mode state) and answers every pass / call right.
 // Starts from the start screen; takes the first-match lesson on the way.

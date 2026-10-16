@@ -12,7 +12,17 @@ const store = () => {
   return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
 };
 const boot = () => {
-  const sb = { localStorage: store(), sessionStorage: store(), location: { search: '', href: 'http://x/', hostname: 'x' }, console, setTimeout, clearTimeout, addEventListener() {}, URLSearchParams, URL };
+  const sb = {
+    localStorage: store(),
+    sessionStorage: store(),
+    location: { search: '', href: 'http://x/', hostname: 'x' },
+    console,
+    setTimeout,
+    clearTimeout,
+    addEventListener() {},
+    URLSearchParams,
+    URL,
+  };
   sb.window = sb;
   vm.createContext(sb);
   vm.runInContext(code, sb);

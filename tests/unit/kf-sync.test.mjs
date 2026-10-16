@@ -20,7 +20,10 @@ const makeStorage = () => {
 // In-memory server implementing the BACKEND.md API.
 const makeServer = () => {
   const srv = {
-    users: [{ id: 1, name: 'Keeper', avatar: '⚽', pin: '1234' }, { id: 2, name: 'Other', avatar: '🧤', pin: '0000' }],
+    users: [
+      { id: 1, name: 'Keeper', avatar: '⚽', pin: '1234' },
+      { id: 2, name: 'Other', avatar: '🧤', pin: '0000' },
+    ],
     sessions: new Map(), // token -> userId
     progress: new Map(), // userId -> { rev, state }
     results: new Map(), // id -> result
@@ -43,7 +46,12 @@ const makeServer = () => {
     }
     if (path === '/api/logout') {
       srv.sessions.delete(device.token);
-      return { status: 204, json: async () => { throw new Error('empty'); } };
+      return {
+        status: 204,
+        json: async () => {
+          throw new Error('empty');
+        },
+      };
     }
     const uid = srv.sessions.get(device.token);
     if (!uid) return json(401, { error: 'auth' });
@@ -77,7 +85,10 @@ const settle = async () => {
 };
 
 const FakeDateBase = Date.now();
-const loadDevice = (srv, { search = '', localStorage = makeStorage(), sessionStorage = makeStorage(), token = null, cards = FAKE_CARDS } = {}) => {
+const loadDevice = (
+  srv,
+  { search = '', localStorage = makeStorage(), sessionStorage = makeStorage(), token = null, cards = FAKE_CARDS } = {},
+) => {
   const dev = { token, listeners: {}, docListeners: {}, timers: [], now: 0, nextId: 1, fetches: 0, localStorage, sessionStorage };
   const sandbox = {
     localStorage,
@@ -165,7 +176,10 @@ test('guest flow unchanged, no network', async () => {
 test('login: bad pin, then pull + debounced push', async () => {
   const srv = makeServer();
   srv.sessions.set('seed', 1);
-  srv.progress.set(1, { rev: 3, state: { v: 1, coins: 40, cards: { 'lionel-messi': 1 }, achievements: { legend: 1 }, games: {}, gameData: {}, stats: { correct: 5 } } });
+  srv.progress.set(1, {
+    rev: 3,
+    state: { v: 1, coins: 40, cards: { 'lionel-messi': 1 }, achievements: { legend: 1 }, games: {}, gameData: {}, stats: { correct: 5 } },
+  });
   const d = loadDevice(srv);
   const { KF } = d;
   const events = [];
@@ -438,18 +452,47 @@ test('merge3 rules', () => {
   const { KF } = loadDevice(makeServer());
   const m = KF._merge3;
   const mk = (o) => ({
-    v: 1, coins: 0, cards: {}, achievements: {}, games: {}, gameData: {},
+    v: 1,
+    coins: 0,
+    cards: {},
+    achievements: {},
+    games: {},
+    gameData: {},
     ...o,
-    stats: { correct: 0, wrong: 0, games: 0, perfect: 0, streak: 0, bestStreak: 0, packs: 0, dayStreak: 0, lastDay: '', ...(o.stats || {}) },
+    stats: {
+      correct: 0,
+      wrong: 0,
+      games: 0,
+      perfect: 0,
+      streak: 0,
+      bestStreak: 0,
+      packs: 0,
+      dayStreak: 0,
+      lastDay: '',
+      ...(o.stats || {}),
+    },
   });
-  const base = mk({ coins: 10, stats: { correct: 10, bestStreak: 4 }, games: { g: { plays: 1, best: 3, max: 5, lastPlayed: 100 } }, gameData: { goalkeeper: { saves: 5, name: 'a', list: [1] } } });
+  const base = mk({
+    coins: 10,
+    stats: { correct: 10, bestStreak: 4 },
+    games: { g: { plays: 1, best: 3, max: 5, lastPlayed: 100 } },
+    gameData: { goalkeeper: { saves: 5, name: 'a', list: [1] } },
+  });
   const local = mk({
-    coins: 7, achievements: { a: 50 }, cards: { messi: 1 }, stats: { correct: 12, bestStreak: 6, streak: 2, dayStreak: 3, lastDay: '2026-01-02' },
-    games: { g: { plays: 2, best: 4, max: 5, lastPlayed: 200 } }, gameData: { goalkeeper: { saves: 8, name: 'b', list: [1, 2] } },
+    coins: 7,
+    achievements: { a: 50 },
+    cards: { messi: 1 },
+    stats: { correct: 12, bestStreak: 6, streak: 2, dayStreak: 3, lastDay: '2026-01-02' },
+    games: { g: { plays: 2, best: 4, max: 5, lastPlayed: 200 } },
+    gameData: { goalkeeper: { saves: 8, name: 'b', list: [1, 2] } },
   });
   const server = mk({
-    coins: 15, achievements: { a: 40, b: 60 }, cards: { pedri: 2 }, stats: { correct: 11, bestStreak: 5, streak: 1, dayStreak: 1, lastDay: '2026-01-01' },
-    games: { g: { plays: 1, best: 3, max: 5, lastPlayed: 100 }, h: { plays: 1, best: 1, max: 1, lastPlayed: 1 } }, gameData: { goalkeeper: { saves: 5, name: 'a', list: [1, 3] } },
+    coins: 15,
+    achievements: { a: 40, b: 60 },
+    cards: { pedri: 2 },
+    stats: { correct: 11, bestStreak: 5, streak: 1, dayStreak: 1, lastDay: '2026-01-01' },
+    games: { g: { plays: 1, best: 3, max: 5, lastPlayed: 100 }, h: { plays: 1, best: 1, max: 1, lastPlayed: 1 } },
+    gameData: { goalkeeper: { saves: 5, name: 'a', list: [1, 3] } },
   });
   const r = m(base, local, server);
   assert.equal(r.coins, 12); // 15 + (7-10)
@@ -506,7 +549,10 @@ test('openPack: coins, price, pack event, empty manifest', () => {
   assert.equal(pack.length, 3);
   assert.equal(cardEvents, 0);
   assert.ok(got.every((c) => typeof c.isNew === 'boolean' && c.id && c.cat));
-  assert.equal(Object.values(KF.get().cards).reduce((a, b) => a + b, 0), 3);
+  assert.equal(
+    Object.values(KF.get().cards).reduce((a, b) => a + b, 0),
+    3,
+  );
   // no manifest: kf.js still works
   const e = loadDevice(makeServer(), { cards: null }).KF;
   e.addCoins(20);
@@ -561,11 +607,16 @@ test('sellDuplicate keeps one copy and pays by category', () => {
 test('sticker migration: once, idempotent, refunds', async () => {
   const srv = makeServer();
   const ls = makeStorage();
-  ls.setItem('kf-progress-v1', JSON.stringify(freshState({
-    coins: 4,
-    cards: undefined,
-    stickers: { messi: 2, 'courtois-gold': 1, courtois: 1, mudryk: 2, dovbyk: 1, shevchenko: 1, kane: 1, bogus: 1 },
-  })));
+  ls.setItem(
+    'kf-progress-v1',
+    JSON.stringify(
+      freshState({
+        coins: 4,
+        cards: undefined,
+        stickers: { messi: 2, 'courtois-gold': 1, courtois: 1, mudryk: 2, dovbyk: 1, shevchenko: 1, kane: 1, bogus: 1 },
+      }),
+    ),
+  );
   const d = loadDevice(srv, { localStorage: ls });
   const st = d.KF.get();
   assert.equal(st.stickers, undefined);

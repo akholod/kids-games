@@ -15,7 +15,8 @@
     examEyebrow: 'Partido final',
     examTitle: 'Examen final',
     examStart: 'Empezar el examen',
-    examInfo: ({ n }) => `${n} preguntas de toda la unidad, como en el cole. Cada fallo es una 🟨 tarjeta amarilla. ¡Tranquilidad, es para practicar!`,
+    examInfo: ({ n }) =>
+      `${n} preguntas de toda la unidad, como en el cole. Cada fallo es una 🟨 tarjeta amarilla. ¡Tranquilidad, es para practicar!`,
     examBest: ({ grade, nota }) => `Tu mejor nota: ${grade} (${nota})`,
     cardsLabel: 'Tarjetas',
     goalsLabel: 'Goles',
@@ -135,19 +136,31 @@
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const LETTERS = 'ABCDEFGH';
-  const shake = (...els) => els.forEach((el) => {
-    if (!el || reduced()) return;
-    el.classList.remove('shake');
-    void el.getBoundingClientRect();
-    el.classList.add('shake');
-  });
+  const shake = (...els) =>
+    els.forEach((el) => {
+      if (!el || reduced()) return;
+      el.classList.remove('shake');
+      void el.getBoundingClientRect();
+      el.classList.add('shake');
+    });
 
   if (!C || !A) {
     $('stations').replaceChildren(h('p', { text: L('loadError') }));
     return;
   }
 
-  const HUES = { capas: '#3f8fc9', agua: '#22a6bf', rocas: '#a8743f', mundo: '#4f9a4a', globo: '#2f6fb0', mapas: '#c8962a', pinta: '#e0703c', brujula: '#d9473b', eco: '#2f9a7a', curiosidades: '#8b5bb8' };
+  const HUES = {
+    capas: '#3f8fc9',
+    agua: '#22a6bf',
+    rocas: '#a8743f',
+    mundo: '#4f9a4a',
+    globo: '#2f6fb0',
+    mapas: '#c8962a',
+    pinta: '#e0703c',
+    brujula: '#d9473b',
+    eco: '#2f9a7a',
+    curiosidades: '#8b5bb8',
+  };
   const STATIONS = C.stations;
   const stationOf = (id) => STATIONS.find((s) => s.id === id);
   const EXAM_N = Object.values(C.exam.perStation).reduce((a, b) => a + b, 0);
@@ -179,7 +192,12 @@
     return { i, label: L('grades')[i], nota: n.toFixed(1).replace('.', ','), n };
   };
   const GRADE_COLORS = ['#e5a12a', '#9fb53a', '#5fa33a', '#2f8a52', '#1d6fb0'];
-  const starsEl = (n) => h('span', { class: 'stars', 'aria-label': `${n} de 3 estrellas` }, [0, 1, 2].map((i) => h('span', { class: i < n ? 'on' : '', text: '★' })));
+  const starsEl = (n) =>
+    h(
+      'span',
+      { class: 'stars', 'aria-label': `${n} de 3 estrellas` },
+      [0, 1, 2].map((i) => h('span', { class: i < n ? 'on' : '', text: '★' })),
+    );
 
   // ---------- Hub ----------
   const renderHub = () => {
@@ -187,20 +205,28 @@
     const tiles = STATIONS.map((s, i) => {
       const rec = data.st[s.id];
       const meta = rec
-        ? [starsEl(rec.stars), h('span', { class: 'best', text: T('best', { score: rec.best, max: rec.max }) }), rec.stars >= 2 && h('span', { class: 'badge', text: L('passed') })]
+        ? [
+            starsEl(rec.stars),
+            h('span', { class: 'best', text: T('best', { score: rec.best, max: rec.max }) }),
+            rec.stars >= 2 && h('span', { class: 'badge', text: L('passed') }),
+          ]
         : [starsEl(0), h('span', { text: L('notPlayed') })];
-      return h('button', { type: 'button', class: 'station', style: `--hue:${HUES[s.id] || '#3f8fc9'}`, onclick: () => openIntro(s) },
+      return h(
+        'button',
+        { type: 'button', class: 'station', style: `--hue:${HUES[s.id] || '#3f8fc9'}`, onclick: () => openIntro(s) },
         h('span', { class: 'st-num', 'aria-hidden': 'true', text: String(i + 1) }),
         h('span', { class: 'st-icon', 'aria-hidden': 'true', text: s.icon }),
         h('span', { class: 'st-body' }, h('strong', { text: s.title }), h('small', { text: s.intro })),
-        h('span', { class: 'st-meta' }, meta));
+        h('span', { class: 'st-meta' }, meta),
+      );
     });
     $('stations').replaceChildren(...tiles, $('exam-card'));
     const passed = STATIONS.filter((s) => (data.st[s.id]?.stars || 0) >= 2).length;
     const stars = STATIONS.reduce((n, s) => n + (data.st[s.id]?.stars || 0), 0);
     $('tally').replaceChildren(
       h('span', { text: T('tallyPassed', { n: passed, total: STATIONS.length }) }),
-      h('span', { text: T('tallyStars', { n: stars, total: STATIONS.length * 3 }) }));
+      h('span', { text: T('tallyStars', { n: stars, total: STATIONS.length * 3 }) }),
+    );
     $('exam-info').textContent = T('examInfo', { n: EXAM_N });
     $('exam-best').hidden = !data.exam;
     if (data.exam) $('exam-best').textContent = T('examBest', { grade: data.exam.grade, nota: data.exam.nota });
@@ -217,7 +243,10 @@
     $('intro-dlg').showModal();
     $('intro-go').focus();
   };
-  $('intro-go').addEventListener('click', () => { $('intro-dlg').close(); startStation(introStation.id); });
+  $('intro-go').addEventListener('click', () => {
+    $('intro-dlg').close();
+    startStation(introStation.id);
+  });
   $('intro-back').addEventListener('click', () => $('intro-dlg').close());
 
   // ---------- Task sampling ----------
@@ -228,7 +257,10 @@
     const out = [];
     const count = {};
     const fits = (t) => (count[t.type] || 0) < (caps[t.type] ?? Infinity);
-    const take = (t) => { out.push(t); count[t.type] = (count[t.type] || 0) + 1; };
+    const take = (t) => {
+      out.push(t);
+      count[t.type] = (count[t.type] || 0) + 1;
+    };
     for (const t of pool) if (always.includes(t.type) && out.length < n && fits(t)) take(t);
     for (const t of pool) if (out.length < n && !out.includes(t) && fits(t)) take(t);
     for (const t of pool) if (out.length < n && !out.includes(t)) take(t);
@@ -251,10 +283,12 @@
     begin({ mode: 'station', station: id, tasks });
   };
   const startExam = () => {
-    const tasks = shuffle(Object.entries(C.exam.perStation).flatMap(([id, n]) => {
-      const s = stationOf(id);
-      return s ? sampleTasks(s.tasks, n, EXAM_CAPS).map(withStation(id)) : [];
-    }));
+    const tasks = shuffle(
+      Object.entries(C.exam.perStation).flatMap(([id, n]) => {
+        const s = stationOf(id);
+        return s ? sampleTasks(s.tasks, n, EXAM_CAPS).map(withStation(id)) : [];
+      }),
+    );
     begin({ mode: 'exam', tasks });
   };
   const begin = (opts) => {
@@ -266,13 +300,17 @@
   };
   const drawCards = () => {
     const n = session?.mode === 'exam' ? session.cards : 0;
-    $('cards').replaceChildren(...Array.from({ length: Math.min(n, RED_AFTER) }, (_, i) => h('i', { class: i === RED_AFTER - 1 ? 'r' : 'y' })));
+    $('cards').replaceChildren(
+      ...Array.from({ length: Math.min(n, RED_AFTER) }, (_, i) => h('i', { class: i === RED_AFTER - 1 ? 'r' : 'y' })),
+    );
   };
   const drawDots = () => {
-    $('dots').replaceChildren(...session.tasks.map((_, i) => {
-      const r = session.results[i];
-      return h('span', { class: `dot ${r === true ? 'ok' : r === false ? 'miss' : i === session.index ? 'now' : ''}` });
-    }));
+    $('dots').replaceChildren(
+      ...session.tasks.map((_, i) => {
+        const r = session.results[i];
+        return h('span', { class: `dot ${r === true ? 'ok' : r === false ? 'miss' : i === session.index ? 'now' : ''}` });
+      }),
+    );
   };
 
   const nextTask = () => {
@@ -280,9 +318,10 @@
     session.task = task;
     session.answered = false;
     const n = session.tasks.length;
-    $('play-label').innerHTML = session.mode === 'exam'
-      ? T('examLabel', { i: session.index + 1, n })
-      : T('roundLabel', { title: stationOf(session.station).title, i: session.index + 1, n });
+    $('play-label').innerHTML =
+      session.mode === 'exam'
+        ? T('examLabel', { i: session.index + 1, n })
+        : T('roundLabel', { title: stationOf(session.station).title, i: session.index + 1, n });
     $('prompt').textContent = task.q;
     $('prompt').classList.toggle('long', task.q.length > 90);
     $('feedback').replaceChildren();
@@ -318,22 +357,50 @@
       if (!reduced()) g.classList.add('bump');
     }
     const exam = session.mode === 'exam';
-    if (exam && !correct) { session.cards++; drawCards(); }
+    if (exam && !correct) {
+      session.cards++;
+      drawCards();
+    }
     const red = exam && !correct && session.cards === RED_AFTER;
-    const card = exam && !correct && session.cards <= RED_AFTER && h('div', { class: 'ref' },
-      h('span', { class: `ref-card ${red ? 'r' : 'y'}`, 'aria-hidden': 'true' }),
-      h('div', {}, h('p', { class: 'fb-title', text: red ? L('red') : L('yellow') }), h('p', { text: red ? L('redText') : L('yellowText') })));
+    const card =
+      exam &&
+      !correct &&
+      session.cards <= RED_AFTER &&
+      h(
+        'div',
+        { class: 'ref' },
+        h('span', { class: `ref-card ${red ? 'r' : 'y'}`, 'aria-hidden': 'true' }),
+        h(
+          'div',
+          {},
+          h('p', { class: 'fb-title', text: red ? L('red') : L('yellow') }),
+          h('p', { text: red ? L('redText') : L('yellowText') }),
+        ),
+      );
 
     const fixText = task.type === 'tf' && task.truth === false && task.fix ? task.fix : null;
-    const box = h('div', { class: `fb ${correct ? 'ok' : 'miss'}` },
+    const box = h(
+      'div',
+      { class: `fb ${correct ? 'ok' : 'miss'}` },
       card,
-      h('p', { class: 'fb-title', text: correct ? `${info.soft ? L('praiseSoft') : praise()} ⚽` : `${card ? '' : `${L('almost')} `}${info.answer ? T('answerIs', { a: info.answer }) : L('seeRight')}` }),
+      h('p', {
+        class: 'fb-title',
+        text: correct
+          ? `${info.soft ? L('praiseSoft') : praise()} ⚽`
+          : `${card ? '' : `${L('almost')} `}${info.answer ? T('answerIs', { a: info.answer }) : L('seeRight')}`,
+      }),
       info.note && h('p', { text: info.note }),
       fixText && h('p', { class: 'fb-fix', text: T('fix', { text: fixText }) }),
-      task.fact && h('p', { class: 'fb-fact', text: `💡 ${task.fact}` }));
+      task.fact && h('p', { class: 'fb-fact', text: `💡 ${task.fact}` }),
+    );
     const last = session.index === session.tasks.length - 1;
     const next = h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, last ? L('result') : L('next'));
-    const actions = h('div', { class: 'fb-actions' }, next, red && h('button', { class: 'btn btn-light', type: 'button', onclick: startExam }, L('restart')));
+    const actions = h(
+      'div',
+      { class: 'fb-actions' },
+      next,
+      red && h('button', { class: 'btn btn-light', type: 'button', onclick: startExam }, L('restart')),
+    );
     $('feedback').replaceChildren(box, actions);
     ctrl = { onKey: (e) => (e.key === 'Enter' ? (next.click(), true) : false) };
     next.focus({ preventScroll: true });
@@ -348,7 +415,11 @@
   };
 
   // ---------- Finish ----------
-  const starSvg = (on) => h('span', { class: on ? 'on' : 'off', html: '<svg viewBox="0 0 48 46" aria-hidden="true"><path d="M24 2l6.5 14.3 15.5 1.6-11.6 10.4 3.3 15.3L24 35.8 10.3 43.6l3.3-15.3L2 17.9l15.5-1.6z" fill="#f2b218" stroke="#c98a00" stroke-width="2" stroke-linejoin="round"/></svg>' });
+  const starSvg = (on) =>
+    h('span', {
+      class: on ? 'on' : 'off',
+      html: '<svg viewBox="0 0 48 46" aria-hidden="true"><path d="M24 2l6.5 14.3 15.5 1.6-11.6 10.4 3.3 15.3L24 35.8 10.3 43.6l3.3-15.3L2 17.9l15.5-1.6z" fill="#f2b218" stroke="#c98a00" stroke-width="2" stroke-linejoin="round"/></svg>',
+    });
 
   const finish = () => {
     ctrl = null;
@@ -374,16 +445,42 @@
       const passed = stars >= 2;
       const idx = STATIONS.findIndex((s) => s.id === id);
       const nextSt = STATIONS[idx + 1];
-      if (passed && nextSt) buttons.push(h('button', { class: 'btn', type: 'button', onclick: () => { renderHub(); show('hub'); openIntro(nextSt); } }, L('nextStation')));
-      buttons.push(h('button', { class: `btn ${passed && nextSt ? 'btn-light' : 'btn-dark'}`, type: 'button', onclick: () => startStation(id) }, L('again')));
+      if (passed && nextSt)
+        buttons.push(
+          h(
+            'button',
+            {
+              class: 'btn',
+              type: 'button',
+              onclick: () => {
+                renderHub();
+                show('hub');
+                openIntro(nextSt);
+              },
+            },
+            L('nextStation'),
+          ),
+        );
+      buttons.push(
+        h(
+          'button',
+          { class: `btn ${passed && nextSt ? 'btn-light' : 'btn-dark'}`, type: 'button', onclick: () => startStation(id) },
+          L('again'),
+        ),
+      );
       buttons.push(h('button', { class: 'btn btn-light', type: 'button', onclick: toHub }, L('toHub')));
       el.replaceChildren(
         h('p', { class: 'eyebrow', text: `${stationOf(id).icon} ${stationOf(id).title}` }),
         h('h1', { text: passed ? L('stationPassed') : L('stationDone') }),
-        h('div', { class: 'big-stars', 'aria-label': `${stars} de 3 estrellas` }, [0, 1, 2].map((i) => starSvg(i < stars))),
+        h(
+          'div',
+          { class: 'big-stars', 'aria-label': `${stars} de 3 estrellas` },
+          [0, 1, 2].map((i) => starSvg(i < stars)),
+        ),
         h('div', { class: 'score-pill' }, `${score} / ${max}`, h('small', { text: '⚽' })),
         h('p', { class: 'msg', text: `${passed ? L('stationGreat') : L('stationKeep')} ${T('stationMsg', { coins })}${bonus}` }),
-        h('div', { class: 'actions' }, buttons));
+        h('div', { class: 'actions' }, buttons),
+      );
       if (stars >= 2) KFUI.confetti();
     } else {
       const g = gradeFor(score, max);
@@ -392,26 +489,53 @@
       const rows = STATIONS.filter((s) => session.byStation[s.id]).map((s) => {
         const v = session.byStation[s.id];
         const pct = Math.round((v.right / v.total) * 100);
-        return h('div', { class: 'rrow' },
+        return h(
+          'div',
+          { class: 'rrow' },
           h('span', { class: 'nm', text: `${s.icon} ${s.title}` }),
           h('span', { class: `bar${v.right < v.total ? ' low' : ''}` }, h('i', { style: `width:${Math.max(pct, 4)}%` })),
           h('b', { text: `${v.right}/${v.total}` }),
           v.right < v.total
-            ? h('button', { class: 'btn btn-light', type: 'button', onclick: () => { renderHub(); show('hub'); openIntro(s); } }, L('review2'))
-            : h('span', { class: 'okmark', 'aria-hidden': 'true', text: '✓' }));
+            ? h(
+                'button',
+                {
+                  class: 'btn btn-light',
+                  type: 'button',
+                  onclick: () => {
+                    renderHub();
+                    show('hub');
+                    openIntro(s);
+                  },
+                },
+                L('review2'),
+              )
+            : h('span', { class: 'okmark', 'aria-hidden': 'true', text: '✓' }),
+        );
       });
       const y = Math.min(session.cards, RED_AFTER - 1);
       const r = session.cards >= RED_AFTER ? 1 : 0;
       el.replaceChildren(
         h('p', { class: 'eyebrow', text: L('examDone') }),
-        h('div', { class: 'grade', style: `--gc:${GRADE_COLORS[g.i]}` }, h('b', { text: g.label }), h('span', { text: T('nota', { n: g.nota }) })),
+        h(
+          'div',
+          { class: 'grade', style: `--gc:${GRADE_COLORS[g.i]}` },
+          h('b', { text: g.label }),
+          h('span', { text: T('nota', { n: g.nota }) }),
+        ),
         h('br'),
         h('div', { class: 'score-pill' }, `${score} / ${max}`, h('small', { text: '⚽' })),
-        h('p', { class: 'msg', text: `${g.i >= 4 ? L('examMsgTop') : g.i >= 2 ? L('examMsgOk') : L('examMsgLow')} ${session.cards ? T('examCards', { y, r }) : L('noCards')} ${T('stationMsg', { coins })}${bonus}` }),
+        h('p', {
+          class: 'msg',
+          text: `${g.i >= 4 ? L('examMsgTop') : g.i >= 2 ? L('examMsgOk') : L('examMsgLow')} ${session.cards ? T('examCards', { y, r }) : L('noCards')} ${T('stationMsg', { coins })}${bonus}`,
+        }),
         h('div', { class: 'report' }, h('h2', { text: L('byTopic') }), rows),
-        h('div', { class: 'actions' },
+        h(
+          'div',
+          { class: 'actions' },
           h('button', { class: 'btn btn-dark', type: 'button', onclick: startExam }, L('again')),
-          h('button', { class: 'btn btn-light', type: 'button', onclick: toHub }, L('toHub'))));
+          h('button', { class: 'btn btn-light', type: 'button', onclick: toHub }, L('toHub')),
+        ),
+      );
       if (g.i >= 3) KFUI.confetti();
     }
     show('finish');
@@ -438,7 +562,14 @@
     const art = artEl(task.art);
     if (!art) return kids;
     const wide = String(task.art).startsWith('world-highlight:');
-    return [h('div', { class: `with-art${wide ? '' : ' side'}` }, art, h('div', { class: 'side-col', style: 'display:grid;gap:14px;justify-items:center' }, kids))];
+    return [
+      h(
+        'div',
+        { class: `with-art${wide ? '' : ' side'}` },
+        art,
+        h('div', { class: 'side-col', style: 'display:grid;gap:14px;justify-items:center' }, kids),
+      ),
+    ];
   };
   // Mouse/pen drag as an extra to tap-tap (touch keeps native scrolling, so it uses taps only).
   const draggable = (el, { onStart, targets, onDrop }) => {
@@ -461,7 +592,11 @@
         ghost.style.left = `${ev.clientX}px`;
         ghost.style.top = `${ev.clientY}px`;
         const t = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(targets);
-        if (t !== over) { over?.classList.remove('over'); over = t; over?.classList.add('over'); }
+        if (t !== over) {
+          over?.classList.remove('over');
+          over = t;
+          over?.classList.add('over');
+        }
       };
       const up = (ev) => {
         removeEventListener('pointermove', move);
@@ -472,7 +607,10 @@
         over?.classList.remove('over');
         const t = document.elementFromPoint(ev.clientX, ev.clientY)?.closest(targets);
         // Swallow the click that follows a drag (it fires in this same task, if at all).
-        const swallow = (c) => { c.stopImmediatePropagation(); c.preventDefault(); };
+        const swallow = (c) => {
+          c.stopImmediatePropagation();
+          c.preventDefault();
+        };
         el.addEventListener('click', swallow, { capture: true, once: true });
         setTimeout(() => el.removeEventListener('click', swallow, { capture: true }), 0);
         if (t) onDrop(t);
@@ -497,7 +635,9 @@
     const list = preset || task.fixed ? opts : shuffle(opts);
     const words = list.some((o) => String(o.text).length > 14);
     let done = false;
-    const buttons = list.map((o, i) => h('button', { type: 'button', class: 'choice', onclick: () => choose(i) }, h('kbd', { text: String(i + 1) }), o.text));
+    const buttons = list.map((o, i) =>
+      h('button', { type: 'button', class: 'choice', onclick: () => choose(i) }, h('kbd', { text: String(i + 1) }), o.text),
+    );
     const choose = (i) => {
       if (done) return;
       done = true;
@@ -509,11 +649,16 @@
       if (!list[i].ok) buttons[i].classList.add('wrong');
       resolve(list[i].ok, { answer: list.find((o) => o.ok)?.text });
     };
-    work.append(...withArt(task, h('div', { class: `choices${words ? ' words' : ''}` }, buttons), kbdHint(T('kChoice', { n: buttons.length }))));
+    work.append(
+      ...withArt(task, h('div', { class: `choices${words ? ' words' : ''}` }, buttons), kbdHint(T('kChoice', { n: buttons.length }))),
+    );
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
-        if (n >= 1 && n <= buttons.length) { choose(n - 1); return true; }
+        if (n >= 1 && n <= buttons.length) {
+          choose(n - 1);
+          return true;
+        }
         return false;
       },
     };
@@ -522,7 +667,14 @@
   // True / false. keys V/F, 1/2.
   RENDER.tf = (task, work) => {
     let done = false;
-    const mk = (val, icon, label, key) => h('button', { type: 'button', class: 'choice', onclick: () => choose(val) }, h('kbd', { text: key }), h('b', { 'aria-hidden': 'true', text: icon }), label);
+    const mk = (val, icon, label, key) =>
+      h(
+        'button',
+        { type: 'button', class: 'choice', onclick: () => choose(val) },
+        h('kbd', { text: key }),
+        h('b', { 'aria-hidden': 'true', text: icon }),
+        label,
+      );
     const yes = mk(true, '✓', L('true'), 'V');
     const no = mk(false, '✗', L('false'), 'F');
     const choose = (val) => {
@@ -539,8 +691,14 @@
     ctrl = {
       onKey: (e) => {
         const k = e.key.toLowerCase();
-        if (k === 'v' || k === '1') { choose(true); return true; }
-        if (k === 'f' || k === '2') { choose(false); return true; }
+        if (k === 'v' || k === '1') {
+          choose(true);
+          return true;
+        }
+        if (k === 'f' || k === '2') {
+          choose(false);
+          return true;
+        }
         return false;
       },
     };
@@ -564,15 +722,30 @@
     const hint = hintEl();
     const binLists = [];
     const chips = items.map((it, i) => {
-      const b = h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', onclick: () => select(i) }, it.icon && h('span', { class: 'ico', 'aria-hidden': 'true', text: it.icon }), it.text);
+      const b = h(
+        'button',
+        { type: 'button', class: 'chip', 'aria-pressed': 'false', onclick: () => select(i) },
+        it.icon && h('span', { class: 'ico', 'aria-hidden': 'true', text: it.icon }),
+        it.text,
+      );
       draggable(b, { onStart: () => select(i), targets: '.bin', onDrop: (t) => drop(Number(t.dataset.i)) });
       return b;
     });
     const binEls = bins.map((b, i) => {
       const list = h('div', { class: 'bin-items' });
       binLists.push(list);
-      return h('button', { type: 'button', class: 'bin', 'data-i': String(i), onclick: () => drop(i) },
-        h('span', { class: 'bin-head' }, h('span', { class: 'ico', 'aria-hidden': 'true', text: b.icon }), b.label, h('kbd', { text: String(i + 1) })), list);
+      return h(
+        'button',
+        { type: 'button', class: 'bin', 'data-i': String(i), onclick: () => drop(i) },
+        h(
+          'span',
+          { class: 'bin-head' },
+          h('span', { class: 'ico', 'aria-hidden': 'true', text: b.icon }),
+          b.label,
+          h('kbd', { text: String(i + 1) }),
+        ),
+        list,
+      );
     });
     const select = (i) => {
       if (placed.has(i)) return;
@@ -583,19 +756,27 @@
     const place = (i, binIdx, fixed) => {
       placed.add(i);
       chips[i].remove();
-      binLists[binIdx].append(h('span', { class: fixed ? 'fixed' : '', text: `${items[i].icon ? `${items[i].icon} ` : ''}${items[i].text}` }));
+      binLists[binIdx].append(
+        h('span', { class: fixed ? 'fixed' : '', text: `${items[i].icon ? `${items[i].icon} ` : ''}${items[i].text}` }),
+      );
       const el = binEls[binIdx];
       el.classList.remove('flash');
       void el.offsetWidth;
       el.classList.add('flash');
       setTimeout(() => el.classList.remove('flash'), 500);
       const rest = remaining();
-      if (!rest.length) { resolve(mistakes <= 1, { soft: mistakes === 1 }); return; }
+      if (!rest.length) {
+        resolve(mistakes <= 1, { soft: mistakes === 1 });
+        return;
+      }
       select(rest[0]);
     };
     const drop = (binIdx) => {
       if (session.answered || !bins[binIdx]) return;
-      if (!remaining().includes(sel)) { hint.textContent = L('pickCard'); return; }
+      if (!remaining().includes(sel)) {
+        hint.textContent = L('pickCard');
+        return;
+      }
       const it = items[sel];
       if (it.bin === bins[binIdx].id) {
         hint.textContent = '';
@@ -615,11 +796,19 @@
       }
     };
     select(0);
-    work.append(h('div', { class: 'tray' }, chips), hint, h('div', { class: 'bins', style: `--n:${bins.length}` }, binEls), kbdHint(T('kSort', { n: bins.length })));
+    work.append(
+      h('div', { class: 'tray' }, chips),
+      hint,
+      h('div', { class: 'bins', style: `--n:${bins.length}` }, binEls),
+      kbdHint(T('kSort', { n: bins.length })),
+    );
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
-        if (n >= 1 && n <= bins.length) { drop(n - 1); return true; }
+        if (n >= 1 && n <= bins.length) {
+          drop(n - 1);
+          return true;
+        }
         if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
           const rest = remaining();
           if (!rest.length) return true;
@@ -642,8 +831,15 @@
     const good = new Set();
     let checks = 0;
     const hint = hintEl();
-    const els = cards.map((c, k) => h('button', { type: 'button', class: 'ord-card', onclick: () => tap(k) },
-      h('span', { class: 'ord-num', 'aria-hidden': 'true' }), h('span', { text: c.text }), h('kbd', { text: LETTERS[k] })));
+    const els = cards.map((c, k) =>
+      h(
+        'button',
+        { type: 'button', class: 'ord-card', onclick: () => tap(k) },
+        h('span', { class: 'ord-num', 'aria-hidden': 'true' }),
+        h('span', { text: c.text }),
+        h('kbd', { text: LETTERS[k] }),
+      ),
+    );
     const checkBtn = h('button', { type: 'button', class: 'btn btn-dark', disabled: true, onclick: () => check() }, L('check'));
     const undoBtn = h('button', { type: 'button', class: 'btn btn-light', onclick: () => undo() }, L('undo'));
     const draw = () => {
@@ -673,7 +869,10 @@
     const undo = () => {
       let last = null;
       for (const [k, v] of num) if (!good.has(k) && (last === null || v > num.get(last))) last = k;
-      if (last !== null) { num.delete(last); draw(); }
+      if (last !== null) {
+        num.delete(last);
+        draw();
+      }
     };
     const reveal = () => {
       const order = cards.map((c, k) => k).sort((a, b) => cards[a].i - cards[b].i);
@@ -689,12 +888,25 @@
     };
     const check = () => {
       if (session.answered) return;
-      if (num.size < n) { hint.textContent = L('orderNeedAll'); return; }
+      if (num.size < n) {
+        hint.textContent = L('orderNeedAll');
+        return;
+      }
       checks++;
       const wrong = cards.map((c, k) => k).filter((k) => num.get(k) !== cards[k].i + 1);
-      if (!wrong.length) { reveal(); resolve(true, { soft: checks > 1 }); return; }
-      if (checks >= 2) { reveal(); resolve(false); return; }
-      cards.forEach((c, k) => { if (!wrong.includes(k)) good.add(k); });
+      if (!wrong.length) {
+        reveal();
+        resolve(true, { soft: checks > 1 });
+        return;
+      }
+      if (checks >= 2) {
+        reveal();
+        resolve(false);
+        return;
+      }
+      cards.forEach((c, k) => {
+        if (!wrong.includes(k)) good.add(k);
+      });
       wrong.forEach((k) => num.delete(k));
       shake(...wrong.map((k) => els[k]));
       hint.textContent = L('orderGreen');
@@ -707,9 +919,18 @@
     ctrl = {
       onKey: (e) => {
         const k = LETTERS.indexOf(e.key.toUpperCase());
-        if (e.key.length === 1 && k >= 0 && k < n) { tap(k); return true; }
-        if (e.key === 'Backspace') { undo(); return true; }
-        if (e.key === 'Enter') { check(); return true; }
+        if (e.key.length === 1 && k >= 0 && k < n) {
+          tap(k);
+          return true;
+        }
+        if (e.key === 'Backspace') {
+          undo();
+          return true;
+        }
+        if (e.key === 'Enter') {
+          check();
+          return true;
+        }
         return false;
       },
     };
@@ -727,8 +948,13 @@
     let matched = 0;
     const tries = new Map();
     const hint = hintEl();
-    const mk = (item, side, k) => h('button', { type: 'button', class: 'pr', 'aria-pressed': 'false', onclick: () => tap(side, k) },
-      h('kbd', { text: side === 'L' ? String(k + 1) : LETTERS[k] }), item.text);
+    const mk = (item, side, k) =>
+      h(
+        'button',
+        { type: 'button', class: 'pr', 'aria-pressed': 'false', onclick: () => tap(side, k) },
+        h('kbd', { text: side === 'L' ? String(k + 1) : LETTERS[k] }),
+        item.text,
+      );
     const lEls = left.map((it, k) => mk(it, 'L', k));
     const rEls = right.map((it, k) => mk(it, 'R', k));
     const mark = () => {
@@ -766,7 +992,10 @@
         const t = (tries.get(l) || 0) + 1;
         tries.set(l, t);
         if (t >= 2) {
-          lock(l, right.findIndex((x) => x.i === left[l].i));
+          lock(
+            l,
+            right.findIndex((x) => x.i === left[l].i),
+          );
           hint.textContent = L('pairShown');
         } else {
           hint.textContent = L('pairNo');
@@ -775,13 +1004,23 @@
       mark();
       if (matched === pairs.length) resolve(mistakes <= 1, { soft: mistakes === 1 });
     };
-    work.append(h('div', { class: 'pairs' }, h('div', { class: 'col' }, lEls), h('div', { class: 'col' }, rEls)), hint, kbdHint(T('kPairs', { n: pairs.length, l: LETTERS[pairs.length - 1] })));
+    work.append(
+      h('div', { class: 'pairs' }, h('div', { class: 'col' }, lEls), h('div', { class: 'col' }, rEls)),
+      hint,
+      kbdHint(T('kPairs', { n: pairs.length, l: LETTERS[pairs.length - 1] })),
+    );
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
-        if (n >= 1 && n <= pairs.length) { tap('L', n - 1); return true; }
+        if (n >= 1 && n <= pairs.length) {
+          tap('L', n - 1);
+          return true;
+        }
         const k = LETTERS.indexOf(e.key.toUpperCase());
-        if (e.key.length === 1 && k >= 0 && k < pairs.length) { tap('R', k); return true; }
+        if (e.key.length === 1 && k >= 0 && k < pairs.length) {
+          tap('R', k);
+          return true;
+        }
         return false;
       },
     };
@@ -811,7 +1050,10 @@
     m.regions.forEach((r, id) => {
       r.el.addEventListener('click', () => pickRegion(id));
       r.el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickRegion(id); }
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          pickRegion(id);
+        }
       });
     });
     work.append(h('div', { class: 'map-wrap' }, m.el), kbdHint(L('kMap')));
@@ -831,15 +1073,39 @@
     let placedN = 0;
     const tries = new Map();
     const chipEls = labels.map((l, k) => {
-      const b = h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false', onclick: () => tapChip(k) }, h('kbd', { text: String(k + 1) }), l.text);
-      draggable(b, { onStart: () => { selChip = k; mark(); }, targets: '.slot', onDrop: (t) => tapSlot(Number(t.dataset.i)) });
+      const b = h(
+        'button',
+        { type: 'button', class: 'chip', 'aria-pressed': 'false', onclick: () => tapChip(k) },
+        h('kbd', { text: String(k + 1) }),
+        l.text,
+      );
+      draggable(b, {
+        onStart: () => {
+          selChip = k;
+          mark();
+        },
+        targets: '.slot',
+        onDrop: (t) => tapSlot(Number(t.dataset.i)),
+      });
       return b;
     });
-    const slotEls = spots.map((s, k) => h('button', {
-      type: 'button', class: 'slot', 'data-i': String(k), 'data-spot': s.id, 'aria-label': `Sitio ${LETTERS[k]}`, 'aria-pressed': 'false',
-      style: `left:${(s.x / bw) * 100}%;top:${(s.y / bh) * 100}%;width:${(s.w / bw) * 100}%`,
-      onclick: () => tapSlot(k),
-    }, h('span', { class: 'q', 'aria-hidden': 'true', text: '?' }), h('kbd', { text: LETTERS[k] })));
+    const slotEls = spots.map((s, k) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'slot',
+          'data-i': String(k),
+          'data-spot': s.id,
+          'aria-label': `Sitio ${LETTERS[k]}`,
+          'aria-pressed': 'false',
+          style: `left:${(s.x / bw) * 100}%;top:${(s.y / bh) * 100}%;width:${(s.w / bw) * 100}%`,
+          onclick: () => tapSlot(k),
+        },
+        h('span', { class: 'q', 'aria-hidden': 'true', text: '?' }),
+        h('kbd', { text: LETTERS[k] }),
+      ),
+    );
     const mark = () => {
       chipEls.forEach((c, k) => c.setAttribute('aria-pressed', String(k === selChip)));
       slotEls.forEach((s, k) => s.setAttribute('aria-pressed', String(k === selSlot)));
@@ -865,7 +1131,11 @@
       if (selChip === null || selSlot === null) return;
       const chipK = selChip;
       const slotK = selSlot;
-      if (labels[chipK].id === spots[slotK].id) { hint.textContent = ''; fill(chipK, slotK, false); return; }
+      if (labels[chipK].id === spots[slotK].id) {
+        hint.textContent = '';
+        fill(chipK, slotK, false);
+        return;
+      }
       mistakes++;
       shake(chipEls[chipK], slotEls[slotK]);
       const t = (tries.get(chipK) || 0) + 1;
@@ -873,7 +1143,11 @@
       selSlot = null;
       if (t >= 2) {
         hint.textContent = T('labelShown', { text: labels[chipK].text });
-        fill(chipK, spots.findIndex((s) => s.id === labels[chipK].id), true);
+        fill(
+          chipK,
+          spots.findIndex((s) => s.id === labels[chipK].id),
+          true,
+        );
       } else {
         hint.textContent = L('labelTry');
         mark();
@@ -889,19 +1163,33 @@
       if (session.answered || !slotEls[k] || slotEls[k].disabled) return;
       selSlot = k;
       mark();
-      if (selChip === null) { hint.textContent = L('pickLabel'); return; }
+      if (selChip === null) {
+        hint.textContent = L('pickLabel');
+        return;
+      }
       attempt();
     };
     selChip = 0;
     mark();
     const scene = h('div', { class: `scene${task.scene === 'compass-rose' ? ' compass' : ''}` }, sc.el, slotEls);
-    work.append(h('div', { class: 'tray' }, chipEls), hint, scene, kbdHint(T('kLabel', { n: labels.length, l: LETTERS[spots.length - 1] })));
+    work.append(
+      h('div', { class: 'tray' }, chipEls),
+      hint,
+      scene,
+      kbdHint(T('kLabel', { n: labels.length, l: LETTERS[spots.length - 1] })),
+    );
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
-        if (n >= 1 && n <= labels.length) { tapChip(n - 1); return true; }
+        if (n >= 1 && n <= labels.length) {
+          tapChip(n - 1);
+          return true;
+        }
         const k = LETTERS.indexOf(e.key.toUpperCase());
-        if (e.key.length === 1 && k >= 0 && k < spots.length) { tapSlot(k); return true; }
+        if (e.key.length === 1 && k >= 0 && k < spots.length) {
+          tapSlot(k);
+          return true;
+        }
         return false;
       },
     };
@@ -917,8 +1205,21 @@
     let mistakes = 0;
     const painted = new Set();
     const hint = hintEl();
-    const sw = zones.map((z, k) => h('button', { type: 'button', class: 'swatch', style: `--c:${COLORS[z.color] || '#999'}`, 'aria-pressed': 'false', onclick: () => pickColor(k) },
-      h('i', { 'aria-hidden': 'true' }), h('span', {}, COLOR_NAMES[z.color] || z.color, h('small', { text: z.name })), h('kbd', { text: String(k + 1) })));
+    const sw = zones.map((z, k) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'swatch',
+          style: `--c:${COLORS[z.color] || '#999'}`,
+          'aria-pressed': 'false',
+          onclick: () => pickColor(k),
+        },
+        h('i', { 'aria-hidden': 'true' }),
+        h('span', {}, COLOR_NAMES[z.color] || z.color, h('small', { text: z.name })),
+        h('kbd', { text: String(k + 1) }),
+      ),
+    );
     const pickColor = (k) => {
       if (session.answered) return;
       color = zones[k].color;
@@ -929,7 +1230,11 @@
       if (session.answered || painted.has(id)) return;
       const z = zones.find((x) => x.id === id);
       if (!z) return;
-      if (!color) { hint.textContent = L('pickColor'); shake(...sw); return; }
+      if (!color) {
+        hint.textContent = L('pickColor');
+        shake(...sw);
+        return;
+      }
       if (z.color === color) {
         painted.add(id);
         ae.paint(id, color);
@@ -948,14 +1253,29 @@
       g.setAttribute('aria-label', z ? z.name : id);
       g.addEventListener('click', () => paintZone(id));
       g.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); paintZone(id); }
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          paintZone(id);
+        }
       });
     });
-    work.append(h('div', { class: 'paint' }, h('div', { class: 'aerial-wrap' }, ae.el), h('div', { class: 'palette' }, h('h3', { text: L('paletteTitle') }), sw)), hint, kbdHint(L('kPaint')));
+    work.append(
+      h(
+        'div',
+        { class: 'paint' },
+        h('div', { class: 'aerial-wrap' }, ae.el),
+        h('div', { class: 'palette' }, h('h3', { text: L('paletteTitle') }), sw),
+      ),
+      hint,
+      kbdHint(L('kPaint')),
+    );
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
-        if (n >= 1 && n <= zones.length) { pickColor(n - 1); return true; }
+        if (n >= 1 && n <= zones.length) {
+          pickColor(n - 1);
+          return true;
+        }
         return false;
       },
     };
@@ -963,16 +1283,30 @@
 
   // Walk on the grid map (north up).
   const DIRS = { norte: [0, -1], sur: [0, 1], este: [1, 0], oeste: [-1, 0] };
-  const KEY_DIR = { ArrowUp: 'norte', ArrowDown: 'sur', ArrowRight: 'este', ArrowLeft: 'oeste', n: 'norte', s: 'sur', e: 'este', o: 'oeste' };
+  const KEY_DIR = {
+    ArrowUp: 'norte',
+    ArrowDown: 'sur',
+    ArrowRight: 'este',
+    ArrowLeft: 'oeste',
+    n: 'norte',
+    s: 'sur',
+    e: 'este',
+    o: 'oeste',
+  };
   const keyDir = (e) => KEY_DIR[e.key] || KEY_DIR[e.key.toLowerCase()];
-  const groupSteps = (steps) => steps.reduce((acc, d) => {
-    const last = acc[acc.length - 1];
-    if (last && last.dir === d) last.n++;
-    else acc.push({ dir: d, n: 1 });
-    return acc;
-  }, []);
-  const stepChips = (steps, cls = '') => groupSteps(steps).map((g) => h('span', { class: cls, text: `${{ norte: '↑', sur: '↓', este: '→', oeste: '←' }[g.dir]} ${T('step', { n: g.n, dir: g.dir })}` }));
-  const roseSvg = '<svg viewBox="-30 -34 60 64" class="board-rose" aria-hidden="true"><circle r="17" fill="#fffdf5" stroke="#2c4a3e" stroke-width="2"/><path d="M0-24L5 0 0 24-5 0Z" fill="#2c4a3e"/><path d="M-24 0L0 5 24 0 0-5Z" fill="#2c4a3e" opacity=".55"/><path d="M0-24L5 0-5 0Z" fill="#d9473b"/><text y="-25" text-anchor="middle" font-size="13" font-weight="900" fill="#2c4a3e">N</text></svg>';
+  const groupSteps = (steps) =>
+    steps.reduce((acc, d) => {
+      const last = acc[acc.length - 1];
+      if (last && last.dir === d) last.n++;
+      else acc.push({ dir: d, n: 1 });
+      return acc;
+    }, []);
+  const stepChips = (steps, cls = '') =>
+    groupSteps(steps).map((g) =>
+      h('span', { class: cls, text: `${{ norte: '↑', sur: '↓', este: '→', oeste: '←' }[g.dir]} ${T('step', { n: g.n, dir: g.dir })}` }),
+    );
+  const roseSvg =
+    '<svg viewBox="-30 -34 60 64" class="board-rose" aria-hidden="true"><circle r="17" fill="#fffdf5" stroke="#2c4a3e" stroke-width="2"/><path d="M0-24L5 0 0 24-5 0Z" fill="#2c4a3e"/><path d="M-24 0L0 5 24 0 0-5Z" fill="#2c4a3e" opacity=".55"/><path d="M0-24L5 0-5 0Z" fill="#d9473b"/><text y="-25" text-anchor="middle" font-size="13" font-weight="900" fill="#2c4a3e">N</text></svg>';
 
   const board = (grid, { from, target }) => {
     const [nx, ny] = grid.size;
@@ -983,9 +1317,19 @@
       for (let x = 0; x < nx; x++) {
         const id = at[`${x},${y}`];
         const p = id && grid.places[id];
-        el.append(h('div', { class: `cell${x === 0 ? ' left' : x === nx - 1 ? ' right' : ''}` },
-          p && h('div', { class: `place${id === target ? ' target' : ''}`, 'data-id': id },
-            h('span', { class: 'ico', 'aria-hidden': 'true', text: p.icon }), h('span', { class: 'nm', text: cap(p.name) }))));
+        el.append(
+          h(
+            'div',
+            { class: `cell${x === 0 ? ' left' : x === nx - 1 ? ' right' : ''}` },
+            p &&
+              h(
+                'div',
+                { class: `place${id === target ? ' target' : ''}`, 'data-id': id },
+                h('span', { class: 'ico', 'aria-hidden': 'true', text: p.icon }),
+                h('span', { class: 'nm', text: cap(p.name) }),
+              ),
+          ),
+        );
       }
     }
     const trail = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1012,9 +1356,18 @@
   };
 
   const dpad = (onDir) => {
-    const btn = (d, arrow) => h('button', { type: 'button', class: `dir ${d[0]}`, 'data-dir': d, onclick: () => onDir(d) }, h('b', { 'aria-hidden': 'true', text: arrow }), L('dirs')[d]);
+    const btn = (d, arrow) =>
+      h(
+        'button',
+        { type: 'button', class: `dir ${d[0]}`, 'data-dir': d, onclick: () => onDir(d) },
+        h('b', { 'aria-hidden': 'true', text: arrow }),
+        L('dirs')[d],
+      );
     const btns = { norte: btn('norte', '↑'), oeste: btn('oeste', '←'), este: btn('este', '→'), sur: btn('sur', '↓') };
-    return { el: h('div', { class: 'dpad' }, Object.values(btns), h('span', { class: 'hub-dot', 'aria-hidden': 'true', text: '🧭' })), btns };
+    return {
+      el: h('div', { class: 'dpad' }, Object.values(btns), h('span', { class: 'hub-dot', 'aria-hidden': 'true', text: '🧭' })),
+      btns,
+    };
   };
 
   RENDER.walk = (task, work) => {
@@ -1031,14 +1384,25 @@
       const pad = dpad((d) => choose(d));
       const choose = (d) => {
         if (session.answered) return;
-        Object.values(pad.btns).forEach((x) => { x.disabled = true; });
+        Object.values(pad.btns).forEach((x) => {
+          x.disabled = true;
+        });
         pad.btns[task.answer].classList.add('right');
         if (d !== task.answer) pad.btns[d].classList.add('wrong');
         b.trail.innerHTML = `<line class="arrow" x1="${fromAt[0] + 0.5}" y1="${fromAt[1] + 0.5}" x2="${toAt[0] + 0.5}" y2="${toAt[1] + 0.5}"/>`;
         resolve(d === task.answer, { answer: L('dirs')[task.answer].toLowerCase() });
       };
       work.append(h('div', { class: 'walk' }, b.wrap, h('div', { class: 'side' }, pad.el, kbdHint(L('kDir')))));
-      ctrl = { onKey: (e) => { const d = keyDir(e); if (d) { choose(d); return true; } return false; } };
+      ctrl = {
+        onKey: (e) => {
+          const d = keyDir(e);
+          if (d) {
+            choose(d);
+            return true;
+          }
+          return false;
+        },
+      };
       return;
     }
 
@@ -1047,14 +1411,19 @@
       const path = [[...fromAt]];
       const steps = [];
       const list = h('div', { class: 'steps', 'aria-live': 'polite' });
-      const drawList = () => list.replaceChildren(...(steps.length ? stepChips(steps) : [h('span', { class: 'empty', text: L('noSteps') })]));
+      const drawList = () =>
+        list.replaceChildren(...(steps.length ? stepChips(steps) : [h('span', { class: 'empty', text: L('noSteps') })]));
       const undoBtn = h('button', { type: 'button', class: 'btn btn-light', onclick: () => undo() }, L('undo'));
       const move = (d) => {
         if (session.answered) return;
         const [x, y] = path[path.length - 1];
         const nx = x + DIRS[d][0];
         const ny = y + DIRS[d][1];
-        if (nx < 0 || ny < 0 || nx >= b.nx || ny >= b.ny) { hint.textContent = L('edge'); shake(b.el); return; }
+        if (nx < 0 || ny < 0 || nx >= b.nx || ny >= b.ny) {
+          hint.textContent = L('edge');
+          shake(b.el);
+          return;
+        }
         hint.textContent = '';
         path.push([nx, ny]);
         steps.push(d);
@@ -1062,7 +1431,9 @@
         b.drawTrail(path);
         drawList();
         if (nx === target.at[0] && ny === target.at[1]) {
-          Object.values(pad.btns).forEach((x2) => { x2.disabled = true; });
+          Object.values(pad.btns).forEach((x2) => {
+            x2.disabled = true;
+          });
           undoBtn.disabled = true;
           hint.textContent = T('arrived', { name: target.name });
           resolve(true);
@@ -1083,8 +1454,14 @@
       ctrl = {
         onKey: (e) => {
           const d = keyDir(e);
-          if (d) { move(d); return true; }
-          if (e.key === 'Backspace') { undo(); return true; }
+          if (d) {
+            move(d);
+            return true;
+          }
+          if (e.key === 'Backspace') {
+            undo();
+            return true;
+          }
           return false;
         },
       };
@@ -1096,8 +1473,15 @@
     const others = shuffle(Object.keys(grid.places).filter((id) => id !== answerId && id !== task.from)).slice(0, 3);
     const opts = shuffle([answerId, ...others]);
     let done = false;
-    const buttons = opts.map((id, i) => h('button', { type: 'button', class: 'choice', onclick: () => choose(i) },
-      h('kbd', { text: String(i + 1) }), h('span', { class: 'pi', 'aria-hidden': 'true', text: grid.places[id].icon }), cap(grid.places[id].name)));
+    const buttons = opts.map((id, i) =>
+      h(
+        'button',
+        { type: 'button', class: 'choice', onclick: () => choose(i) },
+        h('kbd', { text: String(i + 1) }),
+        h('span', { class: 'pi', 'aria-hidden': 'true', text: grid.places[id].icon }),
+        cap(grid.places[id].name),
+      ),
+    );
     const choose = (i) => {
       if (done) return;
       done = true;
@@ -1120,16 +1504,34 @@
         b.drawTrail(path.slice(0, k + 1));
         if (k < path.length - 1) setTimeout(tick, 230);
       };
-      if (reduced()) { b.moveToken(path[path.length - 1]); b.drawTrail(path); } else setTimeout(tick, 150);
+      if (reduced()) {
+        b.moveToken(path[path.length - 1]);
+        b.drawTrail(path);
+      } else setTimeout(tick, 150);
       resolve(opts[i] === answerId, { answer: cap(grid.places[answerId].name) });
     };
-    work.append(h('div', { class: 'walk' }, b.wrap, h('div', { class: 'side' },
-      h('p', { class: 'kbd-hint', style: 'display:block', text: L('walkPlan') }), h('div', { class: 'steps' }, stepChips(task.steps, 'plan')),
-      h('div', { class: 'places' }, buttons), kbdHint(T('kChoice', { n: buttons.length })))));
+    work.append(
+      h(
+        'div',
+        { class: 'walk' },
+        b.wrap,
+        h(
+          'div',
+          { class: 'side' },
+          h('p', { class: 'kbd-hint', style: 'display:block', text: L('walkPlan') }),
+          h('div', { class: 'steps' }, stepChips(task.steps, 'plan')),
+          h('div', { class: 'places' }, buttons),
+          kbdHint(T('kChoice', { n: buttons.length })),
+        ),
+      ),
+    );
     ctrl = {
       onKey: (e) => {
         const n = Number(e.key);
-        if (n >= 1 && n <= buttons.length) { choose(n - 1); return true; }
+        if (n >= 1 && n <= buttons.length) {
+          choose(n - 1);
+          return true;
+        }
         return false;
       },
     };
@@ -1138,18 +1540,31 @@
   // ---------- Keyboard ----------
   const midRound = () => session && !$('play').hidden && (session.results.length > 0 || session.index > 0);
   const askQuit = () => {
-    if (!midRound()) { toHub(); return; }
+    if (!midRound()) {
+      toHub();
+      return;
+    }
     $('quit-dlg').showModal();
     $('quit-no').focus();
   };
   $('quit-no').addEventListener('click', () => $('quit-dlg').close());
-  $('quit-yes').addEventListener('click', () => { $('quit-dlg').close(); toHub(); });
+  $('quit-yes').addEventListener('click', () => {
+    $('quit-dlg').close();
+    toHub();
+  });
 
   document.addEventListener('keydown', (e) => {
     if (document.querySelector('dialog[open]') || e.altKey || e.ctrlKey || e.metaKey) return;
     if (e.key === 'Escape') {
-      if (!$('play').hidden) { e.preventDefault(); askQuit(); return; }
-      if (!$('finish').hidden) { toHub(); return; }
+      if (!$('play').hidden) {
+        e.preventDefault();
+        askQuit();
+        return;
+      }
+      if (!$('finish').hidden) {
+        toHub();
+        return;
+      }
       return;
     }
     // Enter/Space on a focused control keeps its own action (Tab users).
@@ -1162,7 +1577,9 @@
   // Parents' test mode: expose the session for automated checks.
   if (KF.TEST_MODE) {
     window.__sp = {
-      get session() { return session; },
+      get session() {
+        return session;
+      },
       startStation,
       startExam,
       toHub,

@@ -20,3 +20,6 @@ playwright.config.mjs
 tests/
 test-results/
 playwright-report/
+biome.json
+tsconfig.json
+*.d.ts

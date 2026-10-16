@@ -30,9 +30,14 @@ const load = (src, { site, search = '' } = {}) => {
     sessionStorage: makeStorage(),
     location: { search },
     document: { visibilityState: 'visible', addEventListener() {} },
-    URLSearchParams, btoa, atob, console,
+    URLSearchParams,
+    btoa,
+    atob,
+    console,
     crypto: { randomUUID: () => 'x' },
-    fetch: async () => { throw new TypeError('offline'); },
+    fetch: async () => {
+      throw new TypeError('offline');
+    },
     setTimeout: () => 0,
     clearTimeout() {},
     KF_CARDS: CARDS,
@@ -49,14 +54,17 @@ const texts = (KF) => ({
   ach: KF.ACHIEVEMENTS.map((a) => ({ id: a.id, icon: a.icon, title: a.title, desc: a.desc })),
   cats: Object.fromEntries(Object.entries(KF.CARD_CATS).map(([k, v]) => [k, v.label])),
   categories: JSON.parse(JSON.stringify(Object.fromEntries(Object.entries(KF.CATEGORIES).filter(([k]) => k !== 'sociales')))),
-  games: JSON.parse(JSON.stringify(legacy(KF.GAMES).map(({ slug, title, emoji, category, desc, status }) => ({ slug, title, emoji, category, desc, status })))),
+  games: JSON.parse(
+    JSON.stringify(
+      legacy(KF.GAMES).map(({ slug, title, emoji, category, desc, status }) => ({ slug, title, emoji, category, desc, status })),
+    ),
+  ),
 });
 
 const plain = (x) => JSON.parse(JSON.stringify(x));
 // Games added after the i18n migration: the snapshot checks below are about the games that existed then.
 const NEW_GAMES = new Set(['sociales-planeta']);
 const legacy = (list) => list.filter((g) => !NEW_GAMES.has(g.slug));
-
 
 test('uk: texts byte-identical to HEAD', () => {
   const now = load(code, { site: { lang: 'uk' } });
@@ -137,14 +145,41 @@ const loadUi = (lang) => {
   const KF = load(code, { site: { lang } });
   const toasts = [];
   const el = () => {
-    const n = { className: '', style: { setProperty() {} }, children: [], parentNode: null, classList: { add() {} }, setAttribute() {}, matches: () => false, dataset: {}, set textContent(v) { toasts.push(v); } };
-    n.append = (...c) => c.forEach((x) => { x.parentNode = n; n.children.push(x); });
-    n.remove = () => { if (n.parentNode) n.parentNode.children = n.parentNode.children.filter((x) => x !== n); n.parentNode = null; };
+    const n = {
+      className: '',
+      style: { setProperty() {} },
+      children: [],
+      parentNode: null,
+      classList: { add() {} },
+      setAttribute() {},
+      matches: () => false,
+      dataset: {},
+      set textContent(v) {
+        toasts.push(v);
+      },
+    };
+    n.append = (...c) =>
+      c.forEach((x) => {
+        x.parentNode = n;
+        n.children.push(x);
+      });
+    n.remove = () => {
+      if (n.parentNode) n.parentNode.children = n.parentNode.children.filter((x) => x !== n);
+      n.parentNode = null;
+    };
     Object.defineProperty(n, 'firstElementChild', { get: () => n.children[0] });
     return n;
   };
   const doc = { createElement: el, body: Object.assign(el(), { prepend() {} }), querySelectorAll: () => [] };
-  const sandbox = { KF, document: doc, matchMedia: () => ({ matches: true }), setTimeout: () => 0, location: { pathname: '/' }, window: {}, console };
+  const sandbox = {
+    KF,
+    document: doc,
+    matchMedia: () => ({ matches: true }),
+    setTimeout: () => 0,
+    location: { pathname: '/' },
+    window: {},
+    console,
+  };
   vm.createContext(sandbox);
   vm.runInContext(uiCode, sandbox);
   return { KF, UI: sandbox.window.KFUI, toasts };
@@ -156,10 +191,19 @@ test('kf-ui: es sync labels and toasts have no Cyrillic', () => {
   KF.addCoins(2);
   KF.answer('x', true);
   for (let i = 0; i < 10; i++) KF.answer('x', true);
-  assert.ok(toasts.some((t) => t.startsWith('+')), 'coin toast');
-  assert.ok(toasts.some((t) => t.includes('nuevo logro')), 'achievement toast');
+  assert.ok(
+    toasts.some((t) => t.startsWith('+')),
+    'coin toast',
+  );
+  assert.ok(
+    toasts.some((t) => t.includes('nuevo logro')),
+    'achievement toast',
+  );
   KF.giveCard('b');
-  assert.ok(toasts.some((t) => t.includes('Carta nueva')), 'card toast');
+  assert.ok(
+    toasts.some((t) => t.includes('Carta nueva')),
+    'card toast',
+  );
   for (const t of toasts) assert.ok(!CYR.test(t), t);
 });
 

@@ -37,8 +37,14 @@ test('fmt', () => {
 test('digits and PLACES', () => {
   assert.deepEqual(M.digits(4528), { UM: 4, C: 5, D: 2, U: 8 });
   assert.deepEqual(M.digits(305), { UM: 0, C: 3, D: 0, U: 5 });
-  assert.deepEqual(M.PLACES.map((p) => p.key), ['UM', 'C', 'D', 'U']);
-  assert.deepEqual(M.PLACES.map((p) => p.value), [1000, 100, 10, 1]);
+  assert.deepEqual(
+    M.PLACES.map((p) => p.key),
+    ['UM', 'C', 'D', 'U'],
+  );
+  assert.deepEqual(
+    M.PLACES.map((p) => p.value),
+    [1000, 100, 10, 1],
+  );
 });
 
 test('roundTo', () => {
@@ -122,7 +128,9 @@ test('valor L5: decompose both forms', () => {
   const n = t.data.n;
   assert.match(t.es, /^Descompón el número \d{4} según el valor de sus cifras y la posición que ocupan\.$/);
   assert.equal(M.checkAnswer(t, M.digits(n)).correct, true);
-  const add = Object.entries({ UM: 1000, C: 100, D: 10, U: 1 }).map(([k, v]) => M.digits(n)[k] * v).filter(Boolean);
+  const add = Object.entries({ UM: 1000, C: 100, D: 10, U: 1 })
+    .map(([k, v]) => M.digits(n)[k] * v)
+    .filter(Boolean);
   assert.equal(M.checkAnswer(t, add).correct, true);
   assert.equal(M.checkAnswer(t, [...add].reverse()).correct, true);
   assert.equal(M.checkAnswer(t, [...add, 1]).correct, false);
@@ -187,22 +195,70 @@ test('valor L6: muro de descomposición', () => {
     assert.equal(M.checkAnswer(t, t.answer + 1).correct, false);
   });
   assert.ok(keysSeen.size >= 5, `forms ${keysSeen.size}`);
-  const t = { kind: 'number', level: 6, answer: 35, data: { sub: 'muro', n: 3519, parts: [{ value: null, key: 'C' }, { value: 1, key: 'D' }, { value: 9, key: 'U' }] } };
+  const t = {
+    kind: 'number',
+    level: 6,
+    answer: 35,
+    data: {
+      sub: 'muro',
+      n: 3519,
+      parts: [
+        { value: null, key: 'C' },
+        { value: 1, key: 'D' },
+        { value: 9, key: 'U' },
+      ],
+    },
+  };
   assert.equal(M.checkAnswer(t, 35).correct, true);
   assert.equal(M.checkAnswer(t, 5).correct, false);
 });
 
 const WORDS = {
-  1000: 'mil', 1001: 'mil uno', 1010: 'mil diez', 1015: 'mil quince', 1016: 'mil dieciséis', 1020: 'mil veinte', 1021: 'mil veintiuno',
-  1022: 'mil veintidós', 1023: 'mil veintitrés', 1026: 'mil veintiséis', 1030: 'mil treinta', 1031: 'mil treinta y uno', 1100: 'mil cien',
-  1101: 'mil ciento uno', 1121: 'mil ciento veintiuno', 1500: 'mil quinientos', 1700: 'mil setecientos', 1900: 'mil novecientos',
-  2000: 'dos mil', 2327: 'dos mil trescientos veintisiete', 2372: 'dos mil trescientos setenta y dos', 3227: 'tres mil doscientos veintisiete',
-  3519: 'tres mil quinientos diecinueve', 4022: 'cuatro mil veintidós', 4026: 'cuatro mil veintiséis', 4275: 'cuatro mil doscientos setenta y cinco',
-  4528: 'cuatro mil quinientos veintiocho', 5000: 'cinco mil', 5555: 'cinco mil quinientos cincuenta y cinco', 6100: 'seis mil cien',
-  6666: 'seis mil seiscientos sesenta y seis', 7086: 'siete mil ochenta y seis', 7777: 'siete mil setecientos setenta y siete',
-  8006: 'ocho mil seis', 8040: 'ocho mil cuarenta', 8200: 'ocho mil doscientos', 9090: 'nueve mil noventa', 9100: 'nueve mil cien',
-  9900: 'nueve mil novecientos', 9999: 'nueve mil novecientos noventa y nueve', 3401: 'tres mil cuatrocientos uno', 6013: 'seis mil trece',
-  2900: 'dos mil novecientos', 1800: 'mil ochocientos', 7300: 'siete mil trescientos',
+  1000: 'mil',
+  1001: 'mil uno',
+  1010: 'mil diez',
+  1015: 'mil quince',
+  1016: 'mil dieciséis',
+  1020: 'mil veinte',
+  1021: 'mil veintiuno',
+  1022: 'mil veintidós',
+  1023: 'mil veintitrés',
+  1026: 'mil veintiséis',
+  1030: 'mil treinta',
+  1031: 'mil treinta y uno',
+  1100: 'mil cien',
+  1101: 'mil ciento uno',
+  1121: 'mil ciento veintiuno',
+  1500: 'mil quinientos',
+  1700: 'mil setecientos',
+  1900: 'mil novecientos',
+  2000: 'dos mil',
+  2327: 'dos mil trescientos veintisiete',
+  2372: 'dos mil trescientos setenta y dos',
+  3227: 'tres mil doscientos veintisiete',
+  3519: 'tres mil quinientos diecinueve',
+  4022: 'cuatro mil veintidós',
+  4026: 'cuatro mil veintiséis',
+  4275: 'cuatro mil doscientos setenta y cinco',
+  4528: 'cuatro mil quinientos veintiocho',
+  5000: 'cinco mil',
+  5555: 'cinco mil quinientos cincuenta y cinco',
+  6100: 'seis mil cien',
+  6666: 'seis mil seiscientos sesenta y seis',
+  7086: 'siete mil ochenta y seis',
+  7777: 'siete mil setecientos setenta y siete',
+  8006: 'ocho mil seis',
+  8040: 'ocho mil cuarenta',
+  8200: 'ocho mil doscientos',
+  9090: 'nueve mil noventa',
+  9100: 'nueve mil cien',
+  9900: 'nueve mil novecientos',
+  9999: 'nueve mil novecientos noventa y nueve',
+  3401: 'tres mil cuatrocientos uno',
+  6013: 'seis mil trece',
+  2900: 'dos mil novecientos',
+  1800: 'mil ochocientos',
+  7300: 'siete mil trescientos',
 };
 
 test('numberToWords table', () => {
@@ -319,9 +375,18 @@ test('columna levels: mixed ops, carry/borrow counts', () => {
 test('column steps and marks: 4.003 − 1.257', () => {
   const d = M.solveColumn('-', 4003, 1257);
   assert.equal(d.result, 2746);
-  assert.deepEqual(d.steps.map((s) => s.place), ['U', 'D', 'C', 'UM']);
-  assert.deepEqual(d.steps.map((s) => s.digit), [6, 4, 7, 2]);
-  assert.deepEqual(d.steps.map((s) => s.borrowed), [true, false, false, false]);
+  assert.deepEqual(
+    d.steps.map((s) => s.place),
+    ['U', 'D', 'C', 'UM'],
+  );
+  assert.deepEqual(
+    d.steps.map((s) => s.digit),
+    [6, 4, 7, 2],
+  );
+  assert.deepEqual(
+    d.steps.map((s) => s.borrowed),
+    [true, false, false, false],
+  );
   assert.equal(d.steps[0].topAfter, 13);
   assert.equal(d.steps[0].lentFrom, 'D');
   assert.deepEqual(d.marks.crossed, { D: true, C: true, UM: true });
@@ -333,9 +398,18 @@ test('column steps and marks: 4.003 − 1.257', () => {
 test('column steps and marks: 532 − 278', () => {
   const d = M.solveColumn('-', 532, 278);
   assert.equal(d.result, 254);
-  assert.deepEqual(d.steps.map((s) => s.digit), [4, 5, 2]);
-  assert.deepEqual(d.steps.map((s) => s.borrowed), [true, true, false]);
-  assert.deepEqual(d.steps.map((s) => s.top), [2, 2, 4]);
+  assert.deepEqual(
+    d.steps.map((s) => s.digit),
+    [4, 5, 2],
+  );
+  assert.deepEqual(
+    d.steps.map((s) => s.borrowed),
+    [true, true, false],
+  );
+  assert.deepEqual(
+    d.steps.map((s) => s.top),
+    [2, 2, 4],
+  );
   assert.deepEqual(d.marks.crossed, { D: true, C: true });
   assert.deepEqual(d.marks.newTop, { D: 2, C: 4 });
   assert.deepEqual(d.marks.smallOne, { U: true, D: true });
@@ -343,8 +417,14 @@ test('column steps and marks: 532 − 278', () => {
 
 test('addition steps', () => {
   const d = M.solveColumn('+', 1678, 1565);
-  assert.deepEqual(d.steps.map((s) => s.digit), [3, 4, 2, 3]);
-  assert.deepEqual(d.steps.map((s) => s.carryOut), [1, 1, 1, 0]);
+  assert.deepEqual(
+    d.steps.map((s) => s.digit),
+    [3, 4, 2, 3],
+  );
+  assert.deepEqual(
+    d.steps.map((s) => s.carryOut),
+    [1, 1, 1, 0],
+  );
   assert.equal(d.result, 3243);
 });
 
@@ -430,7 +510,10 @@ test('columna L4: busca el error', () => {
   });
   assert.ok(wrongCount > SEEDS * 0.4 && wrongCount < SEEDS * 0.6, `wrong ${wrongCount}`);
   assert.deepEqual([...codes].sort(), ['forgot-carry', 'forgot-decrement', 'smaller-from-larger']);
-  const t = { kind: 'fix', data: { op: '+', a: 478, b: 256, shown: 624, result: 734, errorCode: 'forgot-carry', steps: M.solveColumn('+', 478, 256).steps } };
+  const t = {
+    kind: 'fix',
+    data: { op: '+', a: 478, b: 256, shown: 624, result: 734, errorCode: 'forgot-carry', steps: M.solveColumn('+', 478, 256).steps },
+  };
   assert.match(M.checkAnswer(t, { ok: true }).error.es, /Se ha olvidado de llevar una en las decenas/);
 });
 
@@ -599,7 +682,12 @@ test('makeExam count and mix', () => {
   assert.equal(M.makeExam({ rng: seeded(2) }).length, 12);
   const biased = M.makeExam({ count: 200, weights: { columna: 10, valor: 0.01, redondeo: 0.01, problemas: 0.01 }, rng: seeded(9) });
   assert.ok(biased.filter((t) => t.topic === 'columna').length > 150);
-  assert.equal(M.makeExam({ count: 40, maxLevels: { columna: 2 }, rng: seeded(4) }).filter((t) => t.topic === 'columna').every((t) => t.level <= 2), true);
+  assert.equal(
+    M.makeExam({ count: 40, maxLevels: { columna: 2 }, rng: seeded(4) })
+      .filter((t) => t.topic === 'columna')
+      .every((t) => t.level <= 2),
+    true,
+  );
 });
 
 test('weakWeights ordering', () => {
@@ -624,7 +712,14 @@ const everyLevel = (fn) => {
 
 // A few deliberately wrong inputs for any kind, to collect the error objects.
 const wrongInputs = (t) => [
-  0, t.answer + 10, -1, 1000, { UM: 0, C: 0, D: 0, U: 1 }, [1, 2], { ok: true }, { ok: false, value: 1 },
+  0,
+  t.answer + 10,
+  -1,
+  1000,
+  { UM: 0, C: 0, D: 0, U: 1 },
+  [1, 2],
+  { ok: true },
+  { ok: false, value: 1 },
   ...(t.choices ? t.choices.map((c) => c.value) : []),
   ...(t.data && t.data.low !== undefined ? [t.data.low, t.data.high] : []),
 ];
@@ -648,7 +743,10 @@ test('es: same seed gives identical numbers and answers as uk', () => {
   });
   const a = M.makeExam({ count: 24, rng: seeded(5) });
   const b = M.makeExam({ count: 24, rng: seeded(5), lang: 'es' });
-  assert.deepEqual(b.map((t) => [t.id, t.answer]), a.map((t) => [t.id, t.answer]));
+  assert.deepEqual(
+    b.map((t) => [t.id, t.answer]),
+    a.map((t) => [t.id, t.answer]),
+  );
 });
 
 test('es: no Cyrillic in tasks, hints and error messages of any task type', () => {

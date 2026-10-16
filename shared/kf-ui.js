@@ -41,7 +41,13 @@
   document.body.append(stack);
   // A modal <dialog> sits in the top layer, above anything in <body>: show feedback inside it instead.
   function host(el) {
-    const modal = [...document.querySelectorAll('dialog[open]')].reverse().find(d => { try { return d.matches(':modal'); } catch { return false; } });
+    const modal = [...document.querySelectorAll('dialog[open]')].reverse().find((d) => {
+      try {
+        return d.matches(':modal');
+      } catch {
+        return false;
+      }
+    });
     const target = modal || document.body;
     if (el.parentNode !== target) target.append(el);
   }
@@ -53,7 +59,10 @@
     stack.append(node);
     // Keep celebrations visible without covering the match on small screens.
     while (stack.children.length > 2) stack.firstElementChild.remove();
-    setTimeout(() => { node.classList.add('out'); setTimeout(() => node.remove(), 300); }, 2300);
+    setTimeout(() => {
+      node.classList.add('out');
+      setTimeout(() => node.remove(), 300);
+    }, 2300);
   }
   function confetti() {
     if (reduced()) return;
@@ -65,27 +74,41 @@
       bit.style.left = `${Math.random() * 100}%`;
       bit.style.background = colors[i % colors.length];
       bit.style.setProperty('--drift', `${Math.random() * 220 - 110}px`);
-      bit.style.animationDelay = `${Math.random() * .55}s`;
+      bit.style.animationDelay = `${Math.random() * 0.55}s`;
       layer.append(bit);
     }
     host(layer);
     setTimeout(() => layer.remove(), 2600);
   }
   function updateCoins() {
-    document.querySelectorAll('[data-kf-coins]').forEach(el => { el.textContent = KF.get().coins; });
+    document.querySelectorAll('[data-kf-coins]').forEach((el) => {
+      el.textContent = KF.get().coins;
+    });
   }
   KF.on('change', updateCoins);
-  KF.on('coins', delta => { if (delta > 0) toast(`+${delta} 🪙`, 'coin'); });
+  KF.on('coins', (delta) => {
+    if (delta > 0) toast(`+${delta} 🪙`, 'coin');
+  });
   KF.on('earn-cap', () => toast(T('earnCap')));
-  KF.on('achievement', a => { toast(T('achievement', { title: a.title })); confetti(); });
-  KF.on('card', x => { if (x.isNew) { toast(T('card', { name: x.name })); confetti(); } });
+  KF.on('achievement', (a) => {
+    toast(T('achievement', { title: a.title }));
+    confetti();
+  });
+  KF.on('card', (x) => {
+    if (x.isNew) {
+      toast(T('card', { name: x.name }));
+      confetti();
+    }
+  });
   // Sync state of the logged-in player. Any element with data-kf-sync gets data-state;
   // data-kf-sync="" shows the short label, ="long" the explanation, ="dot" only the state.
-  const SYNC = Object.fromEntries(['synced', 'pending', 'offline', 'expired'].map(k => [k, { short: T(`sync.${k}.short`), long: T(`sync.${k}.long`) }]));
+  const SYNC = Object.fromEntries(
+    ['synced', 'pending', 'offline', 'expired'].map((k) => [k, { short: T(`sync.${k}.short`), long: T(`sync.${k}.long`) }]),
+  );
 
   function updateSync() {
     const status = KF.auth?.status || 'guest';
-    document.querySelectorAll('[data-kf-sync]').forEach(el => {
+    document.querySelectorAll('[data-kf-sync]').forEach((el) => {
       el.dataset.state = status;
       const mode = el.dataset.kfSync;
       if (mode !== 'dot') el.textContent = SYNC[status]?.[mode === 'long' ? 'long' : 'short'] || '';

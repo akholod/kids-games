@@ -302,8 +302,16 @@
     gavi: ['gavi'],
   };
   const STICKER_REFUND = {
-    messi: 10, ronaldo: 10, shevchenko: 10, 'courtois-gold': 10,
-    yamal: 5, mbappe: 5, haaland: 5, mudryk: 5, vinicius: 5, bellingham: 5,
+    messi: 10,
+    ronaldo: 10,
+    shevchenko: 10,
+    'courtois-gold': 10,
+    yamal: 5,
+    mbappe: 5,
+    haaland: 5,
+    mudryk: 5,
+    vinicius: 5,
+    bellingham: 5,
   };
   const REFUND_DEFAULT = 3;
 
@@ -342,14 +350,44 @@
     { id: 'first-pack', icon: '🎁', title: T('first-pack.title'), desc: T('first-pack.desc'), check: (s) => s.stats.packs >= 1 },
     { id: 'album-10', icon: '📒', title: T('album-10.title'), desc: T('album-10.desc'), check: (s) => uniqueCards(s) >= 10 },
     { id: 'album-50', icon: '📚', title: T('album-50.title'), desc: T('album-50.desc'), check: (s) => uniqueCards(s) >= 50 },
-    { id: 'album-full', icon: '🏆', title: T('album-full.title'), desc: T('album-full.desc'), check: (s) => CARDS.length > 0 && CARDS.every((c) => s.cards[c.id] > 0) },
+    {
+      id: 'album-full',
+      icon: '🏆',
+      title: T('album-full.title'),
+      desc: T('album-full.desc'),
+      check: (s) => CARDS.length > 0 && CARDS.every((c) => s.cards[c.id] > 0),
+    },
     { id: 'legend', icon: '🌟', title: T('legend.title'), desc: T('legend.desc'), check: (s) => ownedOfCat(s, 'legend') >= 1 },
     { id: 'rare', icon: '💎', title: T('rare.title'), desc: T('rare.desc'), check: (s) => ownedOfCat(s, 'rare') >= 1 },
     { id: 'futsal', icon: '🥅', title: T('futsal.title'), desc: T('futsal.desc'), check: (s) => ownedOfCat(s, 'futsal') >= 5 },
-    { id: 'ukraine-5', icon: '🟦', title: T('ukraine-5.title'), desc: T('ukraine-5.desc'), check: (s) => CARDS.filter((c) => c.ua && s.cards[c.id] > 0).length >= 5 },
-    { id: 'ukraine', icon: '🇺🇦', title: T('ukraine.title'), desc: T('ukraine.desc'), check: (s) => CARDS.some((c) => c.ua) && CARDS.filter((c) => c.ua).every((c) => s.cards[c.id] > 0) },
-    { id: 'keeper-wall', icon: '🧱', title: T('keeper-wall.title'), desc: T('keeper-wall.desc'), check: (s) => (s.gameData?.goalkeeper?.saves || 0) >= 25 },
-    { id: 'keeper-gloves', icon: '🧤', title: T('keeper-gloves.title'), desc: T('keeper-gloves.desc'), check: (s) => (s.gameData?.goalkeeper?.gloves?.owned?.length || 0) >= 2 },
+    {
+      id: 'ukraine-5',
+      icon: '🟦',
+      title: T('ukraine-5.title'),
+      desc: T('ukraine-5.desc'),
+      check: (s) => CARDS.filter((c) => c.ua && s.cards[c.id] > 0).length >= 5,
+    },
+    {
+      id: 'ukraine',
+      icon: '🇺🇦',
+      title: T('ukraine.title'),
+      desc: T('ukraine.desc'),
+      check: (s) => CARDS.some((c) => c.ua) && CARDS.filter((c) => c.ua).every((c) => s.cards[c.id] > 0),
+    },
+    {
+      id: 'keeper-wall',
+      icon: '🧱',
+      title: T('keeper-wall.title'),
+      desc: T('keeper-wall.desc'),
+      check: (s) => (s.gameData?.goalkeeper?.saves || 0) >= 25,
+    },
+    {
+      id: 'keeper-gloves',
+      icon: '🧤',
+      title: T('keeper-gloves.title'),
+      desc: T('keeper-gloves.desc'),
+      check: (s) => (s.gameData?.goalkeeper?.gloves?.owned?.length || 0) >= 2,
+    },
   ];
 
   const fresh = () => ({

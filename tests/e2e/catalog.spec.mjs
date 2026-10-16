@@ -11,10 +11,22 @@ for (const lang of [undefined, 'es']) {
       expect(expected.length).toBeGreaterThan(0);
       const cards = page.locator('#games-list .game-card');
       await expect(cards).toHaveCount(expected.length);
-      const shown = await cards.evaluateAll((els) => els.map((e) => ({ href: e.getAttribute('href'), title: e.querySelector('strong').firstChild.textContent.trim() })));
+      const shown = await cards.evaluateAll((els) =>
+        els.map((e) => ({ href: e.getAttribute('href'), title: e.querySelector('strong').firstChild.textContent.trim() })),
+      );
       // Cards are grouped by category: compare as sets.
       expect(shown.map((c) => c.title).sort()).toEqual(expected.map((g) => g.title).sort());
-      expect(shown.filter((c) => c.href).map((c) => c.href).sort()).toEqual(expected.filter((g) => g.playable).map((g) => `games/${g.slug}/`).sort());
+      expect(
+        shown
+          .filter((c) => c.href)
+          .map((c) => c.href)
+          .sort(),
+      ).toEqual(
+        expected
+          .filter((g) => g.playable)
+          .map((g) => `games/${g.slug}/`)
+          .sort(),
+      );
       if (lang === 'es') {
         const sites = await page.evaluate(() => KF.siteGames().map((g) => KF.GAMES.find((x) => x.slug === g.slug).sites));
         expect(sites.every((s) => s.includes('es'))).toBe(true);

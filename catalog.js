@@ -1,6 +1,7 @@
 'use strict';
-const plural = (n, one, few, many) => n % 10 === 1 && n % 100 !== 11 ? one : [2,3,4].includes(n % 10) && !(n % 100 >= 12 && n % 100 <= 14) ? few : many;
-const es2 = (n, one, many) => n === 1 ? one : many;
+const plural = (n, one, few, many) =>
+  n % 10 === 1 && n % 100 !== 11 ? one : [2, 3, 4].includes(n % 10) && !(n % 100 >= 12 && n % 100 <= 14) ? few : many;
+const es2 = (n, one, many) => (n === 1 ? one : many);
 // Catalog texts. Ukrainian = the main site as it always was; Spanish (Spain, «tú») for the Spanish site.
 const T = KF.i18n({
   uk: {
@@ -61,7 +62,8 @@ const T = KF.i18n({
     'sell.title': 'Обміняти всі повторки?',
     'sell.text': 'Повторок: {n}. За них ти отримаєш +{coins} 🪙. По одній картці кожного футболіста залишиться в альбомі.',
     'sell.yes': 'Так, +{coins} 🪙',
-    'detail.dups': ({ n }) => `У тебе ${T('nCards', { n })}: одна в альбомі і ${n - 1} ${plural(n - 1, 'повторка', 'повторки', 'повторок')}.`,
+    'detail.dups': ({ n }) =>
+      `У тебе ${T('nCards', { n })}: одна в альбомі і ${n - 1} ${plural(n - 1, 'повторка', 'повторки', 'повторок')}.`,
     'detail.one': 'Ця картка вже у твоєму альбомі.',
     'detail.sell': 'Обміняти повторку · +{coins} 🪙',
     'detail.note': 'Одна картка завжди залишається в альбомі.',
@@ -101,11 +103,13 @@ const T = KF.i18n({
     'test.title': 'Тест-режим',
     'test.text': 'Можна грати без зарахування прогресу. Дитячий прогрес не зміниться.',
     'test.on': '🧪 Увімкнути тест-режим',
-    'test.onText': 'Зараз увімкнено: статистика, код і скидання нижче стосуються тільки тестового прогресу. Вхід у профіль і синхронізація в тест-режимі вимкнені.',
+    'test.onText':
+      'Зараз увімкнено: статистика, код і скидання нижче стосуються тільки тестового прогресу. Вхід у профіль і синхронізація в тест-режимі вимкнені.',
     'test.off': 'Вимкнути тест-режим',
     'sync.local': 'Прогрес зберігається лише в цьому браузері. Щоб перенести його на інший пристрій, скопіюйте код.',
     'sync.user': 'Профіль «{name}»: прогрес зберігається на сервері й сам переходить на інші пристрої. Код нижче — запасний варіант.',
-    'sync.guest': 'Прогрес гостя зберігається лише в цьому браузері. Щоб він був на всіх пристроях, увійдіть у профіль («Увійти» вгорі) або перенесіть кодом.',
+    'sync.guest':
+      'Прогрес гостя зберігається лише в цьому браузері. Щоб він був на всіх пристроях, увійдіть у профіль («Увійти» вгорі) або перенесіть кодом.',
     'stat.games': 'Матчі',
     'stat.correct': 'Правильні відповіді',
     'stat.packs': 'Пакунки',
@@ -134,7 +138,8 @@ const T = KF.i18n({
     'who.logout': '👋 Вийти',
     'who.saving': 'Зберігаю…',
     'unsaved.title': 'Ще не все збережено',
-    'unsaved.text': 'Частина прогресу ще не долетіла до сервера. Якщо вийти зараз, її можна загубити. Краще зачекати, поки зʼявиться інтернет.',
+    'unsaved.text':
+      'Частина прогресу ще не долетіла до сервера. Якщо вийти зараз, її можна загубити. Краще зачекати, поки зʼявиться інтернет.',
     'unsaved.stay': 'Залишитись',
     'unsaved.leave': 'Вийти все одно',
     'logout.fail': 'Поки не вийшло вийти. Спробуй, коли зʼявиться інтернет.',
@@ -229,7 +234,8 @@ const T = KF.i18n({
     'pack.title': 'Sobre de cartas',
     'pack.text': 'Trae 3 cartas. ¡Te puede salir una leyenda!',
     'pack.open': 'Abrir',
-    'pack.need': ({ n }) => `${es2(n, 'Te falta', 'Te faltan')} ${T('nCoins', { n })} para el sobre. Ganas monedas acertando en los juegos.`,
+    'pack.need': ({ n }) =>
+      `${es2(n, 'Te falta', 'Te faltan')} ${T('nCoins', { n })} para el sobre. Ganas monedas acertando en los juegos.`,
     filter: 'Qué cartas ver',
     own: 'Mías o no',
     'own.all': 'Todas',
@@ -292,11 +298,14 @@ const T = KF.i18n({
     'test.title': 'Modo de prueba',
     'test.text': 'Puedes jugar sin que cuente el progreso. El progreso real no cambia.',
     'test.on': '🧪 Activar el modo de prueba',
-    'test.onText': 'Está activado: las estadísticas, el código y el borrado de abajo solo afectan al progreso de prueba. En el modo de prueba no se puede entrar en un perfil ni sincronizar.',
+    'test.onText':
+      'Está activado: las estadísticas, el código y el borrado de abajo solo afectan al progreso de prueba. En el modo de prueba no se puede entrar en un perfil ni sincronizar.',
     'test.off': 'Desactivar el modo de prueba',
     'sync.local': 'El progreso se guarda solo en este navegador. Para pasarlo a otro dispositivo, copia el código.',
-    'sync.user': 'Perfil «{name}»: el progreso se guarda en el servidor y pasa solo a otros dispositivos. El código de abajo es una copia de reserva.',
-    'sync.guest': 'El progreso de invitado se guarda solo en este navegador. Para tenerlo en todos los dispositivos, entra en un perfil («Entrar», arriba) o pásalo con el código.',
+    'sync.user':
+      'Perfil «{name}»: el progreso se guarda en el servidor y pasa solo a otros dispositivos. El código de abajo es una copia de reserva.',
+    'sync.guest':
+      'El progreso de invitado se guarda solo en este navegador. Para tenerlo en todos los dispositivos, entra en un perfil («Entrar», arriba) o pásalo con el código.',
     'stat.games': 'Partidos',
     'stat.correct': 'Respuestas correctas',
     'stat.packs': 'Sobres',
@@ -325,7 +334,8 @@ const T = KF.i18n({
     'who.logout': '👋 Salir',
     'who.saving': 'Guardando…',
     'unsaved.title': 'Aún no está todo guardado',
-    'unsaved.text': 'Una parte del progreso aún no ha llegado al servidor. Si sales ahora, se puede perder. Mejor espera a que vuelva internet.',
+    'unsaved.text':
+      'Una parte del progreso aún no ha llegado al servidor. Si sales ahora, se puede perder. Mejor espera a que vuelva internet.',
     'unsaved.stay': 'Me quedo',
     'unsaved.leave': 'Salir igualmente',
     'logout.fail': 'No se ha podido salir. Prueba cuando vuelva internet.',
@@ -380,7 +390,8 @@ const T = KF.i18n({
     'login.done': '¡Listo! ⚽',
     'login.hello': '¡Hola, {name}! ⚽',
     'merge.title': 'Hay progreso de invitado',
-    'merge.text': ({ parts, name }) => `En este dispositivo hay progreso de invitado${parts ? ` (${parts})` : ''}. ¿Lo añadimos al perfil de ${name}?`,
+    'merge.text': ({ parts, name }) =>
+      `En este dispositivo hay progreso de invitado${parts ? ` (${parts})` : ''}. ¿Lo añadimos al perfil de ${name}?`,
     'merge.yes': 'Sí, añadir',
     'merge.done': '¡Listo! El progreso de invitado ya está en el perfil de {name} 🎉',
     'merge.fail': 'No se ha podido añadir. Prueba otra vez más tarde.',
@@ -390,52 +401,92 @@ const T = KF.i18n({
 T.apply();
 T.apply(document.getElementById('pack-tpl').content);
 document.title = T('title');
-for (const [prop, key] of [['--t-new', 'tile.new'], ['--t-show', 'code.show'], ['--t-hide', 'code.hide']]) document.documentElement.style.setProperty(prop, JSON.stringify(T(key)));
+for (const [prop, key] of [
+  ['--t-new', 'tile.new'],
+  ['--t-show', 'code.show'],
+  ['--t-hide', 'code.hide'],
+])
+  document.documentElement.style.setProperty(prop, JSON.stringify(T(key)));
 // Small question dialog (sell duplicates, guest merge, logout warning). Resolves 'primary' | 'secondary' | null (Esc).
 function askDialog({ icon, title, text, primary, secondary }) {
   const d = document.getElementById('ask-dialog');
-  for (const [id, value] of [['ask-icon', icon], ['ask-title', title], ['ask-text', text], ['ask-yes', primary], ['ask-no', secondary]]) document.getElementById(id).textContent = value;
+  for (const [id, value] of [
+    ['ask-icon', icon],
+    ['ask-title', title],
+    ['ask-text', text],
+    ['ask-yes', primary],
+    ['ask-no', secondary],
+  ])
+    document.getElementById(id).textContent = value;
   d.returnValue = '';
   d.showModal();
   document.getElementById('ask-yes').focus();
-  return new Promise(resolve => d.addEventListener('close', () => resolve(d.returnValue || null), { once: true }));
+  return new Promise((resolve) => d.addEventListener('close', () => resolve(d.returnValue || null), { once: true }));
 }
 (() => {
-  const $ = id => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
   // Markup here is built only from KF constants and safeCount() numbers.
   const setMarkup = (el, html) => el.replaceChildren(document.createRange().createContextualFragment(html));
   const tabs = [...document.querySelectorAll('[role="tab"]')];
   function showTab(name) {
     document.body.classList.toggle('games-view', name === 'games');
-    tabs.forEach(tab => { const active = tab.dataset.tab === name; tab.setAttribute('aria-selected', active); tab.tabIndex = active ? 0 : -1; $(tab.getAttribute('aria-controls')).hidden = !active; });
+    tabs.forEach((tab) => {
+      const active = tab.dataset.tab === name;
+      tab.setAttribute('aria-selected', active);
+      tab.tabIndex = active ? 0 : -1;
+      $(tab.getAttribute('aria-controls')).hidden = !active;
+    });
   }
   tabs.forEach((tab, index) => {
     tab.addEventListener('click', () => showTab(tab.dataset.tab));
-    tab.addEventListener('keydown', e => { const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!step) return; e.preventDefault(); const next = tabs[(index + step + tabs.length) % tabs.length]; showTab(next.dataset.tab); next.focus(); });
+    tab.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!step) return;
+      e.preventDefault();
+      const next = tabs[(index + step + tabs.length) % tabs.length];
+      showTab(next.dataset.tab);
+      next.focus();
+    });
   });
-  const safeCount = n => Number.isFinite(Number(n)) ? Math.max(0, Number(n)) : 0;
+  const safeCount = (n) => (Number.isFinite(Number(n)) ? Math.max(0, Number(n)) : 0);
   function renderGames() {
     const state = KF.get();
-    const siteGames = KF.siteGames ? KF.siteGames() : KF.GAMES.filter(g => KF.isListed(g));
-    setMarkup($('games-list'), Object.entries(KF.CATEGORIES).map(([key, category]) => {
-      const games = siteGames.filter(g => g.category === key);
-      if (!games.length) return '';
-      return `<div class="category"><h3>${category.emoji} ${category.title}</h3><div class="game-grid">${games.map(g => {
-        const record = state.games?.[g.slug];
-        const ready = KF.isPlayable(g);
-        const beta = g.status === 'beta' ? `<span class="beta-tag">${T('game.beta')}</span>` : '';
-        return `<${ready ? 'a href="games/' + g.slug + '/"' : 'div'} class="game-card ${ready ? 'ready' : 'soon'}"><span class="game-icon" aria-hidden="true">${g.emoji}</span><strong>${g.title}${beta}</strong><p>${g.desc}</p><span class="game-bottom"><span>${record ? T('game.record', { best: safeCount(record.best), max: safeCount(record.max), plays: safeCount(record.plays) }) : T(ready ? 'game.first' : 'game.wip')}</span><span class="${ready ? 'game-go' : 'soon-label'}">${T(ready ? 'game.play' : 'game.soon')}</span></span></${ready ? 'a' : 'div'}>`;
-      }).join('')}</div></div>`;
-    }).join(''));
+    const siteGames = KF.siteGames ? KF.siteGames() : KF.GAMES.filter((g) => KF.isListed(g));
+    setMarkup(
+      $('games-list'),
+      Object.entries(KF.CATEGORIES)
+        .map(([key, category]) => {
+          const games = siteGames.filter((g) => g.category === key);
+          if (!games.length) return '';
+          return `<div class="category"><h3>${category.emoji} ${category.title}</h3><div class="game-grid">${games
+            .map((g) => {
+              const record = state.games?.[g.slug];
+              const ready = KF.isPlayable(g);
+              const beta = g.status === 'beta' ? `<span class="beta-tag">${T('game.beta')}</span>` : '';
+              return `<${ready ? 'a href="games/' + g.slug + '/"' : 'div'} class="game-card ${ready ? 'ready' : 'soon'}"><span class="game-icon" aria-hidden="true">${g.emoji}</span><strong>${g.title}${beta}</strong><p>${g.desc}</p><span class="game-bottom"><span>${record ? T('game.record', { best: safeCount(record.best), max: safeCount(record.max), plays: safeCount(record.plays) }) : T(ready ? 'game.first' : 'game.wip')}</span><span class="${ready ? 'game-go' : 'soon-label'}">${T(ready ? 'game.play' : 'game.soon')}</span></span></${ready ? 'a' : 'div'}>`;
+            })
+            .join('')}</div></div>`;
+        })
+        .join(''),
+    );
   }
   function renderAwards() {
     const earned = KF.get().achievements || {};
-    $('award-progress').textContent = `${KF.ACHIEVEMENTS.filter(a => earned[a.id]).length} / ${KF.ACHIEVEMENTS.length}`;
-    setMarkup($('achievement-grid'), KF.ACHIEVEMENTS.map(a => `<div class="badge card ${earned[a.id] ? '' : 'locked'}"><span class="badge-icon" aria-hidden="true">${earned[a.id] ? a.icon : '🔒'}</span><span><strong>${a.title}</strong><p>${a.desc}</p>${earned[a.id] ? `<small>${T('awards.got')}</small>` : ''}</span></div>`).join(''));
+    $('award-progress').textContent = `${KF.ACHIEVEMENTS.filter((a) => earned[a.id]).length} / ${KF.ACHIEVEMENTS.length}`;
+    setMarkup(
+      $('achievement-grid'),
+      KF.ACHIEVEMENTS.map(
+        (a) =>
+          `<div class="badge card ${earned[a.id] ? '' : 'locked'}"><span class="badge-icon" aria-hidden="true">${earned[a.id] ? a.icon : '🔒'}</span><span><strong>${a.title}</strong><p>${a.desc}</p>${earned[a.id] ? `<small>${T('awards.got')}</small>` : ''}</span></div>`,
+      ).join(''),
+    );
   }
   function renderParents() {
     const s = KF.get().stats;
-    setMarkup($('stats'), `<div class="stat">${T('stat.games')}: <b>${safeCount(s.games)}</b></div><div class="stat">${T('stat.correct')}: <b>${safeCount(s.correct)}</b></div><div class="stat">${T('stat.packs')}: <b>${safeCount(s.packs)}</b></div><div class="stat">${T('stat.cards')}: <b>${KF.CARDS.filter(c => KF.get().cards?.[c.id] > 0).length} / ${KF.CARDS.length}</b></div>`);
+    setMarkup(
+      $('stats'),
+      `<div class="stat">${T('stat.games')}: <b>${safeCount(s.games)}</b></div><div class="stat">${T('stat.correct')}: <b>${safeCount(s.correct)}</b></div><div class="stat">${T('stat.packs')}: <b>${safeCount(s.packs)}</b></div><div class="stat">${T('stat.cards')}: <b>${KF.CARDS.filter((c) => KF.get().cards?.[c.id] > 0).length} / ${KF.CARDS.length}</b></div>`,
+    );
     $('export-code').value = KF.exportCode();
   }
   if (KF.TEST_MODE) {
@@ -444,11 +495,19 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('test-mode-link').href = './?parent=off';
     $('test-mode-link').textContent = T('test.off');
   }
-  function render() { renderGames(); renderAwards(); renderParents(); }
+  function render() {
+    renderGames();
+    renderAwards();
+    renderParents();
+  }
   $('copy-code').addEventListener('click', async () => {
     $('export-code').select();
-    try { await navigator.clipboard.writeText($('export-code').value); KFUI.toast(T('code.copied')); }
-    catch { KFUI.toast(T('code.copyByHand')); }
+    try {
+      await navigator.clipboard.writeText($('export-code').value);
+      KFUI.toast(T('code.copied'));
+    } catch {
+      KFUI.toast(T('code.copyByHand'));
+    }
   });
   $('import-btn').addEventListener('click', () => {
     if (!confirm(T('code.confirm'))) return;
@@ -457,7 +516,10 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (ok) $('import-code').value = '';
   });
   $('reset-btn').addEventListener('click', () => {
-    if (confirm(T('reset.confirm'))) { KF.reset(); $('import-status').textContent = T('reset.done'); }
+    if (confirm(T('reset.confirm'))) {
+      KF.reset();
+      $('import-status').textContent = T('reset.done');
+    }
   });
   KF.on('change', render);
   render();
@@ -466,37 +528,51 @@ function askDialog({ icon, title, text, primary, secondary }) {
 // Card album, pack opening and the big card view. The album grid is built once; KF changes only
 // update tiles in place, so hundreds of images are not re-created on every coin change.
 (() => {
-  const $ = id => document.getElementById(id);
-  const h = (tag, props = {}, ...kids) => { const el = Object.assign(document.createElement(tag), props); el.append(...kids); return el; };
+  const $ = (id) => document.getElementById(id);
+  const h = (tag, props = {}, ...kids) => {
+    const el = Object.assign(document.createElement(tag), props);
+    el.append(...kids);
+    return el;
+  };
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const wait = ms => new Promise(r => setTimeout(r, reduced() ? Math.min(ms, 60) : ms));
+  const wait = (ms) => new Promise((r) => setTimeout(r, reduced() ? Math.min(ms, 60) : ms));
   const CATS = KF.CARD_CATS;
   const GROUP = { common: T('group.common'), futsal: T('group.futsal'), rare: T('group.rare'), legend: T('group.legend') };
-  const BY_ID = new Map(KF.CARDS.map(c => [c.id, c]));
-  const have = id => Math.max(0, Math.floor(Number(KF.get().cards?.[id]) || 0));
-  const catClass = cat => `kf-cat-${CATS[cat] ? cat : 'common'}`;
-  const catLabel = cat => (CATS[cat] || CATS.common).label;
-  const sellOf = cat => (CATS[cat] || CATS.common).sell;
-  const pct = (a, b) => `${b ? Math.round(a / b * 100) : 0}%`;
+  const BY_ID = new Map(KF.CARDS.map((c) => [c.id, c]));
+  const have = (id) => Math.max(0, Math.floor(Number(KF.get().cards?.[id]) || 0));
+  const catClass = (cat) => `kf-cat-${CATS[cat] ? cat : 'common'}`;
+  const catLabel = (cat) => (CATS[cat] || CATS.common).label;
+  const sellOf = (cat) => (CATS[cat] || CATS.common).sell;
+  const pct = (a, b) => `${b ? Math.round((a / b) * 100) : 0}%`;
   const packArt = () => $('pack-tpl').content.firstElementChild.cloneNode(true);
-  document.querySelectorAll('[data-pack-art]').forEach(el => el.replaceWith(packArt()));
+  document.querySelectorAll('[data-pack-art]').forEach((el) => el.replaceWith(packArt()));
 
   // Card picture with a styled fallback (offline / missing image). full = big image, thumb shown underneath while it loads.
   function face(card, { full = false, lazy = false, missing = false } = {}) {
     const el = h('span', { className: `kf-cardface ${catClass(card.cat)}${missing ? ' is-missing' : ''}` });
     const secret = missing && card.cat === 'legend';
-    const alt = h('span', { className: 'kf-cardface-alt' },
+    const alt = h(
+      'span',
+      { className: 'kf-cardface-alt' },
       h('span', { className: 'kf-cardface-who', textContent: missing ? '?' : '⚽' }),
-      h('span', { className: 'kf-cardface-plate' },
+      h(
+        'span',
+        { className: 'kf-cardface-plate' },
         h('span', { className: 'kf-cardface-name', textContent: secret ? '???' : card.name }),
-        h('span', { className: 'kf-cardface-cat', textContent: catLabel(card.cat) })));
+        h('span', { className: 'kf-cardface-cat', textContent: catLabel(card.cat) }),
+      ),
+    );
     alt.setAttribute('aria-hidden', 'true');
     if (!missing) {
       const img = h('img', { alt: '', decoding: 'async', width: 256, height: 512, draggable: false });
       if (lazy) img.loading = 'lazy';
       if (full) el.style.setProperty('--thumb', `url("${KF.cardImg(card.id, true)}")`);
       img.addEventListener('error', () => {
-        if (full && !img.dataset.thumb) { img.dataset.thumb = '1'; img.src = KF.cardImg(card.id, true); return; }
+        if (full && !img.dataset.thumb) {
+          img.dataset.thumb = '1';
+          img.src = KF.cardImg(card.id, true);
+          return;
+        }
         el.classList.add('is-broken');
         el.style.removeProperty('--thumb');
       });
@@ -511,47 +587,77 @@ function askDialog({ icon, title, text, primary, secondary }) {
   const tiles = new Map(); // id -> { card, el, owned, n }
   const secs = {};
   const chips = {};
-  let catFilter = 'all', ownFilter = 'all', built = false;
-  const meter = () => { const i = h('i'); return [h('span', { className: 'meter' }, i), i]; };
+  let catFilter = 'all',
+    ownFilter = 'all',
+    built = false;
+  const meter = () => {
+    const i = h('i');
+    return [h('span', { className: 'meter' }, i), i];
+  };
 
   for (const cat of Object.keys(CATS)) {
-    const list = KF.CARDS.filter(c => c.cat === cat);
+    const list = KF.CARDS.filter((c) => c.cat === cat);
     if (!list.length) continue;
-    const count = h('small'), [bar, fill] = meter();
+    const count = h('small'),
+      [bar, fill] = meter();
     bar.setAttribute('aria-hidden', 'true');
     const grid = h('div', { className: 'card-grid' });
-    for (const card of list) { const el = h('div'); grid.append(el); tiles.set(card.id, { card, el, owned: null, n: 0 }); }
-    const sec = h('section', { className: `album-sec ${catClass(cat)}` }, h('div', { className: 'sec-head' }, h('h3', { textContent: GROUP[cat] }), count, bar), grid);
+    for (const card of list) {
+      const el = h('div');
+      grid.append(el);
+      tiles.set(card.id, { card, el, owned: null, n: 0 });
+    }
+    const sec = h(
+      'section',
+      { className: `album-sec ${catClass(cat)}` },
+      h('div', { className: 'sec-head' }, h('h3', { textContent: GROUP[cat] }), count, bar),
+      grid,
+    );
     secs[cat] = { list, sec, count, fill };
     $('album').append(sec);
   }
   // Ukrainian players (ua: true) are a cross-category chip: their tiles stay in the common / futsal sections.
-  const UA = KF.CARDS.filter(c => c.ua);
+  const UA = KF.CARDS.filter((c) => c.ua);
   for (const key of ['all', ...Object.keys(secs), ...(UA.length ? ['ua'] : [])]) {
-    const n = h('small'), [bar, fill] = meter();
+    const n = h('small'),
+      [bar, fill] = meter();
     const cls = key === 'all' ? '' : key === 'ua' ? ' cat-ua' : ` ${catClass(key)}`;
-    const b = h('button', { type: 'button', className: `cat-chip${cls}` }, h('b', { textContent: T.has(`chip.${key}`) ? T(`chip.${key}`) : GROUP[key] }), n, bar);
+    const b = h(
+      'button',
+      { type: 'button', className: `cat-chip${cls}` },
+      h('b', { textContent: T.has(`chip.${key}`) ? T(`chip.${key}`) : GROUP[key] }),
+      n,
+      bar,
+    );
     b.dataset.cat = key;
-    b.addEventListener('click', () => { catFilter = key; applyFilter(); });
+    b.addEventListener('click', () => {
+      catFilter = key;
+      applyFilter();
+    });
     chips[key] = { b, n, fill };
     $('cat-filter').append(b);
   }
-  $('cat-filter').addEventListener('keydown', e => {
+  $('cat-filter').addEventListener('keydown', (e) => {
     const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    const list = Object.values(chips).map(c => c.b), i = list.indexOf(e.target);
+    const list = Object.values(chips).map((c) => c.b),
+      i = list.indexOf(e.target);
     if (!step || i < 0) return;
     e.preventDefault();
     const next = list[(i + step + list.length) % list.length];
     next.focus();
     next.click();
   });
-  $('own-filter').addEventListener('click', e => {
+  $('own-filter').addEventListener('click', (e) => {
     const b = e.target.closest('[data-own]');
-    if (b) { ownFilter = b.dataset.own; applyFilter(); }
+    if (b) {
+      ownFilter = b.dataset.own;
+      applyFilter();
+    }
   });
 
   function updateTile(t) {
-    const n = have(t.card.id), owned = n > 0;
+    const n = have(t.card.id),
+      owned = n > 0;
     if (owned !== t.owned) {
       let el;
       if (owned) {
@@ -580,18 +686,22 @@ function askDialog({ icon, title, text, primary, secondary }) {
 
   function renderAlbum() {
     let changed = !built;
-    for (const t of tiles.values()) { const was = t.owned; updateTile(t); if (was !== t.owned) changed = true; }
+    for (const t of tiles.values()) {
+      const was = t.owned;
+      updateTile(t);
+      if (was !== t.owned) changed = true;
+    }
     built = true;
     let total = 0;
     for (const [cat, s] of Object.entries(secs)) {
-      const got = s.list.filter(c => tiles.get(c.id).owned).length;
+      const got = s.list.filter((c) => tiles.get(c.id).owned).length;
       total += got;
       chips[cat].fill.style.width = pct(got, s.list.length);
       chips[cat].n.textContent = `${got}/${s.list.length}`;
     }
     updateHeads();
     if (chips.ua) {
-      const got = UA.filter(c => tiles.get(c.id)?.owned).length;
+      const got = UA.filter((c) => tiles.get(c.id)?.owned).length;
       chips.ua.n.textContent = `${got}/${UA.length}`;
       chips.ua.fill.style.width = pct(got, UA.length);
     }
@@ -601,7 +711,8 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('album-count').textContent = total;
     $('album-of').textContent = T('album.of', { n: all });
     $('album-total').setAttribute('aria-label', T('album.total', { got: total, all }));
-    const coins = KF.get().coins, need = KF.PACK_PRICE - coins;
+    const coins = KF.get().coins,
+      need = KF.PACK_PRICE - coins;
     $('open-pack').disabled = !KF.canBuyPack();
     $('pack-hint').hidden = KF.canBuyPack();
     $('pack-hint').textContent = T('pack.need', { n: need });
@@ -614,15 +725,17 @@ function askDialog({ icon, title, text, primary, secondary }) {
   // Section headers count the whole category, or only its Ukrainian players while «Україна» is on.
   function updateHeads() {
     for (const s of Object.values(secs)) {
-      const list = catFilter === 'ua' ? s.list.filter(c => c.ua) : s.list;
-      const got = list.filter(c => tiles.get(c.id).owned).length;
+      const list = catFilter === 'ua' ? s.list.filter((c) => c.ua) : s.list;
+      const got = list.filter((c) => tiles.get(c.id).owned).length;
       s.count.textContent = `${got} / ${list.length}`;
       s.fill.style.width = pct(got, list.length);
     }
   }
 
   const shownOwned = () => [...$('album').querySelectorAll('button.tile:not([hidden])')];
-  function rove(target) { for (const b of $('album').querySelectorAll('button.tile')) b.tabIndex = b === target ? 0 : -1; }
+  function rove(target) {
+    for (const b of $('album').querySelectorAll('button.tile')) b.tabIndex = b === target ? 0 : -1;
+  }
 
   function applyFilter() {
     let shown = 0;
@@ -630,7 +743,9 @@ function askDialog({ icon, title, text, primary, secondary }) {
       let any = 0;
       for (const c of s.list) {
         const t = tiles.get(c.id);
-        const ok = (catFilter === 'all' || catFilter === cat || (catFilter === 'ua' && c.ua)) && (ownFilter === 'all' || (ownFilter === 'mine') === t.owned);
+        const ok =
+          (catFilter === 'all' || catFilter === cat || (catFilter === 'ua' && c.ua)) &&
+          (ownFilter === 'all' || (ownFilter === 'mine') === t.owned);
         t.el.hidden = !ok;
         if (ok) any++;
       }
@@ -643,33 +758,44 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('album-empty').hidden = !!shown;
     $('album-empty').textContent = T(ownFilter === 'mine' ? 'empty.mine' : 'empty.done');
     const list = shownOwned();
-    rove(list.find(b => b.tabIndex === 0) || list[0]);
+    rove(list.find((b) => b.tabIndex === 0) || list[0]);
   }
 
   // Keyboard: Tab enters the grid once, arrows move between your cards, Enter opens one.
-  $('album').addEventListener('keydown', e => {
+  $('album').addEventListener('keydown', (e) => {
     const cur = e.target.closest?.('button.tile');
     if (!cur) return;
     const list = shownOwned();
     let next;
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') next = list[list.indexOf(cur) + (e.key === 'ArrowRight' ? 1 : -1)];
     else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      const r = cur.getBoundingClientRect(), down = e.key === 'ArrowDown';
+      const r = cur.getBoundingClientRect(),
+        down = e.key === 'ArrowDown';
       let best = Infinity;
       for (const b of list) {
-        const q = b.getBoundingClientRect(), dy = down ? q.top - r.top : r.top - q.top;
+        const q = b.getBoundingClientRect(),
+          dy = down ? q.top - r.top : r.top - q.top;
         if (dy < 8) continue;
         const score = dy * 10 + Math.abs(q.left - r.left); // nearest row first, then nearest column
-        if (score < best) { best = score; next = b; }
+        if (score < best) {
+          best = score;
+          next = b;
+        }
       }
     } else if (e.key === 'Home') next = list[0];
     else if (e.key === 'End') next = list.at(-1);
     else return;
     e.preventDefault();
-    if (next) { rove(next); next.focus(); }
+    if (next) {
+      rove(next);
+      next.focus();
+    }
   });
-  $('album').addEventListener('focusin', e => { const b = e.target.closest('button.tile'); if (b && b.tabIndex !== 0) rove(b); });
-  $('album').addEventListener('click', e => {
+  $('album').addEventListener('focusin', (e) => {
+    const b = e.target.closest('button.tile');
+    if (b && b.tabIndex !== 0) rove(b);
+  });
+  $('album').addEventListener('click', (e) => {
     const b = e.target.closest('button.tile');
     if (!b) return;
     b.classList.remove('fresh');
@@ -678,12 +804,15 @@ function askDialog({ icon, title, text, primary, secondary }) {
   });
 
   $('sell-all').addEventListener('click', async () => {
-    const d = KF.duplicates(), value = dupValue();
+    const d = KF.duplicates(),
+      value = dupValue();
     if (!d) return;
     const choice = await askDialog({
-      icon: '🔁', title: T('sell.title'),
+      icon: '🔁',
+      title: T('sell.title'),
       text: T('sell.text', { n: d, coins: value }),
-      primary: T('sell.yes', { coins: value }), secondary: T('no'),
+      primary: T('sell.yes', { coins: value }),
+      secondary: T('no'),
     });
     if (choice === 'primary' && KF.sellAllDuplicates()) {
       (shownOwned()[0] || $('open-pack')).focus();
@@ -698,7 +827,9 @@ function askDialog({ icon, title, text, primary, secondary }) {
   function drawDetail(dir) {
     const card = BY_ID.get(viewId);
     if (!card) return;
-    const n = have(card.id), list = shownOwned().map(b => b.dataset.id), at = list.indexOf(card.id);
+    const n = have(card.id),
+      list = shownOwned().map((b) => b.dataset.id),
+      at = list.indexOf(card.id);
     if (dir !== undefined) {
       dd.className = `stage detail-stage ${catClass(card.cat)}`;
       dd.dataset.glow = card.cat;
@@ -725,7 +856,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('detail-card').focus();
   }
   function step(d) {
-    const list = shownOwned().map(b => b.dataset.id);
+    const list = shownOwned().map((b) => b.dataset.id);
     if (list.length < 2) return;
     viewId = list[(list.indexOf(viewId) + d + list.length) % list.length];
     drawDetail(d);
@@ -736,13 +867,20 @@ function askDialog({ icon, title, text, primary, secondary }) {
   $('detail-sell').addEventListener('click', () => {
     if (KF.sellDuplicate(viewId)) drawDetail();
   });
-  dd.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); step(e.key === 'ArrowRight' ? 1 : -1); }
+  dd.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      step(e.key === 'ArrowRight' ? 1 : -1);
+    }
   });
   dd.addEventListener('close', () => {
     if (dd.open) return;
     const t = tiles.get(viewId);
-    if (t?.owned && !t.el.hidden) { rove(t.el); t.el.focus(); t.el.scrollIntoView({ block: 'nearest' }); }
+    if (t?.owned && !t.el.hidden) {
+      rove(t.el);
+      t.el.focus();
+      t.el.scrollIntoView({ block: 'nearest' });
+    }
   });
 
   // ---- Pack opening ----
@@ -750,21 +888,30 @@ function askDialog({ icon, title, text, primary, secondary }) {
   const pd = $('pack-dialog');
   const TEASE = { futsal: T('tease.futsal'), rare: T('tease.rare'), legend: T('tease.legend') };
   const CHARGE = { futsal: 350, rare: 700, legend: 1400 }; // build-up before the flip, ms
-  const special = card => card.cat !== 'common';
+  const special = (card) => card.cat !== 'common';
   let P = null;
-  const live = p => P === p && p.phase !== 'summary' && pd.open;
+  const live = (p) => P === p && p.phase !== 'summary' && pd.open;
 
-  function setGlow(cat) { pd.dataset.glow = cat || ''; pd.className = `stage${cat ? ` ${catClass(cat)}` : ''}`; }
-  function tip(html) { $('pack-tip').replaceChildren(document.createRange().createContextualFragment(html)); }
-  function hit(label) { $('pack-hit').setAttribute('aria-label', label); }
+  function setGlow(cat) {
+    pd.dataset.glow = cat || '';
+    pd.className = `stage${cat ? ` ${catClass(cat)}` : ''}`;
+  }
+  function tip(html) {
+    $('pack-tip').replaceChildren(document.createRange().createContextualFragment(html));
+  }
+  function hit(label) {
+    $('pack-hit').setAttribute('aria-label', label);
+  }
 
   function buyPack() {
     if (P?.busy) return;
     const got = KF.openPack();
     if (!got) return;
     // count shown on each card = final count minus copies that come later in this same pack
-    const counts = got.map((c, i) => have(c.id) - got.slice(i + 1).filter(x => x.id === c.id).length);
-    got.forEach(c => { new Image().src = KF.cardImg(c.id); });
+    const counts = got.map((c, i) => have(c.id) - got.slice(i + 1).filter((x) => x.id === c.id).length);
+    got.forEach((c) => {
+      new Image().src = KF.cardImg(c.id);
+    });
     P = { got, counts, i: -1, phase: 'pack', busy: false };
     setGlow(null);
     $('pack-summary').hidden = true;
@@ -798,13 +945,29 @@ function askDialog({ icon, title, text, primary, secondary }) {
   }
 
   async function show(i) {
-    const p = P, card = p.got[i];
+    const p = P,
+      card = p.got[i];
     p.i = i;
     p.busy = true;
-    const el = h('div', { className: `flip ${catClass(card.cat)}${special(card) ? ' special' : ''}` },
-      h('div', { className: 'flip-inner' },
-        h('div', { className: 'face face-back' }, h('span', { className: 'card-back' }, h('span', { className: 'card-back-ball', textContent: '⚽' }), h('span', { className: 'card-back-word', textContent: 'KEEPER FUN' }))),
-        h('div', { className: 'face face-front' }, face(card, { full: true }))));
+    const el = h(
+      'div',
+      { className: `flip ${catClass(card.cat)}${special(card) ? ' special' : ''}` },
+      h(
+        'div',
+        { className: 'flip-inner' },
+        h(
+          'div',
+          { className: 'face face-back' },
+          h(
+            'span',
+            { className: 'card-back' },
+            h('span', { className: 'card-back-ball', textContent: '⚽' }),
+            h('span', { className: 'card-back-word', textContent: 'KEEPER FUN' }),
+          ),
+        ),
+        h('div', { className: 'face face-front' }, face(card, { full: true })),
+      ),
+    );
     pd.classList.remove('revealed');
     setGlow(special(card) ? card.cat : null);
     $('pack-hit').replaceChildren(el);
@@ -828,7 +991,9 @@ function askDialog({ icon, title, text, primary, secondary }) {
   }
 
   async function flip() {
-    const p = P, card = p.got[p.i], el = $('pack-hit').querySelector('.flip');
+    const p = P,
+      card = p.got[p.i],
+      el = $('pack-hit').querySelector('.flip');
     p.busy = true;
     el.classList.remove('waiting');
     if (CHARGE[card.cat]) {
@@ -842,8 +1007,11 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (!live(p)) return;
     setGlow(card.cat === 'common' ? null : card.cat);
     pd.classList.add('revealed');
-    if (card.cat === 'legend') { pd.classList.add('flash'); KFUI.confetti(); setTimeout(() => P === p && KFUI.confetti(), 500); }
-    else if (card.cat === 'rare') KFUI.confetti();
+    if (card.cat === 'legend') {
+      pd.classList.add('flash');
+      KFUI.confetti();
+      setTimeout(() => P === p && KFUI.confetti(), 500);
+    } else if (card.cat === 'rare') KFUI.confetti();
     await wait(380);
     pd.classList.remove('flash');
     if (!live(p)) return;
@@ -856,12 +1024,22 @@ function askDialog({ icon, title, text, primary, secondary }) {
   }
 
   function statusTag(card, n) {
-    return card.isNew ? h('span', { className: 'new-tag', textContent: T('tag.new') }) : h('span', { className: 'dup-tag', textContent: T('tag.dup', { n, coins: sellOf(card.cat) }) });
+    return card.isNew
+      ? h('span', { className: 'new-tag', textContent: T('tag.new') })
+      : h('span', { className: 'dup-tag', textContent: T('tag.dup', { n, coins: sellOf(card.cat) }) });
   }
   function showInfo(p) {
     const card = p.got[p.i];
     $('pack-tease').textContent = '';
-    $('pack-info').replaceChildren(h('h2', { textContent: card.name }), h('div', { className: 'tags' }, h('span', { className: `cat-tag ${catClass(card.cat)}`, textContent: catLabel(card.cat) }), statusTag(card, p.counts[p.i])));
+    $('pack-info').replaceChildren(
+      h('h2', { textContent: card.name }),
+      h(
+        'div',
+        { className: 'tags' },
+        h('span', { className: `cat-tag ${catClass(card.cat)}`, textContent: catLabel(card.cat) }),
+        statusTag(card, p.counts[p.i]),
+      ),
+    );
     $('pack-info').classList.add('show');
     const slot = $('pack-tray').children[p.i];
     slot.className = 'done';
@@ -875,27 +1053,36 @@ function askDialog({ icon, title, text, primary, secondary }) {
     p.busy = false;
     pd.classList.remove('charging', 'flash', 'revealed');
     const order = Object.keys(CATS);
-    const best = p.got.reduce((a, c) => order.indexOf(c.cat) > order.indexOf(a) ? c.cat : a, 'common');
+    const best = p.got.reduce((a, c) => (order.indexOf(c.cat) > order.indexOf(a) ? c.cat : a), 'common');
     setGlow(best === 'common' ? null : best);
     $('pack-play').hidden = true;
     $('pack-skip').hidden = true;
     $('pack-summary').hidden = false;
     $('pack-step').textContent = T('pack.mine');
-    $('sum-cards').replaceChildren(...p.got.map((c, i) => {
-      const el = h('div', { className: `sum-card ${catClass(c.cat)}${special(c) ? ' special' : ''}` }, face(c), statusTag(c, p.counts[i]));
-      el.style.setProperty('--i', i);
-      el.setAttribute('role', 'img');
-      el.setAttribute('aria-label', `${c.name}, ${catLabel(c.cat).toLowerCase()}, ${T(c.isNew ? 'sum.new' : 'sum.dup')}`);
-      return el;
-    }));
-    const fresh = p.got.filter(c => c.isNew).length, dups = p.got.length - fresh;
+    $('sum-cards').replaceChildren(
+      ...p.got.map((c, i) => {
+        const el = h(
+          'div',
+          { className: `sum-card ${catClass(c.cat)}${special(c) ? ' special' : ''}` },
+          face(c),
+          statusTag(c, p.counts[i]),
+        );
+        el.style.setProperty('--i', i);
+        el.setAttribute('role', 'img');
+        el.setAttribute('aria-label', `${c.name}, ${catLabel(c.cat).toLowerCase()}, ${T(c.isNew ? 'sum.new' : 'sum.dup')}`);
+        return el;
+      }),
+    );
+    const fresh = p.got.filter((c) => c.isNew).length,
+      dups = p.got.length - fresh;
     $('sum-title').textContent = fresh === p.got.length ? T('sum.allNew') : fresh ? T('sum.someNew', { n: fresh }) : T('sum.noNew');
     $('sum-text').textContent = T(dups ? 'sum.dupText' : 'sum.newText');
     drawAgain();
     $('pack-done').focus();
   }
   function drawAgain() {
-    const can = KF.canBuyPack(), need = KF.PACK_PRICE - KF.get().coins;
+    const can = KF.canBuyPack(),
+      need = KF.PACK_PRICE - KF.get().coins;
     $('pack-again').disabled = !can;
     $('pack-again').textContent = T('pack.again', { price: KF.PACK_PRICE });
     $('again-hint').hidden = can;
@@ -909,7 +1096,12 @@ function askDialog({ icon, title, text, primary, secondary }) {
   $('pack-skip').addEventListener('click', summary);
   $('pack-done').addEventListener('click', () => pd.close());
   // Esc: first show all three cards, then close.
-  pd.addEventListener('cancel', e => { if (P && P.phase !== 'summary') { e.preventDefault(); summary(); } });
+  pd.addEventListener('cancel', (e) => {
+    if (P && P.phase !== 'summary') {
+      e.preventDefault();
+      summary();
+    }
+  });
   pd.addEventListener('close', () => {
     if (pd.open) return; // reopened (Esc, then Enter quickly) before this queued event arrived
     P = null;
@@ -917,9 +1109,20 @@ function askDialog({ icon, title, text, primary, secondary }) {
     (KF.canBuyPack() ? $('open-pack') : shownOwned()[0] || $('tab-album')).focus();
   });
 
-  KF.on('change', () => { renderAlbum(); if (P?.phase === 'summary') drawAgain(); if (dd.open) drawDetail(); });
+  KF.on('change', () => {
+    renderAlbum();
+    if (P?.phase === 'summary') drawAgain();
+    if (dd.open) drawDetail();
+  });
   renderAlbum();
-  if (KF.TEST_MODE) window.__album = { buyPack, openDetail, get pack() { return P && { phase: P.phase, i: P.i, busy: P.busy, cats: P.got.map(c => c.cat) }; } };
+  if (KF.TEST_MODE)
+    window.__album = {
+      buyPack,
+      openDetail,
+      get pack() {
+        return P && { phase: P.phase, i: P.i, busy: P.busy, cats: P.got.map((c) => c.cat) };
+      },
+    };
 })();
 
 // Who is playing: header chip, login (player cards + PIN), guest progress merge, logout.
@@ -927,15 +1130,23 @@ function askDialog({ icon, title, text, primary, secondary }) {
 (() => {
   const auth = KF.TEST_MODE ? null : KF.auth;
   if (!auth) return;
-  const $ = id => document.getElementById(id);
-  const h = (tag, props = {}, ...kids) => { const el = Object.assign(document.createElement(tag), props); el.append(...kids); return el; };
-  const count = n => Number.isFinite(Number(n)) ? Math.max(0, Number(n)) : 0;
-  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const $ = (id) => document.getElementById(id);
+  const h = (tag, props = {}, ...kids) => {
+    const el = Object.assign(document.createElement(tag), props);
+    el.append(...kids);
+    return el;
+  };
+  const count = (n) => (Number.isFinite(Number(n)) ? Math.max(0, Number(n)) : 0);
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // Names and avatars come from the server: always set them as text, never as markup.
   const KITS = ['#e2463f', '#2f7de1', '#f2b632', '#8a5ad8', '#18a06a', '#f07a2a', '#e85b9a', '#1c9fb0'];
-  const kitColor = u => KITS[(Math.abs(parseInt(u.id, 10)) || [...String(u.name)].reduce((a, c) => a + c.codePointAt(0), 0)) % KITS.length];
-  const face = u => { const a = String(u.avatar || '').trim(); return a && [...a].length <= 8 ? a : (String(u.name || '?').trim()[0] || '?').toUpperCase(); };
+  const kitColor = (u) =>
+    KITS[(Math.abs(parseInt(u.id, 10)) || [...String(u.name)].reduce((a, c) => a + c.codePointAt(0), 0)) % KITS.length];
+  const face = (u) => {
+    const a = String(u.avatar || '').trim();
+    return a && [...a].length <= 8 ? a : (String(u.name || '?').trim()[0] || '?').toUpperCase();
+  };
   function avatar(u, size = '') {
     const el = h('span', { className: `kf-avatar ${size}`, textContent: face(u) });
     el.style.setProperty('--kit', kitColor(u));
@@ -950,18 +1161,38 @@ function askDialog({ icon, title, text, primary, secondary }) {
     const user = auth.user;
     who.hidden = false;
     $('hero-eyebrow').textContent = user ? T('hero.eyebrowName', { name: user.name }) : T('hero.eyebrow');
-    $('sync-text').textContent = user
-      ? T('sync.user', { name: user.name })
-      : T('sync.guest');
+    $('sync-text').textContent = user ? T('sync.user', { name: user.name }) : T('sync.guest');
     const id = user ? user.id : null;
     if (id !== shownId || !who.childElementCount) {
       shownId = id;
       $('code-box').open = !user; // logged in: progress syncs itself, the code is only a backup
       const btn = user
-        ? h('button', { type: 'button', className: 'who-btn', id: 'who-btn' },
-            (() => { const a = avatar(user); a.append(h('i', { className: 'kf-sync-dot' })); a.lastChild.dataset.kfSync = 'dot'; return a; })(),
-            h('span', { className: 'who-text' }, h('b', { textContent: user.name }), (() => { const s = h('small'); s.dataset.kfSync = ''; return s; })()))
-        : h('button', { type: 'button', className: 'who-btn who-login', id: 'who-btn' }, h('span', { className: 'who-icon', textContent: '👤' }), T('who.login'));
+        ? h(
+            'button',
+            { type: 'button', className: 'who-btn', id: 'who-btn' },
+            (() => {
+              const a = avatar(user);
+              a.append(h('i', { className: 'kf-sync-dot' }));
+              a.lastChild.dataset.kfSync = 'dot';
+              return a;
+            })(),
+            h(
+              'span',
+              { className: 'who-text' },
+              h('b', { textContent: user.name }),
+              (() => {
+                const s = h('small');
+                s.dataset.kfSync = '';
+                return s;
+              })(),
+            ),
+          )
+        : h(
+            'button',
+            { type: 'button', className: 'who-btn who-login', id: 'who-btn' },
+            h('span', { className: 'who-icon', textContent: '👤' }),
+            T('who.login'),
+          );
       btn.addEventListener('click', onWhoClick);
       who.replaceChildren(btn);
       if (user) {
@@ -969,11 +1200,27 @@ function askDialog({ icon, title, text, primary, secondary }) {
         btn.setAttribute('aria-controls', 'who-menu');
         const status = h('p');
         status.dataset.kfSync = 'long';
-        const logout = h('button', { type: 'button', className: 'btn btn-light who-logout', id: 'logout-btn', textContent: T('who.logout') });
+        const logout = h('button', {
+          type: 'button',
+          className: 'btn btn-light who-logout',
+          id: 'logout-btn',
+          textContent: T('who.logout'),
+        });
         logout.addEventListener('click', doLogout);
-        who.append(h('div', { className: 'who-menu', id: 'who-menu', hidden: true },
-          h('div', { className: 'who-menu-head' }, avatar(user, 'lg'), h('div', {}, h('strong', { textContent: user.name }), h('span', { textContent: T('who.now') }))),
-          status, logout));
+        who.append(
+          h(
+            'div',
+            { className: 'who-menu', id: 'who-menu', hidden: true },
+            h(
+              'div',
+              { className: 'who-menu-head' },
+              avatar(user, 'lg'),
+              h('div', {}, h('strong', { textContent: user.name }), h('span', { textContent: T('who.now') })),
+            ),
+            status,
+            logout,
+          ),
+        );
       }
     }
     KFUI.updateSync();
@@ -992,24 +1239,51 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (open && fromKeyboard) $('logout-btn').focus();
     else if (refocus) $('who-btn').focus();
   }
-  document.addEventListener('pointerdown', e => { if (menuOpen() && !who.contains(e.target)) toggleMenu(false, false); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && menuOpen()) toggleMenu(false); });
-  who.addEventListener('focusout', e => { if (menuOpen() && e.relatedTarget && !who.contains(e.relatedTarget)) toggleMenu(false, false); });
+  document.addEventListener('pointerdown', (e) => {
+    if (menuOpen() && !who.contains(e.target)) toggleMenu(false, false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menuOpen()) toggleMenu(false);
+  });
+  who.addEventListener('focusout', (e) => {
+    if (menuOpen() && e.relatedTarget && !who.contains(e.relatedTarget)) toggleMenu(false, false);
+  });
 
   async function doLogout() {
     const btn = $('logout-btn');
     btn.disabled = true;
     btn.textContent = T('who.saving');
     let r;
-    try { r = await auth.logout(); } catch { r = { ok: false }; }
+    try {
+      r = await auth.logout();
+    } catch {
+      r = { ok: false };
+    }
     if (r && r.ok === false) {
       btn.disabled = false;
       btn.textContent = T('who.logout');
       toggleMenu(false, false);
-      const choice = await ask({ icon: '☁️', title: T('unsaved.title'), text: T('unsaved.text'), primary: T('unsaved.stay'), secondary: T('unsaved.leave') });
-      if (choice !== 'secondary') { $('who-btn').focus(); return; }
-      try { await auth.logout({ force: true }); } catch { /* checked below */ }
-      if (auth.user) { KFUI.toast(T('logout.fail')); $('who-btn').focus(); return; }
+      const choice = await ask({
+        icon: '☁️',
+        title: T('unsaved.title'),
+        text: T('unsaved.text'),
+        primary: T('unsaved.stay'),
+        secondary: T('unsaved.leave'),
+      });
+      if (choice !== 'secondary') {
+        $('who-btn').focus();
+        return;
+      }
+      try {
+        await auth.logout({ force: true });
+      } catch {
+        /* checked below */
+      }
+      if (auth.user) {
+        KFUI.toast(T('logout.fail'));
+        $('who-btn').focus();
+        return;
+      }
     }
     renderWho();
     if (!auth.user) KFUI.toast(T('logout.done'));
@@ -1024,7 +1298,14 @@ function askDialog({ icon, title, text, primary, secondary }) {
   const keys = [...$('keypad').querySelectorAll('button')];
   const lockedUntil = {};
   // mode: which PIN the keypad is for — 'login', or a new player's 'create' / 'confirm'
-  let users = [], current = null, pin = '', busy = false, direct = false, lockTimer = 0, loadToken = 0, mode = 'login';
+  let users = [],
+    current = null,
+    pin = '',
+    busy = false,
+    direct = false,
+    lockTimer = 0,
+    loadToken = 0,
+    mode = 'login';
   const onPin = () => !$('step-pin').hidden;
   const onNew = () => !$('step-new').hidden;
   function showStep(id) {
@@ -1038,7 +1319,8 @@ function askDialog({ icon, title, text, primary, secondary }) {
     draft.avatar = AVATARS[0];
     signupClosed = '';
     if (!dlg.open) dlg.showModal();
-    if (user) showPin(user); else showPick();
+    if (user) showPin(user);
+    else showPick();
   }
   function closeLogin() {
     stopLock();
@@ -1049,7 +1331,9 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('who-btn')?.focus();
   }
   function goBack() {
-    if (onPin() && mode === 'confirm') { if (!busy) showNewPin(false); } // busy: the player is being created
+    if (onPin() && mode === 'confirm') {
+      if (!busy) showNewPin(false);
+    } // busy: the player is being created
     else if (onPin() && mode === 'create') showNew();
     else if (onNew() || (onPin() && !direct)) showPick();
     else closeLogin();
@@ -1066,19 +1350,27 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('pick-text').textContent = T('pick.text');
     $('pick-msg').dataset.kind = message ? 'net' : '';
     $('pick-msg').textContent = message;
-    $('players').replaceChildren(...[0, 1].map(() => { const s = h('div', { className: 'player skeleton' }, h('i'), h('u')); s.setAttribute('aria-hidden', 'true'); return s; }));
+    $('players').replaceChildren(
+      ...[0, 1].map(() => {
+        const s = h('div', { className: 'player skeleton' }, h('i'), h('u'));
+        s.setAttribute('aria-hidden', 'true');
+        return s;
+      }),
+    );
     $('play-guest').focus();
     const token = ++loadToken;
     let list;
-    try { list = await auth.users(); } catch { list = null; }
+    try {
+      list = await auth.users();
+    } catch {
+      list = null;
+    }
     if (token !== loadToken || !dlg.open || $('step-pick').hidden) return;
     list = Array.isArray(list) ? list : list?.users;
     if (!Array.isArray(list)) {
       $('players').replaceChildren();
       $('pick-msg').dataset.kind = 'net';
-      $('pick-msg').textContent = navigator.onLine === false
-        ? T('pick.offline')
-        : T('pick.fail');
+      $('pick-msg').textContent = navigator.onLine === false ? T('pick.offline') : T('pick.fail');
       $('pick-retry').hidden = false;
       return;
     }
@@ -1089,20 +1381,34 @@ function askDialog({ icon, title, text, primary, secondary }) {
       return;
     }
     if (!users.length) $('pick-text').textContent = T('pick.emptyAdd');
-    $('players').replaceChildren(...users.map((u, i) => {
-      const kit = h('span', { className: 'kit', textContent: face(u) });
-      const card = h('button', { type: 'button', className: 'player' }, ...(i < 9 ? [h('kbd', { textContent: i + 1 })] : []), kit, h('b', { textContent: u.name }));
-      card.style.setProperty('--kit', kitColor(u));
-      kit.setAttribute('aria-hidden', 'true');
-      card.addEventListener('click', () => showPin(u));
-      return card;
-    }), ...(signupClosed ? [] : [addTile()]));
+    $('players').replaceChildren(
+      ...users.map((u, i) => {
+        const kit = h('span', { className: 'kit', textContent: face(u) });
+        const card = h(
+          'button',
+          { type: 'button', className: 'player' },
+          ...(i < 9 ? [h('kbd', { textContent: i + 1 })] : []),
+          kit,
+          h('b', { textContent: u.name }),
+        );
+        card.style.setProperty('--kit', kitColor(u));
+        kit.setAttribute('aria-hidden', 'true');
+        card.addEventListener('click', () => showPin(u));
+        return card;
+      }),
+      ...(signupClosed ? [] : [addTile()]),
+    );
     $('players').firstElementChild.focus();
   }
   function addTile() {
     const plus = h('span', { className: 'add-plus', textContent: '+' });
     plus.setAttribute('aria-hidden', 'true');
-    const tile = h('button', { type: 'button', className: 'player player-add', id: 'add-player' }, plus, h('b', { textContent: T('pick.add') }));
+    const tile = h(
+      'button',
+      { type: 'button', className: 'player player-add', id: 'add-player' },
+      plus,
+      h('b', { textContent: T('pick.add') }),
+    );
     tile.addEventListener('click', () => showNew());
     return tile;
   }
@@ -1112,7 +1418,11 @@ function askDialog({ icon, title, text, primary, secondary }) {
     current = u;
     pinStep(u, T('pin.hiName', { name: u.name }), T('pin.text'), T(direct ? 'pin.other' : 'back'));
     setMsg(direct ? T('pin.again') : '');
-    if (lockLeft() > 0) startLock(); else { stopLock(); setKeys(true); }
+    if (lockLeft() > 0) startLock();
+    else {
+      stopLock();
+      setKeys(true);
+    }
   }
   // The PIN screen is shared by login and by a new player's "make up a PIN" / "repeat it".
   function pinStep(u, title, text, back, face = avatar(u, 'xl')) {
@@ -1138,11 +1448,18 @@ function askDialog({ icon, title, text, primary, secondary }) {
     [...dots.children].forEach((d, i) => d.classList.toggle('on', i < pin.length));
     dots.setAttribute('aria-label', T('pin.dots', { n: pin.length }));
   }
-  function setKeys(on) { keys.forEach(k => { k.disabled = !on; }); }
+  function setKeys(on) {
+    keys.forEach((k) => {
+      k.disabled = !on;
+    });
+  }
 
   function press(d) {
     if (busy || lockLeft() || pin.length >= 4) return;
-    if (dots.classList.contains('is-bad') || $('pin-msg').dataset.kind === 'net') { dots.classList.remove('is-bad'); setMsg(''); }
+    if (dots.classList.contains('is-bad') || $('pin-msg').dataset.kind === 'net') {
+      dots.classList.remove('is-bad');
+      setMsg('');
+    }
     pin += d;
     drawDots();
     if (pin.length === 4) setTimeout(submit, 160); // let the 4th dot show first
@@ -1162,7 +1479,11 @@ function askDialog({ icon, title, text, primary, secondary }) {
     dots.classList.add('is-busy');
     setMsg(T('pin.checking'));
     let r;
-    try { r = await auth.login(user.id, pin); } catch { r = { ok: false, error: 'network' }; }
+    try {
+      r = await auth.login(user.id, pin);
+    } catch {
+      r = { ok: false, error: 'network' };
+    }
     if (current !== user) return; // dialog closed or another player chosen meanwhile
     busy = false;
     dots.classList.remove('is-busy');
@@ -1183,13 +1504,11 @@ function askDialog({ icon, title, text, primary, secondary }) {
     } else if (err === 'no_user') {
       showPick(T('pin.noUser'));
     } else {
-      setMsg(navigator.onLine === false
-        ? T('pin.offline')
-        : T('pin.fail'), 'net');
+      setMsg(navigator.onLine === false ? T('pin.offline') : T('pin.fail'), 'net');
     }
   }
 
-  const lockLeft = () => current ? Math.max(0, Math.ceil(((lockedUntil[current.id] || 0) - Date.now()) / 1000)) : 0;
+  const lockLeft = () => (current ? Math.max(0, Math.ceil(((lockedUntil[current.id] || 0) - Date.now()) / 1000)) : 0);
   function startLock() {
     stopLock();
     setKeys(false);
@@ -1199,7 +1518,12 @@ function askDialog({ icon, title, text, primary, secondary }) {
     clock.hidden = false;
     const tick = () => {
       const s = lockLeft();
-      if (!s) { stopLock(); setKeys(true); setMsg(T('pin.unlocked')); return; }
+      if (!s) {
+        stopLock();
+        setKeys(true);
+        setMsg(T('pin.unlocked'));
+        return;
+      }
       clock.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
       const text = T('pin.locked', { min: Math.ceil(s / 60) });
       if ($('pin-msg').textContent !== text) setMsg(text, 'wait'); // once a minute, so screen readers are not flooded
@@ -1213,14 +1537,17 @@ function askDialog({ icon, title, text, primary, secondary }) {
   }
 
   // ---- New player: name + avatar → make up a PIN → repeat it → KF.auth.register ----
-  const AVATARS = Array.isArray(KF.AVATARS) && KF.AVATARS.length ? KF.AVATARS : ['⚽', '🧤', '🥅', '🏆', '⭐', '🔥', '🦁', '🐯', '🦊', '🐼', '🚀', '⚡'];
+  const AVATARS =
+    Array.isArray(KF.AVATARS) && KF.AVATARS.length ? KF.AVATARS : ['⚽', '🧤', '🥅', '🏆', '⭐', '🔥', '🦁', '🐯', '🦊', '🐼', '🚀', '⚡'];
   const draft = { name: '', avatar: AVATARS[0] };
-  let firstPin = '', regToken = 0, signupClosed = '';
+  let firstPin = '',
+    regToken = 0,
+    signupClosed = '';
   const TAKEN = T('new.taken');
   const BAD_NAME = T('new.badName');
   // Same rule as the server: letters, spaces, hyphens and apostrophes (Мар'яна), at least one letter.
-  const cleanName = s => s.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim(); // same as the server
-  const nameOk = s => /^[\p{L} '’ʼ-]{1,30}$/u.test(s) && /\p{L}/u.test(s);
+  const cleanName = (s) => s.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim(); // same as the server
+  const nameOk = (s) => /^[\p{L} '’ʼ-]{1,30}$/u.test(s) && /\p{L}/u.test(s);
   const sameName = (a, b) => cleanName(String(a)).toLocaleLowerCase('uk') === b.toLocaleLowerCase('uk');
   // Shirt colour of the id the server will most likely give (SQLite: max + 1), so it stays the same after sign-up.
   const draftKit = () => kitColor({ id: users.reduce((m, u) => Math.max(m, parseInt(u.id, 10) || 0), 0) + 1 });
@@ -1234,7 +1561,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
   $('new-avatars').append(...avatarBtns);
 
   function drawSteps(el, at) {
-    el.replaceChildren(...[1, 2, 3].map(n => h('i', { className: n <= at ? 'on' : '' })));
+    el.replaceChildren(...[1, 2, 3].map((n) => h('i', { className: n <= at ? 'on' : '' })));
     el.setAttribute('aria-label', T('new.step', { n: at }));
   }
   function showNew(hint = '') {
@@ -1264,10 +1591,14 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('new-kit').textContent = draft.avatar;
     $('new-card-name').textContent = name || T('new.placeholder');
     $('new-card-name').classList.toggle('empty', !name);
-    if (pop) { card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
+    if (pop) {
+      card.classList.remove('pop');
+      void card.offsetWidth;
+      card.classList.add('pop');
+    }
   }
   function drawAvatars() {
-    avatarBtns.forEach(b => {
+    avatarBtns.forEach((b) => {
       const on = b.textContent === draft.avatar;
       b.setAttribute('aria-checked', String(on));
       b.tabIndex = on ? 0 : -1;
@@ -1285,7 +1616,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     drawPreview();
     if (!name) return showNew(T('new.empty'));
     if (!nameOk(name)) return showNew(BAD_NAME);
-    if (users.some(u => sameName(u.name, name))) return showNew(TAKEN); // save typing two PINs for nothing
+    if (users.some((u) => sameName(u.name, name))) return showNew(TAKEN); // save typing two PINs for nothing
     showNewPin(false);
   }
   function showNewPin(confirm, msg = '') {
@@ -1293,9 +1624,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (!confirm) firstPin = '';
     const face = avatar(draft, 'xl');
     face.style.setProperty('--kit', draftKit());
-    pinStep(draft, T(confirm ? 'new.repeat' : 'new.create'),
-      T(confirm ? 'new.repeatText' : 'new.createText'),
-      T('back'), face);
+    pinStep(draft, T(confirm ? 'new.repeat' : 'new.create'), T(confirm ? 'new.repeatText' : 'new.createText'), T('back'), face);
     stopLock();
     setKeys(true);
     setMsg(msg, msg ? 'bad' : '');
@@ -1303,7 +1632,10 @@ function askDialog({ icon, title, text, primary, secondary }) {
 
   async function submitNew() {
     if (busy || pin.length < 4) return;
-    if (mode === 'create') { firstPin = pin; return showNewPin(true); }
+    if (mode === 'create') {
+      firstPin = pin;
+      return showNewPin(true);
+    }
     if (pin !== firstPin) {
       showNewPin(false, T('new.mismatch'));
       dots.classList.add('is-bad');
@@ -1315,9 +1647,16 @@ function askDialog({ icon, title, text, primary, secondary }) {
     setMsg(T('new.busy'));
     const token = ++regToken;
     let r;
-    try { r = typeof auth.register === 'function' ? await auth.register(draft.name, pin, draft.avatar) : { ok: false, error: 'network' }; } catch { r = { ok: false, error: 'network' }; }
+    try {
+      r = typeof auth.register === 'function' ? await auth.register(draft.name, pin, draft.avatar) : { ok: false, error: 'network' };
+    } catch {
+      r = { ok: false, error: 'network' };
+    }
     const ok = r && !r.error && r.ok !== false;
-    if (token !== regToken) { if (ok) KFUI.toast(T('new.welcome', { name: draft.name })); return; } // dialog was closed meanwhile
+    if (token !== regToken) {
+      if (ok) KFUI.toast(T('new.welcome', { name: draft.name }));
+      return;
+    } // dialog was closed meanwhile
     busy = false;
     dots.classList.remove('is-busy');
     pin = '';
@@ -1330,18 +1669,19 @@ function askDialog({ icon, title, text, primary, secondary }) {
       full: T('new.full'),
       test_mode: T('new.testMode'),
     }[err];
-    if (stop) { signupClosed = err; return showPick(stop); }
+    if (stop) {
+      signupClosed = err;
+      return showPick(stop);
+    }
     // Network: stay on "repeat the PIN" — typing it again is the retry.
     setKeys(true);
     drawDots();
-    setMsg(navigator.onLine === false
-      ? T('new.offline')
-      : T('new.fail'), 'net');
+    setMsg(navigator.onLine === false ? T('new.offline') : T('new.fail'), 'net');
   }
 
   async function loggedIn(user, guestHint, isNew = false) {
     dots.classList.add('is-ok');
-    [...dots.children].forEach(d => d.classList.add('on'));
+    [...dots.children].forEach((d) => d.classList.add('on'));
     setMsg(T(isNew ? 'new.done' : 'login.done'), 'ok');
     await wait(isNew ? 700 : 500);
     current = null;
@@ -1349,30 +1689,45 @@ function askDialog({ icon, title, text, primary, secondary }) {
     dlg.close();
     renderWho();
     $('who-btn').focus();
-    if (isNew) { KFUI.toast(T('new.welcome', { name: user.name })); KFUI.confetti(); }
-    else KFUI.toast(T('login.hello', { name: user.name }));
+    if (isNew) {
+      KFUI.toast(T('new.welcome', { name: user.name }));
+      KFUI.confetti();
+    } else KFUI.toast(T('login.hello', { name: user.name }));
     await offerGuestMerge(user, guestHint);
   }
 
   async function offerGuestMerge(user, guestHint) {
     let has = guestHint;
-    if (has === undefined) try { has = await auth.hasGuestProgress(); } catch { return; }
+    if (has === undefined)
+      try {
+        has = await auth.hasGuestProgress();
+      } catch {
+        return;
+      }
     if (!has) return;
     let g = typeof has === 'object' ? has : null;
-    if (!g) try { g = JSON.parse(localStorage.getItem('kf-progress-v1')); } catch { g = null; }
+    if (!g)
+      try {
+        g = JSON.parse(localStorage.getItem('kf-progress-v1'));
+      } catch {
+        g = null;
+      }
     const coins = count(g?.coins);
     // older guest data may still carry emoji stickers (kf.js converts them to cards on load)
-    const cards = Object.keys(g?.cards || {}).length || (typeof g?.stickers === 'number' ? count(g.stickers) : Object.keys(g?.stickers || {}).length);
+    const cards =
+      Object.keys(g?.cards || {}).length || (typeof g?.stickers === 'number' ? count(g.stickers) : Object.keys(g?.stickers || {}).length);
     const parts = [coins && T('nCoins', { n: coins }), cards && T('nCards', { n: cards })].filter(Boolean);
     const choice = await ask({
-      icon: '🎒', title: T('merge.title'),
+      icon: '🎒',
+      title: T('merge.title'),
       text: T('merge.text', { parts: parts.join(', '), name: user.name }),
-      primary: T('merge.yes'), secondary: T('no'),
+      primary: T('merge.yes'),
+      secondary: T('no'),
     });
     $('who-btn').focus();
     if (choice !== 'primary') return;
     try {
-      if (await auth.adoptGuest() === false) throw new Error('not adopted');
+      if ((await auth.adoptGuest()) === false) throw new Error('not adopted');
       KFUI.toast(T('merge.done', { name: user.name }));
       KFUI.confetti();
     } catch {
@@ -1380,7 +1735,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     }
   }
 
-  keys.forEach(k => k.addEventListener('click', () => (k.dataset.digit ? press(k.dataset.digit) : erase())));
+  keys.forEach((k) => k.addEventListener('click', () => (k.dataset.digit ? press(k.dataset.digit) : erase())));
   $('pin-back').addEventListener('click', () => (mode === 'login' ? showPick() : goBack()));
   $('pin-close').addEventListener('click', closeLogin);
   $('login-close').addEventListener('click', closeLogin);
@@ -1393,7 +1748,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     setHint(name && !nameOk(name) ? BAD_NAME : '');
     drawPreview();
   });
-  $('new-avatars').addEventListener('keydown', e => {
+  $('new-avatars').addEventListener('keydown', (e) => {
     const cols = getComputedStyle($('new-avatars')).gridTemplateColumns.split(' ').length;
     const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
     if (!step) return;
@@ -1403,27 +1758,55 @@ function askDialog({ icon, title, text, primary, secondary }) {
   });
   $('play-guest').addEventListener('click', closeLogin);
   $('retry-users').addEventListener('click', () => showPick());
-  dlg.addEventListener('cancel', e => { e.preventDefault(); goBack(); });
-  dlg.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); goBack(); return; }
+  dlg.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    goBack();
+  });
+  dlg.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      goBack();
+      return;
+    }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (onPin()) {
-      if (/^[0-9]$/.test(e.key)) { e.preventDefault(); press(e.key); }
-      else if (e.key === 'Backspace') { e.preventDefault(); erase(); }
-      else if (e.key === 'Enter' && !e.target.matches('.login-top button')) { e.preventDefault(); submit(); }
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        press(e.key);
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        erase();
+      } else if (e.key === 'Enter' && !e.target.matches('.login-top button')) {
+        e.preventDefault();
+        submit();
+      }
       return;
     }
     if (onNew()) {
-      if (e.key === 'Enter' && !e.target.matches('.login-top button')) { e.preventDefault(); nameNext(); }
+      if (e.key === 'Enter' && !e.target.matches('.login-top button')) {
+        e.preventDefault();
+        nameNext();
+      }
       return;
     }
     const cards = [...$('players').querySelectorAll('.player:not(.skeleton)')];
-    const players = cards.filter(c => c.id !== 'add-player');
-    if (/^[1-9]$/.test(e.key) && players[e.key - 1]) { e.preventDefault(); players[e.key - 1].click(); return; }
-    if ((e.key === '+' || e.code === 'NumpadAdd' || e.code === 'KeyN') && $('add-player')) { e.preventDefault(); showNew(); return; }
+    const players = cards.filter((c) => c.id !== 'add-player');
+    if (/^[1-9]$/.test(e.key) && players[e.key - 1]) {
+      e.preventDefault();
+      players[e.key - 1].click();
+      return;
+    }
+    if ((e.key === '+' || e.code === 'NumpadAdd' || e.code === 'KeyN') && $('add-player')) {
+      e.preventDefault();
+      showNew();
+      return;
+    }
     const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
     const at = cards.indexOf(document.activeElement);
-    if (step && cards.length) { e.preventDefault(); cards[at < 0 ? 0 : (at + step + cards.length) % cards.length].focus(); }
+    if (step && cards.length) {
+      e.preventDefault();
+      cards[at < 0 ? 0 : (at + step + cards.length) % cards.length].focus();
+    }
   });
 
   KF.on('auth', renderWho);
