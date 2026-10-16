@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 (() => {
   const SLUG = 'math-exam';
@@ -45,21 +44,7 @@
     },
   });
   T.apply();
-  const $ = (id) => document.getElementById(id);
-  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const h = (tag, props = {}, ...kids) => {
-    const el = document.createElement(tag);
-    for (const [k, v] of Object.entries(props)) {
-      if (v === null || v === undefined || v === false) continue;
-      if (k === 'class') el.className = v;
-      else if (k === 'text') el.textContent = v;
-      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-      else el.setAttribute(k, v === true ? '' : v);
-    }
-    el.append(...kids.flat().filter((x) => x !== null && x !== undefined && x !== false));
-    return el;
-  };
+  const { $, h, pick, reduced, restart, shake } = KFG;
 
   const STATIONS = [
     { topic: 'valor', name: 'Taquilla', icon: '🎟️', ua: L('Розряди: UM, C, D, U', 'Valor de las cifras: UM, C, D, U') },
@@ -71,7 +56,6 @@
   const PLACE_KEYS = ['UM', 'C', 'D', 'U'];
   const PLACE_UA = { UM: 'одиниці тисяч', C: 'сотні', D: 'десятки', U: 'одиниці' };
   const PRAISE = ['¡Muy bien!', '¡Golazo!', '¡Perfecto!', '¡Paradón!', '¡Eso es!'];
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   const GLOSSARY_ES = [
     ['UM', 'unidades de millar (1000)'],
@@ -238,10 +222,7 @@
   let session = null;
   let ctrl = null; // current input controller: { onKey(e) => handled }
 
-  const show = (id) => {
-    for (const s of ['hub', 'play', 'finish']) $(s).hidden = s !== id;
-    window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
-  };
+  const show = KFG.screens(['hub', 'play', 'finish'], { scroll: 'smooth' });
 
   const startTraining = (topic, level) => {
     const tasks = Array.from({ length: ROUND }, () => M.makeTask(topic, level, Math.random, KF.lang));
@@ -266,14 +247,7 @@
     $('cards').replaceChildren(...Array.from({ length: n }, (_, i) => h('i', { class: i ? 'red' : 'yellow' })));
   };
 
-  const drawDots = () => {
-    const dots = session.tasks.map((_, i) => {
-      const r = session.results[i];
-      const cls = r === true ? 'ok' : r === false ? 'miss' : i === session.index ? 'now' : '';
-      return h('span', { class: `dot ${cls}` });
-    });
-    $('dots').replaceChildren(...dots);
-  };
+  const drawDots = () => KFG.dots($('dots'), session.results, session.index, { total: session.tasks.length });
 
   const nextTask = () => {
     const task = session.tasks[session.index];
@@ -353,10 +327,8 @@
           { class: 'btn btn-dark', type: 'button', onclick: goNext },
           last ? L('Результат →', 'Ver resultado →') : L('Далі →', 'Siguiente →'),
         );
-    $('feedback').replaceChildren(box, h('br'), next);
     ctrl = { onKey: (e) => (e.key === 'Enter' || e.key === ' ') && (next.click(), true) };
-    next.focus({ preventScroll: true });
-    if (!reduced()) $('feedback').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    KFG.feedback($('feedback'), box, h('br'), next, { scroll: 'animated' });
   };
 
   const goNext = () => {
@@ -441,14 +413,10 @@
   const sayHint = (el, es, ua) => {
     el.replaceChildren(h('span', { text: es || '' }), ua && !ES ? h('span', { class: 'fb-ua', text: `🇺🇦 ${ua}` }) : '');
   };
-  const shake = (el) => {
-    el.classList.remove('shake');
-    void el.offsetWidth;
-    el.classList.add('shake');
-  };
 
   // Number entry with on-screen keypad; keyboard digits / Backspace / Enter.
   // rtl: column answers are typed from the units up, so each new digit goes to the left.
+  /** @param {{ onSubmit: (v: number) => void, onInput?: (v: string) => void, unit?: string, maxLen?: number, okLabel?: string, rtl?: boolean }} opts */
   const numberInput = ({ onSubmit, onInput, unit = '', maxLen = 5, okLabel = 'OK', rtl = false }) => {
     let value = '';
     const box = h('div', { class: 'num-box empty', 'aria-live': 'polite' });
@@ -526,7 +494,7 @@
     ctrl = null;
     const kind = task.kind;
     if (kind === 'choice') return renderChoice(task, work);
-    if (kind === 'packs') return renderPacks(task, work, true);
+    if (kind === 'packs') return renderPacks(task, work);
     if (kind === 'decompose') return renderDecompose(task, work);
     if (kind === 'column') return session.mode === 'exam' ? renderColumnWhole(task, work) : renderColumnSteps(task, work);
     if (kind === 'round') return renderRound(task, work);
@@ -633,9 +601,7 @@
     };
     const flash = (k) => {
       if (reduced()) return;
-      cols[k].wrap.classList.remove('flash');
-      void cols[k].wrap.offsetWidth;
-      cols[k].wrap.classList.add('flash');
+      restart(cols[k].wrap, 'flash');
     };
     PLACE_KEYS.forEach((k, i) => {
       const left = PLACE_KEYS[i - 1];
@@ -1116,7 +1082,8 @@
       const input = numberInput({
         onSubmit: (v) => {
           ctrl = null;
-          afterRound(submitSimple(task, v));
+          submitSimple(task, v);
+          afterRound();
         },
       });
       work.append(input.box, input.pad, input.hint);
@@ -1152,7 +1119,7 @@
       (task.answer === d.low ? left : right).classList.add('right');
       if (!r.correct) (value === d.low ? left : right).classList.add('wrong');
       resolveTask(r.correct, r.error);
-      afterRound(r);
+      afterRound();
     };
     work.append(
       h('div', { class: 'nline' }, left, track, right),
@@ -1311,25 +1278,26 @@
       h('tr', {}, h('td', { text: a }), h('td', {}, b, c ? [h('br'), h('span', { class: 'muted', text: c })] : '')),
     ),
   );
-  $('gloss-btn').addEventListener('click', () => $('gloss').showModal());
-  $('gloss-close').addEventListener('click', () => $('gloss').close());
+  $('gloss-btn').addEventListener('click', () => /** @type {HTMLDialogElement} */ ($('gloss')).showModal());
+  $('gloss-close').addEventListener('click', () => /** @type {HTMLDialogElement} */ ($('gloss')).close());
 
   // ---------- Keyboard ----------
-  document.addEventListener('keydown', (e) => {
-    if ($('gloss').open || e.altKey) return;
-    if (e.key === 'Escape' && !$('play').hidden) {
+  KFG.keys({
+    ctrl: () => ctrl,
+    ignoreMods: ['alt'],
+    nativeButtons: 'button',
+    onEscape: () => {
+      if ($('play').hidden) return false;
       ctrl = null;
       renderHub();
       show('hub');
-      return;
-    }
-    if (e.key.toLowerCase() === (ES ? 'a' : 'u') && !$('play').hidden) {
+      return false;
+    },
+    onKey: (e) => {
+      if (e.key.toLowerCase() !== (ES ? 'a' : 'u') || $('play').hidden) return false;
       setUa($('ua-btn').getAttribute('aria-pressed') !== 'true');
-      return;
-    }
-    // Enter/Space on a focused button keeps its native click (Tab users), except Ctrl/Cmd+Enter.
-    const onButton = e.target instanceof HTMLButtonElement && (e.key === 'Enter' || e.key === ' ') && !e.ctrlKey && !e.metaKey;
-    if (ctrl && !onButton && ctrl.onKey(e)) e.preventDefault();
+      return true;
+    },
   });
   // Mouse clicks on keypad keys must not steal focus, so a following Enter submits instead of re-pressing the key.
   document.addEventListener('mousedown', (e) => {

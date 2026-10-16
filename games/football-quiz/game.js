@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 (() => {
   const SLUG = 'football-quiz';
@@ -142,35 +141,7 @@
   });
   document.title = T('title');
   T.apply();
-  const $ = (id) => document.getElementById(id);
-  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const h = (tag, props = {}, ...kids) => {
-    const el = document.createElement(tag);
-    for (const [k, v] of Object.entries(props)) {
-      if (v === null || v === undefined || v === false) continue;
-      if (k === 'class') el.className = v;
-      else if (k === 'text') el.textContent = v;
-      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
-      else el.setAttribute(k, v === true ? '' : v);
-    }
-    el.append(...kids.flat().filter((x) => x !== null && x !== undefined && x !== false));
-    return el;
-  };
-  const shuffle = (arr) => {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  };
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  const restart = (el, cls) => {
-    el.classList.remove(cls);
-    void el.offsetWidth;
-    el.classList.add(cls);
-  };
+  const { $, h, shuffle, pick, reduced, restart } = KFG;
 
   const LEVELS = [
     { id: '1', name: T('lvl.1.name'), icon: '⚽', desc: T('lvl.1.desc'), has: (q) => q.level === 1 },
@@ -257,13 +228,13 @@
 
   // ---------- Start screen ----------
   let screen = 'start';
-  const show = (id) => {
-    screen = id;
-    for (const s of ['start', 'play', 'finish']) $(s).hidden = s !== id;
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  };
+  const show = KFG.screens(['start', 'play', 'finish'], {
+    onShow: (id) => {
+      screen = id;
+    },
+  });
 
-  const levelButtons = () => [...$('levels').querySelectorAll('.level')];
+  const levelButtons = () => /** @type {HTMLButtonElement[]} */ ([...$('levels').querySelectorAll('.level')]);
   const setLevel = (id, focus) => {
     data.level = id;
     saveData();
@@ -312,7 +283,7 @@
       stat(g?.plays ? `${g.best}/${g.max || ROUND}` : '—', T('stat.best')),
       stat(String(data.goals), T('stat.goals')),
     );
-    $('start-btn').disabled = !BANK.length;
+    /** @type {HTMLButtonElement} */ ($('start-btn')).disabled = !BANK.length;
     drawMeter();
   };
 
@@ -336,14 +307,7 @@
     $('cards').replaceChildren(...Array.from({ length: round.cards }, (_, i) => h('i', { class: i ? 'red' : 'yellow' })));
     $('cards').setAttribute('aria-label', round.cards ? T(round.cards === 1 ? 'cards.yellow' : 'cards.both') : T('cards.none'));
   };
-  const drawDots = () => {
-    $('dots').replaceChildren(
-      ...round.list.map((_, i) => {
-        const r = round.results[i];
-        return h('span', { class: `dot ${r === true ? 'ok' : r === false ? 'miss' : i === round.index ? 'now' : ''}` });
-      }),
-    );
-  };
+  const drawDots = () => KFG.dots($('dots'), round.results, round.index, { total: round.list.length });
   const drawBoard = () => {
     $('score-board').textContent = `${round.goals} : 0`;
     $('board').setAttribute('aria-label', T('board.aria', { n: round.goals }));
@@ -486,9 +450,7 @@
     const next = red
       ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startRound() }, T('restart'))
       : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, T(last ? 'result' : 'next'));
-    $('feedback').replaceChildren(box, next);
-    next.focus({ preventScroll: true });
-    $('feedback').scrollIntoView({ block: 'nearest', behavior: reduced() ? 'auto' : 'smooth' });
+    KFG.feedback($('feedback'), box, next);
   };
 
   const celebrate = (goal, coin) => {
@@ -553,64 +515,61 @@
   $('again-btn').addEventListener('click', startRound);
 
   // ---------- Keyboard ----------
-  document.addEventListener('keydown', (e) => {
-    if (e.altKey || e.ctrlKey || e.metaKey) return;
-    const onButton = e.target instanceof HTMLButtonElement || e.target instanceof HTMLAnchorElement;
-    if (e.key === 'Escape') {
-      e.preventDefault();
+  KFG.keys({
+    nativeButtons: false,
+    onEscape: () => {
       if (screen === 'start') location.href = '../../';
       else toStart();
-      return;
-    }
-    if (screen === 'start') {
-      const n = Number(e.key);
-      if (n >= 1 && n <= LEVELS.length && !levelButtons()[n - 1].disabled) {
-        setLevel(LEVELS[n - 1].id, true);
-        e.preventDefault();
-        return;
+      return true;
+    },
+    onKey: (e) => {
+      const onButton = e.target instanceof HTMLButtonElement || e.target instanceof HTMLAnchorElement;
+      if (screen === 'start') {
+        const n = Number(e.key);
+        if (n >= 1 && n <= LEVELS.length && !levelButtons()[n - 1].disabled) {
+          setLevel(LEVELS[n - 1].id, true);
+          return true;
+        }
+        if (['ArrowRight', 'ArrowDown'].includes(e.key)) {
+          moveLevel(1);
+          return true;
+        }
+        if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
+          moveLevel(-1);
+          return true;
+        }
+        if (e.key === 'Enter' && (!onButton || /** @type {Element} */ (e.target).classList.contains('level'))) {
+          startRound();
+          return true;
+        }
+        return false;
       }
-      if (['ArrowRight', 'ArrowDown'].includes(e.key)) {
-        moveLevel(1);
-        e.preventDefault();
-        return;
+      if (screen !== 'play' || !cur) return false;
+      if (!ES && (e.key === 'u' || e.key === 'U' || e.key === 'г' || e.key === 'Г')) {
+        toggleUa();
+        return true;
       }
-      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
-        moveLevel(-1);
-        e.preventDefault();
-        return;
+      if (!cur.answered) {
+        const n = Number(e.key);
+        if (n >= 1 && n <= 4) {
+          choose(n - 1);
+          return true;
+        }
+        const step = ['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(e.key) ? -1 : 0;
+        if (step) {
+          const i = cur.buttons.indexOf(/** @type {HTMLButtonElement} */ (document.activeElement));
+          cur.buttons[i < 0 ? (step > 0 ? 0 : 3) : (i + step + 4) % 4].focus();
+          return true;
+        }
+        return false;
       }
-      if (e.key === 'Enter' && (!onButton || e.target.classList.contains('level'))) {
-        startRound();
-        e.preventDefault();
+      // Answered: Enter = next (a focused button keeps its own native click).
+      if (e.key === 'Enter' && !onButton) {
+        /** @type {HTMLElement | null} */ ($('feedback').querySelector('.btn'))?.click();
+        return true;
       }
-      return;
-    }
-    if (screen !== 'play' || !cur) return;
-    if (!ES && (e.key === 'u' || e.key === 'U' || e.key === 'г' || e.key === 'Г')) {
-      toggleUa();
-      e.preventDefault();
-      return;
-    }
-    if (!cur.answered) {
-      const n = Number(e.key);
-      if (n >= 1 && n <= 4) {
-        choose(n - 1);
-        e.preventDefault();
-        return;
-      }
-      const step = ['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(e.key) ? -1 : 0;
-      if (step) {
-        const i = cur.buttons.indexOf(document.activeElement);
-        cur.buttons[i < 0 ? (step > 0 ? 0 : 3) : (i + step + 4) % 4].focus();
-        e.preventDefault();
-      }
-      return;
-    }
-    // Answered: Enter = next (a focused button keeps its own native click).
-    if (e.key === 'Enter' && !onButton) {
-      $('feedback').querySelector('.btn')?.click();
-      e.preventDefault();
-    }
+      return false;
+    },
   });
 
   // Parents' test mode: expose state for automated checks.
