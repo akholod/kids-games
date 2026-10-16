@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Drawings for «El planeta donde vivimos»: illustrations (`art`), the world map, label scenes and the aerial view.
 // Plain SVG, our own drawings. Needs maps.js (window.SP_MAPS) for the maps; everything else is self-contained.
 // window.SPArt = { art(key) → Element|null, worldMap(opts), scene(name), aerial() }

@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "es2022",
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
+    "types": [],
+    "skipLibCheck": true,
+    "strict": false,
+    "strictNullChecks": false
+  },
+  "include": [
+    "types/*.d.ts",
+    "shared/**/*.js",
+    "catalog.js",
+    "games/**/*.js"
+  ],
+  "exclude": [
+    "shared/cards.js",
+    "games/sociales-planeta/maps.js",
+    "games/football-quiz/questions.js",
+    "worker",
+    "tests",
+    "node_modules"
+  ]
+}

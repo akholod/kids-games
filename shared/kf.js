@@ -52,7 +52,7 @@
       return site;
     }
   };
-  const LANG = detectLang();
+  const LANG = /** @type {KFLang} */ (detectLang());
   if (typeof document !== 'undefined' && document.documentElement) document.documentElement.lang = LANG;
 
   // T = i18n({ uk: {...}, es: {...} }); T('key', { n: 3 }) — missing keys fall back to uk, then to the key.
@@ -68,7 +68,7 @@
     };
     T.has = (key) => key in dict;
     T.apply = (root = document) => {
-      for (const el of root.querySelectorAll('[data-i18n]')) el.textContent = T(el.dataset.i18n);
+      for (const el of /** @type {NodeListOf<HTMLElement>} */ (root.querySelectorAll('[data-i18n]'))) el.textContent = T(el.dataset.i18n);
       for (const attr of ['placeholder', 'aria-label', 'title']) {
         for (const el of root.querySelectorAll(`[data-i18n-${attr}]`)) el.setAttribute(attr, T(el.getAttribute(`data-i18n-${attr}`)));
       }
@@ -185,6 +185,7 @@
   // Catalog registry. status: 'ready' | 'beta' (visible only in test mode) | 'soon'
   // sites: where the game is shown ('uk' = main site, 'es' = Spanish site). title/desc are the Ukrainian texts
   // (kept for compatibility); es: { title, desc } are the Spanish ones. KF.siteGames() resolves both.
+  /** @type {KFGame[]} */
   const GAMES = [
     {
       slug: 'goalkeeper',
@@ -269,7 +270,8 @@
   };
   const catOf = (c) => (c && CARD_CATS[c.cat]) || CARD_CATS.common;
 
-  const SCRIPT_SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
+  const SCRIPT_SRC =
+    (typeof document !== 'undefined' && document.currentScript && /** @type {HTMLScriptElement} */ (document.currentScript).src) || '';
   const cardImg = (id, thumb) => {
     const rel = `../images/cards/${thumb ? 'thumb/' : ''}${id}.webp`;
     try {
@@ -425,6 +427,7 @@
   // Logged-in user (never in test mode) and its sync slot { base, baseRev, dirty, outbox }.
   let user = TEST_MODE ? null : readJSON(USER_KEY);
   let sync = null;
+  /** @type {KFAuthStatus} */
   let authStatus = user ? 'pending' : 'guest';
 
   const load = () => {
@@ -444,6 +447,7 @@
   };
 
   let state = load();
+  /** @type {Record<string, ((payload?: any) => void)[]>} */
   const listeners = {};
 
   const emit = (type, payload) => {
@@ -871,6 +875,7 @@
     },
   };
 
+  /** @type {KFAPI} */
   const KF = {
     lang: LANG,
     i18n,
@@ -910,7 +915,7 @@
 
     // Call on every answer. Correct answer = +1 coin; { coin: 0.5 } pays every 2nd, { coin: false } nothing
     // (games with their own coin rule, e.g. the quiz: KF.earn 1 coin per 5 correct).
-    answer(slug, correct, { coin = 1 } = {}) {
+    answer(slug, correct, { coin = /** @type {number | boolean} */ (1) } = {}) {
       const st = state.stats;
       if (correct) {
         st.correct++;

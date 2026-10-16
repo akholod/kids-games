@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Ciencias Sociales 3.º (SM Matices), Unidad 1 «El planeta donde vivimos» — task bank.
 // Source: book pages 10–27, transcribed in .pi/book-cs/unit1.md (not in git).
 // Plain data, no logic: window.SP_CONTENT = { stations, exam }.

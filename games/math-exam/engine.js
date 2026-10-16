@@ -1205,6 +1205,7 @@
     return keys[keys.length - 1];
   };
 
+  /** @param {{ count?: number, weights?: Record<string, number>, rng?: () => number, maxLevels?: Record<string, number>, lang?: string }} [opts] */
   const makeExam = ({ count = 12, weights, rng = Math.random, maxLevels, lang: language = 'uk' } = {}) => {
     const topics = TOPICS.map((t) => t.key);
     const order = shuffle(rng, topics).slice(0, count);

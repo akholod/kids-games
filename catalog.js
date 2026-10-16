@@ -399,7 +399,7 @@ const T = KF.i18n({
 });
 // Static markup and the pack template, before anything is drawn; CSS labels come in as custom properties.
 T.apply();
-T.apply(document.getElementById('pack-tpl').content);
+T.apply(/** @type {HTMLTemplateElement} */ (document.getElementById('pack-tpl')).content);
 document.title = T('title');
 for (const [prop, key] of [
   ['--t-new', 'tile.new'],
@@ -409,7 +409,7 @@ for (const [prop, key] of [
   document.documentElement.style.setProperty(prop, JSON.stringify(T(key)));
 // Small question dialog (sell duplicates, guest merge, logout warning). Resolves 'primary' | 'secondary' | null (Esc).
 function askDialog({ icon, title, text, primary, secondary }) {
-  const d = document.getElementById('ask-dialog');
+  const d = /** @type {HTMLDialogElement} */ (document.getElementById('ask-dialog'));
   for (const [id, value] of [
     ['ask-icon', icon],
     ['ask-title', title],
@@ -424,15 +424,16 @@ function askDialog({ icon, title, text, primary, secondary }) {
   return new Promise((resolve) => d.addEventListener('close', () => resolve(d.returnValue || null), { once: true }));
 }
 (() => {
+  /** Elements are looked up by id and used as HTMLInputElement / HTMLDialogElement / ... as needed. @returns {any} */
   const $ = (id) => document.getElementById(id);
   // Markup here is built only from KF constants and safeCount() numbers.
   const setMarkup = (el, html) => el.replaceChildren(document.createRange().createContextualFragment(html));
-  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const tabs = [.../** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('[role="tab"]'))];
   function showTab(name) {
     document.body.classList.toggle('games-view', name === 'games');
     tabs.forEach((tab) => {
       const active = tab.dataset.tab === name;
-      tab.setAttribute('aria-selected', active);
+      tab.setAttribute('aria-selected', String(active));
       tab.tabIndex = active ? 0 : -1;
       $(tab.getAttribute('aria-controls')).hidden = !active;
     });
@@ -528,6 +529,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
 // Card album, pack opening and the big card view. The album grid is built once; KF changes only
 // update tiles in place, so hundreds of images are not re-created on every coin change.
 (() => {
+  /** Elements are looked up by id and used as HTMLInputElement / HTMLDialogElement / ... as needed. @returns {any} */
   const $ = (id) => document.getElementById(id);
   const h = (tag, props = {}, ...kids) => {
     const el = Object.assign(document.createElement(tag), props);
@@ -1130,6 +1132,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
 (() => {
   const auth = KF.TEST_MODE ? null : KF.auth;
   if (!auth) return;
+  /** Elements are looked up by id and used as HTMLInputElement / HTMLDialogElement / ... as needed. @returns {any} */
   const $ = (id) => document.getElementById(id);
   const h = (tag, props = {}, ...kids) => {
     const el = Object.assign(document.createElement(tag), props);

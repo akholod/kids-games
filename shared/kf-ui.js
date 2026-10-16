@@ -82,7 +82,7 @@
   }
   function updateCoins() {
     document.querySelectorAll('[data-kf-coins]').forEach((el) => {
-      el.textContent = KF.get().coins;
+      el.textContent = String(KF.get().coins);
     });
   }
   KF.on('change', updateCoins);
@@ -108,7 +108,7 @@
 
   function updateSync() {
     const status = KF.auth?.status || 'guest';
-    document.querySelectorAll('[data-kf-sync]').forEach((el) => {
+    /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('[data-kf-sync]')).forEach((el) => {
       el.dataset.state = status;
       const mode = el.dataset.kfSync;
       if (mode !== 'dot') el.textContent = SYNC[status]?.[mode === 'long' ? 'long' : 'short'] || '';
