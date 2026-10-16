@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Drawings for «El planeta donde vivimos»: illustrations (`art`), the world map, label scenes and the aerial view.
 // Plain SVG, our own drawings. Needs maps.js (window.SP_MAPS) for the maps; everything else is self-contained.
 // window.SPArt = { art(key) → Element|null, worldMap(opts), scene(name), aerial() }
@@ -478,6 +477,7 @@ window.SPArt = (() => {
         [166, 80],
         [192, 84],
       ];
+      /** @param {number[]} pt @param {number} [r] */
       const star = ([x, y], r = 3.4) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff8d6"/>`;
       return svgEl(
         '0 0 340 210',

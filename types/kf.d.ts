@@ -284,8 +284,9 @@ declare var KF_SITE: { lang: KFLang };
 declare var KF_CARDS: KFCard[];
 declare var MathExam: MathExamAPI;
 // Loosely typed for now (typed by the lanes that migrate those games).
-declare var SP_CONTENT: any;
-declare var SPArt: any;
+declare var SP_CONTENT: SPContent;
+declare var SP_TYPES: ExamRenderers;
+declare var SPArt: ExamArt;
 declare var SP_MAPS: any;
 declare var QUIZ_QUESTIONS: any;
 
@@ -295,8 +296,9 @@ interface Window {
   KF_SITE: { lang: KFLang };
   KF_CARDS: KFCard[];
   MathExam: MathExamAPI;
-  SP_CONTENT: any;
-  SPArt: any;
+  SP_CONTENT: SPContent;
+  SP_TYPES: ExamRenderers;
+  SPArt: ExamArt;
   SP_MAPS: any;
   QUIZ_QUESTIONS: any;
   // test hooks
