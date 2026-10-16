@@ -7,3 +7,4 @@ books/
 images/cards/
 test-results/
 playwright-report/
+.reviews/
