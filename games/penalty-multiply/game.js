@@ -1,11 +1,14 @@
-// @ts-nocheck
 'use strict';
 (() => {
   const slug = 'penalty-multiply',
     total = 5;
-  const $ = (id) => document.getElementById(id);
+  const { $, h } = KFG;
   const selected = new Set([2, 3, 4, 5]);
   const rand = (n) => Math.floor(Math.random() * n);
+  /** @param {Event} e @param {string} selector */
+  const hit = (e, selector) => /** @type {HTMLElement | null} */ (e.target instanceof Element ? e.target.closest(selector) : null);
+  let screen = 'intro';
+  const show = KFG.screens(['intro', 'play', 'finish'], { scroll: false, onShow: (name) => (screen = name) });
   let round = 0,
     score = 0,
     results = [],
@@ -18,7 +21,6 @@
   // Tables 2, 5 and 10 are easy: a coin for every 2 goals. The +5 bonus needs a hard table (6–9) in the round.
   const EASY = [2, 5, 10],
     isHard = (n) => n >= 6 && n <= 9;
-  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   function renderChips() {
     $('chips').innerHTML =
       `<button type="button" class="chip all" aria-pressed="${selected.size === 9}" data-table="all">Усі</button>` +
@@ -27,7 +29,7 @@
         .join('');
   }
   $('chips').addEventListener('click', (e) => {
-    const chip = e.target.closest('.chip');
+    const chip = hit(e, '.chip');
     if (!chip) return;
     if (chip.dataset.table === 'all') {
       selected.clear();
@@ -53,20 +55,15 @@
       correct + 5,
       correct - 5,
     ].filter((n) => n > 0 && n !== correct);
-    const unique = [...new Set(possibilities)].sort(() => Math.random() - 0.5);
-    const choices = [correct, ...unique.slice(0, 2)];
-    for (let i = choices.length - 1; i > 0; i--) {
-      const j = rand(i + 1);
-      [choices[i], choices[j]] = [choices[j], choices[i]];
-    }
-    return choices;
+    const unique = KFG.shuffle([...new Set(possibilities)]);
+    return KFG.shuffle([correct, ...unique.slice(0, 2)]);
   }
   function drawDots() {
-    $('dots').innerHTML = Array.from(
-      { length: total },
-      (_, i) =>
-        `<span class="dot ${results[i] === true ? 'goal' : results[i] === false ? 'saved' : i === round ? 'current' : ''}" aria-label="Удар ${i + 1}: ${results[i] === true ? 'гол' : results[i] === false ? 'сейв' : 'ще попереду'}"></span>`,
-    ).join('');
+    KFG.dots($('dots'), results, round, {
+      total,
+      cls: { ok: 'goal', miss: 'saved', now: 'current' },
+      attrs: (i, r) => ({ 'aria-label': `Удар ${i + 1}: ${r === true ? 'гол' : r === false ? 'сейв' : 'ще попереду'}` }),
+    });
   }
   function next() {
     clearTimeout(timer);
@@ -77,7 +74,7 @@
     $('keeper').classList.remove('dive');
     $('feedback').replaceChildren();
     const tables = [...selected];
-    const a = tables[rand(tables.length)],
+    const a = KFG.pick(tables),
       b = 2 + rand(9);
     answer = a * b;
     table = a;
@@ -90,8 +87,7 @@
     drawDots();
   }
   function finish() {
-    $('play').hidden = true;
-    $('finish').hidden = false;
+    show('finish');
     const result = KF.finishGame(slug, { score, max: total, bonus: hardRound ? 5 : 0 });
     const earned = KF.get().coins - startingCoins;
     $('final-score').textContent = `${score} / ${total}`;
@@ -127,25 +123,24 @@
     drawDots();
     timer = setTimeout(
       () => {
-        const text = document.createElement('p');
-        text.textContent = good ? 'ГОООЛ! ⚽ Чудовий удар!' : `Воротар зловив! 🧤 Правильна відповідь: ${answer}`;
-        const nextButton = document.createElement('button');
-        nextButton.type = 'button';
-        nextButton.className = 'btn btn-dark';
-        nextButton.textContent = round === total - 1 ? 'Результат →' : 'Наступний удар →';
-        nextButton.addEventListener('click', () => {
-          round++;
-          if (round === total) finish();
-          else next();
+        const text = h('p', { text: good ? 'ГОООЛ! ⚽ Чудовий удар!' : `Воротар зловив! 🧤 Правильна відповідь: ${answer}` });
+        const nextButton = h('button', {
+          type: 'button',
+          class: 'btn btn-dark',
+          text: round === total - 1 ? 'Результат →' : 'Наступний удар →',
+          onclick: () => {
+            round++;
+            if (round === total) finish();
+            else next();
+          },
         });
-        $('feedback').replaceChildren(text, nextButton);
-        nextButton.focus({ preventScroll: true });
+        KFG.feedback($('feedback'), text, nextButton, { scroll: false });
       },
-      reduced() ? 100 : 720,
+      KFG.reduced() ? 100 : 720,
     );
   }
   $('goal').addEventListener('click', (e) => {
-    const button = e.target.closest('button.target');
+    const button = /** @type {HTMLButtonElement | null} */ (hit(e, 'button.target'));
     if (button) shoot(button);
   });
   function start() {
@@ -155,12 +150,41 @@
     results = [];
     hardRound = false;
     startingCoins = KF.get().coins;
-    $('intro').hidden = true;
-    $('finish').hidden = true;
-    $('play').hidden = false;
+    show('play');
     next();
   }
   $('start').addEventListener('click', start);
   $('again').addEventListener('click', start);
+  // Keyboard: 1–3 shoot at the 1st–3rd target, Enter = start / next kick / again (a focused button keeps its own click).
+  KFG.keys({
+    ctrl: () => ({
+      onKey: (e) => {
+        if (screen === 'play') {
+          const n = Number(e.key);
+          if (!locked && n >= 1 && n <= 3) {
+            /** @type {HTMLElement} */ ($('goal').children[n - 1])?.click();
+            return true;
+          }
+          if (e.key === 'Enter') {
+            const nextButton = /** @type {HTMLElement | null} */ ($('feedback').querySelector('button'));
+            if (nextButton) nextButton.click();
+            return !!nextButton;
+          }
+          return false;
+        }
+        if (e.key !== 'Enter') return false;
+        $(screen === 'intro' ? 'start' : 'again').click();
+        return true;
+      },
+    }),
+    // Esc mirrors football-quiz / math-exam: back from the round to the intro without asking, from intro / finish to the catalog.
+    onEscape: () => {
+      if (screen === 'play') {
+        clearTimeout(timer);
+        show('intro');
+      } else location.href = '../../';
+      return true;
+    },
+  });
   renderChips();
 })();

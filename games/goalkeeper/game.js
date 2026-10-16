@@ -1,10 +1,9 @@
-// @ts-nocheck
 'use strict';
 (() => {
   const slug = 'goalkeeper',
-    $ = (id) => document.getElementById(id),
-    rand = (n) => Math.floor(Math.random() * n),
-    shuffle = (a) => a.sort(() => Math.random() - 0.5);
+    { $, shuffle } = KFG,
+    rand = (n) => Math.floor(Math.random() * n);
+  /** @type {[string, string, number, number][]} */
   const tiers = [
     ['starter', 'Starter', 0, 0],
     ['infinity', 'Infinity', 15, 6],
@@ -68,6 +67,8 @@
     chest: 'Він стояв прямо перед м’ячем — удар у груди!',
   };
   const arrows = { left: '←', right: '→', high: '↑', low: '↓', chest: '•' };
+  /** @param {Event} e @param {string} selector */
+  const hit = (e, selector) => /** @type {HTMLElement | null} */ (e.target instanceof Element ? e.target.closest(selector) : null);
   let data = KF.gameData(slug);
   data = {
     saves: data.saves || 0,
@@ -95,6 +96,7 @@
     streak = 0,
     results = [],
     target = '',
+    /** @type {any} */
     answer = '',
     choices = [],
     selected = null,
@@ -110,15 +112,14 @@
   // Clean-sheet bonus grows with the level: on rookie the dashed line shows where the ball goes.
   const CLEAN_BONUS = { rookie: 1, academy: 3, pro: 5 };
   const save = () => KF.gameData(slug, data);
-  const show = (name) => {
-    screen = name;
-    for (const s of ['start', 'lesson', 'match', 'end', 'shop']) $(s + '-screen').hidden = s !== name;
-    window.scrollTo(0, 0);
-  };
+  const show = KFG.screens(['start', 'lesson', 'match', 'end', 'shop'], {
+    idOf: (name) => `${name}-screen`,
+    onShow: (name) => (screen = name),
+  });
   const coachSvg = `<svg class="coach-art" viewBox="0 0 140 185" role="img" aria-label="Усміхнений високий воротар Тібо у формі номер один"><ellipse cx="70" cy="176" rx="53" ry="7" fill="#153d2c33"/><path d="M47 117 42 169 62 170 71 124 78 170 98 169 93 117" fill="#244c3e" stroke="#18372c" stroke-width="3"/><path d="M42 169 34 178 65 178 63 169 M78 169 77 178 107 178 98 169" fill="#213128"/><path d="M48 63 Q70 56 92 63 L99 126 Q70 134 41 126Z" fill="#e2a840" stroke="#174d37" stroke-width="3"/><path d="M52 68 88 68 M51 75 89 75" stroke="#ffdd79" stroke-width="3"/><text x="70" y="110" text-anchor="middle" font-size="37" font-weight="900" fill="#174d37">1</text><path d="M48 72 Q31 78 28 112 M92 72 Q109 80 112 112" fill="none" stroke="#e2a840" stroke-width="17" stroke-linecap="round"/><path d="M26 107 Q14 98 13 106 L16 119 27 130 36 122 36 108 Q32 102 28 109Z M114 107 Q126 98 127 106 L124 119 113 130 104 122 104 108 Q108 102 112 109Z" fill="var(--glove)" stroke="#174d37" stroke-width="3"/><path d="M21 113 31 122 M119 113 109 122" stroke="#fff" stroke-width="2"/><rect x="61" y="51" width="18" height="16" rx="6" fill="#b98260"/><ellipse cx="70" cy="32" rx="23" ry="27" fill="#b98260" stroke="#6b4938" stroke-width="2"/><path d="M47 32 Q43 8 64 6 Q90 0 93 25 Q81 22 74 15 Q64 28 47 32Z" fill="#362a28"/><path d="M54 35 60 35 M79 35 85 35" stroke="#342a28" stroke-width="2" stroke-linecap="round"/><path d="M62 45 Q70 52 78 45" fill="none" stroke="#704637" stroke-width="2.5" stroke-linecap="round"/></svg>`;
   document.querySelectorAll('.coach-figure').forEach((el) => (el.innerHTML = coachSvg));
   $('sticker-img').onerror = () => $('sticker-card').classList.add('is-broken');
-  $('sticker-img').src = KF.cardImg('thibaut-courtois', true);
+  /** @type {HTMLImageElement} */ ($('sticker-img')).src = KF.cardImg('thibaut-courtois', true);
   // Every pose is an explicit drawing, not a rotated version of an unrelated kick.
   // Screen-left and screen-right are mirrored for the player facing the goal.
   function shooterSvg(zone, demo = false) {
@@ -196,21 +197,21 @@
       .join('');
   }
   $('topics').onclick = (e) => {
-    const b = e.target.closest('[data-topic]');
+    const b = hit(e, '[data-topic]');
     if (b) {
       topic = b.dataset.topic;
       renderSetup();
     }
   };
   $('paces').onclick = (e) => {
-    const b = e.target.closest('[data-pace]');
+    const b = hit(e, '[data-pace]');
     if (b) {
       pace = b.dataset.pace;
       renderSetup();
     }
   };
   $('levels').onclick = (e) => {
-    const b = e.target.closest('[data-level]');
+    const b = hit(e, '[data-level]');
     if (b) {
       data.level = b.dataset.level;
       save();
@@ -256,8 +257,8 @@
     $('cut-note').textContent = cuts.find((c) => c[0] === data.gloves.cut)[1];
   }
   $('shop-list').onclick = (e) => {
-    const b = e.target.closest('[data-tier]');
-    if (!b || b.disabled) return;
+    const b = hit(e, '[data-tier]');
+    if (!b || /** @type {HTMLButtonElement} */ (b).disabled) return;
     const id = b.dataset.tier,
       tier = tiers.find((t) => t[0] === id);
     if (!data.gloves.owned.includes(id)) {
@@ -270,7 +271,7 @@
     renderShop();
   };
   $('colors').onclick = (e) => {
-    const b = e.target.closest('[data-color]');
+    const b = hit(e, '[data-color]');
     if (b) {
       data.gloves.color = b.dataset.color;
       save();
@@ -278,14 +279,14 @@
     }
   };
   $('cuts').onclick = (e) => {
-    const b = e.target.closest('[data-cut]');
+    const b = hit(e, '[data-cut]');
     if (b) {
       data.gloves.cut = b.dataset.cut;
       save();
       renderShop();
     }
   };
-  document.querySelectorAll('[data-shop]').forEach(
+  /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('[data-shop]')).forEach(
     (b) =>
       (b.onclick = () => {
         shopOrigin = screen;
@@ -305,11 +306,15 @@
     clearInterval(passTimer);
   }
   function dots() {
-    $('dots').innerHTML = Array.from(
-      { length: 6 },
-      (_, i) =>
-        `<span class="dot ${results[i] === 'save' ? 'save' : results[i] === 'miss' ? 'miss' : i === attack ? 'now' : ''}" title="Атака ${i + 1}" aria-label="Атака ${i + 1}: ${results[i] === 'save' ? 'сейв' : results[i] === 'miss' ? 'гол' : 'попереду'}"></span>`,
-    ).join('');
+    KFG.dots($('dots'), results, attack, {
+      total: 6,
+      cls: { ok: 'save' },
+      kind: (r) => (r === 'save' ? 'ok' : r === 'miss' ? 'miss' : undefined),
+      attrs: (i, r) => ({
+        title: `Атака ${i + 1}`,
+        'aria-label': `Атака ${i + 1}: ${r === 'save' ? 'сейв' : r === 'miss' ? 'гол' : 'попереду'}`,
+      }),
+    });
     $('round-label').textContent = `АТАКА ${Math.min(attack + 1, 6)} / 6`;
     $('score-label').textContent = `НАШІ ${goals} : ${rival} СУПЕРНИК`;
     $('streak-label').textContent = `🧤 Серія ${streak}`;
@@ -320,16 +325,14 @@
   }
   function feedback(message, label, fn) {
     $('feedback').hidden = false;
-    $('feedback').replaceChildren();
-    const p = document.createElement('p'),
-      b = document.createElement('button');
-    p.textContent = message;
-    b.type = 'button';
-    b.className = 'btn btn-dark';
-    b.textContent = label;
-    b.onclick = fn;
-    $('feedback').append(p, b);
-    b.focus({ preventScroll: true });
+    KFG.feedback(
+      $('feedback'),
+      KFG.h('p', { text: message }),
+      KFG.h('button', { type: 'button', class: 'btn btn-dark', text: label, onclick: fn }),
+      {
+        scroll: false,
+      },
+    );
   }
   function requestedStart() {
     if (data.matches === 0) openLesson(true);
@@ -417,9 +420,9 @@
       x2 = zone.left + zone.width / 2 - arena.left,
       y2 = zone.top + zone.height / 2 - arena.top;
     const line = $('trajectory-line');
-    for (const [name, value] of Object.entries({ x1, y1, x2, y2 })) line.setAttribute(name, value);
-    $('trajectory-end').setAttribute('cx', x2);
-    $('trajectory-end').setAttribute('cy', y2);
+    for (const [name, value] of Object.entries({ x1, y1, x2, y2 })) line.setAttribute(name, String(value));
+    $('trajectory-end').setAttribute('cx', String(x2));
+    $('trajectory-end').setAttribute('cy', String(y2));
     svg.removeAttribute('hidden');
   }
   function beginTelegraph() {
@@ -536,7 +539,7 @@
   function tickClock() {
     if (phase !== 'pass') return;
     const left = Math.max(0, deadline - performance.now());
-    $('seconds').textContent = Math.ceil(left / 1000);
+    $('seconds').textContent = String(Math.ceil(left / 1000));
     $('ring').style.setProperty('--clock', `${left / 40}%`);
     if (left === 0) resolvePass(-1);
   }
@@ -631,73 +634,76 @@
     renderStats();
   }
   $('goal').onclick = (e) => {
-    const b = e.target.closest('[data-zone]');
+    const b = hit(e, '[data-zone]');
     if (b) chooseSave(b.dataset.zone);
   };
   $('pass-choices').onclick = (e) => {
-    const b = e.target.closest('[data-index]');
+    const b = hit(e, '[data-index]');
     if (b) resolvePass(Number(b.dataset.index));
   };
   $('shout-choices').onclick = (e) => {
-    const b = e.target.closest('[data-index]');
+    const b = hit(e, '[data-index]');
     if (b) resolveCall(Number(b.dataset.index));
   };
   $('start-btn').onclick = requestedStart;
   $('again').onclick = startMatch;
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
+  KFG.keys({
+    ignoreMods: [],
+    nativeButtons: false,
+    onEscape: () => {
       if (screen === 'shop') {
         $('shop-back').click();
-        e.preventDefault();
-      } else if (screen === 'lesson') {
+        return true;
+      }
+      if (screen === 'lesson') {
         closeLesson();
-        e.preventDefault();
-      } else if (screen === 'match') {
-        if (confirm('Вийти з матчу? Цей матч не збережеться.')) {
-          clearTimers();
-          phase = 'idle';
-          show('start');
-          renderStats();
+        return true;
+      }
+      if (screen !== 'match') return false;
+      if (confirm('Вийти з матчу? Цей матч не збережеться.')) {
+        clearTimers();
+        phase = 'idle';
+        show('start');
+        renderStats();
+      }
+      return true;
+    },
+    onKey: (e) => {
+      if (screen === 'match') {
+        if (phase === 'shot') {
+          const map = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'high', ArrowDown: 'low', ' ': 'chest' };
+          if (map[e.key]) {
+            chooseSave(map[e.key]);
+            return true;
+          }
         }
-        e.preventDefault();
-      }
-      return;
-    }
-    if (screen === 'match') {
-      if (phase === 'shot') {
-        const map = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'high', ArrowDown: 'low', ' ': 'chest' };
-        if (map[e.key]) {
-          e.preventDefault();
-          chooseSave(map[e.key]);
-          return;
+        if ((phase === 'pass' || phase === 'call') && /^[1-4]$/.test(e.key)) {
+          const i = Number(e.key) - 1;
+          if (phase === 'pass') resolvePass(i);
+          else resolveCall(i);
+          return true;
+        }
+        if (e.key === 'Enter' && !$('feedback').hidden) {
+          $('feedback').querySelector('button').click();
+          return true;
         }
       }
-      if ((phase === 'pass' || phase === 'call') && /^[1-4]$/.test(e.key)) {
-        e.preventDefault();
-        const i = Number(e.key) - 1;
-        if (phase === 'pass') resolvePass(i);
-        else resolveCall(i);
-        return;
+      if (e.key !== 'Enter') return false;
+      if (screen === 'lesson') {
+        closeLesson(true);
+        return true;
       }
-      if (e.key === 'Enter' && !$('feedback').hidden) {
-        e.preventDefault();
-        $('feedback').querySelector('button').click();
-        return;
+      if (document.activeElement !== document.body) return false;
+      if (screen === 'start') {
+        requestedStart();
+        return true;
       }
-    }
-    if (e.key === 'Enter' && screen === 'lesson') {
-      e.preventDefault();
-      closeLesson(true);
-      return;
-    }
-    if (e.key === 'Enter' && screen === 'start' && document.activeElement === document.body) {
-      e.preventDefault();
-      requestedStart();
-    }
-    if (e.key === 'Enter' && screen === 'end' && document.activeElement === document.body) {
-      e.preventDefault();
-      startMatch();
-    }
+      if (screen === 'end') {
+        startMatch();
+        return true;
+      }
+      return false;
+    },
   });
   if (KF.TEST_MODE)
     Object.defineProperty(window, '__goalkeeper', { get: () => ({ screen, phase, target, answer, choices, attack, saves, pace }) });

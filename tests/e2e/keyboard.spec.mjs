@@ -124,15 +124,35 @@ test('sociales-planeta: choices with 1–4 / V F, Esc closes dialogs and goes ba
   await expect(page.locator('#hub')).toBeVisible();
 });
 
-// Known gap: penalty-multiply has no key handling yet (AGENTS.md wants number keys + Enter).
-test.fixme('penalty-multiply: answers with the keyboard (1–3 pick a goal target, Enter = next kick)', async ({ page }) => {
+test('penalty-multiply: Enter starts, 1–3 pick a goal target, Enter = next kick, Esc goes back', async ({ page }) => {
   await open(page, '/games/penalty-multiply/');
-  await page.locator('#start').focus();
   await page.keyboard.press('Enter');
-  const [a, b] = (await page.textContent('#question')).match(/\d+/g).map(Number);
-  const i = await page.$$eval('#goal button', (bs, want) => bs.findIndex((x) => Number(x.dataset.value) === want), a * b);
-  await page.keyboard.press(String(i + 1));
-  await expect(page.locator('#feedback button')).toBeVisible();
+  await expect(page.locator('#play')).toBeVisible();
+
+  // Esc mid-round goes back to the intro; Enter starts again
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#intro')).toBeVisible();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#round-label')).toContainText('2');
+  await expect(page.locator('#play')).toBeVisible();
+
+  for (let i = 0; i < 5; i++) {
+    await expect(page.locator('#round-label')).toContainText(`${i + 1} ІЗ 5`);
+    const [a, b] = (await page.textContent('#question')).match(/\d+/g).map(Number);
+    const at = await page.$$eval('#goal button', (bs, want) => bs.findIndex((x) => Number(x.dataset.value) === want), a * b);
+    await page.keyboard.press(String(at + 1));
+    await expect(page.locator('#feedback button')).toBeVisible();
+    // a second number key while the shot is resolved does nothing
+    await page.keyboard.press('1');
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('#finish')).toBeVisible();
+  await expect(page.locator('#final-score')).toHaveText('5 / 5');
+
+  // Enter on the finish screen plays again; Esc leaves the round, then the intro, for the catalog
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  await expect(page.locator('#round-label')).toContainText('1 ІЗ 5');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(page).toHaveURL('/');
 });
