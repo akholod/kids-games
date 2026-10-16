@@ -9,7 +9,8 @@
 <link rel="stylesheet" href="../../shared/exam/exam.css">
 <style>
 /* Map tap */
-.map-wrap{width:min(100%,860px);padding:6px;border-radius:18px;background:#fff;box-shadow:0 0 0 1px var(--line),0 8px 20px #12302012}
+/* --ar = map width/height (types.js); the map never grows taller than the room left on screen (--avail, exam.css) */
+.map-wrap{width:min(100%,860px,calc((var(--avail) - 44px) * var(--ar,2) + 12px));padding:6px;border-radius:18px;background:#fff;box-shadow:0 0 0 1px var(--line),0 8px 20px #12302012}
 .world-map{display:block;width:100%;height:auto}
 .wm-sea{fill:#aed6f1}
 .wm-ocean{fill:#9fcdee;stroke:#aed6f1;stroke-width:1}
@@ -35,6 +36,14 @@
 .wm-region,.ae-zone{-webkit-tap-highlight-color:transparent}
 
 /* Label scenes */
+.label-task{display:grid;gap:12px;justify-items:center;width:100%}
+.label-side{display:grid;gap:10px;justify-items:center;width:100%}
+@media(min-width:760px){
+  .label-task{grid-template-columns:minmax(200px,290px) minmax(0,1fr);align-items:center;gap:20px}
+  .label-side .tray{justify-content:flex-start}
+  .label-task .scene{width:min(100%,640px,calc((var(--avail) - 32px) * var(--ar,1.5)))}
+  .label-task .scene.compass{width:min(100%,400px,calc((var(--avail) - 32px) * var(--ar,1)))}
+}
 .scene{position:relative;width:min(100%,640px);margin:0 auto}
 .scene.compass{width:min(100%,400px)}
 .scene-svg{display:block;width:100%;height:auto}
@@ -48,7 +57,12 @@
 
 /* Paint */
 .paint{display:grid;gap:14px;width:min(100%,900px)}
-@media(min-width:760px){.paint{grid-template-columns:minmax(0,1fr) 230px;align-items:start}}
+.paint-side{display:grid;gap:10px;align-content:start}
+/* Wide screens: the legend in two columns beside the drawing, which fits the height left */
+@media(min-width:760px){
+  .paint{grid-template-columns:minmax(0,1fr) minmax(280px,330px);align-items:center}
+  .aerial-wrap{justify-self:center;width:min(100%,calc(var(--avail) * 1.5))}
+}
 .aerial-wrap{border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px oklch(0 0 0 / .12),0 10px 22px #12302018}
 .aerial-svg{display:block;width:100%;height:auto}
 .ae-zone{cursor:pointer;outline:none}
@@ -69,9 +83,8 @@
 .crayon-bg.c-amarillo{fill:#fff0a8}.crayon-line.c-amarillo{stroke:#f2c53d}
 .crayon-bg.c-azul{fill:#a6d2f5}.crayon-line.c-azul{stroke:#2f86d6}
 .palette{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-@media(min-width:760px){.palette{grid-template-columns:minmax(0,1fr)}}
 .palette h3{grid-column:1/-1;margin:0;font:900 .78rem/1 system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.swatch{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:center;min-height:52px;padding:6px 10px;border:2px solid #d5dccf;border-radius:14px;background:#fff;color:var(--ink);text-align:left;font-weight:800;font-size:.9rem;line-height:1.2;transition:border-color .16s,background-color .16s}
+.swatch{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:center;min-height:52px;padding:6px 26px 6px 10px;border:2px solid #d5dccf;border-radius:14px;background:#fff;color:var(--ink);text-align:left;font-weight:800;font-size:.9rem;line-height:1.2;transition:border-color .16s,background-color .16s}
 .swatch i{width:30px;height:30px;border-radius:9px;background:var(--c);box-shadow:inset 0 -3px 0 #0002}
 .swatch small{display:block;color:var(--muted);font-weight:700;font-size:.78rem}
 .swatch kbd{position:absolute;right:8px;top:8px}
@@ -82,7 +95,14 @@
 
 /* Walk: grid map */
 .walk{display:grid;gap:14px;width:min(100%,860px);justify-items:center}
-@media(min-width:760px){.walk{grid-template-columns:minmax(0,1fr) 260px;align-items:center}}
+@media(min-width:760px){
+  .walk{grid-template-columns:minmax(0,1fr) 300px;align-items:center}
+  /* the compass rose moves beside the board: the board gets the height (square, fits --avail) */
+  .walk .board-wrap{width:min(100%,518px,calc(var(--avail) + 46px));padding:6px 52px 6px 6px}
+  .walk .board-rose{top:6px}
+  .dpad{grid-template-rows:repeat(3,58px)}
+  .walk .places .choice{min-height:52px;font-size:.95rem}
+}
 .board-wrap{position:relative;width:min(100%,460px);padding:46px 6px 6px}
 .board-rose{position:absolute;right:4px;top:0;width:44px;height:44px}
 .board{--n:7;position:relative;display:grid;grid-template-columns:repeat(var(--n),1fr);aspect-ratio:1;border-radius:14px;overflow:visible;background:
@@ -110,6 +130,8 @@
 .dir.right{background:var(--ok);border-color:var(--okd)}
 .dir.wrong{background:var(--miss);border-color:#f0c56a}
 .dpad .hub-dot{grid-area:2/2;display:grid;place-items:center;font-size:1.8rem}
+.dir.undo{grid-area:3/3;padding:4px;font-size:.8rem;line-height:1.15}
+.dir.undo:disabled{opacity:.45}
 .steps{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:34px;max-width:420px}
 .steps span{padding:5px 10px;border-radius:100px;background:#fff;border:1px solid var(--line);font-weight:800;font-size:.86rem}
 .steps span.plan{background:#e3f1fc;border-color:#9cc3dd}

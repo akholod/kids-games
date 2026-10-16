@@ -76,7 +76,8 @@ window.SP_TYPES = (() => {
         }
       });
     });
-    work.append(h('div', { class: 'map-wrap' }, m.el), kbdHint(U('kMap')));
+    const [, , vw, vh] = (m.el.getAttribute('viewBox') || '0 0 2 1').split(/\s+/).map(Number);
+    work.append(h('div', { class: 'map-wrap', style: `--ar:${vw / vh}` }, m.el), kbdHint(U('kMap')));
   };
 
   // Label a drawn scene: tap a name chip then a slot (or slot then chip). ≤1 mistake = correct.
@@ -193,11 +194,10 @@ window.SP_TYPES = (() => {
     };
     selChip = 0;
     mark();
-    const scene = h('div', { class: `scene${task.scene === 'compass-rose' ? ' compass' : ''}` }, sc.el, slotEls);
+    const scene = h('div', { class: `scene${task.scene === 'compass-rose' ? ' compass' : ''}`, style: `--ar:${bw / bh}` }, sc.el, slotEls);
+    // Wide screens: the names stand in a column beside the drawing (label-task in index.html).
     work.append(
-      h('div', { class: 'tray' }, chipEls),
-      hint,
-      scene,
+      h('div', { class: 'label-task' }, h('div', { class: 'label-side' }, h('div', { class: 'tray' }, chipEls), hint), scene),
       kbdHint(U('kLabel', { n: labels.length, l: LETTERS[spots.length - 1] })),
     );
     setKeys((e) => {
@@ -288,10 +288,14 @@ window.SP_TYPES = (() => {
         'div',
         { class: 'paint' },
         h('div', { class: 'aerial-wrap' }, ae.el),
-        h('div', { class: 'palette' }, h('h3', { text: U('paletteTitle') }), sw),
+        h(
+          'div',
+          { class: 'paint-side' },
+          h('div', { class: 'palette' }, h('h3', { text: U('paletteTitle') }), sw),
+          hint,
+          kbdHint(U('kPaint')),
+        ),
       ),
-      hint,
-      kbdHint(U('kPaint')),
     );
     setKeys((e) => {
       const n = Number(e.key);
@@ -482,8 +486,11 @@ window.SP_TYPES = (() => {
         hint.textContent = '';
       };
       const pad = dpad(ctx, move);
+      // Undo sits in the d-pad's free corner, next to the moves it takes back.
+      undoBtn.className = 'dir undo';
+      pad.el.append(undoBtn);
       drawList();
-      work.append(h('div', { class: 'walk' }, b.wrap, h('div', { class: 'side' }, pad.el, list, undoBtn, hint, kbdHint(U('kPath')))));
+      work.append(h('div', { class: 'walk' }, b.wrap, h('div', { class: 'side' }, pad.el, list, hint, kbdHint(U('kPath')))));
       setKeys((e) => {
         const d = keyDir(e);
         if (d) {

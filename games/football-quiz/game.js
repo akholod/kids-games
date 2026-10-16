@@ -450,7 +450,10 @@
     const next = red
       ? h('button', { class: 'btn btn-dark', type: 'button', onclick: () => startRound() }, T('restart'))
       : h('button', { class: 'btn btn-dark', type: 'button', onclick: goNext }, T(last ? 'result' : 'next'));
-    KFG.feedback($('feedback'), box, next);
+    // The sheet is sticky, so it is in view at once. When it covers the answers, scroll down just enough to set it in its place.
+    KFG.feedback($('feedback'), box, next, { scroll: false });
+    const hidden = document.documentElement.scrollHeight - innerHeight - scrollY;
+    if (hidden > 0) scrollBy({ top: hidden, behavior: reduced() ? 'instant' : 'smooth' });
   };
 
   const celebrate = (goal, coin) => {

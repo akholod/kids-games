@@ -1,7 +1,8 @@
 :root{--sea:#3f8fc9;--sea-d:#1d4f73;--sea-l:#dcefff;--deep:#15405a;--sand:#f4ead0;--map:#fbf6e6;--red:#d9473b;--ok:#c9f269;--okd:#7fae2e;--miss:#ffe3a6;--missd:#e5a12a;--display:ui-rounded,'SF Pro Rounded','Arial Rounded MT Bold','Trebuchet MS',system-ui,sans-serif}
 .game-shell{max-width:980px;margin:0 auto;padding:17px 0 56px}
 .game-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}
+/* clip, not hidden: a hidden overflow would make the panel a scroll box and break the sticky feedback sheet */
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;overflow:clip}
 [hidden]{display:none!important}
 h1,h2,.display{font-family:var(--display)}
 kbd{font:800 .72rem/1 system-ui;color:var(--muted);background:#ffffffc0;border:1px solid #cfd8cb;border-radius:6px;padding:3px 5px}
@@ -51,8 +52,19 @@ kbd{font:800 .72rem/1 system-ui;color:var(--muted);background:#ffffffc0;border:1
 .mini-card.y{background:#ffd23f}.mini-card.r{background:#e2453c}
 
 /* ---------- Play ---------- */
-.play-head{background:var(--deep);color:#fff;padding:12px clamp(14px,3vw,22px);display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap}
-.play-head .label{flex:1 1 0;min-width:0;font-weight:900;font-size:.92rem;letter-spacing:.06em;text-transform:uppercase;color:#bfe6ff}
+/* While playing, the page's back row gives way to the quit button in the play head, and the shell stops padding the bottom:
+   one task (prompt + controls + feedback) should fit a 1280×650 laptop window without scrolling. */
+.game-shell:has(#play:not([hidden])){padding-top:10px;padding-bottom:16px}
+.game-shell:has(#play:not([hidden]))>.game-top{display:none}
+/* --work-top is measured by exam.js (top of .work); --room = height left below it, --avail = what the task controls may take:
+   all of it on short screens (the feedback sheet then covers the bottom), on taller ones the sheet's ~110px are kept free. */
+#play{--room:calc(100vh - var(--work-top,330px) - 44px);--avail:max(220px,min(var(--room),340px),calc(var(--room) - 110px))}
+@supports(height:100dvh){#play{--room:calc(100dvh - var(--work-top,330px) - 44px)}}
+.play-head{background:var(--deep);color:#fff;padding:8px clamp(10px,2.4vw,18px);display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap}
+.play-quit{flex:none;width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:50%;background:#ffffff1a;color:#fff;font-size:1.3rem;font-weight:900;line-height:1;transition:background-color .16s,transform .16s}
+.play-quit:hover{background:#ffffff33}
+.play-quit:active{transform:scale(.96)}
+.play-head .label{flex:0 1 auto;min-width:0;font-weight:900;font-size:.92rem;letter-spacing:.06em;text-transform:uppercase;color:#bfe6ff}
 .play-head .label b{color:#fff}
 .goals{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:2px 12px;border-radius:100px;background:#ffffff1a;font-weight:900;font-variant-numeric:tabular-nums}
 .goals.bump{animation:bump .45s cubic-bezier(.2,1.6,.4,1)}
@@ -60,28 +72,42 @@ kbd{font:800 .72rem/1 system-ui;color:var(--muted);background:#ffffffc0;border:1
 .cards{display:flex;gap:5px;align-items:center;min-height:22px}
 .cards i{display:block;width:15px;height:21px;border-radius:3px}
 .cards i.y{background:#ffd23f}.cards i.r{background:#e2453c}
-.dots{display:flex;gap:5px;flex-wrap:wrap;padding:10px clamp(14px,3vw,22px) 0;background:var(--sea-l)}
-.dot{flex:1 1 0;min-width:10px;max-width:56px;height:8px;border-radius:8px;background:#ffffffb3;box-shadow:inset 0 0 0 1.5px #9cc3dd}
-.dot.ok{background:var(--okd);box-shadow:none}
+/* Progress bars live in the play head, like the football quiz's match head */
+.dots{flex:1 1 140px;display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap;min-width:0}
+.dot{flex:1 1 0;min-width:8px;max-width:44px;height:8px;border-radius:8px;background:#ffffff1f;box-shadow:inset 0 0 0 1.5px #ffffff3d}
+.dot.ok{background:var(--ok);box-shadow:none}
 .dot.miss{background:var(--missd);box-shadow:none}
-.dot.now{background:var(--sea-d);box-shadow:none}
-.prompt{background:var(--sea-l);padding:14px clamp(16px,3vw,24px) 18px}
+.dot.now{background:#fff;box-shadow:none}
+.prompt{background:var(--sea-l);padding:12px clamp(16px,3vw,24px) 14px}
 .prompt-text{margin:0;font-family:var(--display);font-size:clamp(1.25rem,4.2vw,1.75rem);font-weight:900;line-height:1.25;letter-spacing:-.015em;text-wrap:balance}
 .prompt-text.long{font-size:clamp(1.08rem,3.6vw,1.4rem)}
-.work{padding:20px clamp(12px,3vw,26px) 8px;display:grid;gap:16px;justify-items:center}
+.work{padding:14px clamp(12px,3vw,26px) 12px;display:grid;gap:12px;justify-items:center}
 .work>*{max-width:100%}
 .inline-hint{min-height:1.5em;margin:0;text-align:center;font-weight:800;color:#8a5a00;max-width:560px;text-wrap:balance}
-.feedback{padding:4px clamp(14px,3vw,24px) 26px;text-align:center;scroll-margin-bottom:20px}
-.feedback:empty{padding:0}
-.fb{display:block;max-width:640px;margin:0 auto 14px;padding:16px 20px;border-radius:20px;text-align:left;line-height:1.45;font-weight:700}
+/* Feedback is a sheet stuck to the bottom of the screen: when a big task does not leave room for it,
+   it covers the bottom of the task instead of being scrolled to (the page never jumps away from the task). */
+.feedback{position:sticky;bottom:0;z-index:4;padding:12px clamp(12px,3vw,24px) 14px;text-align:center;background:var(--paper);box-shadow:0 -1px 0 var(--line),0 -12px 18px -16px #12302040}
+.feedback:empty{display:none}
+/* Once answered, the key hints and the emptied card tray step aside to give the sheet room */
+#play:has(.feedback:not(:empty)) .work .kbd-hint{display:none}
+#play:has(.feedback:not(:empty)) .side-col .kbd-hint{display:block;visibility:hidden}
+#play:has(.feedback:not(:empty)) .work .tray:empty{display:none}
+.fb{display:block;max-width:640px;margin:0 auto 12px;padding:12px 18px;border-radius:20px;text-align:left;line-height:1.4;font-weight:700}
 .fb.ok{background:#ebf7d7}
 .fb.miss{background:#fff3d6}
 .fb p{margin:0 0 6px}.fb p:last-child{margin-bottom:0}
-.fb-title{font-family:var(--display);font-size:1.3rem;font-weight:900}
+.fb-title{font-family:var(--display);font-size:1.25rem;font-weight:900}
 .fb-fix{padding:8px 12px;border-radius:12px;background:#ffffffb0}
 .fb-fact{color:#3b5a4f}
 .fb-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .fb-actions .btn{min-width:200px}
+/* Wide screens: the message and the button side by side — the sheet stays one card tall */
+@media(min-width:700px){
+  .feedback:not(:empty){display:flex;align-items:center;justify-content:center;gap:16px}
+  .fb{flex:0 1 700px;margin:0}
+  .fb-actions{flex:none;flex-direction:column}
+  .fb-actions .btn{min-width:190px}
+}
 .ref{display:flex;gap:14px;align-items:center;margin-bottom:8px}
 .ref-card{flex:none;width:44px;height:62px;border-radius:7px;box-shadow:0 8px 16px #0003;transform:rotate(-8deg);animation:ref-in .45s cubic-bezier(.2,1.4,.4,1) both}
 .ref-card.y{background:#ffd23f}.ref-card.r{background:#e2453c}
@@ -95,12 +121,20 @@ kbd{font:800 .72rem/1 system-ui;color:var(--muted);background:#ffffffc0;border:1
 .art .art-world{max-width:640px;max-height:none;border-radius:12px}
 .art .art-spain{max-width:400px;max-height:300px;border-radius:14px;box-shadow:0 0 0 1px oklch(0 0 0 / .1)}
 .with-art{display:grid;gap:18px;width:min(100%,860px);align-items:center}
-@media(min-width:760px){.with-art.side{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.with-art.side .art .art-svg{max-height:280px}}
+.side-col{display:grid;gap:12px;justify-items:center}
+/* Wide screens: the drawing beside the answers, never taller than the room left on screen */
+@media(min-width:760px){
+  .with-art.side{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .with-art.side .art .art-svg{max-height:min(280px,var(--avail))}
+  .with-art.wide{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+  .with-art.side.wide .art .art-world{width:min(100%,calc(var(--avail) * 2.07));max-height:none}
+}
 .side{display:grid;gap:12px;justify-items:center;width:100%}
 
 /* Choice */
 .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,600px)}
 .choices.words{grid-template-columns:minmax(0,1fr)}
+@media(min-width:760px){.work>.choices.words{grid-template-columns:repeat(2,minmax(0,1fr));width:min(100%,720px)}}
 .choice{position:relative;min-height:68px;padding:12px 16px 12px 38px;border:2px solid #c8d6d9;border-radius:18px;background:#fff;color:var(--ink);font-size:clamp(1.05rem,3.6vw,1.3rem);font-weight:850;line-height:1.25;text-align:left;box-shadow:0 5px 0 #d3dfe2;transition:transform .16s,background-color .16s,border-color .16s}
 .choice kbd{position:absolute;top:50%;left:10px;translate:0 -50%}
 .choice:hover:not(:disabled){background:#f0f8ff;border-color:#8ec1e2;transform:translateY(-2px)}
@@ -115,6 +149,7 @@ kbd{font:800 .72rem/1 system-ui;color:var(--muted);background:#ffffffc0;border:1
 
 /* Sort */
 .tray{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:min(100%,720px);min-height:60px}
+@media(min-width:760px){.work>.tray{width:min(100%,880px)}}
 .chip{display:inline-flex;align-items:center;gap:8px;min-height:52px;padding:8px 14px;border:2px solid #c8d6d9;border-radius:16px;background:#fff;color:var(--ink);font-weight:800;font-size:1.02rem;line-height:1.2;text-align:left;box-shadow:0 4px 0 #d3dfe2;transition:transform .16s,background-color .16s,border-color .16s,box-shadow .16s;touch-action:manipulation}
 .chip .ico{font-size:1.35rem}
 .chip:hover:not(:disabled){border-color:#8ec1e2;background:#f0f8ff}
@@ -142,6 +177,15 @@ kbd{font:800 .72rem/1 system-ui;color:var(--muted);background:#ffffffc0;border:1
 .ord-card.good{border-color:var(--okd);background:#f2fae4}
 .ord-card.bad .ord-num{background:var(--missd);color:#fff;border:0}
 .ord-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+/* Wide screens: a long list in two columns, the buttons beside it */
+@media(min-width:760px){
+  .work:has(>.order){grid-template-columns:minmax(0,700px) auto;justify-content:center;align-items:center;column-gap:18px}
+  .work>.order{grid-area:1/1;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+  .work>.order .ord-card{min-height:52px;font-size:1rem}
+  .work>.ord-actions{grid-area:1/2;flex-direction:column}
+  .work:has(>.order)>.inline-hint{grid-area:2/1/3/3}
+  .work:has(>.order)>.kbd-hint{grid-area:3/1/4/3}
+}
 
 /* Pairs */
 .pairs{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:10px 14px;width:min(100%,720px)}
@@ -196,8 +240,24 @@ dialog::backdrop{background:#0b2a3a99}
 .dlg-actions{display:flex;flex-wrap:wrap-reverse;gap:10px}
 .dlg-actions .btn{flex:1 1 160px}
 
+/* Short laptop screens: slimmer cards and bins (still 48px+ to tap) */
+@media(min-width:760px) and (max-height:860px){
+  .tray{gap:8px}
+  .chip{min-height:48px;padding:6px 13px}
+  .bin{min-height:110px;padding:10px}
+  .bin-head .ico{font-size:1.5rem}
+  .pairs,.pairs .col{gap:8px}
+  .pr{min-height:50px;padding-block:7px}
+  .ord-card{min-height:52px;padding-block:6px}
+  .ord-num{width:36px;height:36px}
+  .order{gap:8px}
+  .side-col{gap:10px}
+}
+
 @media(max-width:600px){
   .game-shell{padding-top:8px}
+  .play-head .label{flex:1 1 0}
+  .play-head .dots{order:9;flex-basis:100%;justify-content:flex-start}
   .panel{border-radius:22px}
   .hero{grid-template-columns:minmax(0,1fr) 92px;gap:10px}
   .hero-art{width:92px;align-self:start}

@@ -284,11 +284,21 @@
           h(
             'div',
             { class: 'play-head' },
+            // The page's «← back» row is hidden while playing (it costs a whole row on laptops): this asks like Esc does.
+            h('button', {
+              class: 'play-quit',
+              type: 'button',
+              id: 'play-quit',
+              'aria-label': T('backBtn'),
+              title: T('backBtn'),
+              text: '←',
+              onclick: () => askQuit(),
+            }),
             h('span', { class: 'label', id: 'play-label' }),
+            h('div', { class: 'dots', id: 'dots', 'aria-hidden': 'true' }),
             h('span', { class: 'cards', id: 'cards', 'aria-label': T('cardsLabel') }),
             h('span', { class: 'goals', id: 'goals', 'aria-label': T('goalsLabel') }, '⚽ ', h('b', { id: 'goals-n', text: '0' })),
           ),
-          h('div', { class: 'dots', id: 'dots', 'aria-hidden': 'true' }),
           h('div', { class: 'prompt' }, h('p', { class: 'prompt-text', id: 'prompt' })),
           h('div', { class: 'work', id: 'work' }),
           h('div', { class: 'feedback', id: 'feedback', role: 'status', 'aria-live': 'polite' }),
@@ -509,7 +519,18 @@
       $('feedback').replaceChildren();
       drawDots();
       renderTask(task);
+      fitWork();
     };
+
+    // Where the work area starts (the prompt may take one or two lines): exam.css sizes maps and drawings
+    // to the height left below it (--avail), so a task fits a laptop screen without scrolling.
+    const fitWork = () => {
+      const play = $('play');
+      if (play.hidden) return;
+      play.style.setProperty('--work-top', `${Math.round($('work').getBoundingClientRect().top + scrollY)}px`);
+    };
+    addEventListener('resize', fitWork);
+    new ResizeObserver(fitWork).observe($('prompt'));
 
     // Called once per task.
     const resolve = (/** @type {boolean} */ correct, /** @type {ExamResolveInfo} */ info = {}) => {
@@ -582,7 +603,11 @@
         red && h('button', { class: 'btn btn-light', type: 'button', onclick: startExam }, T('restart')),
       );
       ctrl = { onKey: (e) => (e.key === 'Enter' ? (next.click(), true) : false) };
-      KFG.feedback($('feedback'), box, actions);
+      // The sheet is sticky, so it is in view at once (scrollIntoView would do nothing). When it covers the end of the task,
+      // scroll down just enough to set it in its place: on a laptop that is a few lines, the prompt stays on screen.
+      KFG.feedback($('feedback'), box, actions, { scroll: false });
+      const hidden = document.documentElement.scrollHeight - innerHeight - scrollY;
+      if (hidden > 0) scrollBy({ top: hidden, behavior: reduced() ? 'instant' : 'smooth' });
     };
 
     const goNext = () => {
@@ -812,14 +837,7 @@
         const el = artEl(task.art);
         if (!el) return /** @type {(Node | string)[]} */ (kids);
         const wide = String(task.art).startsWith('world-highlight:');
-        return [
-          h(
-            'div',
-            { class: `with-art${wide ? '' : ' side'}` },
-            el,
-            h('div', { class: 'side-col', style: 'display:grid;gap:14px;justify-items:center' }, kids),
-          ),
-        ];
+        return [h('div', { class: `with-art side${wide ? ' wide' : ''}` }, el, h('div', { class: 'side-col' }, kids))];
       },
       draggable,
       fallback: (task, work, options) => types.choice(task, work, ctx, options),

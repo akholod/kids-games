@@ -7,9 +7,10 @@
 <title>Футбольний квіз — Keeper Fun Games</title>
 <link rel="stylesheet" href="../../shared/kf.css">
 <style>
-.game-shell{max-width:900px;margin:0 auto;padding:17px 0 56px}
+.game-shell{max-width:900px;margin:0 auto;padding:17px 0 24px}
 .game-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}
+/* clip, not hidden: a hidden overflow would make the panel a scroll box and break the sticky feedback sheet */
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;overflow:clip}
 [hidden]{display:none!important}
 .tnum{font-variant-numeric:tabular-nums}
 
@@ -105,10 +106,10 @@
 .choice.dim{opacity:.5}
 .kbd-hint{margin:4px 0 0;color:var(--muted);font-size:.85rem;text-align:center}
 
-/* Feedback */
-.feedback{padding:12px 22px 26px;text-align:center}
-.feedback:empty{padding:0}
-.fb-box{display:block;max-width:640px;margin:0 auto;padding:16px 20px;border-radius:18px;text-align:left;font-weight:700;line-height:1.45}
+/* Feedback: a sheet stuck to the bottom of the screen, so the next button is always in view without scrolling */
+.feedback{position:sticky;bottom:0;z-index:4;padding:12px 22px 14px;text-align:center;background:var(--paper);box-shadow:0 -1px 0 var(--line),0 -12px 18px -16px #12302040}
+.feedback:empty{display:none}
+.fb-box{display:block;max-width:640px;margin:0 auto;padding:14px 18px;border-radius:18px;text-align:left;font-weight:700;line-height:1.4}
 .fb-box.ok{background:#e3f4cb}
 .fb-box.miss{background:#fff1d1}
 .fb-box p{margin:0 0 6px}
@@ -122,7 +123,41 @@
 .ref-card.red{background:#e2453c}
 .ref p{margin:0}
 @keyframes ref-in{from{transform:translateY(-30px) rotate(-30deg) scale(.6);opacity:0}}
-.feedback .btn{margin-top:16px;min-width:220px}
+.feedback .btn{margin-top:12px;min-width:220px}
+/* Answered: the key hint steps aside to give the sheet room (Enter is all that is left to press) */
+.work:has(+ .feedback:not(:empty)) .kbd-hint{display:none}
+/* Wide screens: the message and the button side by side */
+@media(min-width:700px){
+  .feedback:not(:empty){display:flex;align-items:center;justify-content:center;gap:16px}
+  .fb-box{flex:0 1 640px;margin:0}
+  .feedback .btn{flex:none;margin-top:0;min-width:190px}
+  .ref-card{width:44px;height:62px}
+}
+/* Short laptop screens: a slimmer match head and question, so the question and all four answers fit without scrolling */
+@media(min-width:700px) and (max-height:860px){
+  .game-shell:has(#play:not([hidden])){padding-top:6px;padding-bottom:12px}
+  .match-head{padding:8px 22px}
+  .strip{padding:8px 22px}
+  .pitch{height:36px}
+  .pitch .net{top:7px}
+  .prompt{padding:14px 22px}
+  .tags{margin-bottom:6px}
+  .q-text{font-size:1.7rem}
+  .q-text.long{font-size:1.4rem}
+  .work{padding-top:14px}
+  .choice{min-height:64px}
+  .kbd-hint{margin:0}
+  /* start screen */
+  .game-shell{padding-top:10px}
+  .hub{padding:24px 36px}
+  .hub-head{margin-bottom:14px}
+  .hub-icon{width:68px;height:68px;font-size:2.3rem}
+  .hub h1{font-size:2.6rem}
+  .levels{margin-bottom:14px}
+  .level{min-height:78px;padding:10px 12px}
+  .rules{gap:8px;margin-bottom:16px}
+  .rules li{padding:8px 14px}
+}
 
 /* Finish */
 .finish{padding:clamp(25px,6vw,50px);text-align:center}
