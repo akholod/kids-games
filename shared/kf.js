@@ -240,7 +240,7 @@
       emoji: '🌍',
       category: 'sociales',
       desc: 'Готуємось до іспиту з Ciencias Sociales: Unidad 1 — шари Землі, карти, сторони світу.',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: { title: 'El planeta donde vivimos', desc: 'Prepárate para el examen de la Unidad 1: capas de la Tierra, mapas y orientación.' },
     },
