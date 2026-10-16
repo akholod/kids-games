@@ -29,11 +29,12 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
   visible focus, hover states, no swipe-only or hover-only actions.
 - UI text: Ukrainian by default; tasks may mix UA/ES/EN on purpose (see IDEAS.md).
 - Short rounds (2–5 min), instant feedback, celebrate wins, no punishment for mistakes.
-- Every game: include `../../shared/kf.css`, `cards.js`, `kf.js`, `kf-ui.js`; call `KF.answer(slug, correct)` per answer
+- Every game: include `../../shared/kf.css`, `cards.js`, `kf.js`, `kf-ui.js`, `kf-game.js`; call `KF.answer(slug, correct)` per answer
   and `KF.finishGame(slug, { score, max })` at round end; add a "back to catalog" link (`../../`).
 - Rewards must not be farmable: pay less for easy content (`KF.answer(slug, ok, { coin: 0.5 })`, `finishGame(..., { bonus })`)
   and pay the perfect-round bonus only until a level is done perfectly once. Every game's coins pass a daily budget in
   `KF` (40 a day per game in full, then a third; a toast suggests another game). Own coin rules go through `KF.earn(slug, n)`.
+- Shared game helpers: `shared/kf-game.js` (`KFG`: $, h, shuffle, pick, screens, dots, feedback, keys, confirm) — include after kf-ui.js; use them instead of re-implementing.
 - New game → add entry to `GAMES` in `shared/kf.js`: `beta` while in progress (visible only in test mode), then `ready`.
 - Language: `KF.lang` (`'uk' | 'es'`, from `KF_SITE`; never use hostname/`navigator.language`). `?lang=es` / `?lang=uk` forces it in the tab (like `?parent`), `?lang=off` drops it.
   Texts: `const T = KF.i18n({ uk: {...}, es: {...} })`, `T('key', { n })`, `T.apply()` for `[data-i18n*]`; missing es key → uk. The uk dictionary keeps today's exact text. Spanish site: Spain Spanish, «tú», no Cyrillic.
@@ -46,6 +47,7 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 
 ## Tests
 - Code style: Biome (`biome.json`); `pnpm format` fixes formatting + safe lint fixes, `pnpm lint` checks.
+- Types: `pnpm typecheck` (tsc, checkJs, no build; part of `pnpm test`). Cross-file globals (`KF`, `KFUI`, `MathExam`, …) are declared in `types/*.d.ts` (`kf.d.ts`, `kf-game.d.ts`; never put a `.d.ts` next to a same-named `.js` — tsc then skips the `.js`); new files must type-check (no `@ts-nocheck` in new code).
 - `pnpm install` once, then `pnpm test` = lint + unit (`node --test`, `tests/unit/`) + Playwright e2e (`tests/e2e/`, system Chrome, `playwright.config.mjs`; `tests/serve.mjs` serves the repo on :8795).
   Parts: `pnpm test:unit`, `pnpm test:e2e [spec] [--project=laptop|phone]`. Every run is in `?parent` mode with a seeded `Math.random`; any console/page error fails a test.
 - Unit: kf.js (i18n, sync/merge, daily coin budget), math-exam engine. E2E: catalog, one spec per game, `keyboard` (laptop), `rewards`, `screenshots` (phone; refresh with `--update-snapshots` after an intended UI change).
