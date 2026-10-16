@@ -392,7 +392,7 @@ dialog::backdrop{background:#0a2a1d99}
   const DATA_VERSION = 3;
   const loadData = () => {
     const d = KF.gameData(SLUG);
-    const out = { v: DATA_VERSION, topics: { ...(d.topics || {}) }, levels: { ...(d.levels || {}) }, passed: { ...(d.passed || {}) } };
+    const out = { v: DATA_VERSION, topics: { ...(d.topics || {}) }, levels: { ...(d.levels || {}) }, passed: { ...(d.passed || {}) }, perfect: { ...(d.perfect || {}) } };
     if (d.v !== DATA_VERSION) {
       // v3 reworked levels of these topics; old level numbers no longer match.
       for (const t of ['valor', 'columna', 'redondeo', 'estimacion']) {
@@ -589,7 +589,13 @@ dialog::backdrop{background:#0a2a1d99}
     ctrl = null;
     const { score, tasks, mode, topic, level } = session;
     const max = tasks.length;
-    const res = KF.finishGame(SLUG, { score, max });
+    // The perfect-round bonus is paid until the level (or the exam) is done perfectly once.
+    const key = mode === 'exam' ? 'exam' : `${topic}:${level}`;
+    const res = KF.finishGame(SLUG, { score, max, bonus: data.perfect[key] ? 0 : 5 });
+    if (res.perfect && !data.perfect[key]) {
+      data.perfect[key] = true;
+      saveData();
+    }
     const earned = KF.get().coins - session.startCoins;
     let text;
     if (mode === 'train') {
@@ -612,8 +618,8 @@ dialog::backdrop{background:#0a2a1d99}
     $('finish-title').textContent = mode === 'exam' ? 'Fin del partido' : '¡Entrenamiento terminado!';
     $('finish-score').textContent = `${score} / ${max}`;
     $('finish-text').textContent = ES
-      ? `${text} Has ganado ${earned} 🪙${res.perfect ? ' (¡con bonus por ronda perfecta!)' : '.'}`
-      : `${text} Зароблено ${earned} 🪙${res.perfect ? ' (з бонусом за ідеальний раунд!)' : '.'}`;
+      ? `${text} Has ganado ${earned} 🪙${res.bonus ? ' (¡con bonus por ronda perfecta!)' : '.'}`
+      : `${text} Зароблено ${earned} 🪙${res.bonus ? ' (з бонусом за ідеальний раунд!)' : '.'}`;
     if (mode === 'exam') {
       const rows = Object.entries(session.byTopic).map(([t, v]) => h('div', { class: 'report-row' },
         h('span', { text: stationOf(t).name }),

@@ -30,6 +30,9 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 - Short rounds (2–5 min), instant feedback, celebrate wins, no punishment for mistakes.
 - Every game: include `../../shared/kf.css`, `cards.js`, `kf.js`, `kf-ui.js`; call `KF.answer(slug, correct)` per answer
   and `KF.finishGame(slug, { score, max })` at round end; add a "back to catalog" link (`../../`).
+- Rewards must not be farmable: pay less for easy content (`KF.answer(slug, ok, { coin: 0.5 })`, `finishGame(..., { bonus })`)
+  and pay the perfect-round bonus only until a level is done perfectly once. Every game's coins pass a daily budget in
+  `KF` (40 a day per game in full, then a third; a toast suggests another game). Own coin rules go through `KF.earn(slug, n)`.
 - New game → add entry to `GAMES` in `shared/kf.js`: `beta` while in progress (visible only in test mode), then `ready`.
 - Language: `KF.lang` (`'uk' | 'es'`, from `KF_SITE`; never use hostname/`navigator.language`). `?lang=es` / `?lang=uk` forces it in the tab (like `?parent`), `?lang=off` drops it.
   Texts: `const T = KF.i18n({ uk: {...}, es: {...} })`, `T('key', { n })`, `T.apply()` for `[data-i18n*]`; missing es key → uk. The uk dictionary keeps today's exact text. Spanish site: Spain Spanish, «tú», no Cyrillic.

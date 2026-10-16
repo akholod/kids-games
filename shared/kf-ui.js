@@ -5,6 +5,7 @@
     uk: {
       achievement: '🏅 {title} — нове досягнення!',
       card: '🌟 Нова картка: {name}!',
+      earnCap: 'Сьогодні в цій грі монети вже йдуть повільніше. Спробуй іншу гру! 🎮',
       'sync.synced.short': 'Збережено ✓',
       'sync.synced.long': 'Усе збережено. Прогрес однаковий на всіх пристроях.',
       'sync.pending.short': 'Зберігаю',
@@ -19,6 +20,7 @@
     es: {
       achievement: '🏅 {title} — ¡nuevo logro!',
       card: '🌟 ¡Carta nueva: {name}!',
+      earnCap: 'Hoy en este juego las monedas ya llegan más despacio. ¡Prueba otro juego! 🎮',
       'sync.synced.short': 'Guardado ✓',
       'sync.synced.long': 'Todo guardado. Tu progreso es el mismo en todos los dispositivos.',
       'sync.pending.short': 'Guardando',
@@ -74,6 +76,7 @@
   }
   KF.on('change', updateCoins);
   KF.on('coins', delta => { if (delta > 0) toast(`+${delta} 🪙`, 'coin'); });
+  KF.on('earn-cap', () => toast(T('earnCap')));
   KF.on('achievement', a => { toast(T('achievement', { title: a.title })); confetti(); });
   KF.on('card', x => { if (x.isNew) { toast(T('card', { name: x.name })); confetti(); } });
   // Sync state of the logged-in player. Any element with data-kf-sync gets data-state;

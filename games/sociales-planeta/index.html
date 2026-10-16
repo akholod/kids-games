@@ -758,10 +758,13 @@ dialog::backdrop{background:#0b2a3a99}
     ctrl = null;
     const { score, tasks, mode } = session;
     const max = tasks.length;
+    // The perfect-round bonus is paid until the station (or the exam) is done perfectly once.
+    const old = mode === 'station' ? data.st[session.station] : null;
+    const done = mode === 'station' ? !!old && old.best >= old.max : data.exam?.n >= 10;
     // Stations (8 tasks) and the exam (16) share one catalog record: report both as a nota out of 10.
-    const res = KF.finishGame(SLUG, { score: Math.round((score / max) * 10), max: 10 });
+    const res = KF.finishGame(SLUG, { score: Math.round((score / max) * 10), max: 10, bonus: done ? 0 : 5 });
     const coins = KF.get().coins - session.startCoins;
-    const bonus = res.perfect ? L('perfectBonus') : '';
+    const bonus = res.bonus ? L('perfectBonus') : '';
     const el = $('finish');
     const buttons = [];
     if (mode === 'station') {

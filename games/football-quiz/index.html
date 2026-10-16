@@ -593,7 +593,7 @@
         goal = true;
       }
       saveData();
-      if (coin) KF.addCoins(1);
+      if (coin) KF.earn(SLUG, 1);
     } else {
       round.streak = 0;
       round.cards++;
@@ -734,5 +734,3 @@
 </script>
 </body>
 </html>
-</output>
-</invoke>

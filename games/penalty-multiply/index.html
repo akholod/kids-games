@@ -12,7 +12,9 @@
   const $ = id => document.getElementById(id);
   const selected = new Set([2,3,4,5]);
   const rand = n => Math.floor(Math.random() * n);
-  let round = 0, score = 0, results = [], answer = 0, locked = false, startingCoins = 0, timer;
+  let round = 0, score = 0, results = [], answer = 0, table = 0, hardRound = false, locked = false, startingCoins = 0, timer;
+  // Tables 2, 5 and 10 are easy: a coin for every 2 goals. The +5 bonus needs a hard table (6–9) in the round.
+  const EASY = [2, 5, 10], isHard = n => n >= 6 && n <= 9;
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   function renderChips() {
     $('chips').innerHTML = `<button type="button" class="chip all" aria-pressed="${selected.size === 9}" data-table="all">Усі</button>` + Array.from({length:9}, (_, i) => i + 2).map(n => `<button type="button" class="chip" aria-pressed="${selected.has(n)}" data-table="${n}">${n}</button>`).join('');
@@ -40,7 +42,7 @@
     $('keeper').classList.remove('dive');
     $('feedback').replaceChildren();
     const tables = [...selected]; const a = tables[rand(tables.length)], b = 2 + rand(9);
-    answer = a*b;
+    answer = a*b; table = a; if (isHard(a)) hardRound = true;
     $('round-label').textContent = `УДАР ${round+1} ІЗ ${total}`;
     $('question').textContent = `${a} × ${b} = ?`;
     $('goal').innerHTML = makeOptions(a,b).map(n => `<button type="button" class="target" data-value="${n}" aria-label="Відповідь ${n}">${n}</button>`).join('');
@@ -48,10 +50,10 @@
   }
   function finish() {
     $('play').hidden = true; $('finish').hidden = false;
-    const result = KF.finishGame(slug,{score,max:total});
+    const result = KF.finishGame(slug,{score,max:total,bonus:hardRound?5:0});
     const earned = KF.get().coins - startingCoins;
     $('final-score').textContent = `${score} / ${total}`;
-    $('final-message').textContent = `${score === 5 ? 'Усі удари в ціль! Чудовий матч!' : score > 0 ? 'Класний матч! Спробуєш ще раз?' : 'Гарне тренування! Спробуй ще раз.'} Зароблено ${earned} 🪙${result.perfect ? ' (є бонус за 5 голів!)' : '.'}`;
+    $('final-message').textContent = `${score === 5 ? 'Усі удари в ціль! Чудовий матч!' : score > 0 ? 'Класний матч! Спробуєш ще раз?' : 'Гарне тренування! Спробуй ще раз.'} Зароблено ${earned} 🪙${result.bonus ? ' (є бонус за 5 голів!)' : result.perfect ? '. Додай таблицю 6, 7, 8 чи 9 — і за 5 голів буде бонус!' : '.'}`;
     if (score > 0) KFUI.confetti();
   }
   function shoot(button) {
@@ -59,7 +61,7 @@
     locked = true;
     const good = Number(button.dataset.value) === answer;
     results.push(good); if (good) score++;
-    KF.answer(slug,good);
+    KF.answer(slug,good,{coin:EASY.includes(table)?0.5:1});
     $('goal').querySelectorAll('button').forEach(b => { b.disabled = true; if (Number(b.dataset.value) === answer) b.classList.add('correct'); });
     if (!good) button.classList.add('wrong');
     const ball = $('ball').getBoundingClientRect(), target = button.getBoundingClientRect();
@@ -81,7 +83,7 @@
     }, reduced() ? 100 : 720);
   }
   $('goal').addEventListener('click', e => { const button = e.target.closest('button.target'); if (button) shoot(button); });
-  function start() { clearTimeout(timer); round = 0; score = 0; results = []; startingCoins = KF.get().coins; $('intro').hidden = true; $('finish').hidden = true; $('play').hidden = false; next(); }
+  function start() { clearTimeout(timer); round = 0; score = 0; results = []; hardRound = false; startingCoins = KF.get().coins; $('intro').hidden = true; $('finish').hidden = true; $('play').hidden = false; next(); }
   $('start').addEventListener('click',start); $('again').addEventListener('click',start);
   renderChips();
 })();

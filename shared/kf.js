@@ -1,8 +1,9 @@
 // Keeper Fun Games — shared progress core (coins, football cards, achievements).
 // Storage: localStorage (same origin for all games => shared progress).
 // Usage in a game:  <script src="../../shared/kf.js"></script>
-//   KF.answer('penalty-multiply', true)          // per answer
-//   KF.finishGame('penalty-multiply', { score: 4, max: 5 })  // end of round
+//   KF.answer('penalty-multiply', true)          // per answer (+1 coin, or { coin: 0.5 } etc.)
+//   KF.finishGame('penalty-multiply', { score: 4, max: 5 })  // end of round (perfect: +5, or { bonus })
+// Game coins pass a daily budget per game: DAY_CAP in full, then a third (see earn).
 //   KF.on('achievement', (a) => ...)  KF.on('coins', (delta) => ...)
 // Test mode (for parents): open any page with ?parent — progress goes to a
 // per-tab sandbox (sessionStorage) and never touches the real one.
@@ -15,6 +16,7 @@
   const TEST_FLAG = 'kf-test-mode';
   const TEST_COINS = 100;
   const PACK_PRICE = 10;
+  const DAY_CAP = 40;
   const AVATARS = ['⚽', '🧤', '🥅', '🏆', '⭐', '🔥', '🦁', '🐯', '🦊', '🐼', '🚀', '⚡'];
   const PACK_SIZE = 3;
   const USER_KEY = 'kf-user';
@@ -357,6 +359,7 @@
     achievements: {}, // id -> timestamp
     games: {}, // slug -> { plays, best, max, lastPlayed }
     gameData: {}, // slug -> game-specific saved data (KF.gameData)
+    earned: {}, // day -> slug -> coin units a game gave that day, before the cap (only today is kept)
     stats: { correct: 0, wrong: 0, games: 0, perfect: 0, streak: 0, bestStreak: 0, packs: 0, dayStreak: 0, lastDay: '' },
   });
 
@@ -463,6 +466,22 @@
     if (!n) return;
     state.coins = Math.max(0, state.coins + n);
     emit('coins', n);
+  };
+
+  // Coins from games: the first DAY_CAP units of a game a day are paid in full, the rest at a third,
+  // so farming one easy game slows down. Raw units per day are stored: two devices' counts add up on sync.
+  const paidFor = (u) => Math.floor(Math.min(u, DAY_CAP) + Math.max(0, u - DAY_CAP) / 3);
+  const earn = (slug, n) => {
+    if (!(n > 0)) return 0;
+    const day = today();
+    if (!state.earned?.[day]) state.earned = { [day]: {} };
+    const games = state.earned[day];
+    const u = games[slug] || 0;
+    games[slug] = u + n;
+    if (u < DAY_CAP && u + n >= DAY_CAP) emit('earn-cap', slug);
+    const gain = paidFor(u + n) - paidFor(u);
+    addCoins(gain);
+    return gain;
   };
 
   const pickCard = () => {
@@ -851,15 +870,15 @@
       };
     },
 
-    // Call on every answer. Correct answer = +1 coin, unless { coin: false }
-    // (games with their own coin rule, e.g. the quiz: 1 coin per 5 correct).
-    answer(_slug, correct, { coin = true } = {}) {
+    // Call on every answer. Correct answer = +1 coin; { coin: 0.5 } pays every 2nd, { coin: false } nothing
+    // (games with their own coin rule, e.g. the quiz: KF.earn 1 coin per 5 correct).
+    answer(slug, correct, { coin = 1 } = {}) {
       const st = state.stats;
       if (correct) {
         st.correct++;
         st.streak++;
         st.bestStreak = Math.max(st.bestStreak, st.streak);
-        if (coin) addCoins(1);
+        earn(slug, coin === true ? 1 : Number(coin) || 0);
       } else {
         st.wrong++;
         st.streak = 0;
@@ -867,8 +886,9 @@
       commit();
     },
 
-    // Call at the end of a round. Perfect round = +5 bonus coins.
-    finishGame(slug, { score = 0, max = 0 } = {}) {
+    // Call at the end of a round. Perfect round = `bonus` coins (default 5; a game may lower it for easy rounds).
+    // Returns the bonus really paid (after the daily cap).
+    finishGame(slug, { score = 0, max = 0, bonus = 5 } = {}) {
       const st = state.stats;
       if (!state.games[slug]) state.games[slug] = { plays: 0, best: 0, max, lastPlayed: 0 };
       const g = state.games[slug];
@@ -880,12 +900,20 @@
       st.games++;
       touchDay();
       const perfect = max > 0 && score === max;
+      let paid = 0;
       if (perfect) {
         st.perfect++;
-        addCoins(5);
+        paid = earn(slug, bonus);
       }
       commit();
-      return { perfect, coins: state.coins };
+      return { perfect, bonus: paid, coins: state.coins };
+    },
+
+    // Coins a game gives by its own rule (counted in the game's daily budget). Returns coins paid.
+    earn(slug, n) {
+      const gain = earn(slug, n);
+      commit();
+      return gain;
     },
 
     addCoins(n) {
