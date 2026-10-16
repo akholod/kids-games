@@ -27,6 +27,8 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 
 ## Conventions
 - Big buttons, works offline after load.
+- Minimal scrolling: on laptops (from 1280×650) a play screen — task, controls, feedback + next button — fits without page scroll
+  (two columns on wide-and-short screens, feedback beside/over the work area, art sized to the free height); on phones scroll as little as possible.
 - Every game must work both with touch (tablet/phone) and laptop keyboard + mouse:
   number/letter keys for input, Enter = submit, Backspace = erase, Esc = back/close, arrows/1–4 for choices;
   visible focus, hover states, no swipe-only or hover-only actions.
@@ -56,7 +58,7 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 - Types: `pnpm typecheck` (tsc, checkJs, no build; part of `pnpm test`). Cross-file globals (`KF`, `KFUI`, `MathExam`, …) are declared in `types/*.d.ts` (`kf.d.ts`, `kf-game.d.ts`, `exam.d.ts`; never put a `.d.ts` next to a same-named `.js` — tsc then skips the `.js`); new files must type-check (no `@ts-nocheck` in new code).
 - `pnpm install` once, then `pnpm test` = lint + unit (`node --test`, `tests/unit/`) + Playwright e2e (`tests/e2e/`, system Chrome, `playwright.config.mjs`; `tests/serve.mjs` serves the repo on :8795).
   Parts: `pnpm test:unit`, `pnpm test:e2e [spec] [--project=laptop|phone]`. Every run is in `?parent` mode with a seeded `Math.random`; any console/page error fails a test.
-- Unit: kf.js (i18n, sync/merge, daily coin budget), math-exam engine, exam content (`KFExam.validate`). E2E: catalog, one spec per game, `keyboard` (laptop), `rewards`, `screenshots` (phone; refresh with `--update-snapshots` after an intended UI change).
+- Unit: kf.js (i18n, sync/merge, daily coin budget), math-exam engine, exam content (`KFExam.validate`). E2E: catalog, one spec per game, `keyboard` (laptop), `no-scroll` (laptop 1366×657), `rewards`, `screenshots` (phone; refresh with `--update-snapshots` after an intended UI change).
 - `deploy.sh` runs `pnpm test` first and aborts on failure.
 - New game → add an e2e spec that plays one full round to the finish screen (plus `?lang=es` if it is on the Spanish site) and a keyboard test.
 

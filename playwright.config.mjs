@@ -42,8 +42,8 @@ export default defineConfig({
     {
       name: 'phone',
       use: { viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 },
-      // Keyboard-only flows need a laptop.
-      testIgnore: /keyboard\.spec/,
+      // Keyboard-only flows and the laptop no-scroll guard need a laptop.
+      testIgnore: /keyboard\.spec|no-scroll\.spec/,
     },
   ],
 });

@@ -7,6 +7,8 @@
 .test-note{padding:12px 14px;border-radius:14px;background:#fff4d6;border:1px solid #f0d58f;font-weight:700}
 .beta-tag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:100px;background:var(--gold);color:var(--ink);font-size:.72rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;vertical-align:middle}
 .kf-confetti{position:fixed;inset:0;z-index:90;overflow:hidden;pointer-events:none}.kf-confetti i{position:absolute;top:-20px;width:9px;height:16px;animation:confetti-fall 1.8s ease-in forwards}@keyframes toast-in{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}@keyframes confetti-fall{to{transform:translate(var(--drift),105vh) rotate(720deg);opacity:0}}
+/* Short laptop screens: a slimmer header leaves more room for the game. */
+@media(min-width:700px) and (max-height:760px){.header-inner{min-height:60px}}
 @media(max-width:600px){.wrap{width:min(100% - 28px,1100px)}.header-inner{min-height:68px}.brand{font-size:1rem}.brand-mark{width:40px;height:40px}.coin-pill{padding:0 12px}}
 /* Football cards: frame colors per category + a card image with a styled fallback (album, packs, game rewards).
    <span class="kf-cardface kf-cat-rare [is-missing|is-broken]"><img><span class="kf-cardface-alt"><span class="kf-cardface-who">?</span><span class="kf-cardface-plate"><span class="kf-cardface-name"></span><span class="kf-cardface-cat"></span></span></span></span> */
