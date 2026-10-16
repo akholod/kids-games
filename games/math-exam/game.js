@@ -145,7 +145,7 @@
   let data = loadData();
   const saveData = () => KF.gameData(SLUG, data);
   const unlocked = (topic) => Math.min(Math.max(1, data.levels[topic] || 1), Math.max(1, (M?.LEVELS?.[topic] || []).length));
-  const levelsOf = (topic) => (M.LEVELS && M.LEVELS[topic]) || [];
+  const levelsOf = (topic) => M.LEVELS?.[topic] || [];
 
   const recordTopic = (topic, correct) => {
     const t = data.topics[topic] || { right: 0, total: 0 };
@@ -951,7 +951,7 @@
 
     const stepError = (digit, flag) => {
       const r = M.checkColumnStep ? M.checkColumnStep(task, step, digit, flag) : null;
-      return r && r.error ? r.error : null;
+      return r?.error ? r.error : null;
     };
 
     // Marks the borrow in the notebook (small 1, crossed digits to the left).

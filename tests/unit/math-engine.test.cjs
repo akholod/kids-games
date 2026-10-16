@@ -273,7 +273,7 @@ test('numberToWords: all 1000..9999 are well-formed', () => {
   for (let n = 1000; n <= 9999; n++) {
     const w = M.numberToWords(n);
     assert.match(w, /^[a-zñáéíóú ]+$/, w);
-    assert.ok(!/  |\bcien (?!mil)|ciento$|^ | $/.test(w), w);
+    assert.ok(!/ {2}|\bcien (?!mil)|ciento$|^ | $/.test(w), w);
     if (n % 1000 === 0) assert.ok(/mil$/.test(w));
     assert.ok(!/ y (cero|diez|veinte)/.test(w), w);
     assert.ok(!/ y \w+ y /.test(w), w);
@@ -733,7 +733,10 @@ test('es: same seed gives identical numbers and answers as uk', () => {
       assert.equal(es.kind, uk.kind);
       assert.deepEqual(es.answer, uk.answer);
       assert.deepEqual(es.data, uk.data);
-      assert.deepEqual(es.choices && es.choices.map((c) => c.value), uk.choices && uk.choices.map((c) => c.value));
+      assert.deepEqual(
+        es.choices?.map((c) => c.value),
+        uk.choices?.map((c) => c.value),
+      );
       if (!uk.choices || uk.data.sub !== 'read') assert.deepEqual(es.choices, uk.choices);
       if (uk.kind !== 'choice' || !/^¿Cómo se lee/.test(uk.es)) assert.equal(es.es, uk.es);
       assert.equal(es.lang, 'es');
@@ -763,7 +766,7 @@ test('es: no Cyrillic in tasks, hints and error messages of any task type', () =
           assert.ok(!CYR.test(JSON.stringify(r.error)), `${topic}${level}: ${JSON.stringify(r.error)}`);
         }
       }
-      if (t.data && t.data.steps) {
+      if (t.data?.steps) {
         for (let i = 0; i < t.data.steps.length; i++) {
           for (const flag of [undefined, true, false, 0, 1]) {
             for (const d of [0, 5, 7]) {

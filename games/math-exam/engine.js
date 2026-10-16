@@ -1210,7 +1210,7 @@
     const order = shuffle(rng, topics).slice(0, count);
     while (order.length < count) order.push(weightedPick(rng, weights));
     return shuffle(rng, order).map((topic) => {
-      const cap = Math.min((maxLevels && maxLevels[topic]) || LEVELS[topic].length, LEVELS[topic].length);
+      const cap = Math.min(maxLevels?.[topic] || LEVELS[topic].length, LEVELS[topic].length);
       return makeTask(topic, int(rng, 1, cap), rng, language);
     });
   };

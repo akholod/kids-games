@@ -45,7 +45,8 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 - Users are added by hand: `node scripts/add-user.mjs <name> <pin> [avatar]` (`--update` changes the PIN).
 
 ## Tests
-- `pnpm install` once, then `pnpm test` = unit (`node --test`, `tests/unit/`) + Playwright e2e (`tests/e2e/`, system Chrome, `playwright.config.mjs`; `tests/serve.mjs` serves the repo on :8795).
+- Code style: Biome (`biome.json`); `pnpm format` fixes formatting + safe lint fixes, `pnpm lint` checks.
+- `pnpm install` once, then `pnpm test` = lint + unit (`node --test`, `tests/unit/`) + Playwright e2e (`tests/e2e/`, system Chrome, `playwright.config.mjs`; `tests/serve.mjs` serves the repo on :8795).
   Parts: `pnpm test:unit`, `pnpm test:e2e [spec] [--project=laptop|phone]`. Every run is in `?parent` mode with a seeded `Math.random`; any console/page error fails a test.
 - Unit: kf.js (i18n, sync/merge, daily coin budget), math-exam engine. E2E: catalog, one spec per game, `keyboard` (laptop), `rewards`, `screenshots` (phone; refresh with `--update-snapshots` after an intended UI change).
 - `deploy.sh` runs `pnpm test` first and aborts on failure.

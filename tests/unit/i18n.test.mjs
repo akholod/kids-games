@@ -136,7 +136,7 @@ test('every game declares sites and Spanish texts', () => {
   const KF = load(code);
   for (const g of KF.GAMES) {
     assert.ok(Array.isArray(g.sites) && g.sites.includes('uk'), g.slug);
-    assert.ok(g.es && g.es.title && g.es.desc && !CYR.test(g.es.title + g.es.desc), g.slug);
+    assert.ok(g.es?.title && g.es.desc && !CYR.test(g.es.title + g.es.desc), g.slug);
   }
 });
 

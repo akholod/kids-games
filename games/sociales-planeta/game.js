@@ -1372,7 +1372,7 @@
 
   RENDER.walk = (task, work) => {
     const grid = C.grids[task.grid];
-    if (!grid || !grid.places[task.from]) return RENDER.choice(task, work, [{ text: String(task.answer), ok: true }]);
+    if (!grid?.places[task.from]) return RENDER.choice(task, work, [{ text: String(task.answer), ok: true }]);
     const cardinal = C.CARDINALS.includes(task.answer);
     const isPath = task.answer === 'path';
     const b = board(grid, { from: task.from, target: cardinal || isPath ? task.to : null });

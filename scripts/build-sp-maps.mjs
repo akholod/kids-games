@@ -129,7 +129,7 @@ function cleanMulti(mp, eps, minArea, minHole) {
 
 const fmt = (t) => {
   const neg = t < 0;
-  let a = Math.abs(t);
+  const a = Math.abs(t);
   let s;
   if (a % 10 === 0) s = String(a / 10);
   else s = String(Math.floor(a / 10)) + '.' + (a % 10);
@@ -257,7 +257,7 @@ const farFrom = (poly) => {
 };
 for (const f of countries) {
   const nm = f.properties.NAME;
-  let cont = cmap[f.properties.CONTINENT] || sevenSeas[nm];
+  const cont = cmap[f.properties.CONTINENT] || sevenSeas[nm];
   if (!cont) continue;
   for (const poly of multi(f.geometry)) {
     let c = cont;
@@ -305,7 +305,6 @@ for (const k in buckets) {
 }
 
 // oceans: boundaries in lon/lat
-const P = (pts) => [pts.map(wp).concat([wp(pts[0])])];
 const pacEastLine = [
   [-168, 66],
   [-141, 64],
@@ -356,8 +355,7 @@ const pacWestLine = [
   [147, -60],
 ];
 const ring = (pts) => pts.map(wp).concat([wp(pts[0])]);
-const L = 180,
-  B = -60,
+const B = -60,
   T = 66;
 const oceans = {
   pacifico: {

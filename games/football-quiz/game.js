@@ -189,7 +189,7 @@
   const forSite = (q) => {
     if (!ES || !q || q.lang === 'es') return q;
     const e = q.es;
-    if (!e || !e.q || !Array.isArray(e.options)) return null;
+    if (!e?.q || !Array.isArray(e.options)) return null;
     return { ...q, lang: 'es', q: e.q, options: e.options, fact: e.fact, uk: null };
   };
 
@@ -198,8 +198,7 @@
     const ids = new Set();
     return (Array.isArray(window.QUIZ_QUESTIONS) ? window.QUIZ_QUESTIONS : []).map(forSite).filter((q) => {
       const ok =
-        q &&
-        q.id &&
+        q?.id &&
         !ids.has(q.id) &&
         q.q &&
         Array.isArray(q.options) &&

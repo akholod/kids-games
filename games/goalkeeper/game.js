@@ -483,7 +483,7 @@
     );
   }
   function makeQuestion() {
-    let kind = topic === 'mix' ? ['multiply', 'math', 'words'][rand(3)] : topic;
+    const kind = topic === 'mix' ? ['multiply', 'math', 'words'][rand(3)] : topic;
     let correct, prompt, options;
     if (kind === 'multiply') {
       const a = 2 + rand(9),
@@ -572,7 +572,7 @@
     $('feedback').hidden = true;
     const c = calls[callIndex];
     caption('¿Qué gritas? · Що крикнеш?', c[0]);
-    let indices = shuffle([0, 1, 2, 3, 4]).slice(0, 4);
+    const indices = shuffle([0, 1, 2, 3, 4]).slice(0, 4);
     if (!indices.includes(callIndex)) indices[rand(4)] = callIndex;
     choices = shuffle(indices).map((i) => callOptions[i]);
     answer = callOptions[callIndex];

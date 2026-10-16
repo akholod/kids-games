@@ -1029,7 +1029,7 @@
     importCode(code) {
       try {
         const data = JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-        if (!data || data.v !== 1) return false;
+        if (data?.v !== 1) return false;
         state = merge(fresh(), data);
         commit();
         return true;
