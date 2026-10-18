@@ -8,6 +8,7 @@
 //   KFG.feedback(box, content, ...buttons, { focus, scroll })           fill the feedback box, focus the first button
 //   const off = KFG.keys({ ctrl, active, onEscape, onKey, ignoreMods, nativeButtons })   the one document keydown listener
 //   KFG.confirm(dialog, { onYes, onNo, focus })                         ask in an existing <dialog>, Esc = no
+//   KFG.say(text, lang, { rate })  KFG.canSay(lang)  KFG.hush()       speech with a local voice; silent (false) without one
 // @ts-check
 'use strict';
 
@@ -247,7 +248,40 @@
     if (target instanceof HTMLElement) target.focus();
   };
 
+  // Speech (Web Speech API). A voice of the language, local (works offline) first: 'es' → es-ES before other Spanish,
+  // 'en' → en-GB, en-US, any English. No such voice = silent, so the text on screen must always be enough.
+  // The voice list loads asynchronously: canSay() may be false right after page load ('voiceschanged' on speechSynthesis).
+  /** @type {Record<string, string[]>} */
+  const VOICE_PREF = { es: ['es-es', 'es'], en: ['en-gb', 'en-us', 'en'], uk: ['uk'] };
+  /** @param {string} lang @returns {SpeechSynthesisVoice | null} */
+  const voiceFor = (lang) => {
+    const voices = window.speechSynthesis?.getVoices() || [];
+    for (const pref of VOICE_PREF[lang] || [lang.toLowerCase()]) {
+      const match = voices.filter((v) => v.lang.replace('_', '-').toLowerCase().startsWith(pref));
+      const voice = match.find((v) => v.localService) || match[0];
+      if (voice) return voice;
+    }
+    return null;
+  };
+  window.speechSynthesis?.getVoices(); // starts loading the list
+
+  /** @param {string} text @param {string} lang @param {{ rate?: number }} [opts] @returns {boolean} spoken */
+  const say = (text, lang, { rate = 0.95 } = {}) => {
+    const voice = voiceFor(lang);
+    if (!voice) return false;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = voice;
+    u.lang = voice.lang;
+    u.rate = rate;
+    speechSynthesis.speak(u);
+    return true;
+  };
+  /** @param {string} lang */
+  const canSay = (lang) => voiceFor(lang) !== null;
+  const hush = () => window.speechSynthesis?.cancel();
+
   /** @type {KFGAPI} */
-  const api = { $, h, shuffle, pick, reduced, restart, shake, screens, dots, feedback, keys, confirm };
+  const api = { $, h, shuffle, pick, reduced, restart, shake, screens, dots, feedback, keys, confirm, say, canSay, hush };
   window.KFG = api;
 })();

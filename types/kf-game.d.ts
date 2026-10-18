@@ -47,6 +47,12 @@ interface KFGAPI {
   feedback(container: Element, content: Node, ...buttons: KFGFeedbackItem[]): void;
   keys(opts: KFGKeysOptions): () => void;
   confirm(dialog: HTMLDialogElement, opts?: { onYes?: () => void; onNo?: () => void; focus?: 'yes' | 'no' | 'none' }): void;
+  /** Speaks `text` with a local voice of `lang` ('es' | 'en' | 'uk' | BCP-47 prefix); false (silent) without such a voice. */
+  say(text: string, lang: string, opts?: { rate?: number }): boolean;
+  /** A voice for `lang` is available (the list loads asynchronously after page load). */
+  canSay(lang: string): boolean;
+  /** Stops speaking. */
+  hush(): void;
 }
 
 declare const KFG: KFGAPI;
