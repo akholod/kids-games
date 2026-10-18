@@ -1,7 +1,7 @@
 // Laptop guard: a task screen fits a short laptop window (1366×768 minus browser UI) without page scroll,
 // and after answering the "next" button is on screen. Pages open in ?parent mode, so the 48px test ribbon is included.
 import { test, expect, open } from './helpers.mjs';
-import { answerCurrentTask, openStation, solveMathTask } from './drivers.mjs';
+import { answerCurrentTask, answerWordTask, openStation, playWordTasks, solveMathTask } from './drivers.mjs';
 
 test.use({ viewport: { width: 1366, height: 657 } });
 
@@ -93,4 +93,15 @@ test('coach-simon: intro, memory play, commands feedback and finish fit', async 
   await tap(page.locator(`button.zone[data-zone="${cmd.zone}"]`));
   await expectOnScreen(page, page.locator('#feedback button'), 'next');
   await expectFits(page, 'commands feedback');
+});
+
+test('word-match: every task type fits; next button visible', async ({ page, tap }) => {
+  await open(page, '/games/word-match/');
+  const types = await playWordTasks(page, 'clothes', ['pic', 'text', 'listen', 'spell', 'pairs']);
+  for (const type of types) {
+    await expectFits(page, type);
+    await answerWordTask(page, tap);
+    await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${type} next`);
+    await tap(page.locator('#feedback .fb-actions .btn').first());
+  }
 });

@@ -219,13 +219,13 @@
     },
     {
       slug: 'word-match',
-      title: 'Слова UA–ES–EN',
+      title: 'Команда слів',
       emoji: '🗣️',
       category: 'english',
-      desc: 'М’яч, balón, ball — з’єднай переклади.',
-      status: 'soon',
-      sites: ['uk'],
-      es: { title: 'Palabras ES–EN', desc: 'Balón, ball… ¡une las traducciones!' },
+      desc: 'Англійські слова: футбол, школа, планета. Кожне вивчене слово — новий гравець у команді!',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: { title: 'Equipo de palabras', desc: 'Palabras en inglés del fútbol, el cole y el planeta. ¡Cada palabra es un fichaje!' },
     },
     {
       slug: 'football-quiz',

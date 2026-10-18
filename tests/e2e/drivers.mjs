@@ -239,3 +239,87 @@ export const playSimonCommands = async (page, tap, { press, next, shots = 10 } =
   await expect(page.locator('#finish')).toBeVisible();
   return page.evaluate(() => __simon.results);
 };
+
+// ---------- word-match ----------
+
+// Index of the pair button with own text `text` in column `col` (0 = English, 1 = translation) of the pairs task.
+const pairIndex = (page, col, text) =>
+  page.evaluate(
+    ([c, want]) =>
+      [...document.querySelectorAll(`#work .pairs .col:nth-child(${c + 1}) .pr`)].findIndex(
+        (b) =>
+          [...b.childNodes]
+            .filter((n) => n.nodeType === 3)
+            .map((n) => n.textContent)
+            .join('') === want,
+      ),
+    [col, text],
+  );
+
+// A round of the chosen tasks of one station (window.__wm.play, test mode). pickers: (tasks) => task, in order.
+export const playWordTasks = (page, station, types) =>
+  page.evaluate(
+    ([id, want]) => {
+      const s = WM_CONTENT.stations.find((x) => x.id === id);
+      const used = new Set();
+      const tasks = want.map((w) => {
+        const t = s.tasks.find(
+          (x) =>
+            !used.has(x) &&
+            (w === 'pic' ? x.type === 'choice' && x.art : w === 'text' ? x.type === 'choice' && !x.art : x.type === w) &&
+            (!x.key || ![...used].some((u) => u.key === x.key)),
+        );
+        used.add(t);
+        return { ...t, station: id };
+      });
+      __wm.play(tasks);
+      return tasks.map((t) => t.type);
+    },
+    [station, types],
+  );
+
+// Answers the current word-match task right. spell: `wrongFirst` checks the letters reversed once (a retry), then right.
+export const answerWordTask = async (page, tap, { wrongFirst = false } = {}) => {
+  const t = await page.evaluate(() => __wm.session.task);
+  if (t.type === 'choice') {
+    const i = await choiceIndex(page, t.options[t.answer]);
+    expect(i, `choice "${t.options[t.answer]}" on screen`).toBeGreaterThanOrEqual(0);
+    return tapChoice(page, tap, i);
+  }
+  if (t.type === 'listen') return tap(page.locator(`.wm-opt[data-key="${t.word.key}"]`));
+  if (t.type === 'spell') {
+    const fill = async (letters) => {
+      for (const ch of letters) await tap(page.locator(`.wm-tile[data-ch="${ch}"]:not(:disabled)`).first());
+      await tap(page.locator('.wm-check'));
+    };
+    if (wrongFirst) {
+      await fill([...t.word.en].reverse());
+      await expect(page.locator('.wm-spell')).not.toHaveClass(/is-done/);
+      // the right letters stay (green), the rest go back to the tiles: fill the free slots in order
+      const free = await page.evaluate(() => [...document.querySelectorAll('.wm-slot')].map((s) => !s.classList.contains('good')));
+      return fill([...t.word.en].filter((_, i) => free[i]));
+    }
+    return fill([...t.word.en]);
+  }
+  if (t.type === 'pairs') {
+    for (const [en, tr] of t.pairs) {
+      await tap(page.locator('#work .pairs .col:nth-child(1) .pr').nth(await pairIndex(page, 0, en)));
+      await tap(page.locator('#work .pairs .col:nth-child(2) .pr').nth(await pairIndex(page, 1, tr)));
+    }
+    return;
+  }
+  throw new Error(`unsupported word-match task ${t.type}`);
+};
+
+// Plays the running word-match session to its finish screen, every answer right. Returns the task types and keys seen.
+export const playWordSession = async (page, tap, opts) => {
+  const seen = [];
+  for (let i = 0; i < 30; i++) {
+    const t = await page.evaluate(() => __wm.session.task);
+    seen.push({ type: t.type, key: t.key });
+    await answerWordTask(page, tap, opts);
+    await tap(page.locator('#feedback .fb-actions .btn').first());
+    if (await page.locator('#finish').isVisible()) return seen;
+  }
+  throw new Error('word-match session did not finish');
+};

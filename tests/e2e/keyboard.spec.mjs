@@ -1,6 +1,6 @@
 // Laptop only: every game must be playable with the keyboard (AGENTS.md conventions).
 import { test, expect, open, record } from './helpers.mjs';
-import { playMathSession, playSimonCommands, playSimonMemory } from './drivers.mjs';
+import { playMathSession, playSimonCommands, playSimonMemory, playWordTasks } from './drivers.mjs';
 
 const tapNever = () => {
   throw new Error('keyboard test must not tap');
@@ -193,4 +193,48 @@ test('coach-simon: arrows pick the mode, Enter starts, 1–9 / numpad for zones,
   await expect(page.locator('#intro')).toBeVisible();
   await page.keyboard.press('Escape');
   await page.waitForURL((u) => !u.pathname.includes('coach-simon'));
+});
+
+test('word-match: Enter opens a theme, 1–4 pick, letters + Enter spell, pairs 1–4 + A–D, Enter = next', async ({ page }) => {
+  await open(page, '/games/word-match/');
+  await page.locator('#stations .station').first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-go')).toBeFocused();
+  await page.keyboard.press('Escape');
+
+  await playWordTasks(page, 'animals', ['pic', 'listen', 'spell', 'pairs']);
+  // own text of a button (the <kbd> number is not part of it)
+  const indexOf = (sel, text) =>
+    page.evaluate(
+      ([s, want]) =>
+        [...document.querySelectorAll(s)].findIndex(
+          (b) =>
+            [...b.childNodes]
+              .filter((n) => n.nodeType === 3)
+              .map((n) => n.textContent)
+              .join('') === want,
+        ),
+      [sel, text],
+    );
+  for (let i = 0; i < 4; i++) {
+    const t = await page.evaluate(() => __wm.session.task);
+    if (t.type === 'choice') await page.keyboard.press(String((await indexOf('#work .choice', t.options[t.answer])) + 1));
+    if (t.type === 'listen') {
+      const keys = await page.locator('.wm-opt').evaluateAll((els) => els.map((e) => e.dataset.key));
+      await page.keyboard.press(String(keys.indexOf(t.word.key) + 1));
+    }
+    if (t.type === 'spell') {
+      await page.keyboard.type(t.word.en);
+      await page.keyboard.press('Enter');
+    }
+    if (t.type === 'pairs')
+      for (const [en, tr] of t.pairs) {
+        await page.keyboard.press(String((await indexOf('#work .pairs .col:nth-child(1) .pr', en)) + 1));
+        await page.keyboard.press('ABCD'[await indexOf('#work .pairs .col:nth-child(2) .pr', tr)]);
+      }
+    await expect(page.locator('#feedback .fb-actions .btn').first()).toBeVisible();
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('#finish')).toBeVisible();
+  expect(await page.evaluate(() => __wm.session.results)).toEqual([true, true, true, true]);
 });

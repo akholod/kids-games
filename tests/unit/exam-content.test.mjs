@@ -133,3 +133,79 @@ test('validate survives garbage', () => {
   assert.ok(validate({}).length > 0);
   assert.ok(validate({ slug: 's', title: 't', stations: [{}], exam: {} }).length > 0);
 });
+
+// ---------- word-match: tasks generated from the word list, per site language ----------
+
+const CYR = /[\u0400-\u04FF]/;
+const bootWords = (lang) => {
+  const sb = { console, Math, KF: { lang, i18n: () => (key) => key }, KFG: { shuffle: (a) => [...a].sort(() => Math.random() - 0.5) } };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of ['shared/exam/exam.js', 'shared/exam/types.js', 'games/word-match/content.js'])
+    vm.runInContext(read(f), sb, { filename: f });
+  return sb;
+};
+
+for (const lang of ['uk', 'es']) {
+  test(`word-match (${lang}): generated content is valid, keys unique, translations unique per theme`, () => {
+    const { KFExam: E, WM_CONTENT: wm } = bootWords(lang);
+    assert.deepEqual([...E.validate(clone(wm))], []);
+    assert.deepEqual([...wm.natives], lang === 'es' ? ['es'] : ['uk', 'es']);
+    assert.equal(wm.stations.length, 12);
+    const keys = new Set();
+    for (const t of wm.themes) {
+      assert.ok(t.words.length >= 10, t.id);
+      for (const n of ['en', 'es', 'uk']) assert.equal(new Set(t.words.map((w) => w[n])).size, t.words.length, `${t.id}: duplicate ${n}`);
+      for (const w of t.words) {
+        assert.ok(!keys.has(w.key), w.key);
+        keys.add(w.key);
+        assert.ok(!CYR.test(w.en + w.es), w.key);
+        assert.ok(CYR.test(w.uk), w.key);
+      }
+    }
+    for (const s of wm.stations) {
+      assert.ok(s.tasks.length >= 30, `${s.id}: ${s.tasks.length} tasks`);
+      const keyed = new Set(s.tasks.filter((x) => x.key).map((x) => x.key));
+      assert.ok(keyed.size >= 8, `${s.id}: a round of 8 needs 8 different words`);
+      for (const task of s.tasks) {
+        if (task.type === 'choice') assert.equal(new Set(task.options).size, task.options.length, `${s.id}: ${task.q}`);
+        if (task.type === 'listen') assert.ok(task.options.every((w) => w.pic || w.color) && task.options[0] === task.word);
+        if (task.type === 'spell') assert.match(task.word.en, /^[a-z]{3,8}$/i);
+        if (task.art) assert.ok(wm.words[task.art], task.art);
+      }
+    }
+  });
+}
+
+test('word-match (es): no Cyrillic anywhere in the Spanish site content', () => {
+  const { WM_CONTENT: wm } = bootWords('es');
+  const seen = [];
+  const walk = (x, path) => {
+    if (typeof x === 'string') {
+      if (CYR.test(x) && !path.endsWith('.uk')) seen.push(path);
+    } else if (typeof x === 'function') {
+      const s = x({
+        n: 1,
+        total: 2,
+        w: 'x',
+        grade: 'g',
+        nota: '1',
+        coins: 1,
+        need: 1,
+        a: 'a',
+        text: 't',
+        item: 'i',
+        bin: 'b',
+        l: 'D',
+        y: 1,
+        r: 0,
+        score: 1,
+        max: 2,
+      });
+      if (CYR.test(s)) seen.push(path);
+    } else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) walk(v, `${path}.${k}`);
+  };
+  // word objects keep their Ukrainian name (.uk) — the es site never shows it
+  walk({ ...wm, words: {}, themes: [] }, 'wm');
+  assert.deepEqual(seen, []);
+});

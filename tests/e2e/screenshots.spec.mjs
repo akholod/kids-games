@@ -2,7 +2,7 @@
 // Baselines live in tests/e2e/screenshots.spec.mjs-snapshots/ (Linux Chrome); refresh with
 //   pnpm test:e2e screenshots --update-snapshots
 import { test, expect, open } from './helpers.mjs';
-import { openStation } from './drivers.mjs';
+import { openStation, playWordTasks } from './drivers.mjs';
 
 const snap = async (page, name) => {
   await page.waitForLoadState('networkidle');
@@ -65,4 +65,12 @@ test('coach-simon: start screen and the memory turn', async ({ page, tap }) => {
   await page.waitForFunction(() => __simon.phase === 'input');
   await page.waitForTimeout(300); // the last light fades
   await snap(page, 'coach-simon-memory');
+});
+
+test('word-match: hub and a spell task', async ({ page }) => {
+  await open(page, '/games/word-match/');
+  await snap(page, 'word-match-hub');
+  await playWordTasks(page, 'animals', ['spell']);
+  await expect(page.locator('.wm-spell')).toBeVisible();
+  await snap(page, 'word-match-spell');
 });
