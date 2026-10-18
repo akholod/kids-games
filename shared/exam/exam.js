@@ -1,6 +1,7 @@
 // Keeper Fun Games — exam-prep engine: a school unit as stations (short practice rounds) plus a final exam with cards.
 // Include after kf.js, kf-ui.js, kf-game.js; link exam.css; then types.js (generic task renderers), the unit's content/art/types, game.js.
-//   KFExam.mount(unit, { art, types, root })   renders hub / play / finish / dialogs into root (default #exam-root)
+//   KFExam.mount(unit, { art, types, root, weight, onAnswer })   renders hub / play / finish / dialogs into root (default #exam-root)
+//     weight(task) ≥ 0 = how likely a task is drawn; onAnswer(task, correct) = after each resolved task; task.key = learning item (no repeats in a draw)
 //   KFExam.validate(unit, types?) → string[]   content errors tsc can't see (empty = fine)
 //   KFExam.types                               generic renderers {choice, tf, sort, order, pairs} (types.js)
 // The unit is plain data (see types/exam.d.ts ExamUnit); its own task types come as renderers in `types`
@@ -359,7 +360,6 @@
     );
     // The site header (outside the root) may carry [data-i18n*] texts.
     T.apply();
-    if (art?.hero) $('hero-art').append(art.hero());
 
     // ---------- Saved progress ----------
     // Sync merges numbers in gameData by adding the deltas of both devices (shared/kf.js mergeVal),
@@ -398,6 +398,8 @@
     // ---------- Hub ----------
     const renderHub = () => {
       data = loadData();
+      // Redrawn on every return to the hub: a unit's hero may show live numbers.
+      if (art?.hero) $('hero-art').replaceChildren(art.hero());
       const tiles = STATIONS.map((s, i) => {
         const rec = data.st[s.id];
         const meta = rec
@@ -448,24 +450,38 @@
     $('intro-back').addEventListener('click', () => intro.close());
 
     // ---------- Task sampling ----------
+    // Weighted random order (Efraimidis–Spirakis): the bigger the weight, the earlier a task tends to come; weight 0 = last.
+    const weightedOrder = (/** @type {ExamTask[]} */ tasks, /** @type {(t: ExamTask) => number} */ weight) =>
+      tasks
+        .map((t) => {
+          const w = Number(weight(t)) || 0;
+          return { t, k: w > 0 ? Math.random() ** (1 / w) : -1 };
+        })
+        .sort((a, b) => b.k - a.k)
+        .map((x) => x.t);
     const sampleTasks = (
       /** @type {ExamTask[]} */ tasks,
       /** @type {number} */ n,
       /** @type {ExamCaps} */ limits,
       /** @type {string[]} */ first = [],
     ) => {
-      const pool = shuffle(tasks);
+      const pool = opts.weight ? weightedOrder(tasks, opts.weight) : shuffle(tasks);
       /** @type {ExamTask[]} */
       const out = [];
+      /** @type {Set<string>} */
+      const keys = new Set();
       /** @type {Record<string, number>} */
       const count = {};
       const fits = (/** @type {ExamTask} */ t) => (count[t.type] || 0) < (limits[t.type] ?? Number.POSITIVE_INFINITY);
       const take = (/** @type {ExamTask} */ t) => {
         out.push(t);
         count[t.type] = (count[t.type] || 0) + 1;
+        if (t.key !== undefined) keys.add(t.key);
       };
-      for (const t of pool) if (first.includes(t.type) && out.length < n && fits(t)) take(t);
-      for (const t of pool) if (out.length < n && !out.includes(t) && fits(t)) take(t);
+      // Tasks that train an item already in the draw wait for the last pass.
+      const fresh = (/** @type {ExamTask} */ t) => t.key === undefined || !keys.has(t.key);
+      for (const t of pool) if (first.includes(t.type) && out.length < n && fits(t) && fresh(t)) take(t);
+      for (const t of pool) if (out.length < n && !out.includes(t) && fits(t) && fresh(t)) take(t);
       for (const t of pool) if (out.length < n && !out.includes(t)) take(t);
       return shuffle(out);
     };
@@ -544,6 +560,13 @@
       if (correct) bs.right++;
       session.byStation[task.station] = bs;
       KF.answer(SLUG, correct);
+      if (opts.onAnswer) {
+        try {
+          opts.onAnswer(task, correct);
+        } catch (e) {
+          console.warn('KFExam: onAnswer failed', e);
+        }
+      }
       const tp = data.topics[task.station] || { right: 0, total: 0 };
       tp.total++;
       if (correct) tp.right++;

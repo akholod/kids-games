@@ -9,6 +9,8 @@ interface ExamTaskBase {
   art?: string;
   /** One short sentence shown after the answer. */
   fact?: string;
+  /** Id of the learning item the task trains (e.g. a word): one draw avoids tasks with the same key while others exist. */
+  key?: string;
 }
 
 /** One correct option; the UI shuffles unless `fixed`. */
@@ -227,6 +229,10 @@ interface ExamMountOptions {
   types?: ExamRenderers;
   /** Default: #exam-root. */
   root?: HTMLElement;
+  /** How likely a task is drawn into a round / the exam (≥ 0, 0 = only as a last resort). Default: all equal. */
+  weight?: (task: ExamTask) => number;
+  /** Called once per resolved task, right after the engine's own KF.answer. Errors in it are caught and warned. */
+  onAnswer?: (task: ExamSessionTask, correct: boolean) => void;
 }
 
 interface KFExamAPI {

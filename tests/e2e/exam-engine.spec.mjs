@@ -242,3 +242,121 @@ test('the unit praise list is used for right answers', async ({ page }) => {
   await answerByKeys(page);
   await expect(page.locator('#feedback .fb.ok .fb-title')).toHaveText('¡Hurra! ⚽');
 });
+
+// ---- optional engine features: task keys, weights, answer hook, hero redrawn on every hub visit ----
+
+// The fake unit with the given stations; `mountOpts` is the source of the options object passed to KFExam.mount next to art/types.
+const openUnit = async (page, stations, { mountOpts = '', exam = { [stations[0].id]: 1 }, round = 4 } = {}) => {
+  const unit = { ...UNIT, round, stations, exam: { perStation: exam } };
+  await page.route('**/games/sociales-planeta/content.js', (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: `window.SP_CONTENT = ${JSON.stringify(unit)};` }),
+  );
+  await page.route('**/games/sociales-planeta/game.js', (route) =>
+    route.fulfill({
+      contentType: 'text/javascript',
+      body: `KFExam.mount(window.SP_CONTENT, { art: window.SPArt, types: window.SP_TYPES, ${mountOpts} });`,
+    }),
+  );
+  await open(page, '/games/sociales-planeta/');
+};
+
+const station = (id, tasks) => ({ id, title: `Estación ${id}`, icon: '🔹', intro: 'Prueba.', tasks });
+const keyed = (key, i, extra = {}) => ({ ...choice(`${key}-${i}`, ['x', 'y'], 0), key, ...extra });
+const ids = (page) => page.evaluate(() => __exam.session.tasks.map((t) => t.q));
+
+test('tasks with a key: one draw has no repeated key while enough distinct keys exist', async ({ page }) => {
+  // 6 keys, two tasks each; a round of 4 (and an exam draw of 4) always has room for 4 different keys.
+  const tasks = ['k0', 'k1', 'k2', 'k3', 'k4', 'k5'].flatMap((k) => [keyed(k, 1), keyed(k, 2)]);
+  await openUnit(page, [station('k', tasks)], { exam: { k: 4 } });
+  for (let i = 0; i < 12; i++) {
+    await page.evaluate(() => __exam.startStation('k'));
+    const keys = await page.evaluate(() => __exam.session.tasks.map((t) => t.key));
+    expect(keys).toHaveLength(4);
+    expect(new Set(keys).size).toBe(4);
+  }
+  for (let i = 0; i < 6; i++) {
+    await page.evaluate(() => __exam.startExam());
+    const keys = await page.evaluate(() => __exam.session.tasks.map((t) => t.key));
+    expect(new Set(keys).size).toBe(keys.length);
+  }
+});
+
+test('tasks with a key: keys repeat only when there are not enough distinct ones', async ({ page }) => {
+  const tasks = ['k0', 'k1'].flatMap((k) => [keyed(k, 1), keyed(k, 2), keyed(k, 3)]);
+  await openUnit(page, [station('k', tasks)]);
+  await page.evaluate(() => __exam.startStation('k'));
+  const keys = await page.evaluate(() => __exam.session.tasks.map((t) => t.key));
+  expect(keys).toHaveLength(4);
+  expect(keys.filter((k) => k === 'k0').length).toBeGreaterThanOrEqual(1);
+  expect(keys.filter((k) => k === 'k1').length).toBeGreaterThanOrEqual(1);
+});
+
+test('weight: weight 0 is never drawn while enough weighted tasks exist, a heavy task is always drawn', async ({ page }) => {
+  const zero = [0, 1, 2].map((i) => keyed(`z${i}`, 1, { w: 0 }));
+  const normal = [0, 1, 2, 3, 4, 5].map((i) => keyed(`n${i}`, 1, { w: 1 }));
+  const heavy = keyed('heavy', 1, { w: 1000 });
+  await openUnit(page, [station('w', [...zero, ...normal, heavy])], { mountOpts: 'weight: (t) => t.w,', exam: { w: 4 } });
+  for (let i = 0; i < 5; i++) {
+    await page.evaluate(() => __exam.startStation('w'));
+    const qs = await ids(page);
+    expect(qs).toHaveLength(4);
+    expect(qs).toContain('heavy-1');
+    expect(qs.filter((q) => q.startsWith('z'))).toEqual([]);
+  }
+  for (let i = 0; i < 3; i++) {
+    await page.evaluate(() => __exam.startExam());
+    const qs = await ids(page);
+    expect(qs).toContain('heavy-1');
+    expect(qs.filter((q) => q.startsWith('z'))).toEqual([]);
+  }
+});
+
+test('onAnswer gets the session task and the verdict; a throwing hook does not break the round', async ({ page }) => {
+  const tasks = [0, 1, 2, 3].map((i) => keyed(`w${i}`, 1));
+  const mountOpts = `onAnswer: (t, ok) => {
+    (window.__log ||= []).push({ station: t.station, key: t.key, q: t.q, ok });
+    if (window.__log.length === 2) throw new Error('hook failed');
+  },`;
+  await openUnit(page, [station('h', tasks)], { mountOpts });
+  await page.evaluate(() => __exam.startStation('h'));
+  await answerByKeys(page); // right
+  expect(await page.evaluate(() => window.__log)).toHaveLength(1);
+  await page.keyboard.press('Enter');
+  await answerByKeys(page, { wrong: true }); // wrong, and the hook throws
+  await expect(page.locator('#feedback .fb.miss')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await answerByKeys(page);
+  await page.keyboard.press('Enter');
+  await answerByKeys(page);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#finish')).toBeVisible();
+  const log = await page.evaluate(() => window.__log);
+  expect(log.map((e) => e.ok)).toEqual([true, false, true, true]);
+  for (const e of log) {
+    expect(e.station).toBe('h');
+    expect(e.key).toBe(e.q.split('-')[0]);
+  }
+  expect(await page.evaluate((s) => KF.gameData(s).topics.h, SLUG)).toMatchObject({ total: 4, right: 3 });
+});
+
+test('the hub hero is drawn again on every return to the hub', async ({ page }) => {
+  await page.route('**/games/sociales-planeta/art.js', (route) =>
+    route.fulfill({
+      contentType: 'text/javascript',
+      body: `window.SPArt = { art: () => null, hero: () => { const d = document.createElement('div'); d.className = 'demo-hero'; d.textContent = 'rounds:' + Object.keys(KF.gameData('${SLUG}').st || {}).length; return d; } };`,
+    }),
+  );
+  await openUnit(page, [
+    station(
+      'a',
+      [0, 1, 2, 3].map((i) => keyed(`a${i}`, 1)),
+    ),
+  ]);
+  await expect(page.locator('#hero-art .demo-hero')).toHaveText('rounds:0');
+  await page.evaluate(() => __exam.startStation('a'));
+  await playRound(page);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+  await expect(page.locator('#hero-art .demo-hero')).toHaveCount(1);
+  await expect(page.locator('#hero-art .demo-hero')).toHaveText('rounds:1');
+});
