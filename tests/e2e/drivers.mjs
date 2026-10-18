@@ -183,3 +183,59 @@ export const playGoalkeeperMatch = async (page, tap) => {
   }
   throw new Error('goalkeeper match did not finish');
 };
+
+// ---------- coach-simon ----------
+
+// Picks mode / level / (commands) language on the intro and starts a round with the game timings sped up:
+// memory 20× (light shows), commands 2.5× (the ball must not beat the test's tap: pro 2.5 s → 1 s).
+export const startSimon = async (page, tap, { mode, level, lang } = {}) => {
+  await page.evaluate((k) => (window.__simon.timeScale = k), mode === 'commands' ? 0.4 : 0.05);
+  if (mode) await tap(page.locator(`[data-mode="${mode}"]`));
+  if (level) await tap(page.locator(`[data-level="${level}"]`));
+  if (lang) await tap(page.locator(`[data-lang="${lang}"]`));
+  await tap(page.locator('#start'));
+  await expect(page.locator('#play')).toBeVisible();
+};
+
+const simonInput = (page) =>
+  page.waitForFunction(() => window.__simon.phase === 'input' || window.__simon.screen === 'finish', null, { timeout: 15_000 });
+
+// Memory: repeats every sequence right; `missAt` = sequence lengths at which the first tap is wrong on purpose (once per entry).
+// Returns when the finish screen shows. `press` = (zone) => Promise, default taps the zone.
+export const playSimonMemory = async (page, tap, { missAt = [], press } = {}) => {
+  const hitZone = press || ((z) => tap(page.locator(`button.zone[data-zone="${z}"]`)));
+  const misses = [...missAt];
+  for (let step = 0; step < 40; step++) {
+    await simonInput(page);
+    // `wrong` = a zone of this level (unused zones are switched off) that is not the first of the sequence
+    const s = await page.evaluate(() => ({
+      screen: __simon.screen,
+      seq: __simon.seq,
+      wrong: SimonEngine.LEVELS[__simon.level].memory.zones.find((z) => z !== __simon.seq[0]),
+    }));
+    if (s.screen === 'finish') return;
+    const miss = misses.indexOf(s.seq.length);
+    if (miss >= 0) {
+      misses.splice(miss, 1);
+      await hitZone(s.wrong);
+    } else for (const z of s.seq) await hitZone(z);
+    await page.waitForFunction(() => window.__simon.phase !== 'input' || window.__simon.screen === 'finish', null, { timeout: 15_000 });
+  }
+  throw new Error('simon memory round did not finish');
+};
+
+// Commands: catches every real command, stands still on tricks; Next after each of `shots` shots (the rest of the round).
+// Returns the verdicts.
+export const playSimonCommands = async (page, tap, { press, next, shots = 10 } = {}) => {
+  const hitZone = press || ((z) => tap(page.locator(`button.zone[data-zone="${z}"]`)));
+  const goNext = next || (() => tap(page.locator('#feedback button')));
+  for (let i = 0; i < shots; i++) {
+    await simonInput(page);
+    const cmd = await page.evaluate(() => __simon.cmd);
+    if (!cmd.trick) await hitZone(cmd.zone);
+    await page.waitForFunction(() => window.__simon.phase === 'feedback', null, { timeout: 15_000 });
+    await goNext();
+  }
+  await expect(page.locator('#finish')).toBeVisible();
+  return page.evaluate(() => __simon.results);
+};

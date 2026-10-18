@@ -247,6 +247,16 @@
       sites: ['uk', 'es'],
       es: { title: 'El planeta donde vivimos', desc: 'Prepárate para el examen de la Unidad 1: capas de la Tierra, mapas y orientación.' },
     },
+    {
+      slug: 'coach-simon',
+      title: 'Тренер-Саймон',
+      emoji: '🚦',
+      category: 'fun',
+      desc: 'Запам’ятай вогники у воротах і лови команди тренера: ¡Arriba! Top left!',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: { title: 'Simón dice', desc: 'Recuerda las luces de la portería y reacciona a las órdenes: ¡Arriba! Top left!' },
+    },
   ];
 
   const CATEGORIES = {

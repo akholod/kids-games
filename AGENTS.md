@@ -39,7 +39,7 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 - Rewards must not be farmable: pay less for easy content (`KF.answer(slug, ok, { coin: 0.5 })`, `finishGame(..., { bonus })`)
   and pay the perfect-round bonus only until a level is done perfectly once. Every game's coins pass a daily budget in
   `KF` (40 a day per game in full, then a third; a toast suggests another game). Own coin rules go through `KF.earn(slug, n)`.
-- Shared game helpers: `shared/kf-game.js` (`KFG`: $, h, shuffle, pick, screens, dots, feedback, keys, confirm) — include after kf-ui.js; use them instead of re-implementing.
+- Shared game helpers: `shared/kf-game.js` (`KFG`: $, h, shuffle, pick, screens, dots, feedback, keys, confirm, say/canSay = speech with a local voice, silent without one) — include after kf-ui.js; use them instead of re-implementing.
 - New exam unit (school subject/unit): folder `games/<slug>/` with `index.html` (copy the `sociales-planeta` stub: `exam.css` link, unit `<style>` only for what is unit-specific, `<main id="exam-root">`, scripts incl. `shared/exam/exam.js`+`types.js`),
   `content.js` (`window.<NAME> = ` an `ExamUnit`: slug = folder, stations with tasks, `exam.perStation`; optional `strings`/`lists`/`hues`/`sampling`/`round`) and `game.js` (`KFExam.mount(unit, { art, types })`);
   only for task types beyond choice/tf/sort/order/pairs add `types.js` (renderers `(task, work, ctx)`) and `art.js`. Then `KF.GAMES` entry (`beta`), run `tests/unit/exam-content.test.mjs` (add the unit there), add an e2e spec (see `exam-engine.spec.mjs`: a content-only unit via `page.route`).
@@ -58,7 +58,7 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 - Types: `pnpm typecheck` (tsc, checkJs, no build; part of `pnpm test`). Cross-file globals (`KF`, `KFUI`, `MathExam`, …) are declared in `types/*.d.ts` (`kf.d.ts`, `kf-game.d.ts`, `exam.d.ts`; never put a `.d.ts` next to a same-named `.js` — tsc then skips the `.js`); new files must type-check (no `@ts-nocheck` in new code).
 - `pnpm install` once, then `pnpm test` = lint + unit (`node --test`, `tests/unit/`) + Playwright e2e (`tests/e2e/`, system Chrome, `playwright.config.mjs`; `tests/serve.mjs` serves the repo on :8795).
   Parts: `pnpm test:unit`, `pnpm test:e2e [spec] [--project=laptop|phone]`. Every run is in `?parent` mode with a seeded `Math.random`; any console/page error fails a test.
-- Unit: kf.js (i18n, sync/merge, daily coin budget), math-exam engine, exam content (`KFExam.validate`). E2E: catalog, one spec per game, `keyboard` (laptop), `no-scroll` (laptop 1366×657), `rewards`, `screenshots` (phone; refresh with `--update-snapshots` after an intended UI change).
+- Unit: kf.js (i18n, sync/merge, daily coin budget), math-exam and coach-simon engines, exam content (`KFExam.validate`). E2E: catalog, one spec per game, `keyboard` (laptop), `no-scroll` (laptop 1366×657), `rewards`, `screenshots` (phone; refresh with `--update-snapshots` after an intended UI change).
 - `deploy.sh` runs `pnpm test` first and aborts on failure.
 - New game → add an e2e spec that plays one full round to the finish screen (plus `?lang=es` if it is on the Spanish site) and a keyboard test.
 

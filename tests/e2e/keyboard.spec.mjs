@@ -1,6 +1,6 @@
 // Laptop only: every game must be playable with the keyboard (AGENTS.md conventions).
 import { test, expect, open, record } from './helpers.mjs';
-import { playMathSession } from './drivers.mjs';
+import { playMathSession, playSimonCommands, playSimonMemory } from './drivers.mjs';
 
 const tapNever = () => {
   throw new Error('keyboard test must not tap');
@@ -155,4 +155,42 @@ test('penalty-multiply: Enter starts, 1–3 pick a goal target, Enter = next kic
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   await expect(page).toHaveURL('/');
+});
+
+test('coach-simon: arrows pick the mode, Enter starts, 1–9 / numpad for zones, Enter = next / again, Esc back and out', async ({
+  page,
+}) => {
+  await open(page, '/games/coach-simon/');
+  await page.evaluate(() => (window.__simon.timeScale = 0.05));
+  // memory with the numpad (spatial: 7 = top left … 3 = bottom right)
+  await page.locator('[data-mode="memory"]').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  const numpad = (z) => page.keyboard.press(`Numpad${(2 - Math.floor(z / 3)) * 3 + (z % 3) + 1}`);
+  await playSimonMemory(page, tapNever, { press: numpad, missAt: [4, 4] });
+  await expect(page.locator('#final-score')).toHaveText('3 / 10');
+
+  // "change" (Enter on the focused button) goes to the intro, arrows switch to commands, top-row digits answer, Enter = next
+  await page.locator('#change').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro')).toBeVisible();
+  await page.locator('[data-mode="memory"]').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('[data-mode="commands"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.evaluate(() => (window.__simon.timeScale = 0.4));
+  await page.keyboard.press('Enter');
+  const results = await playSimonCommands(page, tapNever, {
+    press: (z) => page.keyboard.press(String(z + 1)),
+    next: () => page.keyboard.press('Enter'),
+  });
+  expect(results.every((v) => v === 'save' || v === 'held')).toBe(true);
+  await expect(page.locator('#final-score')).toHaveText('10 / 10');
+
+  // Enter = again, Esc = intro (from a round), Esc = catalog
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#intro')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.waitForURL((u) => !u.pathname.includes('coach-simon'));
 });

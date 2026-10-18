@@ -78,3 +78,19 @@ test('goalkeeper: start screen fits', async ({ page }) => {
   await expectFits(page, 'start');
   await expectOnScreen(page, page.locator('#start-btn'), 'start button');
 });
+
+test('coach-simon: intro, memory play, commands feedback and finish fit', async ({ page, tap }) => {
+  await open(page, '/games/coach-simon/');
+  await expectFits(page, 'intro memory');
+  await tap(page.locator('[data-mode="commands"]'));
+  await expectFits(page, 'intro commands');
+  await expectOnScreen(page, page.locator('#start'), 'start button');
+  await page.evaluate(() => (window.__simon.timeScale = 0.4));
+  await tap(page.locator('#start'));
+  await page.waitForFunction(() => __simon.phase === 'input');
+  await expectFits(page, 'commands shot');
+  const cmd = await page.evaluate(() => __simon.cmd);
+  await tap(page.locator(`button.zone[data-zone="${cmd.zone}"]`));
+  await expectOnScreen(page, page.locator('#feedback button'), 'next');
+  await expectFits(page, 'commands feedback');
+});

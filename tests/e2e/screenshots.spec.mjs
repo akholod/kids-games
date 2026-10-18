@@ -56,3 +56,13 @@ test('sociales-planeta: stations and first task', async ({ page, tap }) => {
   await expect(page.locator('#work .choice').first()).toBeVisible();
   await snap(page, 'sociales-planeta-task');
 });
+
+test('coach-simon: start screen and the memory turn', async ({ page, tap }) => {
+  await open(page, '/games/coach-simon/');
+  await snap(page, 'coach-simon-start');
+  await page.evaluate(() => (window.__simon.timeScale = 0.05));
+  await tap(page.locator('#start'));
+  await page.waitForFunction(() => __simon.phase === 'input');
+  await page.waitForTimeout(300); // the last light fades
+  await snap(page, 'coach-simon-memory');
+});
