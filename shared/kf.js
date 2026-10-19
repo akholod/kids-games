@@ -253,7 +253,7 @@
       emoji: '🚦',
       category: 'fun',
       desc: 'Запам’ятай вогники у воротах і лови команди тренера: ¡Arriba! Top left!',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: { title: 'Simón dice', desc: 'Recuerda las luces de la portería y reacciona a las órdenes: ¡Arriba! Top left!' },
     },
