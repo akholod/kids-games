@@ -223,7 +223,7 @@
       emoji: '🗣️',
       category: 'english',
       desc: 'Англійські слова: футбол, школа, планета. Кожне вивчене слово — новий гравець у команді!',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: { title: 'Equipo de palabras', desc: 'Palabras en inglés del fútbol, el cole y el planeta. ¡Cada palabra es un fichaje!' },
     },
