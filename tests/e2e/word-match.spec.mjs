@@ -24,7 +24,26 @@ test('word-match: hub with 12 themes and the squad, one full theme round', async
   for (const k of keys) expect(w[k]).toMatchObject({ ok: 1, miss: 0, run: 1 });
 });
 
-test('word-match: every task type — picture, translation, listen (no voice: read), spell with a retry, pairs', async ({ page, tap }) => {
+const slugOf = (text) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+test('word-match: every task type — picture, translation, listen (recorded clip), spell with a retry, pairs', async ({ page, tap }) => {
+  // count the clips that really start playing, and the clip files requested
+  await page.addInitScript(() => {
+    window.__clips = 0;
+    const start = AudioBufferSourceNode.prototype.start;
+    AudioBufferSourceNode.prototype.start = function (...args) {
+      window.__clips++;
+      return start.apply(this, args);
+    };
+  });
+  const clipUrls = [];
+  page.on('request', (r) => {
+    if (r.url().endsWith('.mp3')) clipUrls.push(new URL(r.url()).pathname);
+  });
   await open(page, `/games/${SLUG}/`);
   const types = await playWordTasks(page, 'animals', ['pic', 'text', 'listen', 'spell', 'pairs']);
   expect(types).toEqual(['choice', 'choice', 'listen', 'spell', 'pairs']);
@@ -32,7 +51,14 @@ test('word-match: every task type — picture, translation, listen (no voice: re
   for (let i = 0; i < types.length; i++) {
     const t = await page.evaluate(() => __wm.session.task);
     if (t.type === 'choice' && t.art) await expect(page.locator('#work .wm-pic')).toBeVisible();
-    if (t.type === 'listen') await expect(page.locator('#wm-word')).toContainText(t.word.en); // headless Chrome has no voice
+    if (t.type === 'listen') {
+      // clips exist for every word: the 🔊 button, not the no-voice word card
+      await expect(page.locator('#wm-play')).toBeVisible();
+      await expect(page.locator('#wm-word')).toHaveCount(0);
+      await tap(page.locator('#wm-play'));
+      await expect.poll(() => page.evaluate(() => window.__clips)).toBeGreaterThan(0);
+      expect(clipUrls).toContain(`/audio/en/${slugOf(t.word.en)}.mp3`);
+    }
     await answerWordTask(page, tap, { wrongFirst: t.type === 'spell' });
     if (t.type === 'spell') await expect(page.locator('.wm-spell')).toHaveClass(/is-done/);
     await tap(page.locator('#feedback .fb-actions .btn').first());
@@ -42,6 +68,19 @@ test('word-match: every task type — picture, translation, listen (no voice: re
   expect(results.every(Boolean)).toBe(true); // the spell retry still counts as right (soft)
   const w = await words(page);
   expect(Object.keys(w)).toHaveLength(4); // pairs has no key
+});
+
+test('word-match: a word without a clip falls back — no voice: the word is shown instead of the 🔊 button', async ({ page, tap }) => {
+  await page.route('**/shared/audio.js', (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: 'window.KF_AUDIO = { en: [] };' }),
+  );
+  await open(page, `/games/${SLUG}/`);
+  await playWordTasks(page, 'animals', ['listen']);
+  const t = await page.evaluate(() => __wm.session.task);
+  await expect(page.locator('#wm-word')).toContainText(t.word.en); // headless Chrome has no voice
+  await expect(page.locator('#wm-play')).toHaveCount(0);
+  await answerWordTask(page, tap);
+  await expect(page.locator('#feedback .fb-actions .btn').first()).toBeVisible();
 });
 
 test('word-match: a word joins the squad after 2 right answers in a row, a miss brings it back more often', async ({ page, tap }) => {

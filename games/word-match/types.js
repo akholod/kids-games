@@ -48,7 +48,7 @@ window.WM_TYPES = (() => {
       KFG.restart(playBtn, 'is-on');
     };
     const drawClue = () => {
-      const voice = KFG.canSay('en');
+      const voice = KFG.canSay('en', word.en);
       clue.replaceChildren(voice ? playBtn : wordCard);
       keysHint.textContent = voice ? T('kListen', { n: opts.length }) : T('kChoice', { n: opts.length });
       return voice;
@@ -77,10 +77,11 @@ window.WM_TYPES = (() => {
     };
 
     work.append(h('div', { class: 'wm-listen' }, clue, h('div', { class: 'wm-opts' }, buttons), keysHint));
+    KFG.preload(word.en, 'en');
     if (drawClue()) {
       // Once, right after the task appears (not over another word still being spoken).
       setTimeout(() => {
-        if (!answered() && playBtn.isConnected && !window.speechSynthesis?.speaking) play();
+        if (!answered() && playBtn.isConnected && !KFG.speaking()) play();
       }, 350);
     } else if (window.speechSynthesis && !speechSynthesis.getVoices().length) {
       // The voice list loads asynchronously: if an English voice turns up before the answer, switch to listening.
@@ -132,6 +133,7 @@ window.WM_TYPES = (() => {
     const good = new Set();
     let tries = 0;
     const hint = ctx.hint();
+    KFG.preload(word.en, 'en'); // the word is spoken when the task is done
 
     const slotEls = target.map((_, i) =>
       h('button', { type: 'button', class: 'wm-slot', 'data-i': String(i), onmousedown: keepFocus, onclick: () => takeFrom(i) }),

@@ -11,6 +11,7 @@
       "**/*.mjs",
       "**/*.cjs",
       "!shared/cards.js",
+      "!shared/audio.js",
       "!games/sociales-planeta/maps.js",
       "!games/football-quiz/questions.js"
     ]

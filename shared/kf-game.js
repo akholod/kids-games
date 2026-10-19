@@ -8,7 +8,9 @@
 //   KFG.feedback(box, content, ...buttons, { focus, scroll })           fill the feedback box, focus the first button
 //   const off = KFG.keys({ ctrl, active, onEscape, onKey, ignoreMods, nativeButtons })   the one document keydown listener
 //   KFG.confirm(dialog, { onYes, onNo, focus })                         ask in an existing <dialog>, Esc = no
-//   KFG.say(text, lang, { rate })  KFG.canSay(lang)  KFG.hush()       speech with a local voice; silent (false) without one
+//   KFG.say(text, lang, { rate })  KFG.canSay(lang, text?)  KFG.hush()  KFG.speaking()  KFG.preload(text, lang)
+//        speech: a pre-recorded clip from shared/audio.js (window.KF_AUDIO, load it before this file) when `text` has one,
+//        else a local voice (rate applies to it only); silent (false) without either
 // @ts-check
 'use strict';
 
@@ -248,9 +250,74 @@
     if (target instanceof HTMLElement) target.focus();
   };
 
-  // Speech (Web Speech API). A voice of the language, local (works offline) first: 'es' → es-ES before other Spanish,
-  // 'en' → en-GB, en-US, any English. No such voice = silent, so the text on screen must always be enough.
+  // Speech. First choice: a pre-recorded clip (audio/<lang>/<slug>.mp3, listed in window.KF_AUDIO by shared/audio.js), played
+  // through the Web Audio API (it works on iPad Safari once a gesture has unlocked the context). Fallback: Web Speech API,
+  // a voice of the language, local (works offline) first: 'es' → es-ES before other Spanish, 'en' → en-GB, en-US, any English.
+  // No clip and no voice = silent, so the text on screen must always be enough.
   // The voice list loads asynchronously: canSay() may be false right after page load ('voiceschanged' on speechSynthesis).
+  const SCRIPT_SRC = document.currentScript instanceof HTMLScriptElement ? document.currentScript.src : '';
+  const CLIP_BASE = SCRIPT_SRC ? new URL('../audio/', SCRIPT_SRC).href : '';
+
+  /** Same rule as slug() in scripts/build-audio.mjs; surrounding punctuation ('¡Hola!') drops out with it.
+   * @param {string} text */
+  const slug = (text) =>
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  /** @param {string} text @param {string} lang @returns {string | null} url of the clip, null without one */
+  const clipUrl = (text, lang) => {
+    const s = slug(text);
+    return CLIP_BASE && s && window.KF_AUDIO?.[lang]?.includes(s) ? `${CLIP_BASE}${lang}/${s}.mp3` : null;
+  };
+
+  /** @type {AudioContext | null} */
+  let actx = null;
+  const audioCtx = () => {
+    if (!actx) {
+      const Ctor = window.AudioContext || /** @type {any} */ (window).webkitAudioContext;
+      if (Ctor) actx = new Ctor();
+    }
+    return actx;
+  };
+  // The first gesture unlocks the context (iOS/Safari and autoplay policies); only on pages that have clips at all.
+  const unlock = () => {
+    if (!window.KF_AUDIO) return;
+    // iOS 17+: play even with the silent switch on (Web Audio is 'ambient' there by default, like a ringtone)
+    const session = /** @type {any} */ (navigator).audioSession;
+    if (session && session.type !== 'playback') session.type = 'playback';
+    const c = audioCtx();
+    if (c && c.state !== 'running') c.resume().catch(() => {});
+  };
+  for (const ev of ['pointerdown', 'keydown', 'touchend']) document.addEventListener(ev, unlock, { capture: true, passive: true });
+
+  /** @type {Map<string, Promise<AudioBuffer | null>>} */
+  const buffers = new Map();
+  /** Fetched and decoded once per url; a failure resolves null and is not cached, so a later call tries again.
+   * @param {string} url @returns {Promise<AudioBuffer | null>} */
+  const load = (url) => {
+    let p = buffers.get(url);
+    if (!p) {
+      p = fetch(url)
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+        // callback form: older Safari has no promise-returning decodeAudioData
+        .then((data) => new Promise((ok, fail) => audioCtx()?.decodeAudioData(data, ok, fail) ?? fail(new Error('no audio'))))
+        .catch(() => {
+          buffers.delete(url);
+          return null;
+        });
+      buffers.set(url, /** @type {Promise<AudioBuffer | null>} */ (p));
+    }
+    return /** @type {Promise<AudioBuffer | null>} */ (p);
+  };
+
+  /** Warms up: fetches and decodes the clip for `text`, if there is one.
+   * @param {string} text @param {string} lang */
+  const preload = (text, lang) => {
+    const url = clipUrl(text, lang);
+    if (url) void load(url);
+  };
+
   /** @type {Record<string, string[]>} */
   const VOICE_PREF = { es: ['es-es', 'es'], en: ['en-gb', 'en-us', 'en'], uk: ['uk'] };
   /** @param {string} lang @returns {SpeechSynthesisVoice | null} */
@@ -265,8 +332,8 @@
   };
   window.speechSynthesis?.getVoices(); // starts loading the list
 
-  /** @param {string} text @param {string} lang @param {{ rate?: number }} [opts] @returns {boolean} spoken */
-  const say = (text, lang, { rate = 0.95 } = {}) => {
+  /** @param {string} text @param {string} lang @param {number} rate @returns {boolean} spoken */
+  const speak = (text, lang, rate) => {
     const voice = voiceFor(lang);
     if (!voice) return false;
     speechSynthesis.cancel();
@@ -277,11 +344,83 @@
     speechSynthesis.speak(u);
     return true;
   };
-  /** @param {string} lang */
-  const canSay = (lang) => voiceFor(lang) !== null;
-  const hush = () => window.speechSynthesis?.cancel();
+
+  let seq = 0; // numbers the clip requests: a later say() or hush() makes an earlier, still loading one stale
+  let activeId = 0; // the clip request that is loading or playing, 0 = none
+  /** @type {AudioBufferSourceNode | null} */
+  let source = null;
+
+  const hush = () => {
+    activeId = 0;
+    const s = source;
+    source = null;
+    if (s) {
+      s.onended = null;
+      try {
+        s.stop();
+      } catch {
+        // already stopped
+      }
+    }
+    window.speechSynthesis?.cancel();
+  };
+
+  /** Speaks `text`: the clip if there is one (true at once, the device voice takes over if the clip cannot be loaded),
+   * else the device voice (false without one). opts.rate applies to the device voice only.
+   * @param {string} text @param {string} lang @param {{ rate?: number }} [opts] @returns {boolean} will be spoken */
+  const say = (text, lang, { rate = 0.95 } = {}) => {
+    const url = clipUrl(text, lang);
+    if (!url) return speak(text, lang, rate);
+    hush();
+    const id = ++seq;
+    activeId = id;
+    void load(url).then((buf) => {
+      if (activeId !== id) return; // stopped or replaced meanwhile
+      const c = audioCtx();
+      if (!buf || !c) {
+        activeId = 0;
+        speak(text, lang, rate);
+        return;
+      }
+      if (c.state === 'suspended') c.resume().catch(() => {});
+      const s = c.createBufferSource();
+      s.buffer = buf;
+      s.connect(c.destination);
+      s.onended = () => {
+        if (source === s) {
+          source = null;
+          activeId = 0;
+        }
+      };
+      source = s;
+      s.start();
+    });
+    return true;
+  };
+  /** @param {string} lang @param {string} [text] a clip for `text` or a device voice for `lang` */
+  const canSay = (lang, text) => (text !== undefined && clipUrl(text, lang) !== null) || voiceFor(lang) !== null;
+  /** A clip is loading or playing, or the device voice is speaking. */
+  const speaking = () => activeId !== 0 || Boolean(window.speechSynthesis?.speaking);
 
   /** @type {KFGAPI} */
-  const api = { $, h, shuffle, pick, reduced, restart, shake, screens, dots, feedback, keys, confirm, say, canSay, hush };
+  const api = {
+    $,
+    h,
+    shuffle,
+    pick,
+    reduced,
+    restart,
+    shake,
+    screens,
+    dots,
+    feedback,
+    keys,
+    confirm,
+    say,
+    canSay,
+    hush,
+    preload,
+    speaking,
+  };
   window.KFG = api;
 })();
