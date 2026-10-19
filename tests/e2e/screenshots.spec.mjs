@@ -2,7 +2,7 @@
 // Baselines live in tests/e2e/screenshots.spec.mjs-snapshots/ (Linux Chrome); refresh with
 //   pnpm test:e2e screenshots --update-snapshots
 import { test, expect, open } from './helpers.mjs';
-import { openStation, playWordTasks } from './drivers.mjs';
+import { openStation, playChTasks, playWordTasks } from './drivers.mjs';
 
 const snap = async (page, name) => {
   await page.waitForLoadState('networkidle');
@@ -73,4 +73,12 @@ test('word-match: hub and a spell task', async ({ page }) => {
   await playWordTasks(page, 'animals', ['spell']);
   await expect(page.locator('.wm-spell')).toBeVisible();
   await snap(page, 'word-match-spell');
+});
+
+test('chytanka: hub and a read task by syllables', async ({ page }) => {
+  await open(page, '/games/chytanka/');
+  await snap(page, 'chytanka-hub');
+  await playChTasks(page, 'kyiv', ['read']);
+  await expect(page.locator('.ch-word.is-split')).toBeVisible();
+  await snap(page, 'chytanka-read');
 });

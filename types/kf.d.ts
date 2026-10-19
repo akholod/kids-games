@@ -56,7 +56,7 @@ interface KFState {
 
 // ---- registry ----
 
-type KFCategoryId = 'math' | 'english' | 'fun' | 'sociales';
+type KFCategoryId = 'math' | 'english' | 'fun' | 'sociales' | 'ukrainian';
 type KFGameStatus = 'ready' | 'beta' | 'soon';
 
 interface KFGame {

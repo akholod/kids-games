@@ -53,7 +53,9 @@ const load = (src, { site, search = '' } = {}) => {
 const texts = (KF) => ({
   ach: KF.ACHIEVEMENTS.map((a) => ({ id: a.id, icon: a.icon, title: a.title, desc: a.desc })),
   cats: Object.fromEntries(Object.entries(KF.CARD_CATS).map(([k, v]) => [k, v.label])),
-  categories: JSON.parse(JSON.stringify(Object.fromEntries(Object.entries(KF.CATEGORIES).filter(([k]) => k !== 'sociales')))),
+  categories: JSON.parse(
+    JSON.stringify(Object.fromEntries(Object.entries(KF.CATEGORIES).filter(([k]) => k !== 'sociales' && k !== 'ukrainian'))),
+  ),
   games: JSON.parse(
     JSON.stringify(
       legacy(KF.GAMES).map(({ slug, title, emoji, category, desc, status }) => ({ slug, title, emoji, category, desc, status })),
@@ -63,7 +65,7 @@ const texts = (KF) => ({
 
 const plain = (x) => JSON.parse(JSON.stringify(x));
 // Games added after the i18n migration: the snapshot checks below are about the games that existed then.
-const NEW_GAMES = new Set(['sociales-planeta', 'coach-simon', 'word-match']);
+const NEW_GAMES = new Set(['sociales-planeta', 'coach-simon', 'word-match', 'chytanka']);
 const legacy = (list) => list.filter((g) => !NEW_GAMES.has(g.slug));
 
 test('uk: texts byte-identical to HEAD', () => {

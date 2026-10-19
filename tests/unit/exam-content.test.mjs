@@ -209,3 +209,79 @@ test('word-match (es): no Cyrillic anywhere in the Spanish site content', () => 
   walk({ ...wm, words: {}, themes: [] }, 'wm');
   assert.deepEqual(seen, []);
 });
+
+// ---------- chytanka («Читанка-мандрівка») ----------
+
+const bootChytanka = () => {
+  const sb = {
+    console,
+    Math,
+    KF: { lang: 'uk', i18n: () => (key) => key },
+    KFG: { shuffle: (a) => [...a].sort(() => Math.random() - 0.5) },
+  };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of ['shared/exam/exam.js', 'shared/exam/types.js', 'games/chytanka/content.js'])
+    vm.runInContext(read(f), sb, { filename: f });
+  return sb;
+};
+// Ukrainian letters only: a Latin look-alike (i, a, o, e, c, p, x) in a word is an invisible bug.
+const UA_WORD = /^[а-щьюяґєії’]+$/;
+const STRESS = /\u0301/g;
+
+test('chytanka: generated content is valid; words, syllables and stress marks are consistent', () => {
+  for (let run = 0; run < 5; run++) {
+    const { KFExam: E, CH_CONTENT: ch } = bootChytanka();
+    assert.deepEqual([...E.validate(clone(ch))], []);
+    assert.equal(ch.stations.length, 10);
+    assert.deepEqual(
+      ch.route.map((r) => r.id),
+      ch.stations.map((s) => s.id),
+    );
+    const seen = new Set();
+    for (const st of ch.route) {
+      assert.equal(st.words.length, 12, st.id);
+      assert.equal(new Set(st.words.map((w) => w.pic)).size, 12, `${st.id}: pictures must differ within a stop`);
+      for (const w of st.words) {
+        assert.ok(!seen.has(w.word), `${w.word}: twice in the unit`);
+        seen.add(w.word);
+        assert.equal(w.key, `${st.id}.${w.word}`);
+        assert.ok(UA_WORD.test(w.word), `${w.word}: not only Ukrainian letters`);
+        assert.equal(w.syl.join('').replace(STRESS, ''), w.word);
+        const marks = (w.syl.join('').match(STRESS) || []).length;
+        assert.equal(marks, w.syl.length > 1 ? 1 : 0, `${w.syl.join('-')}: one stress mark in a word of 2+ syllables`);
+        for (const s of w.syl) assert.ok(/[аеєиіїоуюя]/.test(s), `${w.word}: syllable «${s}» without a vowel`);
+        assert.ok(w.pic, w.word);
+      }
+      const station = ch.stations.find((s) => s.id === st.id);
+      const types = new Set(station.tasks.map((t) => t.type));
+      for (const t of ['read', 'choice', 'hear', 'build', 'story']) assert.ok(types.has(t), `${st.id}: no ${t}`);
+      for (const t of station.tasks) {
+        if (t.options) assert.equal(new Set(t.options.map((o) => (typeof o === 'string' ? o : o.key))).size, t.options.length, t.q);
+        if (t.type === 'read') {
+          assert.equal(t.options[0], t.word);
+          assert.equal(t.options.length, 4);
+          assert.equal(new Set(t.options.map((o) => o.pic)).size, 4);
+        }
+        if (t.type === 'hear' || t.type === 'choice') {
+          assert.equal(t.options.length, 4, t.key);
+          assert.equal(t.options[0], ch.words[t.key].word);
+        }
+        if (t.type === 'build') {
+          const own = t.word.syl.map((s) => s.replace(STRESS, ''));
+          assert.ok(t.extra.length >= 1);
+          for (const x of t.extra) assert.ok(!own.includes(x.replace(STRESS, '')), `${t.word.word}: extra «${x}» is its own syllable`);
+        }
+        if (t.type === 'gap') {
+          assert.equal(t.word.word[t.at], t.options[0], t.key);
+          assert.ok(t.options.length >= 2);
+        }
+        if (t.type === 'story') {
+          assert.equal(t.options.length, 4);
+          assert.ok(t.text && t.ask, t.text);
+        }
+      }
+    }
+    assert.equal(seen.size, 120);
+  }
+});

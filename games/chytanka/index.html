@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173a7a">
+<title>Читанка-мандрівка — Keeper Fun Games</title>
+<link rel="stylesheet" href="../../shared/kf.css">
+<link rel="stylesheet" href="../../shared/exam/exam.css">
+<style>
+/* A travel primer: cream notebook paper, Ukrainian blue and yellow, words in a wide, open reading face */
+:root{--sea:#2f6fd0;--sea-d:#1f4f9f;--sea-l:#e8f0ff;--deep:#173a7a;--ua-y:#ffd23f;--ua-yd:#c9a018;--ch-ink:#1d2e57;--ch-c0:#1f4fae;--ch-c1:#c2412f;
+  --ch-read:Verdana,'DejaVu Sans','Segoe UI',Tahoma,system-ui,sans-serif}
+.play-head{box-shadow:inset 0 -3px 0 var(--ua-y)}
+
+/* ---------- Hub: a page of a school notebook ---------- */
+.hub{--pad:clamp(18px,4.5vw,40px);background:
+  linear-gradient(90deg,transparent 0 calc(var(--pad) - 10px),#ef9a9a8c calc(var(--pad) - 10px) calc(var(--pad) - 8px),transparent 0),
+  repeating-linear-gradient(transparent 0 33px,#d3def3 33px 34px),#fffdf6}
+.hero{grid-template-columns:minmax(0,1fr) min(340px,42%);margin-bottom:18px}
+.hero-art{width:100%;transform:rotate(1.5deg)}
+.ch-passport{padding:8px 8px 10px;border-radius:22px;color:#fff;background:linear-gradient(160deg,#1f4fa8,var(--deep) 70%);box-shadow:inset 0 0 0 2px #ffffff1f,0 4px 0 #0e2552,0 14px 26px #0e255233}
+.ch-pp-head{display:flex;align-items:center;gap:8px;padding:2px 6px 8px;font-family:var(--display);font-size:.95rem;letter-spacing:.02em}
+.ch-pp-flag{flex:none;width:22px;height:15px;border-radius:3px;background:linear-gradient(var(--sea) 50%,var(--ua-y) 50%);box-shadow:0 0 0 1.5px #ffffff80}
+.ch-pp-page{padding:4px;border-radius:14px;background:repeating-radial-gradient(circle at 20% 130%,transparent 0 9px,#efe5c9 9px 10px),#fffaf0}
+.ch-map{display:block;width:100%;height:auto}
+.ch-land{fill:#fbe7a6;stroke:#d6b65a;stroke-width:3;stroke-linejoin:round}
+.ch-river{fill:none;stroke:#8bb8ea;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.ch-leg{stroke:var(--sea);stroke-width:6;stroke-dasharray:1 14;stroke-linecap:round;opacity:.7}
+.ch-leg.done{stroke-dasharray:none;opacity:1}
+.ch-stamp{stroke:#fff;stroke-width:5}
+.ch-stamp-ring{fill:none;stroke:#ffffffb3;stroke-width:2.5;stroke-dasharray:4 5}
+.ch-stamp-ico{font-size:40px;text-anchor:middle;dominant-baseline:central}
+.ch-next{fill:#fff;stroke:var(--ua-y);stroke-width:8}
+.ch-next-dot{fill:var(--sea)}
+.ch-halo{fill:none;stroke:var(--ua-yd);stroke-width:4;transform-box:fill-box;transform-origin:center;animation:ch-halo 3s ease-out infinite}
+@keyframes ch-halo{from{opacity:.8;scale:1}70%,to{opacity:0;scale:2.1}}
+.ch-later{fill:#b7bfd0;stroke:#fff;stroke-width:4}
+.ch-label{font:800 36px var(--ch-read);fill:var(--ch-ink);paint-order:stroke;stroke:#fffaf0;stroke-width:9;stroke-linejoin:round}
+.later .ch-label{fill:#66708c;font-weight:700}
+.next .ch-label{fill:var(--sea-d)}
+.ch-pp-foot{display:flex;align-items:center;justify-content:space-between;gap:6px 10px;flex-wrap:wrap;padding:8px 6px 0}
+.ch-pp-stats{display:grid;gap:2px;font-size:.8rem;font-weight:800;line-height:1.25;color:#d5e2ff;font-variant-numeric:tabular-nums}
+.ch-pp-next{padding:5px 12px;border-radius:100px;background:var(--ua-y);color:var(--ch-ink);font-weight:900;font-size:.88rem;line-height:1.2}
+
+/* ---------- Hub tiles: a passed city gets an ink stamp; the final is a road, not a pitch ---------- */
+.station .badge{background:none;color:color-mix(in srgb,var(--hue) 82%,#000);box-shadow:inset 0 0 0 2px currentColor;text-transform:uppercase;letter-spacing:.05em;font-size:.7rem;transform:rotate(-6deg)}
+.exam-card{background:
+  repeating-linear-gradient(90deg,var(--ua-y) 0 22px,transparent 22px 40px) 0 calc(100% - 14px)/100% 4px no-repeat,
+  radial-gradient(circle at 96% 10%,#ffd23f2e 0 70px,transparent 71px),
+  linear-gradient(135deg,#2058b8,var(--deep))}
+.exam-card .eyebrow{color:var(--ua-y)}
+.exam-card p{color:#dbe6ff}
+.exam-card .btn{background:var(--ua-y);box-shadow:0 5px 0 #b38c12}
+.exam-card .btn:hover:not(:disabled){background:#ffde6b}
+.exam-card .btn:active:not(:disabled){box-shadow:0 2px 0 #b38c12}
+
+/* ---------- Play: shared sizes ---------- */
+/* --fit = what a task may take on a laptop and still leave the feedback sheet room below it (--room comes from exam.css) */
+#play{--fit:max(170px,calc(var(--room,420px) - 124px))}
+.ch-pic{display:grid;place-items:center;line-height:1;user-select:none;-webkit-user-select:none}
+.ch-card{--hue:var(--sea);display:grid;place-content:center;width:min(100%,260px,var(--fit,260px));aspect-ratio:1;container-type:inline-size;margin:0 auto;border-radius:28px;
+  background:radial-gradient(circle at 50% 40%,#fff 0 40%,color-mix(in srgb,var(--hue) 14%,#fff));
+  box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--hue) 28%,#fff),0 6px 0 color-mix(in srgb,var(--hue) 30%,#dfe6d9),0 14px 26px #12302014}
+.ch-card .ch-pic{font-size:52cqi}
+@media(min-width:760px){.with-art.side:has(.ch-card){grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}}
+/* Written words are read, so they get the reading face everywhere (generic choice too) */
+.choice{font-family:var(--ch-read);font-weight:700;font-size:clamp(1.2rem,4vw,1.5rem)}
+
+/* All option buttons of the unit */
+.ch-opt,.ch-wopt,.ch-letter,.ch-ans,.ch-tile{position:relative;border:2px solid #c8d3e6;border-radius:20px;background:#fff;color:var(--ch-ink);box-shadow:0 5px 0 #d3dbea;
+  touch-action:manipulation;transition:transform .16s,background-color .16s,border-color .16s,opacity .16s}
+:is(.ch-opt,.ch-wopt,.ch-letter,.ch-ans,.ch-tile) kbd{position:absolute;top:7px;left:8px}
+:is(.ch-opt,.ch-wopt,.ch-letter,.ch-ans,.ch-tile):hover:not(:disabled){background:#f0f5ff;border-color:#8eb0e2;transform:translateY(-2px)}
+:is(.ch-opt,.ch-wopt,.ch-letter,.ch-ans,.ch-tile):active:not(:disabled){transform:scale(.96)}
+:is(.ch-opt,.ch-wopt,.ch-letter,.ch-ans):disabled{cursor:default}
+:is(.ch-opt,.ch-wopt,.ch-letter,.ch-ans).right{background:var(--ok);border-color:var(--okd);box-shadow:0 5px 0 #a5c96a}
+:is(.ch-opt,.ch-wopt,.ch-letter,.ch-ans).wrong{background:var(--miss);border-color:#f0c56a;box-shadow:0 5px 0 #ecd29a}
+:is(.ch-opt,.ch-wopt,.ch-letter,.ch-ans).dim{opacity:.5}
+
+/* ---------- The word, the primer way: syllables under arcs, in two alternating colours ---------- */
+.ch-reader{container-type:inline-size;display:grid;justify-items:center;gap:8px;width:100%;padding:12px 14px;border-radius:26px;background:#fff;box-shadow:inset 0 0 0 2px #dfe6f3,0 5px 0 #d7e0ef}
+.ch-word{display:flex;justify-content:center;align-items:baseline;column-gap:0;padding:.14em 0 .32em;font-family:var(--ch-read);font-weight:700;line-height:1.15;letter-spacing:.02em;color:var(--ch-ink);white-space:nowrap;
+  font-size:min(4.4rem,calc(100cqi / (var(--len) * .74 + var(--gaps) * .42 + .3)));transition:column-gap .35s cubic-bezier(.2,0,0,1)}
+.ch-syl{position:relative;transition:color .3s}
+.ch-syl::after{content:"";position:absolute;left:.04em;right:.04em;bottom:-.24em;height:.22em;border:.07em solid currentColor;border-top:0;border-radius:0 0 50% 50%/0 0 100% 100%;opacity:0;transition:opacity .3s}
+.ch-word.is-split{column-gap:.36em}
+.ch-word.is-split .c0{color:var(--ch-c0)}
+.ch-word.is-split .c1{color:var(--ch-c1)}
+.ch-word.is-split .ch-syl::after{opacity:.75}
+.ch-split{min-height:48px;padding:6px 18px;border-radius:100px;font-size:.95rem}
+.ch-split[aria-pressed=true]{background:var(--sea-l);box-shadow:0 5px 0 #c2d4f2}
+
+/* ---------- read: the word, then 4 pictures ---------- */
+.ch-read{display:grid;gap:14px;width:min(100%,880px);justify-items:center}
+.ch-opts{--ph:clamp(92px,calc((var(--room,420px) - 196px) / 2),130px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,460px)}
+.ch-opt{display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;align-items:center;height:var(--ph);padding:8px 8px 6px;container-type:size}
+.ch-opt .ch-pic{width:100%;height:100%;font-size:min(58cqh,48cqw)}
+.ch-opt .cap{display:none;max-width:100%;padding:1px 10px;border-radius:100px;background:#fff;font:700 1rem/1.2 var(--ch-read);overflow-wrap:anywhere}
+.ch-opt.right .cap,.ch-opt.wrong .cap{display:block}
+
+/* ---------- hear: a big play button, 4 written words ---------- */
+.ch-hear{display:grid;gap:14px;width:min(100%,860px);justify-items:center}
+.ch-clue{display:grid;justify-items:center;width:100%}
+.ch-play{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:64px;width:min(100%,320px);padding:10px 22px;border:0;border-radius:100px;
+  background:var(--deep);color:#fff;font-family:var(--display);font-size:1.25rem;font-weight:900;box-shadow:0 5px 0 #0c2350;transition:transform .16s,background-color .16s,box-shadow .16s}
+.ch-play:hover{background:#21489a}
+.ch-play:active{transform:scale(.96);box-shadow:0 2px 0 #0c2350}
+.ch-play .ico{font-size:1.6rem;line-height:1}
+.ch-play::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 0 0 #ffd23faa;pointer-events:none}
+.ch-play.is-on::after{animation:ch-wave 1.1s ease-out 2}
+@keyframes ch-wave{to{box-shadow:0 0 0 20px #ffd23f00}}
+.ch-novoice{display:grid;justify-items:center;gap:6px;width:100%}
+.ch-novoice .ch-card{width:clamp(110px,calc(var(--fit,300px) * .6),160px)}
+.ch-novoice small{color:var(--muted);font-weight:800;text-align:center;text-wrap:balance}
+.ch-words{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,480px)}
+.ch-wopt{min-height:76px;padding:12px 12px 12px 30px;font:700 clamp(1.35rem,5vw,1.75rem)/1.2 var(--ch-read);overflow-wrap:anywhere}
+
+/* ---------- build: syllable tiles into slots ---------- */
+.ch-build{display:grid;gap:12px;width:min(100%,880px);justify-items:center}
+.ch-build .ch-card,.ch-gap .ch-card{width:min(100%,120px,calc(var(--fit,300px) * .5));border-radius:24px}
+.ch-build-col{display:grid;gap:10px;justify-items:center;width:100%;min-width:0}
+.ch-bslots{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;width:100%;transition:gap .35s cubic-bezier(.2,0,0,1)}
+.ch-bslot{min-width:2.7em;height:64px;padding:0 .3em;border:2px dashed #a9b8d6;border-radius:16px;background:#f6f8fd;color:var(--ch-ink);font:700 1.9rem/1 var(--ch-read);
+  transition:background-color .16s,border-color .16s,transform .16s}
+.ch-bslot.next{border-style:solid;border-color:var(--sea);background:#fff}
+.ch-bslot.filled{border-style:solid;border-color:#9fb8e4;background:var(--sea-l)}
+.ch-bslot.filled:hover:not(:disabled){background:#d6e4fb}
+.ch-bslot.good{border-color:var(--okd);background:var(--ok)}
+.ch-bslot.fixed{border-style:solid;border-color:var(--missd);background:var(--miss)}
+.ch-bslot:disabled{cursor:default}
+.ch-bslot.missed{animation:ch-missed 1s ease-out}
+@keyframes ch-missed{from{background:var(--miss);border-color:var(--missd)}}
+.ch-build.is-done .ch-bslots{gap:3px}
+.ch-build.is-done .ch-tiles,.ch-build.is-done .ch-build-actions{display:none}
+.ch-tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:min(100%,640px)}
+.ch-tile{min-width:76px;height:62px;padding:0 14px 0 24px;font:700 1.7rem/1 var(--ch-read)}
+.ch-tile:disabled{opacity:.18;box-shadow:none;transform:none}
+.ch-build-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.ch-build-actions .btn{min-width:150px}
+
+/* ---------- gap: the lost letter ---------- */
+.ch-gap{display:grid;gap:12px;width:min(100%,820px);justify-items:center}
+.ch-gap-col{display:grid;gap:14px;justify-items:center;width:100%;min-width:0}
+.ch-gap .ch-reader{width:min(100%,520px)}
+.ch-slot{display:inline-grid;place-items:center;min-width:.66em;height:1.08em;margin:0 .05em;vertical-align:-.16em;border-radius:.14em;background:#fff6cf;box-shadow:inset 0 0 0 .05em var(--ua-yd)}
+.ch-slot:empty{background:repeating-linear-gradient(-45deg,#fff6cf 0 .1em,#ffeeb0 .1em .2em);animation:ch-blink 1.6s ease-in-out infinite alternate}
+@keyframes ch-blink{to{box-shadow:inset 0 0 0 .07em var(--sea)}}
+.ch-slot i{font-style:normal;animation:ch-drop .45s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes ch-drop{from{transform:translateY(-.9em);opacity:0}}
+.ch-slot.ok{background:var(--ok);box-shadow:inset 0 0 0 .05em var(--okd)}
+.ch-slot.fix{background:var(--miss);box-shadow:inset 0 0 0 .05em var(--missd)}
+.ch-letters{display:flex;justify-content:center;gap:12px}
+.ch-letter{width:96px;height:84px;font:700 2.6rem/1 var(--ch-read)}
+
+/* ---------- story: a lined page, then the question ---------- */
+.ch-story{display:grid;gap:14px;width:min(100%,920px);justify-items:center}
+.ch-page{display:grid;gap:10px;justify-items:start;width:100%;padding:12px 20px 14px 30px;border-radius:22px;font-size:clamp(1.35rem,4.4vw,1.8rem);
+  background:linear-gradient(90deg,transparent 0 16px,#ef9a9a8c 16px 18px,transparent 0),
+    repeating-linear-gradient(transparent 0 calc(1.6em - 2px),#d3def3 calc(1.6em - 2px) 1.6em) content-box,#fffdf6;
+  box-shadow:inset 0 0 0 2px #e5dcc2,0 5px 0 #e5dcc2}
+.ch-text{margin:0;font:600 1em/1.6 var(--ch-read);color:var(--ch-ink);text-wrap:pretty}
+.ch-listen{min-height:48px;padding:6px 18px;font-size:1rem}
+.ch-ask-col{display:grid;gap:12px;justify-items:center;width:100%;min-width:0}
+.ch-ask{margin:0;font:800 clamp(1.15rem,4vw,1.4rem)/1.3 var(--ch-read);color:var(--ch-ink);text-align:center;text-wrap:balance}
+.ch-answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,480px)}
+.ch-ans{min-height:68px;padding:10px 12px 10px 30px;font:700 clamp(1.05rem,3.8vw,1.3rem)/1.25 var(--ch-read)}
+
+/* ---------- Laptops: two columns, sized to the free height ---------- */
+@media(min-width:760px){
+  .ch-read{grid-template-columns:minmax(0,1fr) minmax(0,460px);align-items:center;column-gap:24px}
+  .ch-read>.kbd-hint,.ch-hear>.kbd-hint{grid-column:1/-1}
+  .ch-reader{padding:18px 18px 14px}
+  .ch-opts{--ph:clamp(92px,calc((var(--fit,300px) - 12px) / 2),150px)}
+  .ch-hear{grid-template-columns:minmax(200px,260px) minmax(0,480px);justify-content:center;align-items:center;column-gap:30px}
+  .ch-play{flex-direction:column;gap:6px;width:clamp(150px,calc(var(--fit,300px) * .8),210px);aspect-ratio:1;border-radius:50%;font-size:1.1rem;box-shadow:0 7px 0 #0c2350,0 16px 30px #0c235033}
+  .ch-play .ico{font-size:3.4rem}
+  .ch-play:active{box-shadow:0 3px 0 #0c2350}
+  .ch-words{gap:14px}
+  .ch-wopt{min-height:min(96px,calc((var(--fit,300px) - 14px) / 2))}
+  .ch-build,.ch-gap{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:28px}
+  .ch-build .ch-card,.ch-gap .ch-card{width:clamp(130px,calc(var(--fit,300px) * .78),220px);border-radius:28px}
+  .ch-story{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;column-gap:24px}
+}
+@media(min-width:760px) and (max-height:700px){
+  .ch-bslot{height:58px}
+  .ch-tile{height:56px}
+  .ch-build-col{gap:8px}
+  .ch-letter{height:76px}
+}
+
+/* ---------- Phones ---------- */
+@media(max-width:600px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .hero-art{width:min(100%,380px);justify-self:center;transform:none}
+  .ch-label{font-size:40px}
+  .ch-reader{padding:8px 10px}
+  /* Picture → word: a smaller card, the four short words two by two */
+  .with-art .ch-card{width:min(44vw,170px);border-radius:22px}
+  .choices:not(.words){grid-template-columns:repeat(2,minmax(0,1fr))}
+  .choices:not(.words) .choice{min-height:60px;padding-inline:8px;text-align:center;font-size:min(1.2rem,4.6vw)}
+  .ch-build .ch-card,.ch-gap .ch-card{width:min(26vw,96px);border-radius:20px}
+  .ch-build,.ch-gap{gap:10px}
+  .ch-bslots{gap:6px}
+  .ch-bslot{height:56px;font-size:1.6rem;border-radius:14px}
+  .ch-tiles{gap:8px}
+  .ch-tile{min-width:64px;height:56px;font-size:1.5rem}
+  .ch-build-actions{width:100%;flex-wrap:nowrap}
+  .ch-build-actions .btn{flex:1 1 0;min-width:0;padding-inline:12px}
+  .ch-letter{width:84px;height:72px}
+  .ch-play{min-height:60px}
+  .ch-wopt{min-height:64px}
+  .ch-ans{min-height:60px}
+  .ch-page{padding:8px 14px 10px 26px}
+}
+/* Touch screens show no key hints: the buttons need no room for them */
+@media(hover:none){.ch-wopt,.ch-ans,.choice{padding-left:12px}.ch-tile{padding-left:14px}}
+
+@media(prefers-reduced-motion:reduce){
+  .ch-halo{display:none}
+  .ch-slot:empty,.ch-slot i,.ch-bslot.missed,.ch-play.is-on::after{animation:none}
+  .ch-word,.ch-syl,.ch-syl::after,.ch-bslots{transition:none}
+}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Монети" data-i18n-aria-label="coins">🪙 <span data-kf-coins>0</span></div></div></header>
+<main class="wrap game-shell" id="exam-root"></main>
+
+<script src="../../shared/site.js"></script><script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
+<script src="../../shared/kf-ui.js"></script>
+<script src="../../shared/audio.js"></script>
+<script src="../../shared/kf-game.js"></script>
+<script src="../../shared/exam/exam.js"></script>
+<script src="../../shared/exam/types.js"></script>
+<script src="map.js"></script>
+<script src="content.js"></script>
+<script src="art.js"></script>
+<script src="types.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

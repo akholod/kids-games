@@ -1,15 +1,16 @@
 // Pre-recorded speech clips for the games (Microsoft Edge neural TTS, generated offline, never in the browser).
 //
 // Setup (once):   python3 -m venv ~/.cache/kf-tts && ~/.cache/kf-tts/bin/pip install -U edge-tts
-// Run:            EDGE_TTS=~/.cache/kf-tts/bin/edge-tts node scripts/build-audio.mjs [--voice-en=…] [--voice-es=…] [--rate=-10%] [--pad=200] [--force]
+// Run:            EDGE_TTS=~/.cache/kf-tts/bin/edge-tts node scripts/build-audio.mjs [--voice-en|es|uk=…] [--rate=-10%] [--pad=200] [--force]
 //   --force regenerates every clip (after changing a voice / rate / pad); without it only the missing ones are made.
 //   --pad = ms of silence before the word (ffmpeg, env FFMPEG): a speaker waking up from standby swallows the start of a
 //   sound, and it must be the silence, not the first letter.
 // Phrases: en = every distinct `en` of WM_CONTENT.words (games/word-match/content.js) + the coach's English commands,
-//          es = the coach's Spanish commands (SimonEngine.phrases, games/coach-simon/engine.js).
-// Voices:  en-GB-SoniaNeural (British English, like the school), es-ES-ElviraNeural.
-// Output:  audio/<lang>/<slug>.mp3 (slug = accents dropped, lowercase, runs of non [a-z0-9] → '-'), stale clips are deleted,
-//          shared/audio.js = window.KF_AUDIO = { en: [slugs], es: [slugs] } — the manifest KFG.say checks before using a clip.
+//          es = the coach's Spanish commands (SimonEngine.phrases, games/coach-simon/engine.js),
+//          uk = the words and short texts of games/chytanka/content.js; the voice reads the words with their stress marks.
+// Voices:  en-GB-SoniaNeural (British English, like the school), es-ES-ElviraNeural, uk-UA-PolinaNeural.
+// Output:  audio/<lang>/<slug>.mp3 (slug = Ukrainian transliterated, accents dropped, lowercase, runs of non [a-z0-9] → '-'),
+//          stale clips are deleted, shared/audio.js = window.KF_AUDIO = { en: [slugs], … } — the manifest KFG.say checks.
 // The clips (~10 KB each) are committed and deployed. When Microsoft answers HTTP 403, update edge-tts
 // (`~/.cache/kf-tts/bin/pip install -U edge-tts`) — old versions get blocked.
 import { spawn } from 'node:child_process';
@@ -24,19 +25,61 @@ const manifest = path.join(root, 'shared/audio.js');
 const args = process.argv.slice(2);
 const flag = (name, def) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? def;
 const force = args.includes('--force');
-const VOICES = { en: flag('voice-en', 'en-GB-SoniaNeural'), es: flag('voice-es', 'es-ES-ElviraNeural') };
+const VOICES = {
+  en: flag('voice-en', 'en-GB-SoniaNeural'),
+  es: flag('voice-es', 'es-ES-ElviraNeural'),
+  uk: flag('voice-uk', 'uk-UA-PolinaNeural'),
+};
 const rate = flag('rate', '-10%');
 const pad = Number(flag('pad', '200'));
 const home = (/** @type {string} */ p) => p.replace(/^~(?=\/)/, process.env.HOME || '~');
 const bin = home(process.env.EDGE_TTS || 'edge-tts');
 const ffmpeg = home(process.env.FFMPEG || 'ffmpeg');
 
-// Same rule as slug() in shared/kf-game.js.
+// Ukrainian → Latin for file names (кит → kyt, кіт → kit: look-alike words stay apart).
+const UA = {
+  а: 'a',
+  б: 'b',
+  в: 'v',
+  г: 'h',
+  ґ: 'g',
+  д: 'd',
+  е: 'e',
+  є: 'ye',
+  ж: 'zh',
+  з: 'z',
+  и: 'y',
+  і: 'i',
+  ї: 'yi',
+  й: 'i',
+  к: 'k',
+  л: 'l',
+  м: 'm',
+  н: 'n',
+  о: 'o',
+  п: 'p',
+  р: 'r',
+  с: 's',
+  т: 't',
+  у: 'u',
+  ф: 'f',
+  х: 'kh',
+  ц: 'ts',
+  ч: 'ch',
+  ш: 'sh',
+  щ: 'shch',
+  ь: '',
+  ю: 'yu',
+  я: 'ya',
+};
+// Same rule as slug() in shared/kf-game.js: apostrophes dropped, Ukrainian transliterated, accents and stress marks dropped.
 const slug = (text) =>
   text
+    .toLowerCase()
+    .replace(/[’'ʼ]/g, '')
+    .replace(/[а-яґєії]/g, (c) => UA[c] ?? c)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
@@ -44,12 +87,24 @@ const slug = (text) =>
 const sb = { console, Math, KF: { lang: 'uk', i18n: () => (key) => key }, KFG: { shuffle: (a) => [...a] } };
 sb.window = sb;
 vm.createContext(sb);
-for (const f of ['shared/exam/exam.js', 'shared/exam/types.js', 'games/word-match/content.js', 'games/coach-simon/engine.js'])
-  vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sb, { filename: f });
+const FILES = [
+  'shared/exam/exam.js',
+  'shared/exam/types.js',
+  'games/word-match/content.js',
+  'games/coach-simon/engine.js',
+  'games/chytanka/content.js',
+];
+for (const f of FILES) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sb, { filename: f });
 
+const same = (/** @type {string} */ t) => [t, t];
+// [the text the game says (→ the file name), what the voice reads]
 const SOURCES = {
-  en: [...Object.values(sb.WM_CONTENT.words).map((w) => w.en), ...sb.SimonEngine.phrases('en')],
-  es: sb.SimonEngine.phrases('es'),
+  en: [...Object.values(sb.WM_CONTENT.words).map((w) => w.en), ...sb.SimonEngine.phrases('en')].map(same),
+  es: sb.SimonEngine.phrases('es').map(same),
+  uk: [
+    ...Object.values(sb.CH_CONTENT.words).map((w) => [w.word, w.syl.join('')]),
+    ...sb.CH_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'story').map((t) => same(t.text))),
+  ],
 };
 
 // Texts that differ only in case / punctuation ('Right!' and 'right') share a clip.
@@ -58,15 +113,16 @@ const bare = (text) =>
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim();
-/** @type {Record<string, Map<string, string>>} lang → slug → text */
+/** @type {Record<string, Map<string, { text: string, tts: string }>>} lang → slug → phrase */
 const phrases = {};
-for (const [lang, texts] of Object.entries(SOURCES)) {
+for (const [lang, entries] of Object.entries(SOURCES)) {
   const map = new Map();
-  for (const text of texts) {
+  for (const [text, tts] of entries) {
     const s = slug(text);
     if (!s) throw new Error(`empty slug for «${text}»`);
-    if (map.has(s) && bare(map.get(s)) !== bare(text)) throw new Error(`${lang} slug clash «${s}»: «${map.get(s)}» / «${text}»`);
-    if (!map.has(s)) map.set(s, text);
+    const had = map.get(s);
+    if (had && bare(had.text) !== bare(text)) throw new Error(`${lang} slug clash «${s}»: «${had.text}» / «${text}»`);
+    if (!had) map.set(s, { text, tts });
   }
   phrases[lang] = map;
 }
@@ -89,7 +145,7 @@ const make = async ({ lang, s }) => {
   const tmp = path.join(dirOf(lang), `.${s}.tmp.mp3`);
   for (let attempt = 1; ; attempt++) {
     try {
-      await exec(bin, ['--text', phrases[lang].get(s), '--voice', VOICES[lang], `--rate=${rate}`, '--write-media', raw]);
+      await exec(bin, ['--text', phrases[lang].get(s).tts, '--voice', VOICES[lang], `--rate=${rate}`, '--write-media', raw]);
       if (fs.statSync(raw).size <= 1000) throw new Error('clip too small');
       // Edge pads every clip to ~1.9 s: cut the trailing silence down to 0.1 s, then add `pad` ms in front.
       const trim = 'areverse,silenceremove=start_periods=1:start_silence=0.1:start_threshold=-50dB,areverse';

@@ -323,3 +323,66 @@ export const playWordSession = async (page, tap, opts) => {
   }
   throw new Error('word-match session did not finish');
 };
+
+// ---------- chytanka ----------
+
+// A round of the chosen task types of one stop (window.__ch.play, test mode); 'pic' = picture → word choice.
+export const playChTasks = (page, station, types) =>
+  page.evaluate(
+    ([id, want]) => {
+      const s = CH_CONTENT.stations.find((x) => x.id === id);
+      const used = new Set();
+      const tasks = want.map((w) => {
+        const t = s.tasks.find(
+          (x) => !used.has(x) && (w === 'pic' ? x.type === 'choice' : x.type === w) && (!x.key || ![...used].some((u) => u.key === x.key)),
+        );
+        used.add(t);
+        return { ...t, station: id };
+      });
+      __ch.play(tasks);
+      return tasks.map((t) => t.type);
+    },
+    [station, types],
+  );
+
+// Answers the current chytanka task right. build: `wrongFirst` checks the syllables reversed once (a retry), then right.
+export const answerChTask = async (page, tap, { wrongFirst = false } = {}) => {
+  const t = await page.evaluate(() => __ch.session.task);
+  if (t.type === 'choice') {
+    const i = await choiceIndex(page, t.options[t.answer]);
+    expect(i, `choice "${t.options[t.answer]}" on screen`).toBeGreaterThanOrEqual(0);
+    return tapChoice(page, tap, i);
+  }
+  if (t.type === 'read') return tap(page.locator(`.ch-opt[data-key="${t.word.key}"]`));
+  if (t.type === 'hear') return tap(page.locator(`.ch-wopt[data-word="${t.word.word}"]`));
+  if (t.type === 'gap') return tap(page.locator(`.ch-letter[data-letter="${t.options[0]}"]`));
+  if (t.type === 'story') return tap(page.locator(`.ch-ans[data-answer="${t.options[0]}"]`));
+  if (t.type === 'build') {
+    const fill = async (syls) => {
+      for (const s of syls) await tap(page.locator(`.ch-tile[data-syl="${s}"]:not(:disabled)`).first());
+      await tap(page.locator('.ch-check'));
+    };
+    if (wrongFirst) {
+      await fill([...t.word.syl].reverse());
+      await expect(page.locator('.ch-build')).not.toHaveClass(/is-done/);
+      // the right syllables stay (green), the rest go back to the tiles: fill the free slots in order
+      const free = await page.evaluate(() => [...document.querySelectorAll('.ch-bslot')].map((s) => !s.classList.contains('good')));
+      return fill(t.word.syl.filter((_, i) => free[i]));
+    }
+    return fill(t.word.syl);
+  }
+  throw new Error(`unsupported chytanka task ${t.type}`);
+};
+
+// Plays the running chytanka session to its finish screen, every answer right. Returns the task types and keys seen.
+export const playChSession = async (page, tap) => {
+  const seen = [];
+  for (let i = 0; i < 30; i++) {
+    const t = await page.evaluate(() => __ch.session.task);
+    seen.push({ type: t.type, key: t.key });
+    await answerChTask(page, tap);
+    await tap(page.locator('#feedback .fb-actions .btn').first());
+    if (await page.locator('#finish').isVisible()) return seen;
+  }
+  throw new Error('chytanka session did not finish');
+};

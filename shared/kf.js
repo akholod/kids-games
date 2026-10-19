@@ -85,6 +85,7 @@
       'cat.english': 'Англійська',
       'cat.fun': 'Футбол-розваги',
       'cat.sociales': 'Світ навколо нас',
+      'cat.ukrainian': 'Українська мова',
       'card.common': 'Звичайна',
       'card.futsal': 'Футзал',
       'card.rare': 'Рідкісна',
@@ -135,6 +136,7 @@
       'cat.english': 'Inglés',
       'cat.fun': 'Fútbol y diversión',
       'cat.sociales': 'Ciencias Sociales',
+      'cat.ukrainian': 'Ucraniano',
       'card.common': 'Común',
       'card.futsal': 'Fútbol sala',
       'card.rare': 'Rara',
@@ -257,6 +259,16 @@
       sites: ['uk', 'es'],
       es: { title: 'Simón dice', desc: 'Recuerda las luces de la portería y reacciona a las órdenes: ¡Arriba! Top left!' },
     },
+    {
+      slug: 'chytanka',
+      title: 'Читанка-мандрівка',
+      emoji: '🧭',
+      category: 'ukrainian',
+      desc: 'Мандруй Україною і читай по складах: за кожне місто — печатка в паспорті!',
+      status: 'beta',
+      sites: ['uk'],
+      es: { title: 'Lectura en ucraniano', desc: 'Lee palabras en ucraniano por sílabas viajando por Ucrania.' },
+    },
   ];
 
   const CATEGORIES = {
@@ -264,6 +276,7 @@
     english: { title: T('cat.english'), emoji: '🇬🇧' },
     fun: { title: T('cat.fun'), emoji: '🎉' },
     sociales: { title: T('cat.sociales'), emoji: '🌍' },
+    ukrainian: { title: T('cat.ukrainian'), emoji: '🇺🇦' },
   };
 
   // Football cards. Manifest comes from shared/cards.js (window.KF_CARDS), loaded before kf.js;

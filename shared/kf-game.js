@@ -258,13 +258,52 @@
   const SCRIPT_SRC = document.currentScript instanceof HTMLScriptElement ? document.currentScript.src : '';
   const CLIP_BASE = SCRIPT_SRC ? new URL('../audio/', SCRIPT_SRC).href : '';
 
-  /** Same rule as slug() in scripts/build-audio.mjs; surrounding punctuation ('¡Hola!') drops out with it.
+  /** Ukrainian → Latin for clip file names (кит → kyt, кіт → kit). @type {Record<string, string>} */
+  const UA = {
+    а: 'a',
+    б: 'b',
+    в: 'v',
+    г: 'h',
+    ґ: 'g',
+    д: 'd',
+    е: 'e',
+    є: 'ye',
+    ж: 'zh',
+    з: 'z',
+    и: 'y',
+    і: 'i',
+    ї: 'yi',
+    й: 'i',
+    к: 'k',
+    л: 'l',
+    м: 'm',
+    н: 'n',
+    о: 'o',
+    п: 'p',
+    р: 'r',
+    с: 's',
+    т: 't',
+    у: 'u',
+    ф: 'f',
+    х: 'kh',
+    ц: 'ts',
+    ч: 'ch',
+    ш: 'sh',
+    щ: 'shch',
+    ь: '',
+    ю: 'yu',
+    я: 'ya',
+  };
+  /** Same rule as slug() in scripts/build-audio.mjs: apostrophes dropped, Ukrainian transliterated, accents and stress
+   * marks dropped; surrounding punctuation ('¡Hola!') drops out with it.
    * @param {string} text */
   const slug = (text) =>
     text
+      .toLowerCase()
+      .replace(/[’'ʼ]/g, '')
+      .replace(/[а-яґєії]/g, (c) => UA[c] ?? c)
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
   /** @param {string} text @param {string} lang @returns {string | null} url of the clip, null without one */

@@ -9,11 +9,19 @@ const path = (rel) => fileURLToPath(new URL(`../../${rel}`, import.meta.url));
 const read = (rel) => fs.readFileSync(path(rel), 'utf8');
 
 // Same rule as slug() in shared/kf-game.js and scripts/build-audio.mjs.
+const UA = Object.fromEntries(
+  [...'абвгґдеєжзиіїйклмнопрстуфхцчшщьюя'].map((c, i) => [
+    c,
+    'a b v h g d e ye zh z y i yi i k l m n o p r s t u f kh ts ch sh shch _ yu ya'.split(' ')[i].replace('_', ''),
+  ]),
+);
 const slug = (text) =>
   text
+    .toLowerCase()
+    .replace(/[’'ʼ]/g, '')
+    .replace(/[а-яґєії]/g, (c) => UA[c] ?? c)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
@@ -52,6 +60,25 @@ test('audio: every coach-simon command (es, en; with and without "Simon says") h
     }
   }
   assert.equal(slug('Simón dice: arriba a la izquierda'), 'simon-dice-arriba-a-la-izquierda');
+});
+
+test('audio: every chytanka word and short text has a Ukrainian clip; look-alike words get different files', () => {
+  const { CH_CONTENT: ch } = boot(['shared/exam/exam.js', 'shared/exam/types.js', 'games/chytanka/content.js']);
+  const texts = [
+    ...Object.values(ch.words).map((w) => w.word),
+    ...ch.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'story').map((t) => t.text)),
+  ];
+  assert.equal(texts.length, 150);
+  for (const t of texts) {
+    const s = slug(t);
+    assert.ok([...AUDIO.uk].includes(s), `uk «${t}»: «${s}» is not in KF_AUDIO.uk`);
+    assert.ok(fs.statSync(path(`audio/uk/${s}.mp3`)).size > 1000, `uk/${s}.mp3 is empty`);
+  }
+  assert.equal(slug('м’яч'), 'myach');
+  assert.equal(slug('ведмі́дь'), 'vedmid');
+  assert.notEqual(slug('кит'), slug('кіт'));
+  assert.notEqual(slug('лис'), slug('ліс'));
+  assert.equal(slug('їжак'), 'yizhak');
 });
 
 test('audio: manifest and audio/<lang>/ agree, slugs are sorted and unique', () => {

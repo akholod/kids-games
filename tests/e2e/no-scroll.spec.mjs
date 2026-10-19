@@ -1,7 +1,7 @@
 // Laptop guard: a task screen fits a short laptop window (1366×768 minus browser UI) without page scroll,
 // and after answering the "next" button is on screen. Pages open in ?parent mode, so the 48px test ribbon is included.
 import { test, expect, open } from './helpers.mjs';
-import { answerCurrentTask, answerWordTask, openStation, playWordTasks, solveMathTask } from './drivers.mjs';
+import { answerChTask, answerCurrentTask, answerWordTask, openStation, playChTasks, playWordTasks, solveMathTask } from './drivers.mjs';
 
 test.use({ viewport: { width: 1366, height: 657 } });
 
@@ -103,5 +103,18 @@ test('word-match: every task type fits; next button visible', async ({ page, tap
     await answerWordTask(page, tap);
     await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${type} next`);
     await tap(page.locator('#feedback .fb-actions .btn').first());
+  }
+});
+
+test('chytanka: every task type fits (the longest words); next button visible', async ({ page, tap }) => {
+  await open(page, '/games/chytanka/');
+  for (const station of ['dnipro', 'kharkiv']) {
+    const types = await playChTasks(page, station, ['read', 'pic', 'hear', 'build', 'gap', 'story']);
+    for (const type of types) {
+      await expectFits(page, `${station} ${type}`);
+      await answerChTask(page, tap);
+      await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${station} ${type} next`);
+      await tap(page.locator('#feedback .fb-actions .btn').first());
+    }
   }
 });

@@ -1,6 +1,6 @@
 // Laptop only: every game must be playable with the keyboard (AGENTS.md conventions).
 import { test, expect, open, record } from './helpers.mjs';
-import { playMathSession, playSimonCommands, playSimonMemory, playWordTasks } from './drivers.mjs';
+import { playChTasks, playMathSession, playSimonCommands, playSimonMemory, playWordTasks } from './drivers.mjs';
 
 const tapNever = () => {
   throw new Error('keyboard test must not tap');
@@ -237,4 +237,42 @@ test('word-match: Enter opens a theme, 1–4 pick, letters + Enter spell, pairs 
   }
   await expect(page.locator('#finish')).toBeVisible();
   expect(await page.evaluate(() => __wm.session.results)).toEqual([true, true, true, true]);
+});
+
+test('chytanka: 1–4 pick, Space splits the word, 1–9 + Enter build, Enter = next', async ({ page }) => {
+  await open(page, '/games/chytanka/');
+  await page.locator('#stations .station').first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-go')).toBeFocused();
+  await page.keyboard.press('Escape');
+
+  await playChTasks(page, 'odesa', ['read', 'hear', 'build', 'gap', 'story']);
+  // 1-based position of the button whose data attribute is `value`
+  const keyOf = (sel, attr, value) =>
+    page.locator(sel).evaluateAll((els, [a, v]) => els.findIndex((e) => e.getAttribute(a) === v) + 1, [attr, value]);
+  for (let i = 0; i < 5; i++) {
+    const t = await page.evaluate(() => __ch.session.task);
+    if (t.type === 'read') {
+      await page.keyboard.press(' ');
+      await expect(page.locator('.ch-word')).toHaveClass(/is-split/);
+      await page.keyboard.press(String(await keyOf('.ch-opt', 'data-key', t.word.key)));
+    }
+    if (t.type === 'hear') await page.keyboard.press(String(await keyOf('.ch-wopt', 'data-word', t.word.word)));
+    if (t.type === 'build') {
+      const tiles = await page.locator('.ch-tile').evaluateAll((els) => els.map((e) => e.getAttribute('data-syl')));
+      const used = new Set();
+      for (const s of t.word.syl) {
+        const k = tiles.findIndex((x, j) => x === s && !used.has(j));
+        used.add(k);
+        await page.keyboard.press(String(k + 1));
+      }
+      await page.keyboard.press('Enter');
+    }
+    if (t.type === 'gap') await page.keyboard.press(String(await keyOf('.ch-letter', 'data-letter', t.options[0])));
+    if (t.type === 'story') await page.keyboard.press(String(await keyOf('.ch-ans', 'data-answer', t.options[0])));
+    await expect(page.locator('#feedback .fb-actions .btn').first()).toBeVisible();
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('#finish')).toBeVisible();
+  expect(await page.evaluate(() => __ch.session.results)).toEqual([true, true, true, true, true]);
 });

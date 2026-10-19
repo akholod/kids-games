@@ -13,6 +13,7 @@
       "!shared/cards.js",
       "!shared/audio.js",
       "!games/sociales-planeta/maps.js",
+      "!games/chytanka/map.js",
       "!games/football-quiz/questions.js"
     ]
   },
