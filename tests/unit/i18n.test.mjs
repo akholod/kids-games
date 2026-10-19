@@ -105,13 +105,14 @@ test('es: achievements, categories, card categories are Spanish, no Cyrillic', (
   assert.equal(KF.CARD_CATS.legend.weight, 2);
 });
 
-test('es: siteGames = math-exam + football-quiz, Spanish, no Cyrillic', () => {
+test('es: siteGames = math-exam + penalty-multiply + football-quiz, Spanish, no Cyrillic', () => {
   const KF = load(code, { site: { lang: 'es' } });
   const list = legacy(KF.siteGames());
-  assert.deepEqual(plain(list.map((g) => g.slug)), ['math-exam', 'football-quiz']);
+  assert.deepEqual(plain(list.map((g) => g.slug)), ['math-exam', 'penalty-multiply', 'football-quiz']);
   for (const g of list) assert.ok(!CYR.test(g.title + g.desc), g.slug);
   assert.equal(list[0].title, 'Examen de mates');
-  assert.equal(list[1].title, 'Quiz de fútbol');
+  assert.equal(list[1].title, 'Penaltis de multiplicar');
+  assert.equal(list[2].title, 'Quiz de fútbol');
   // KF.GAMES is untouched (Ukrainian texts, for compatibility)
   assert.equal(KF.GAMES.find((g) => g.slug === 'football-quiz').title, 'Футбольний квіз');
 });
@@ -120,16 +121,16 @@ test('siteGames respects status: beta only in test mode, soon is listed', () => 
   const KF = load(code, { site: { lang: 'es' } });
   const g = KF.GAMES.find((x) => x.slug === 'math-exam');
   g.status = 'beta';
-  assert.deepEqual(plain(legacy(KF.siteGames()).map((x) => x.slug)), ['football-quiz']);
+  assert.deepEqual(plain(legacy(KF.siteGames()).map((x) => x.slug)), ['penalty-multiply', 'football-quiz']);
   const T = load(code, { site: { lang: 'es' }, search: '?parent' });
   T.GAMES.find((x) => x.slug === 'math-exam').status = 'beta';
-  assert.deepEqual(plain(legacy(T.siteGames()).map((x) => x.slug)), ['math-exam', 'football-quiz']);
+  assert.deepEqual(plain(legacy(T.siteGames()).map((x) => x.slug)), ['math-exam', 'penalty-multiply', 'football-quiz']);
 });
 
 test('?lang override sticks in the tab', () => {
   const sandboxSearch = load(code, { site: { lang: 'uk' }, search: '?lang=es' });
   assert.equal(sandboxSearch.lang, 'es');
-  assert.deepEqual(plain(legacy(sandboxSearch.siteGames()).map((g) => g.slug)), ['math-exam', 'football-quiz']);
+  assert.deepEqual(plain(legacy(sandboxSearch.siteGames()).map((g) => g.slug)), ['math-exam', 'penalty-multiply', 'football-quiz']);
 });
 
 test('every game declares sites and Spanish texts', () => {

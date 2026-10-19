@@ -3,6 +3,80 @@
   const slug = 'penalty-multiply',
     total = 5;
   const { $, h } = KFG;
+  const T = KF.i18n({
+    uk: {
+      title: 'Пенальті-множення — Keeper Fun Games',
+      coins: 'Монети',
+      back: '← До каталогу',
+      eyebrow: 'Математика · ⚽',
+      h1: 'Пенальті-множення',
+      sub: 'Розв’яжи приклад і натисни правильну відповідь у воротах. Попереду 5 ударів!',
+      tables: 'Які таблиці тренуємо?',
+      'tables.aria': 'Таблиці множення',
+      all: 'Усі',
+      many: 'Можна обрати кілька чисел.',
+      start: 'На поле →',
+      round: 'УДАР {n} ІЗ {total}',
+      'dots.aria': 'Результати ударів',
+      dot: 'Удар {n}: {r}',
+      'dot.goal': 'гол',
+      'dot.save': 'сейв',
+      'dot.next': 'ще попереду',
+      pick: 'Обери відповідь',
+      'goal.aria': 'Варіанти відповіді',
+      option: 'Відповідь {n}',
+      goal: 'ГОООЛ! ⚽ Чудовий удар!',
+      saved: 'Воротар зловив! 🧤 Правильна відповідь: {n}',
+      next: 'Наступний удар →',
+      result: 'Результат →',
+      over: 'Матч завершено!',
+      'fin.perfect': 'Усі удари в ціль! Чудовий матч!',
+      'fin.good': 'Класний матч! Спробуєш ще раз?',
+      'fin.zero': 'Гарне тренування! Спробуй ще раз.',
+      earned: 'Зароблено {n} 🪙.',
+      'earned.bonus': 'Зароблено {n} 🪙 (є бонус за 5 голів!)',
+      'earned.hint': 'Зароблено {n} 🪙. Додай таблицю 6, 7, 8 чи 9 — і за 5 голів буде бонус!',
+      again: 'Ще раз ↗',
+      catalog: 'До каталогу',
+    },
+    es: {
+      title: 'Penaltis de multiplicar — Keeper Fun Games',
+      coins: 'Monedas',
+      back: '← Al catálogo',
+      eyebrow: 'Mates · ⚽',
+      h1: 'Penaltis de multiplicar',
+      sub: 'Resuelve la multiplicación y chuta a la respuesta correcta. ¡Tienes 5 penaltis!',
+      tables: '¿Qué tablas practicamos?',
+      'tables.aria': 'Tablas de multiplicar',
+      all: 'Todas',
+      many: 'Puedes elegir varias.',
+      start: '¡Al campo! →',
+      round: 'PENALTI {n} DE {total}',
+      'dots.aria': 'Resultados de los penaltis',
+      dot: 'Penalti {n}: {r}',
+      'dot.goal': 'gol',
+      'dot.save': 'parada',
+      'dot.next': 'falta por tirar',
+      pick: 'Elige la respuesta',
+      'goal.aria': 'Respuestas',
+      option: 'Respuesta {n}',
+      goal: '¡GOOOL! ⚽ ¡Qué golazo!',
+      saved: '¡Paradón del portero! 🧤 La respuesta correcta es {n}',
+      next: 'Siguiente penalti →',
+      result: 'Resultado →',
+      over: '¡Fin del partido!',
+      'fin.perfect': '¡Todos los penaltis dentro! ¡Partidazo!',
+      'fin.good': '¡Buen partido! ¿Lo intentas otra vez?',
+      'fin.zero': '¡Buen entrenamiento! Inténtalo otra vez.',
+      earned: 'Has ganado {n} 🪙.',
+      'earned.bonus': 'Has ganado {n} 🪙 (¡con premio extra por 5 goles!)',
+      'earned.hint': 'Has ganado {n} 🪙. Añade la tabla del 6, 7, 8 o 9 y con 5 goles ganarás un premio extra.',
+      again: 'Otra vez ↗',
+      catalog: 'Al catálogo',
+    },
+  });
+  document.title = T('title');
+  T.apply();
   const selected = new Set([2, 3, 4, 5]);
   const rand = (n) => Math.floor(Math.random() * n);
   /** @param {Event} e @param {string} selector */
@@ -22,11 +96,12 @@
   const EASY = [2, 5, 10],
     isHard = (n) => n >= 6 && n <= 9;
   function renderChips() {
-    $('chips').innerHTML =
-      `<button type="button" class="chip all" aria-pressed="${selected.size === 9}" data-table="all">Усі</button>` +
-      Array.from({ length: 9 }, (_, i) => i + 2)
-        .map((n) => `<button type="button" class="chip" aria-pressed="${selected.has(n)}" data-table="${n}">${n}</button>`)
-        .join('');
+    const chip = (/** @type {string} */ table, /** @type {boolean} */ on, /** @type {string} */ text) =>
+      h('button', { type: 'button', class: table === 'all' ? 'chip all' : 'chip', 'aria-pressed': String(on), 'data-table': table, text });
+    $('chips').replaceChildren(
+      chip('all', selected.size === 9, T('all')),
+      ...Array.from({ length: 9 }, (_, i) => i + 2).map((n) => chip(String(n), selected.has(n), String(n))),
+    );
   }
   $('chips').addEventListener('click', (e) => {
     const chip = hit(e, '.chip');
@@ -62,7 +137,7 @@
     KFG.dots($('dots'), results, round, {
       total,
       cls: { ok: 'scored', miss: 'saved', now: 'current' },
-      attrs: (i, r) => ({ 'aria-label': `Удар ${i + 1}: ${r === true ? 'гол' : r === false ? 'сейв' : 'ще попереду'}` }),
+      attrs: (i, r) => ({ 'aria-label': T('dot', { n: i + 1, r: T(r === true ? 'dot.goal' : r === false ? 'dot.save' : 'dot.next') }) }),
     });
   }
   function next() {
@@ -79,11 +154,13 @@
     answer = a * b;
     table = a;
     if (isHard(a)) hardRound = true;
-    $('round-label').textContent = `УДАР ${round + 1} ІЗ ${total}`;
+    $('round-label').textContent = T('round', { n: round + 1, total });
     $('question').textContent = `${a} × ${b} = ?`;
-    $('goal').innerHTML = makeOptions(a, b)
-      .map((n) => `<button type="button" class="target" data-value="${n}" aria-label="Відповідь ${n}">${n}</button>`)
-      .join('');
+    $('goal').replaceChildren(
+      ...makeOptions(a, b).map((n) =>
+        h('button', { type: 'button', class: 'target', 'data-value': String(n), 'aria-label': T('option', { n }), text: String(n) }),
+      ),
+    );
     drawDots();
   }
   function finish() {
@@ -91,8 +168,9 @@
     const result = KF.finishGame(slug, { score, max: total, bonus: hardRound ? 5 : 0 });
     const earned = KF.get().coins - startingCoins;
     $('final-score').textContent = `${score} / ${total}`;
-    $('final-message').textContent =
-      `${score === 5 ? 'Усі удари в ціль! Чудовий матч!' : score > 0 ? 'Класний матч! Спробуєш ще раз?' : 'Гарне тренування! Спробуй ще раз.'} Зароблено ${earned} 🪙${result.bonus ? ' (є бонус за 5 голів!)' : result.perfect ? '. Додай таблицю 6, 7, 8 чи 9 — і за 5 голів буде бонус!' : '.'}`;
+    const fin = score === total ? 'fin.perfect' : score > 0 ? 'fin.good' : 'fin.zero';
+    const tail = result.bonus ? 'earned.bonus' : result.perfect ? 'earned.hint' : 'earned';
+    $('final-message').textContent = `${T(fin)} ${T(tail, { n: earned })}`;
     if (score > 0) KFUI.confetti();
   }
   function shoot(button) {
@@ -123,11 +201,11 @@
     drawDots();
     timer = setTimeout(
       () => {
-        const text = h('p', { text: good ? 'ГОООЛ! ⚽ Чудовий удар!' : `Воротар зловив! 🧤 Правильна відповідь: ${answer}` });
+        const text = h('p', { text: good ? T('goal') : T('saved', { n: answer }) });
         const nextButton = h('button', {
           type: 'button',
           class: 'btn btn-dark',
-          text: round === total - 1 ? 'Результат →' : 'Наступний удар →',
+          text: T(round === total - 1 ? 'result' : 'next'),
           onclick: () => {
             round++;
             if (round === total) finish();

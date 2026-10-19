@@ -214,7 +214,7 @@
       category: 'math',
       desc: 'Розв’яжи приклад і забий гол!',
       status: 'ready',
-      sites: ['uk'],
+      sites: ['uk', 'es'],
       es: { title: 'Penaltis de multiplicar', desc: 'Resuelve la operación y ¡marca gol!' },
     },
     {
