@@ -79,3 +79,20 @@ test('coach-simon: Spanish site — no Cyrillic, translation in English', async 
   await playSimonCommands(page, tap, { shots: 9 });
   await expectNoCyrillic(page, 'on the finish screen');
 });
+
+test('coach-simon: commands are pre-recorded clips (es + en on mix), no "no voice" note', async ({ page, tap }) => {
+  await open(page, `/games/${SLUG}/`);
+  const clips = new Set();
+  page.on('request', (r) => {
+    const m = r.url().match(/\/audio\/(es|en)\/([a-z0-9-]+)\.mp3$/);
+    if (m) clips.add(`${m[1]}/${m[2]}`);
+  });
+  await startSimon(page, tap, { mode: 'commands', level: 'pro', lang: 'mix' });
+  // all 36 phrases are loaded before the first whistle
+  await expect.poll(() => clips.size).toBe(36);
+  expect(clips).toContain('es/simon-dice-arriba-a-la-izquierda');
+  expect(clips).toContain('en/top-left');
+  await expect(page.locator('#voice-note')).toBeHidden();
+  await page.waitForFunction(() => __simon.phase === 'input');
+  expect(await page.evaluate(() => KFG.speaking())).toBe(true); // the command clip is playing
+});

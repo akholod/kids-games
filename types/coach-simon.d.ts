@@ -45,6 +45,8 @@ interface SimonEngineAPI {
   memoryTiming(level: SimonLevelId, len: number): { on: number; gap: number };
   makeCommands(level: SimonLevelId, lang: SimonLang, rand?: () => number): SimonCommand[];
   spoken(cmd: SimonCommand): string;
+  /** Everything the coach can say in `lang`: every zone, with and without the "Simon says" prefix. */
+  phrases(lang: 'es' | 'en'): string[];
   /** zone = tapped zone, null = did not move before the ball came. */
   judge(cmd: SimonCommand, zone: number | null): SimonVerdict;
   isRight(v: SimonVerdict): boolean;

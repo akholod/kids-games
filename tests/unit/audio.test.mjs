@@ -1,4 +1,4 @@
-// Pre-recorded clips: every English word of word-match has one, the manifest (shared/audio.js) and audio/en/ agree.
+// Pre-recorded clips: every English word of word-match and every coach command has one, the manifest (shared/audio.js) and audio/<lang>/ agree.
 import test from 'node:test';
 import vm from 'node:vm';
 import fs from 'node:fs';
@@ -11,6 +11,8 @@ const read = (rel) => fs.readFileSync(path(rel), 'utf8');
 // Same rule as slug() in shared/kf-game.js and scripts/build-audio.mjs.
 const slug = (text) =>
   text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -23,8 +25,8 @@ const boot = (files, extra = {}) => {
   return sb;
 };
 
-const manifest = [...boot(['shared/audio.js']).KF_AUDIO.en];
-const files = fs.readdirSync(path('audio/en')).filter((f) => !f.startsWith('.'));
+const AUDIO = boot(['shared/audio.js']).KF_AUDIO;
+const manifest = [...AUDIO.en];
 
 test('audio: every English word of word-match has a clip in the manifest and a non-empty file', () => {
   const { WM_CONTENT: wm } = boot(['shared/exam/exam.js', 'shared/exam/types.js', 'games/word-match/content.js']);
@@ -38,13 +40,32 @@ test('audio: every English word of word-match has a clip in the manifest and a n
   }
 });
 
-test('audio: manifest and audio/en/ agree, slugs are sorted and unique', () => {
-  assert.equal(new Set(manifest).size, manifest.length);
-  assert.deepEqual(manifest, [...manifest].sort());
-  for (const s of manifest) assert.ok(fs.existsSync(path(`audio/en/${s}.mp3`)), `${s}: no file`);
-  assert.deepEqual(
-    files.filter((f) => !f.endsWith('.mp3') || !manifest.includes(f.slice(0, -4))),
-    [],
-    'files outside the manifest',
-  );
+test('audio: every coach-simon command (es, en; with and without "Simon says") has a clip', () => {
+  const { SimonEngine } = boot(['games/coach-simon/engine.js']);
+  for (const lang of ['es', 'en']) {
+    const phrases = SimonEngine.phrases(lang);
+    assert.equal(phrases.length, 18);
+    for (const p of phrases) {
+      const s = slug(p);
+      assert.ok([...AUDIO[lang]].includes(s), `${lang} «${p}»: «${s}» is not in KF_AUDIO.${lang}`);
+      assert.ok(fs.statSync(path(`audio/${lang}/${s}.mp3`)).size > 1000, `${lang}/${s}.mp3 is empty`);
+    }
+  }
+  assert.equal(slug('Simón dice: arriba a la izquierda'), 'simon-dice-arriba-a-la-izquierda');
+});
+
+test('audio: manifest and audio/<lang>/ agree, slugs are sorted and unique', () => {
+  assert.deepEqual(Object.keys(AUDIO).sort(), fs.readdirSync(path('audio')).sort());
+  for (const [lang, list] of Object.entries(AUDIO)) {
+    const slugs = [...list];
+    assert.equal(new Set(slugs).size, slugs.length, lang);
+    assert.deepEqual(slugs, [...slugs].sort(), lang);
+    for (const s of slugs) assert.ok(fs.existsSync(path(`audio/${lang}/${s}.mp3`)), `${lang}/${s}: no file`);
+    const files = fs.readdirSync(path(`audio/${lang}`)).filter((f) => !f.startsWith('.'));
+    assert.deepEqual(
+      files.filter((f) => !f.endsWith('.mp3') || !slugs.includes(f.slice(0, -4))),
+      [],
+      `${lang}: files outside the manifest`,
+    );
+  }
 });

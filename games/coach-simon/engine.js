@@ -125,6 +125,11 @@
     return cmd.lang === 'es' ? `¡${cmd.words}!` : `${cmd.words}!`;
   };
 
+  // Everything the coach can say in `lang` (every zone, with and without "Simon says"): the pre-recorded clips.
+  /** @param {'es' | 'en'} lang */
+  const phrases = (lang) =>
+    ZONES.flatMap((z, zone) => ['', SAYS[lang]].map((prefix) => spoken({ zone, lang, trick: false, prefix, words: z[lang] })));
+
   // The keeper's reaction to a command: tapped zone, or null = did not move before the ball came.
   // save = right zone; goal = wrong zone or too late; held = did not move on a trick (right); fooled = moved on a trick.
   /** @param {SimonCommand} cmd @param {number | null} zone @returns {SimonVerdict} */
@@ -162,6 +167,7 @@
     memoryTiming,
     makeCommands,
     spoken,
+    phrases,
     judge,
     isRight,
     keyZone,

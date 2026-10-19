@@ -596,16 +596,20 @@
     });
     KFG.feedback($('feedback'), content, btn, { scroll: true });
   }
+  // Languages of the commands: 'mix' = both.
+  const cmdLangs = () => /** @type {('es' | 'en')[]} */ (lang === 'mix' ? ['es', 'en'] : [lang]);
   // A note once a session when the coach can't speak the commands (the text on screen is enough to play).
   function voiceCheck() {
-    const need = lang === 'mix' ? ['es', 'en'] : [lang];
-    const missing = data.sound && mode === 'commands' && need.some((l) => !KFG.canSay(l));
+    const need = cmdLangs();
+    const missing = data.sound && mode === 'commands' && need.some((l) => !KFG.canSay(l, SimonEngine.phrases(l)[0]));
+    // the commands are pre-recorded clips: load them before the first whistle
+    if (data.sound && mode === 'commands') for (const l of need) for (const p of SimonEngine.phrases(l)) KFG.preload(p, l);
     $('voice-note').hidden = !missing || voiceNoted;
     if (missing) voiceNoted = true;
   }
   // The voice list loads late: hide the note once the voices are there.
   window.speechSynthesis?.addEventListener?.('voiceschanged', () => {
-    if ((lang === 'mix' ? ['es', 'en'] : [lang]).every((l) => KFG.canSay(l))) $('voice-note').hidden = true;
+    if (cmdLangs().every((l) => KFG.canSay(l, SimonEngine.phrases(l)[0]))) $('voice-note').hidden = true;
   });
 
   // ---------- round ----------
