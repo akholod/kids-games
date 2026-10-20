@@ -1,6 +1,6 @@
 // Laptop only: every game must be playable with the keyboard (AGENTS.md conventions).
 import { test, expect, open, record } from './helpers.mjs';
-import { playChTasks, playMathSession, playSimonCommands, playSimonMemory, playWordTasks } from './drivers.mjs';
+import { playChTasks, playDcTasks, playMathSession, playSimonCommands, playSimonMemory, playWordTasks } from './drivers.mjs';
 
 const tapNever = () => {
   throw new Error('keyboard test must not tap');
@@ -275,4 +275,58 @@ test('chytanka: 1–4 pick, Space splits the word, 1–9 + Enter build, Enter = 
   }
   await expect(page.locator('#finish')).toBeVisible();
   expect(await page.evaluate(() => __ch.session.results)).toEqual([true, true, true, true, true]);
+});
+
+test('dictado: 1–n pick, letters + Enter build the word, 0/1–n tilde, Enter = next; the final typed with Shift and the accent key', async ({
+  page,
+}) => {
+  await open(page, '/games/dictado/');
+  await page.locator('#stations .station').first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-go')).toBeFocused();
+  await page.keyboard.press('Escape');
+
+  // 1-based position of the option `value` on screen
+  const keyOf = (sel, value) =>
+    page.locator(sel).evaluateAll((els, v) => els.findIndex((e) => e.getAttribute('data-opt') === v) + 1, value);
+  await playDcTasks(page, 'mp-mb', ['gap', 'pick', 'tiles', 'cloze', 'spot']);
+  for (let i = 0; i < 5; i++) {
+    const t = await page.evaluate(() => __dc.session.task);
+    if (t.type === 'gap' || t.type === 'pick') await page.keyboard.press(String(await keyOf('#work .dc-opt', t.options[0])));
+    if (t.type === 'tiles') {
+      await page.keyboard.type(t.word);
+      await page.keyboard.press('Enter');
+    }
+    if (t.type === 'cloze')
+      for (const g of t.parts.filter((p) => typeof p !== 'string'))
+        await page.keyboard.press(String(await keyOf('#dc-chooser .dc-opt', g.right)));
+    if (t.type === 'spot') await page.keyboard.press(String(t.wrong + 1));
+    await expect(page.locator('#feedback .fb-actions .btn').first()).toBeVisible();
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('#finish')).toBeVisible();
+  expect(await page.evaluate(() => __dc.session.results)).toEqual([true, true, true, true, true]);
+
+  // tilde (vowel number / 0 = no tilde) and the typed final: Shift for the capital, ' + o = ó
+  await page.evaluate(() => {
+    const tasks = (id) => DC_CONTENT.stations.find((s) => s.id === id).tasks;
+    __dc.play([
+      { ...tasks('tilde').find((t) => t.type === 'tilde' && t.word === 'árbol'), station: 'tilde' },
+      { ...tasks('tilde').find((t) => t.type === 'tilde' && t.word === 'pelota'), station: 'tilde' },
+      { ...tasks('mayusculas').find((t) => t.type === 'write' && t.word === 'Gijón'), station: 'mayusculas' },
+    ]);
+  });
+  await page.keyboard.press('1'); // árbol: the 1st vowel
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('0'); // pelota: no tilde
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Shift+KeyG');
+  await page.keyboard.type('ij');
+  await page.keyboard.press("'");
+  await page.keyboard.type('on');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#feedback .fb-actions .btn').first()).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#finish')).toBeVisible();
+  expect(await page.evaluate(() => __dc.session.results)).toEqual([true, true, true]);
 });

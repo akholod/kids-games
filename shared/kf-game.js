@@ -8,9 +8,9 @@
 //   KFG.feedback(box, content, ...buttons, { focus, scroll })           fill the feedback box, focus the first button
 //   const off = KFG.keys({ ctrl, active, onEscape, onKey, ignoreMods, nativeButtons })   the one document keydown listener
 //   KFG.confirm(dialog, { onYes, onNo, focus })                         ask in an existing <dialog>, Esc = no
-//   KFG.say(text, lang, { rate })  KFG.canSay(lang, text?)  KFG.hush()  KFG.speaking()  KFG.preload(text, lang)
-//        speech: a pre-recorded clip from shared/audio.js (window.KF_AUDIO, load it before this file) when `text` has one,
-//        else a local voice (rate applies to it only); silent (false) without either
+//   KFG.say(text, lang, { rate, slow })  KFG.canSay(lang, text?)  KFG.hush()  KFG.speaking()  KFG.preload(text, lang, slow?)
+//        speech: a pre-recorded clip from shared/audio.js (window.KF_AUDIO, load it before this file) when `text` has one
+//        (slow: its slow recording, KF_AUDIO['<lang>-slow'], if there is one), else a local voice; silent (false) without either
 // @ts-check
 'use strict';
 
@@ -352,10 +352,14 @@
     return /** @type {Promise<AudioBuffer | null>} */ (p);
   };
 
+  // The slow recording of `text` (a dictated sentence) when there is one, else the normal clip.
+  /** @param {string} text @param {string} lang @param {boolean} slow */
+  const clipFor = (text, lang, slow) => (slow && clipUrl(text, `${lang}-slow`)) || clipUrl(text, lang);
+
   /** Warms up: fetches and decodes the clip for `text`, if there is one.
-   * @param {string} text @param {string} lang */
-  const preload = (text, lang) => {
-    const url = clipUrl(text, lang);
+   * @param {string} text @param {string} lang @param {boolean} [slow] the slow recording */
+  const preload = (text, lang, slow = false) => {
+    const url = clipFor(text, lang, slow);
     if (url) void load(url);
   };
 
@@ -407,10 +411,12 @@
   };
 
   /** Speaks `text`: the clip if there is one (true at once, the device voice takes over if the clip cannot be loaded),
-   * else the device voice (false without one). opts.rate applies to the device voice only.
-   * @param {string} text @param {string} lang @param {{ rate?: number }} [opts] @returns {boolean} will be spoken */
-  const say = (text, lang, { rate = 0.95 } = {}) => {
-    const url = clipUrl(text, lang);
+   * else the device voice (false without one). opts.rate applies to the device voice only; opts.slow picks the slow
+   * recording (the device voice then speaks at 0.75 of `rate`).
+   * @param {string} text @param {string} lang @param {{ rate?: number, slow?: boolean }} [opts] @returns {boolean} will be spoken */
+  const say = (text, lang, { rate = 0.95, slow = false } = {}) => {
+    if (slow) rate *= 0.75;
+    const url = clipFor(text, lang, slow);
     if (!url) return speak(text, lang, rate);
     hush();
     const id = ++seq;

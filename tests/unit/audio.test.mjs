@@ -81,6 +81,18 @@ test('audio: every chytanka word and short text has a Ukrainian clip; look-alike
   assert.equal(slug('їжак'), 'yizhak');
 });
 
+test('audio: everything the dictado coach says has a Spanish clip, every sentence a slow one too', () => {
+  const { DC_CONTENT: dc } = boot(['shared/exam/exam.js', 'shared/exam/types.js', 'games/dictado/content.js']);
+  const tasks = dc.stations.flatMap((s) => s.tasks.filter((t) => t.say));
+  assert.ok(tasks.length > 500);
+  for (const t of tasks) {
+    const s = slug(t.say);
+    assert.ok([...AUDIO.es].includes(s), `es «${t.say}»: «${s}» is not in KF_AUDIO.es`);
+    if (t.type === 'cloze') assert.ok([...AUDIO['es-slow']].includes(s), `es-slow «${t.say}»`);
+  }
+  assert.equal(slug('compañero'), 'companero');
+});
+
 test('audio: manifest and audio/<lang>/ agree, slugs are sorted and unique', () => {
   assert.deepEqual(Object.keys(AUDIO).sort(), fs.readdirSync(path('audio')).sort());
   for (const [lang, list] of Object.entries(AUDIO)) {

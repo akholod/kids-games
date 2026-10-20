@@ -386,3 +386,85 @@ export const playChSession = async (page, tap) => {
   }
   throw new Error('chytanka session did not finish');
 };
+
+// ---------- dictado ----------
+
+// A round of the chosen task types of one rule (window.__dc.play, test mode).
+export const playDcTasks = (page, station, types) =>
+  page.evaluate(
+    ([id, want]) => {
+      const s = DC_CONTENT.stations.find((x) => x.id === id);
+      const used = new Set();
+      const tasks = want.map((w) => {
+        const t = s.tasks.find((x) => !used.has(x) && x.type === w && ![...used].some((u) => u.key === x.key));
+        used.add(t);
+        return { ...t, station: id };
+      });
+      __dc.play(tasks);
+      return tasks.map((t) => t.type);
+    },
+    [station, types],
+  );
+
+// Types `text` on the dictado on-screen keyboard: ⇧ for a capital, ´ / ¨ before an accented vowel; spaces fill themselves.
+const ACCENT = { á: ['´', 'a'], é: ['´', 'e'], í: ['´', 'i'], ó: ['´', 'o'], ú: ['´', 'u'], ü: ['¨', 'u'] };
+export const typeDcKeys = async (page, tap, text) => {
+  for (const ch of text) {
+    if (ch === ' ') continue;
+    const low = ch.toLowerCase();
+    if (ch !== low) await tap(page.locator('.dc-key[data-k="shift"]'));
+    const [acc, base] = ACCENT[low] || [null, low];
+    if (acc) await tap(page.locator(`.dc-key[data-k="${acc}"]`));
+    await tap(page.locator(`.dc-key[data-k="${base}"]`));
+  }
+};
+
+// Answers the current dictado task right. tiles / write: `wrongFirst` checks a wrong spelling once (a retry), then right.
+export const answerDcTask = async (page, tap, { wrongFirst = false } = {}) => {
+  const t = await page.evaluate(() => __dc.session.task);
+  const opt = (sel, value) => tap(page.locator(`${sel}[data-opt="${value}"]`));
+  if (t.type === 'gap') return opt('#work .dc-opt', t.options[0]);
+  if (t.type === 'pick') return opt('#work .dc-opt', t.options[0]);
+  if (t.type === 'tilde') return tap(t.answer < 0 ? page.locator('#dc-notilde') : page.locator(`.dc-tv[data-i="${t.answer}"]`));
+  if (t.type === 'spot') return tap(page.locator(`.dc-chip[data-i="${t.wrong}"]`));
+  if (t.type === 'cloze') {
+    const gaps = t.parts.filter((p) => typeof p !== 'string');
+    for (let i = 0; i < gaps.length; i++) {
+      await tap(page.locator(`.dc-cgap[data-i="${i}"]`));
+      await opt('#dc-chooser .dc-opt', gaps[i].right);
+    }
+    return;
+  }
+  if (t.type === 'tiles' || t.type === 'write') {
+    const letters = [...t.word];
+    const fill = async (chars) => {
+      if (t.type === 'write') await typeDcKeys(page, tap, chars.join(''));
+      else for (const c of chars) await tap(page.locator(`.dc-tile[data-ch="${c}"]:not(:disabled)`).first());
+      await tap(page.locator('.dc-check'));
+    };
+    if (wrongFirst) {
+      // the first two letters swapped (same tiles / keys, a wrong spelling)
+      const [a, b, ...rest] = letters.filter((c) => c !== ' ');
+      expect(a, 'two different first letters').not.toBe(b);
+      await fill([b, a, ...rest]);
+      await expect(page.locator('#feedback .fb-actions .btn')).toHaveCount(0);
+      const free = await page.evaluate(() => [...document.querySelectorAll('.dc-slot')].map((s) => !s.classList.contains('good')));
+      return fill(letters.filter((c, i) => free[i] && c !== ' '));
+    }
+    return fill(letters.filter((c) => c !== ' '));
+  }
+  throw new Error(`unsupported dictado task ${t.type}`);
+};
+
+// Plays the running dictado session to its finish screen, every answer right. Returns the task types and keys seen.
+export const playDcSession = async (page, tap) => {
+  const seen = [];
+  for (let i = 0; i < 30; i++) {
+    const t = await page.evaluate(() => __dc.session.task);
+    seen.push({ type: t.type, key: t.key });
+    await answerDcTask(page, tap);
+    await tap(page.locator('#feedback .fb-actions .btn').first());
+    if (await page.locator('#finish').isVisible()) return seen;
+  }
+  throw new Error('dictado session did not finish');
+};

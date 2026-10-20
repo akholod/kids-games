@@ -54,7 +54,7 @@ const texts = (KF) => ({
   ach: KF.ACHIEVEMENTS.map((a) => ({ id: a.id, icon: a.icon, title: a.title, desc: a.desc })),
   cats: Object.fromEntries(Object.entries(KF.CARD_CATS).map(([k, v]) => [k, v.label])),
   categories: JSON.parse(
-    JSON.stringify(Object.fromEntries(Object.entries(KF.CATEGORIES).filter(([k]) => k !== 'sociales' && k !== 'ukrainian'))),
+    JSON.stringify(Object.fromEntries(Object.entries(KF.CATEGORIES).filter(([k]) => !['sociales', 'ukrainian', 'lengua'].includes(k)))),
   ),
   games: JSON.parse(
     JSON.stringify(
@@ -65,7 +65,7 @@ const texts = (KF) => ({
 
 const plain = (x) => JSON.parse(JSON.stringify(x));
 // Games added after the i18n migration: the snapshot checks below are about the games that existed then.
-const NEW_GAMES = new Set(['sociales-planeta', 'coach-simon', 'word-match', 'chytanka']);
+const NEW_GAMES = new Set(['sociales-planeta', 'coach-simon', 'word-match', 'chytanka', 'dictado']);
 const legacy = (list) => list.filter((g) => !NEW_GAMES.has(g.slug));
 
 test('uk: texts byte-identical to HEAD', () => {

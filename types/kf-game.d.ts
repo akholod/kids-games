@@ -50,17 +50,17 @@ interface KFGAPI {
   /**
    * Speaks `text`: a pre-recorded clip when window.KF_AUDIO[lang] has one (returns true at once; the device voice takes over if
    * the clip cannot be loaded), else a local voice of `lang` ('es' | 'en' | 'uk' | BCP-47 prefix; false = silent without one).
-   * `opts.rate` applies to the device voice only.
+   * `opts.rate` applies to the device voice only; `opts.slow` plays the slow recording (window.KF_AUDIO['<lang>-slow']) if any.
    */
-  say(text: string, lang: string, opts?: { rate?: number }): boolean;
+  say(text: string, lang: string, opts?: { rate?: number; slow?: boolean }): boolean;
   /** `text` has a clip, or a device voice for `lang` is available (the voice list loads asynchronously after page load). */
   canSay(lang: string, text?: string): boolean;
   /** Stops the clip and the device voice. */
   hush(): void;
   /** A clip is loading or playing, or the device voice is speaking. */
   speaking(): boolean;
-  /** Fetches and decodes the clip of `text` ahead of say(); does nothing without a clip. */
-  preload(text: string, lang: string): void;
+  /** Fetches and decodes the clip of `text` (its slow recording with `slow`) ahead of say(); does nothing without a clip. */
+  preload(text: string, lang: string, slow?: boolean): void;
 }
 
 declare const KFG: KFGAPI;

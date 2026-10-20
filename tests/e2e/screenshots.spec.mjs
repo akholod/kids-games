@@ -2,7 +2,7 @@
 // Baselines live in tests/e2e/screenshots.spec.mjs-snapshots/ (Linux Chrome); refresh with
 //   pnpm test:e2e screenshots --update-snapshots
 import { test, expect, open } from './helpers.mjs';
-import { openStation, playChTasks, playWordTasks } from './drivers.mjs';
+import { openStation, playChTasks, playDcTasks, playWordTasks } from './drivers.mjs';
 
 const snap = async (page, name) => {
   await page.waitForLoadState('networkidle');
@@ -81,4 +81,12 @@ test('chytanka: hub and a read task by syllables', async ({ page }) => {
   await playChTasks(page, 'kyiv', ['read']);
   await expect(page.locator('.ch-word.is-split')).toBeVisible();
   await snap(page, 'chytanka-read');
+});
+
+test('dictado: hub and the typed final', async ({ page }) => {
+  await open(page, '/games/dictado/');
+  await snap(page, 'dictado-hub');
+  await playDcTasks(page, 'mp-mb', ['write']);
+  await expect(page.locator('.dc-key[data-k="ñ"]')).toBeVisible();
+  await snap(page, 'dictado-write');
 });

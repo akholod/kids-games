@@ -285,3 +285,89 @@ test('chytanka: generated content is valid; words, syllables and stress marks ar
     assert.equal(seen.size, 120);
   }
 });
+
+// ---------- dictado («Dictado del míster») ----------
+
+const bootDictado = (lang) => {
+  const sb = { console, Math, KF: { lang, i18n: () => (key) => key }, KFG: { shuffle: (a) => [...a].sort(() => Math.random() - 0.5) } };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of ['shared/exam/exam.js', 'shared/exam/types.js', 'games/dictado/content.js'])
+    vm.runInContext(read(f), sb, { filename: f });
+  return sb;
+};
+const ACCENTED = { á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u' };
+// The Spanish fields of a task (what is dictated and written): never Cyrillic, on either site.
+const spanishOf = (t) => JSON.stringify([t.say, t.word, t.options, t.parts, t.words, t.fix, t.plain]);
+
+for (const lang of ['uk', 'es']) {
+  test(`dictado (${lang}): content is valid; gaps, spellings, tildes and sentences are consistent`, () => {
+    const { KFExam: E, DC_CONTENT: dc } = bootDictado(lang);
+    assert.deepEqual([...E.validate(clone(dc))], []);
+    assert.equal(dc.stations.length, 12);
+    assert.deepEqual(
+      dc.rules.map((r) => r.id),
+      dc.stations.map((s) => s.id),
+    );
+    if (lang === 'es') assert.ok(!CYR.test(JSON.stringify(dc)), 'Cyrillic on the Spanish site');
+    const homophones = new Set(dc.homophones);
+    const bare = (s) => s.toLowerCase().replace(/[¿¡?!.,]/g, '');
+    for (const st of dc.stations) {
+      const by = (type) => st.tasks.filter((t) => t.type === type);
+      assert.ok(by('write').length >= 10, `${st.id}: write tasks for the final`);
+      assert.ok(by('cloze').length >= 6, `${st.id}: sentences`);
+      for (const t of st.tasks) {
+        assert.ok(!CYR.test(spanishOf(t)), `${st.id}: Cyrillic in ${spanishOf(t)}`);
+        assert.ok(t.key?.startsWith(`${st.id}.`), t.key);
+        if (['gap', 'pick', 'tiles', 'tilde', 'write'].includes(t.type))
+          assert.ok(!homophones.has(bare(t.say)), `${st.id}: «${t.say}» sounds like another word: only in a sentence`);
+        if (t.options) assert.equal(new Set(t.options).size, t.options.length, `${st.id}: ${t.options}`);
+        if (t.type === 'gap') {
+          assert.equal(t.word.slice(t.at, t.at + t.len), t.options[0], t.word);
+          assert.ok(t.options.length >= 2);
+          assert.equal(t.say, t.word);
+        }
+        if (t.type === 'pick') {
+          assert.equal(t.options[0], t.say);
+          assert.ok(t.options.length >= 2 && t.options.length <= 3, t.say);
+        }
+        if (t.type === 'tiles') {
+          assert.ok(!/\s/.test(t.word) && t.word.length <= 10, t.word);
+          assert.ok(t.traps.length >= 1 && t.traps.length <= 3, t.word);
+        }
+        if (t.type === 'tilde') {
+          assert.ok(!/[áéíóú]/.test(t.plain), t.plain);
+          if (t.answer < 0) assert.equal(t.plain, t.word);
+          else {
+            assert.equal(ACCENTED[t.word[t.answer]], t.plain[t.answer], t.word);
+            assert.equal(
+              t.word.replace(/[áéíóú]/g, (c) => ACCENTED[c]),
+              t.plain,
+            );
+          }
+        }
+        if (t.type === 'cloze') {
+          const gaps = t.parts.filter((p) => typeof p !== 'string');
+          assert.ok(gaps.length >= 1 && gaps.length <= 3, t.say);
+          assert.equal(t.parts.map((p) => (typeof p === 'string' ? p : p.right)).join(''), t.say);
+          for (const g of gaps) {
+            assert.equal(g.options[0], g.right);
+            assert.equal(new Set(g.options).size, g.options.length, t.say);
+          }
+        }
+        if (t.type === 'spot') {
+          const right = t.say.split(' ');
+          assert.equal(t.words.length, right.length, t.say);
+          const diff = [...t.words].map((w, i) => (w === right[i] ? -1 : i)).filter((i) => i >= 0);
+          assert.deepEqual(diff, [t.wrong], t.say);
+          assert.ok(right[t.wrong].startsWith(t.fix), `${t.fix} / ${right[t.wrong]}`);
+        }
+        if (t.type === 'write') assert.equal(t.say, t.word);
+      }
+    }
+    // the final is typed: the exam draws only write tasks, station rounds never do
+    const types = new Set(dc.stations.flatMap((s) => s.tasks.map((t) => t.type)));
+    for (const type of types) if (type !== 'write') assert.equal(dc.sampling.examCaps[type], 0, type);
+    assert.equal(dc.sampling.caps.write, 0);
+  });
+}

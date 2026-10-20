@@ -7,6 +7,8 @@
 //   sound, and it must be the silence, not the first letter.
 // Phrases: en = every distinct `en` of WM_CONTENT.words (games/word-match/content.js) + the coach's English commands,
 //          es = the coach's Spanish commands (SimonEngine.phrases, games/coach-simon/engine.js),
+//          + every word and sentence the coach dictates in games/dictado/content.js (`say` of its tasks),
+//          es-slow = the dictado sentences again, slower (KFG.say(text, 'es', { slow: true })),
 //          uk = the words and short texts of games/chytanka/content.js; the voice reads the words with their stress marks.
 // Voices:  en-GB-SoniaNeural (British English, like the school), es-ES-ElviraNeural, uk-UA-PolinaNeural.
 // Output:  audio/<lang>/<slug>.mp3 (slug = Ukrainian transliterated, accents dropped, lowercase, runs of non [a-z0-9] → '-'),
@@ -30,7 +32,10 @@ const VOICES = {
   es: flag('voice-es', 'es-ES-ElviraNeural'),
   uk: flag('voice-uk', 'uk-UA-PolinaNeural'),
 };
+VOICES['es-slow'] = VOICES.es;
 const rate = flag('rate', '-10%');
+/** @type {Record<string, string>} speech rate per clip set (default --rate) */
+const RATES = { 'es-slow': flag('rate-slow', '-35%') };
 const pad = Number(flag('pad', '200'));
 const home = (/** @type {string} */ p) => p.replace(/^~(?=\/)/, process.env.HOME || '~');
 const bin = home(process.env.EDGE_TTS || 'edge-tts');
@@ -93,14 +98,17 @@ const FILES = [
   'games/word-match/content.js',
   'games/coach-simon/engine.js',
   'games/chytanka/content.js',
+  'games/dictado/content.js',
 ];
 for (const f of FILES) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sb, { filename: f });
 
 const same = (/** @type {string} */ t) => [t, t];
+const dictado = sb.DC_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.say));
 // [the text the game says (→ the file name), what the voice reads]
 const SOURCES = {
   en: [...Object.values(sb.WM_CONTENT.words).map((w) => w.en), ...sb.SimonEngine.phrases('en')].map(same),
-  es: sb.SimonEngine.phrases('es').map(same),
+  es: [...sb.SimonEngine.phrases('es'), ...dictado.map((t) => t.say)].map(same),
+  'es-slow': dictado.filter((t) => t.type === 'cloze').map((t) => same(t.say)),
   uk: [
     ...Object.values(sb.CH_CONTENT.words).map((w) => [w.word, w.syl.join('')]),
     ...sb.CH_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'story').map((t) => same(t.text))),
@@ -122,6 +130,9 @@ for (const [lang, entries] of Object.entries(SOURCES)) {
     if (!s) throw new Error(`empty slug for «${text}»`);
     const had = map.get(s);
     if (had && bare(had.text) !== bare(text)) throw new Error(`${lang} slug clash «${s}»: «${had.text}» / «${text}»`);
+    // ¿…? / ¡…! are said with their intonation: they never share a clip with the same words said plainly.
+    const marks = (/** @type {string} */ t) => t.replace(/[^¿¡]/g, '');
+    if (had && marks(had.text) !== marks(text)) throw new Error(`${lang} «${had.text}» / «${text}»: same clip, other intonation`);
     if (!had) map.set(s, { text, tts });
   }
   phrases[lang] = map;
@@ -145,7 +156,8 @@ const make = async ({ lang, s }) => {
   const tmp = path.join(dirOf(lang), `.${s}.tmp.mp3`);
   for (let attempt = 1; ; attempt++) {
     try {
-      await exec(bin, ['--text', phrases[lang].get(s).tts, '--voice', VOICES[lang], `--rate=${rate}`, '--write-media', raw]);
+      const r = RATES[lang] || rate;
+      await exec(bin, ['--text', phrases[lang].get(s).tts, '--voice', VOICES[lang], `--rate=${r}`, '--write-media', raw]);
       if (fs.statSync(raw).size <= 1000) throw new Error('clip too small');
       // Edge pads every clip to ~1.9 s: cut the trailing silence down to 0.1 s, then add `pad` ms in front.
       const trim = 'areverse,silenceremove=start_periods=1:start_silence=0.1:start_threshold=-50dB,areverse';
@@ -167,7 +179,7 @@ const queue = [];
 for (const [lang, map] of Object.entries(phrases)) {
   fs.mkdirSync(dirOf(lang), { recursive: true });
   const todo = [...map.keys()].filter((s) => force || !fs.existsSync(fileOf(lang, s)) || fs.statSync(fileOf(lang, s)).size <= 1000);
-  console.log(`${lang}: ${map.size} phrases, ${todo.length} to generate (${VOICES[lang]}, rate ${rate}, pad ${pad} ms)`);
+  console.log(`${lang}: ${map.size} phrases, ${todo.length} to generate (${VOICES[lang]}, rate ${RATES[lang] || rate}, pad ${pad} ms)`);
   queue.push(...todo.map((s) => ({ lang, s })));
 }
 let done = 0;
@@ -203,7 +215,7 @@ if (failed) {
 }
 const list = (lang) => [...phrases[lang].keys()].sort().map((s) => `'${s}'`);
 const body = Object.keys(phrases)
-  .map((lang) => `  ${lang}: [${list(lang).join(', ')}],`)
+  .map((lang) => `  ${/^\w+$/.test(lang) ? lang : `'${lang}'`}: [${list(lang).join(', ')}],`)
   .join('\n');
 fs.writeFileSync(
   manifest,

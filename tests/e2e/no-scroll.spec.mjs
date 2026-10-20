@@ -1,7 +1,17 @@
 // Laptop guard: a task screen fits a short laptop window (1366×768 minus browser UI) without page scroll,
 // and after answering the "next" button is on screen. Pages open in ?parent mode, so the 48px test ribbon is included.
 import { test, expect, open } from './helpers.mjs';
-import { answerChTask, answerCurrentTask, answerWordTask, openStation, playChTasks, playWordTasks, solveMathTask } from './drivers.mjs';
+import {
+  answerChTask,
+  answerCurrentTask,
+  answerDcTask,
+  answerWordTask,
+  openStation,
+  playChTasks,
+  playDcTasks,
+  playWordTasks,
+  solveMathTask,
+} from './drivers.mjs';
 
 test.use({ viewport: { width: 1366, height: 657 } });
 
@@ -113,6 +123,23 @@ test('chytanka: every task type fits (the longest words); next button visible', 
     for (const type of types) {
       await expectFits(page, `${station} ${type}`);
       await answerChTask(page, tap);
+      await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${station} ${type} next`);
+      await tap(page.locator('#feedback .fb-actions .btn').first());
+    }
+  }
+});
+
+test('dictado: every task type fits (the longest words and sentences, the keyboard); next button visible', async ({ page, tap }) => {
+  await open(page, '/games/dictado/');
+  for (const [station, types] of [
+    ['mp-mb', ['gap', 'pick', 'tiles', 'cloze', 'spot', 'write']],
+    ['tilde', ['tilde', 'cloze']],
+    ['signos', ['cloze', 'write']],
+  ]) {
+    await playDcTasks(page, station, types);
+    for (const type of types) {
+      await expectFits(page, `${station} ${type}`);
+      await answerDcTask(page, tap);
       await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${station} ${type} next`);
       await tap(page.locator('#feedback .fb-actions .btn').first());
     }

@@ -86,6 +86,7 @@
       'cat.fun': 'Футбол-розваги',
       'cat.sociales': 'Світ навколо нас',
       'cat.ukrainian': 'Українська мова',
+      'cat.lengua': 'Іспанська мова',
       'card.common': 'Звичайна',
       'card.futsal': 'Футзал',
       'card.rare': 'Рідкісна',
@@ -137,6 +138,7 @@
       'cat.fun': 'Fútbol y diversión',
       'cat.sociales': 'Ciencias Sociales',
       'cat.ukrainian': 'Ucraniano',
+      'cat.lengua': 'Lengua',
       'card.common': 'Común',
       'card.futsal': 'Fútbol sala',
       'card.rare': 'Rara',
@@ -269,6 +271,16 @@
       sites: ['uk'],
       es: { title: 'Lectura en ucraniano', desc: 'Lee palabras en ucraniano por sílabas viajando por Ucrania.' },
     },
+    {
+      slug: 'dictado',
+      title: 'Dictado del míster',
+      emoji: '📝',
+      category: 'lengua',
+      desc: 'Іспанський диктант від тренера: b чи v, h, ll чи y, тильда, ¿? і ¡!',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: { title: 'Dictado del míster', desc: 'El míster dicta y tú escribes: b o v, h, ll o y, la tilde, ¿? y ¡!' },
+    },
   ];
 
   const CATEGORIES = {
@@ -277,6 +289,7 @@
     fun: { title: T('cat.fun'), emoji: '🎉' },
     sociales: { title: T('cat.sociales'), emoji: '🌍' },
     ukrainian: { title: T('cat.ukrainian'), emoji: '🇺🇦' },
+    lengua: { title: T('cat.lengua'), emoji: '🇪🇸' },
   };
 
   // Football cards. Manifest comes from shared/cards.js (window.KF_CARDS), loaded before kf.js;
