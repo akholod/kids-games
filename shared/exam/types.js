@@ -1,4 +1,4 @@
-// Keeper Fun Games — generic exam task renderers: KFExam.types.{choice, tf, sort, order, pairs}.
+// Keeper Fun Games — generic exam task renderers: KFExam.types.{choice, tf, sort, order, pairs}, and KFExam.builder (word from tiles).
 // Include after shared/exam/exam.js. Each is (task, work, ctx) → void, see ExamRendererCtx in types/exam.d.ts.
 // @ts-check
 'use strict';
@@ -400,5 +400,186 @@
     });
   };
 
+  // ---------- builder ----------
+  // A word built from units (letters, syllables) in slots: tap a tile (or type), tap a filled slot = it and the ones after it go back,
+  // ⌫ = erase, check when full: a miss locks the right slots green and sends the rest back once, the second miss shows the answer.
+  // Used by renderers of units that spell: KFExam.builder(ctx, opts) → ExamBuilder (see types/exam.d.ts); the renderer lays out the parts.
+  /** @type {ExamBuilderFactory} */
+  const builder = (ctx, o) => {
+    const { h, T, shake, resolve, answered } = ctx;
+    const { target, classes, strings } = o;
+    const pool = o.tiles || null;
+    const same = o.same || ((a, b) => a === b);
+    const show = o.show || ((u) => u);
+    const n = target.length;
+    /** @type {(string | null)[]} slot → unit in it */
+    const units = Array(n).fill(null);
+    /** @type {(number | null)[]} slot → index of the tile of the pool in it */
+    const from = Array(n).fill(null);
+    /** @type {Set<number>} slots already checked right (locked) */
+    const good = new Set();
+    let tries = 0;
+    const hint = ctx.hint();
+    // Tiles and the erase button must not take the focus on a tap: Enter would then click them instead of «check».
+    const keepFocus = (/** @type {MouseEvent} */ e) => e.preventDefault();
+
+    const slotEls = target.map((_, i) =>
+      h('button', { type: 'button', class: classes.slot, 'data-i': String(i), onmousedown: keepFocus, onclick: () => takeFrom(i) }),
+    );
+    const tileEls = (pool || []).map((unit, t) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: classes.tile,
+          [o.tileAttr || 'data-unit']: unit,
+          onmousedown: keepFocus,
+          onclick: () => putTile(t),
+          text: o.tileContent ? null : unit,
+        },
+        o.tileContent?.(unit, t),
+      ),
+    );
+    const eraseBtn = h(
+      'button',
+      { type: 'button', class: `btn btn-light ${classes.erase}`, onmousedown: keepFocus, onclick: () => erase() },
+      T(strings.erase),
+    );
+    const checkBtn = h('button', { type: 'button', class: `btn btn-dark ${classes.check}`, onclick: () => check() }, T('check'));
+    const slotsEl = h('div', { class: classes.slots, lang: o.slotsLang }, slotEls);
+    const tilesEl = h('div', { class: classes.tiles, lang: o.tilesLang }, tileEls);
+
+    const used = (/** @type {number} */ t) => from.includes(t);
+    const free = () => units.indexOf(null);
+    const draw = () => {
+      const next = free();
+      slotEls.forEach((el, i) => {
+        const u = units[i];
+        el.textContent = u === null ? '' : show(u);
+        el.classList.toggle('filled', u !== null);
+        el.classList.toggle('good', good.has(i));
+        el.classList.toggle('next', i === next && !answered());
+        el.disabled = u === null || good.has(i) || answered();
+      });
+      tileEls.forEach((el, t) => {
+        el.disabled = used(t) || answered();
+      });
+      checkBtn.disabled = next >= 0;
+      if (checkBtn.disabled && document.activeElement === checkBtn) checkBtn.blur(); // no focus ring on a dead button
+      eraseBtn.disabled = !units.some((u, i) => u !== null && !good.has(i));
+    };
+
+    const fill = (/** @type {string} */ unit, /** @type {number | null} */ t) => {
+      const s = free();
+      units[s] = unit;
+      from[s] = t;
+      hint.textContent = '';
+      draw();
+      if (free() < 0) checkBtn.focus({ preventScroll: true });
+    };
+    const putTile = (/** @type {number} */ t) => {
+      if (answered() || !pool || t < 0 || t >= pool.length || used(t)) return;
+      if (free() < 0) {
+        if (o.shakeFull) shake(slotsEl);
+        return;
+      }
+      fill(pool[t], t);
+    };
+    const put = (/** @type {string} */ unit) => {
+      const t = pool ? pool.findIndex((c, i) => same(c, unit) && !used(i)) : -1;
+      if (free() < 0 || (pool && t < 0)) shake(free() < 0 ? slotsEl : tilesEl);
+      else if (pool) putTile(t);
+      else if (!answered()) fill(unit, null);
+    };
+    // Back one unit: the last one that is not locked green.
+    const erase = () => {
+      if (answered()) return;
+      for (let i = n - 1; i >= 0; i--) {
+        if (units[i] !== null && !good.has(i)) {
+          units[i] = null;
+          from[i] = null;
+          break;
+        }
+      }
+      draw();
+    };
+    // A tapped unit goes back to the tiles, with the ones after it (slots fill left to right).
+    const takeFrom = (/** @type {number} */ i) => {
+      if (answered() || good.has(i)) return;
+      for (let j = i; j < n; j++) {
+        if (good.has(j)) continue;
+        units[j] = null;
+        from[j] = null;
+      }
+      draw();
+    };
+    const check = () => {
+      if (answered()) return;
+      if (free() >= 0) {
+        hint.textContent = T(strings.fill);
+        shake(slotsEl);
+        return;
+      }
+      tries++;
+      const wrong = target.map((_, i) => i).filter((i) => !same(/** @type {string} */ (units[i]), target[i]));
+      for (const i of target.keys()) if (!wrong.includes(i)) good.add(i);
+      if (!wrong.length || tries >= 2) {
+        // Done: the player's right units stay green, the fixed ones are amber.
+        hint.textContent = '';
+        resolve(!wrong.length, wrong.length ? { answer: o.answer ?? target.join('') } : { soft: tries > 1 });
+        draw();
+        for (const i of wrong) {
+          slotEls[i].textContent = show(target[i]);
+          slotEls[i].classList.add('fixed');
+        }
+        o.onDone?.(!wrong.length);
+        return;
+      }
+      // One more try: right units lock green, the others go back to the tiles.
+      for (const i of wrong) {
+        units[i] = null;
+        from[i] = null;
+      }
+      hint.textContent = good.size ? T(strings.green) : T(strings.again);
+      draw();
+      for (const i of wrong) KFG.restart(slotEls[i], 'missed');
+      shake(...wrong.map((i) => slotEls[i]));
+    };
+
+    draw();
+    return {
+      slotsEl,
+      tilesEl,
+      slotEls,
+      tileEls,
+      eraseBtn,
+      checkBtn,
+      hint,
+      put,
+      putTile,
+      erase,
+      check,
+      values: () => [...units],
+      setKeys: (extra) =>
+        ctx.setKeys((e) => {
+          if (e.key === 'Enter') {
+            check();
+            return true;
+          }
+          if (e.key === 'Backspace' || e.key === 'Delete') {
+            erase();
+            return true;
+          }
+          if (extra?.(e)) return true;
+          const k = o.keyUnit?.(e);
+          if (k === null || k === undefined) return false;
+          if (typeof k === 'number') putTile(k);
+          else put(k);
+          return true;
+        }),
+    };
+  };
+
   window.KFExam.types = { choice, tf, sort, order, pairs: pairsTask };
+  window.KFExam.builder = builder;
 })();

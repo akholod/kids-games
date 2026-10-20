@@ -192,6 +192,65 @@ type ExamRenderer<T = ExamTask> = (task: T, work: HTMLElement, ctx: ExamRenderer
 
 type ExamRenderers = Record<string, ExamRenderer<any>>;
 
+// ---- builder: a word built from tiles (or keys) into slots, shared by the spelling-like task types ----
+
+interface ExamBuilderOptions {
+  /** The right units, slot by slot (letters, syllables, …). */
+  target: string[];
+  /** A pool of tiles, each usable once (a letter / syllable set with traps). Omit for reusable keys: the caller draws its own
+   *  keys (e.g. an on-screen keyboard) and calls `put(unit)`; `tilesEl` is then an empty container for them. */
+  tiles?: string[];
+  /** Are two units the same for the check (and for typing a tile)? Default: ===. */
+  same?: (a: string, b: string) => boolean;
+  /** Text of a unit in a slot. Default: the unit itself. */
+  show?: (unit: string) => string;
+  /** The right answer for ctx.resolve after the last miss. Default: the units joined. */
+  answer?: string;
+  /** Key → unit to put (typed letter), or index of a tile of the pool, or null = not ours. Enter, Backspace and Delete are the builder's own. */
+  keyUnit?: (e: KeyboardEvent) => string | number | null;
+  /** Shake the slots when a tile is tapped / picked by its index while all slots are full (typing always shakes). */
+  shakeFull?: boolean;
+  /** CSS classes of the parts (erase and check get `btn btn-light` / `btn btn-dark` in front). */
+  classes: { slot: string; tile: string; slots: string; tiles: string; erase: string; check: string };
+  /** Attribute that holds the unit on a tile. Default: data-unit. */
+  tileAttr?: string;
+  /** Content of a tile (`t` = its index in the pool). Default: the unit as text. */
+  tileContent?: (unit: string, t: number) => KFGKid;
+  /** `lang` of the slots / tiles containers. */
+  slotsLang?: string;
+  tilesLang?: string;
+  /** Keys of the task's strings: fill (check before all slots are full), green (a retry with some right), again (a retry with none), erase (button). */
+  strings: { fill: string; green: string; again: string; erase: string };
+  /** The task is done (ok = right, also after a retry); slots and tiles are already drawn. */
+  onDone?: (ok: boolean) => void;
+}
+
+interface ExamBuilder {
+  slotsEl: HTMLDivElement;
+  /** The tiles; empty in the reusable-keys mode (put your own keys here). */
+  tilesEl: HTMLDivElement;
+  slotEls: HTMLButtonElement[];
+  tileEls: HTMLButtonElement[];
+  eraseBtn: HTMLButtonElement;
+  checkBtn: HTMLButtonElement;
+  /** Lay it out after slotsEl. */
+  hint: HTMLParagraphElement;
+  /** Puts a unit in the next free slot (pool mode: takes the first free tile equal to it); shakes when it can't. */
+  put(unit: string): void;
+  /** Puts the tile of the pool with this index in the next free slot. */
+  putTile(t: number): void;
+  /** Back one unit: the last that is not locked. */
+  erase(): void;
+  /** Checks (not before all slots are full); one more try after the first miss. */
+  check(): void;
+  /** The units now in the slots (null = empty). */
+  values(): (string | null)[];
+  /** Sets the task's keys: Enter = check, Backspace / Delete = erase, then `extra`, then keyUnit. */
+  setKeys(extra?: (e: KeyboardEvent) => unknown): void;
+}
+
+type ExamBuilderFactory = (ctx: ExamRendererCtx, opts: ExamBuilderOptions) => ExamBuilder;
+
 // ---- session, records ----
 
 interface ExamSession {
@@ -242,6 +301,8 @@ interface KFExamAPI {
   validate(unit: ExamUnit, types?: ExamRenderers): string[];
   /** The generic renderers (choice, tf, sort, order, pairs), set by shared/exam/types.js. */
   types: ExamRenderers;
+  /** The word builder (tiles / keys → slots, check, one retry), set by shared/exam/types.js. */
+  builder?: ExamBuilderFactory;
 }
 
 declare var KFExam: KFExamAPI;

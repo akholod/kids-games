@@ -217,39 +217,32 @@ window.CH_TYPES = (() => {
   // ---------- build ----------
   /** @type {ExamRenderer<CHBuildTask>} */
   const build = (task, work, ctx) => {
-    const { T, shuffle, shake, resolve, answered, setKeys, kbdHint } = ctx;
+    const { h, T, shuffle, kbdHint } = ctx;
     fresh();
     const w = task.word;
-    const target = w.syl;
-    const n = target.length;
-    const tiles = shuffle([...target, ...task.extra]);
-    /** @type {(number | null)[]} slot → index of the tile in it */
-    const slots = Array(n).fill(null);
-    /** @type {Set<number>} slots already checked right (locked) */
-    const good = new Set();
-    let tries = 0;
-    const hint = ctx.hint();
+    const tiles = shuffle([...w.syl, ...task.extra]);
     KFG.preload(w.word, 'uk');
-
-    const slotEls = target.map((_, i) =>
-      h('button', { type: 'button', class: 'ch-bslot', 'data-i': String(i), onmousedown: keepFocus, onclick: () => takeFrom(i) }),
-    );
-    const tileEls = tiles.map((s, t) =>
-      h(
-        'button',
-        { type: 'button', class: 'ch-tile', 'data-syl': s, onmousedown: keepFocus, onclick: () => put(t) },
-        t < 9 && h('kbd', { text: String(t + 1) }),
-        h('span', { lang: 'uk', text: s }),
-      ),
-    );
-    const eraseBtn = h(
-      'button',
-      { type: 'button', class: 'btn btn-light ch-erase', onmousedown: keepFocus, onclick: () => erase() },
-      T('buildErase'),
-    );
-    const checkBtn = h('button', { type: 'button', class: 'btn btn-dark ch-check', onclick: () => check() }, T('check'));
-    const slotsEl = h('div', { class: 'ch-bslots', lang: 'uk' }, slotEls);
-    const tilesEl = h('div', { class: 'ch-tiles' }, tileEls);
+    // Same letters = right (ма + ма́ reads as «мама» too); the slots then show the syllables with the right stress.
+    const b = /** @type {ExamBuilderFactory} */ (KFExam.builder)(ctx, {
+      target: w.syl,
+      tiles,
+      same: (a, c) => plain(a) === plain(c),
+      answer: w.word,
+      keyUnit: (e) => {
+        const d = digit(e, Math.min(tiles.length, 9));
+        return d ? d - 1 : null;
+      },
+      shakeFull: true,
+      classes: { slot: 'ch-bslot', tile: 'ch-tile', slots: 'ch-bslots', tiles: 'ch-tiles', erase: 'ch-erase', check: 'ch-check' },
+      tileAttr: 'data-syl',
+      tileContent: (s, t) => [t < 9 && h('kbd', { text: String(t + 1) }), h('span', { lang: 'uk', text: s })],
+      slotsLang: 'uk',
+      strings: { fill: 'buildFill', green: 'buildGreen', again: 'buildAgain', erase: 'buildErase' },
+      onDone: () => {
+        box.classList.add('is-done');
+        say(w.word);
+      },
+    });
     const box = h(
       'div',
       { class: 'ch-build' },
@@ -257,115 +250,15 @@ window.CH_TYPES = (() => {
       h(
         'div',
         { class: 'ch-build-col' },
-        slotsEl,
-        hint,
-        tilesEl,
-        h('div', { class: 'ch-build-actions' }, eraseBtn, checkBtn),
+        b.slotsEl,
+        b.hint,
+        b.tilesEl,
+        h('div', { class: 'ch-build-actions' }, b.eraseBtn, b.checkBtn),
         kbdHint(T('kBuild', { n: Math.min(tiles.length, 9) })),
       ),
     );
-
-    const used = (/** @type {number} */ t) => slots.includes(t);
-    const free = () => slots.indexOf(null);
-    const draw = () => {
-      const next = free();
-      slotEls.forEach((el, i) => {
-        const t = slots[i];
-        if (!el.classList.contains('fixed')) el.textContent = t === null ? '' : tiles[t];
-        el.classList.toggle('filled', t !== null);
-        el.classList.toggle('good', good.has(i));
-        el.classList.toggle('next', i === next && !answered());
-        el.disabled = t === null || good.has(i) || answered();
-      });
-      tileEls.forEach((el, t) => {
-        el.disabled = used(t) || answered();
-      });
-      checkBtn.disabled = next >= 0;
-      if (checkBtn.disabled && document.activeElement === checkBtn) checkBtn.blur(); // no focus ring on a dead button
-      eraseBtn.disabled = !slots.some((t, i) => t !== null && !good.has(i));
-    };
-
-    const put = (/** @type {number} */ t) => {
-      if (answered() || used(t)) return;
-      const s = free();
-      if (s < 0) {
-        shake(slotsEl);
-        return;
-      }
-      slots[s] = t;
-      hint.textContent = '';
-      draw();
-      if (free() < 0) checkBtn.focus({ preventScroll: true });
-    };
-    // Back one syllable: the last one that is not locked green.
-    const erase = () => {
-      if (answered()) return;
-      for (let i = n - 1; i >= 0; i--) {
-        if (slots[i] !== null && !good.has(i)) {
-          slots[i] = null;
-          break;
-        }
-      }
-      draw();
-    };
-    // A tapped syllable goes back to the tiles, with the ones after it (slots fill left to right).
-    const takeFrom = (/** @type {number} */ i) => {
-      if (answered() || good.has(i)) return;
-      for (let j = i; j < n; j++) if (!good.has(j)) slots[j] = null;
-      draw();
-    };
-    const finish = () => {
-      box.classList.add('is-done');
-      draw();
-      say(w.word);
-    };
-    const check = () => {
-      if (answered()) return;
-      if (free() >= 0) {
-        hint.textContent = T('buildFill');
-        shake(slotsEl);
-        return;
-      }
-      tries++;
-      // Same letters = right (ма + ма́ reads as «мама» too); the slots then show the syllables with the right stress.
-      const wrong = target.map((_, i) => i).filter((i) => plain(tiles[/** @type {number} */ (slots[i])]) !== plain(target[i]));
-      for (const i of target.keys()) if (!wrong.includes(i)) good.add(i);
-      if (!wrong.length || tries >= 2) {
-        hint.textContent = '';
-        resolve(!wrong.length, wrong.length ? { answer: w.word } : { soft: tries > 1 });
-        target.forEach((s, i) => {
-          slotEls[i].textContent = s;
-          if (wrong.includes(i)) slotEls[i].classList.add('fixed');
-        });
-        finish();
-        return;
-      }
-      // One more try: right syllables lock green, the others go back to the tiles.
-      for (const i of wrong) slots[i] = null;
-      hint.textContent = good.size ? T('buildGreen') : T('buildAgain');
-      draw();
-      for (const i of wrong) KFG.restart(slotEls[i], 'missed');
-      shake(...wrong.map((i) => slotEls[i]));
-    };
-
-    draw();
     work.append(box);
-    setKeys((e) => {
-      if (e.key === 'Enter') {
-        check();
-        return true;
-      }
-      if (e.key === 'Backspace' || e.key === 'Delete') {
-        erase();
-        return true;
-      }
-      const d = digit(e, Math.min(tiles.length, 9));
-      if (d) {
-        put(d - 1);
-        return true;
-      }
-      return false;
-    });
+    b.setKeys();
   };
 
   // ---------- gap ----------
