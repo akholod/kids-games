@@ -1,3 +1,5 @@
+import '../shared/kit.js';
+
 const ITER = 100000;
 const COOKIE = 'kf_session';
 const YEAR = 365 * 24 * 3600;
@@ -8,7 +10,8 @@ const MAX_FAILS = 5;
 const LOCK_MS = 5 * 60 * 1000;
 const MAX_USERS = 40;
 const MAX_SIGNUPS = 3;
-const AVATARS = ['⚽', '🧤', '🥅', '🏆', '⭐', '🔥', '🦁', '🐯', '🦊', '🐼', '🚀', '⚡'];
+const DEFAULT_AVATAR = '⚽';
+const validAvatar = (a) => globalThis.KFKit.valid(a);
 
 const enc = new TextEncoder();
 
@@ -106,16 +109,11 @@ async function auth(request, env, now) {
   return { user: { id: row.id, name: row.name, avatar: row.avatar }, hash, setCookie };
 }
 
-async function login(request, env, now) {
-  const body = await readJson(request);
-  if (!isObj(body) || !isInt(body.userId) || typeof body.pin !== 'string') return err('bad_request', 400);
-  const u = await env.DB.prepare('SELECT id, name, avatar, pin_hash, failed, locked_until FROM users WHERE id = ?')
-    .bind(body.userId)
-    .first();
-  if (!u) return err('no_user', 404);
+// The PIN gate of login and of the account changes: lockout (5 fails → 5 min), failed counter, success resets it.
+// `u` = users row with id, pin_hash, failed, locked_until. Returns an error Response, or null when the PIN is right.
+async function checkPin(env, u, pin, now) {
   if (u.locked_until > now) return err('locked', 429, { retryAfter: Math.ceil((u.locked_until - now) / 1000) });
-
-  const ok = /^\d{4}$/.test(body.pin) && (await verifyPin(body.pin, u.pin_hash));
+  const ok = typeof pin === 'string' && /^\d{4}$/.test(pin) && (await verifyPin(pin, u.pin_hash));
   if (!ok) {
     const failed = (u.failed || 0) + 1;
     if (failed >= MAX_FAILS) {
@@ -127,8 +125,20 @@ async function login(request, env, now) {
     await env.DB.prepare('UPDATE users SET failed = ? WHERE id = ?').bind(failed, u.id).run();
     return err('bad_pin', 401, { attemptsLeft: MAX_FAILS - failed });
   }
+  if (u.failed || u.locked_until) await env.DB.prepare('UPDATE users SET failed = 0, locked_until = 0 WHERE id = ?').bind(u.id).run();
+  return null;
+}
 
-  return startSession(env, u, now, [env.DB.prepare('UPDATE users SET failed = 0, locked_until = 0 WHERE id = ?').bind(u.id)]);
+async function login(request, env, now) {
+  const body = await readJson(request);
+  if (!isObj(body) || !isInt(body.userId) || typeof body.pin !== 'string') return err('bad_request', 400);
+  const u = await env.DB.prepare('SELECT id, name, avatar, pin_hash, failed, locked_until FROM users WHERE id = ?')
+    .bind(body.userId)
+    .first();
+  if (!u) return err('no_user', 404);
+  const denied = await checkPin(env, u, body.pin, now);
+  if (denied) return denied;
+  return startSession(env, u, now);
 }
 
 // Creates the session row (in one batch with `before`) and answers with the user + cookie.
@@ -146,15 +156,21 @@ async function startSession(env, u, now, before = [], status = 200) {
   return json({ user: { id: u.id, name: u.name, avatar: u.avatar } }, status, { 'Set-Cookie': cookie(token, YEAR) });
 }
 
+// Normalised name, or '' if it breaks the rule.
+// NFC keeps й/ї as single letters; every apostrophe becomes ʼ, so Мар'яна and Марʼяна are one name.
+function normName(raw) {
+  const name = typeof raw === 'string' ? raw.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim() : '';
+  return /^[\p{L} '’ʼ-]{1,30}$/u.test(name) && /\p{L}/u.test(name) ? name : '';
+}
+
 async function register(request, env, now) {
   const body = await readJson(request);
   if (!isObj(body)) return err('bad_request', 400);
-  // NFC keeps й/ї as single letters; every apostrophe becomes ʼ, so Мар'яна and Марʼяна are one name.
-  const name = typeof body.name === 'string' ? body.name.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim() : '';
-  if (!/^[\p{L} '’ʼ-]{1,30}$/u.test(name) || !/\p{L}/u.test(name)) return err('bad_name', 400);
+  const name = normName(body.name);
+  if (!name) return err('bad_name', 400);
   if (typeof body.pin !== 'string' || !/^\d{4}$/.test(body.pin)) return err('bad_pin_format', 400);
-  const avatar = body.avatar == null || body.avatar === '' ? AVATARS[0] : body.avatar;
-  if (!AVATARS.includes(avatar)) return err('bad_avatar', 400);
+  const avatar = body.avatar == null || body.avatar === '' ? DEFAULT_AVATAR : body.avatar;
+  if (!validAvatar(avatar)) return err('bad_avatar', 400);
 
   const total = await env.DB.prepare('SELECT count(*) AS n FROM users').first();
   if (total.n >= MAX_USERS) return err('full', 403);
@@ -176,10 +192,57 @@ async function register(request, env, now) {
       .run();
     id = r.meta.last_row_id;
   } catch (e) {
-    if (/UNIQUE/i.test(String(e && (e.message || e)))) return err('name_taken', 409);
+    if (isUnique(e)) return err('name_taken', 409);
     throw e;
   }
   return startSession(env, { id, name, avatar }, now, [], 201);
+}
+
+const isUnique = (e) => /UNIQUE/i.test(String(e && (e.message || e)));
+
+async function meRow(env, id) {
+  return env.DB.prepare('SELECT id, name, avatar, pin_hash, failed, locked_until FROM users WHERE id = ?').bind(id).first();
+}
+const publicUser = (u) => ({ id: u.id, name: u.name, avatar: u.avatar });
+
+async function setAvatar(request, env, session) {
+  const body = await readJson(request);
+  if (!isObj(body) || !validAvatar(body.avatar)) return err('bad_avatar', 400);
+  await env.DB.prepare('UPDATE users SET avatar = ? WHERE id = ?').bind(body.avatar, session.user.id).run();
+  return json({ user: { ...session.user, avatar: body.avatar } });
+}
+
+async function rename(request, env, session, now) {
+  const body = await readJson(request);
+  if (!isObj(body)) return err('bad_request', 400);
+  const u = await meRow(env, session.user.id);
+  const denied = await checkPin(env, u, body.pin, now);
+  if (denied) return denied;
+  const name = normName(body.name);
+  if (!name) return err('bad_name', 400);
+  const taken = await env.DB.prepare('SELECT 1 FROM users WHERE name = ? COLLATE NOCASE AND id != ?').bind(name, u.id).first();
+  if (taken) return err('name_taken', 409);
+  try {
+    await env.DB.prepare('UPDATE users SET name = ? WHERE id = ?').bind(name, u.id).run();
+  } catch (e) {
+    if (isUnique(e)) return err('name_taken', 409);
+    throw e;
+  }
+  return json({ user: { ...publicUser(u), name } });
+}
+
+async function changePin(request, env, session, now) {
+  const body = await readJson(request);
+  if (!isObj(body)) return err('bad_request', 400);
+  // checked before the PIN gate: a typo in the new PIN must not cost an attempt
+  if (typeof body.newPin !== 'string' || !/^\d{4}$/.test(body.newPin)) return err('bad_pin_format', 400);
+  const u = await meRow(env, session.user.id);
+  const denied = await checkPin(env, u, body.pin, now);
+  if (denied) return denied;
+  await env.DB.prepare('UPDATE users SET pin_hash = ? WHERE id = ?')
+    .bind(await hashPin(body.newPin), u.id)
+    .run();
+  return json({ ok: true });
 }
 
 function validateResults(results) {
@@ -243,7 +306,7 @@ async function handle(request, env, url, now) {
   if (pathname === '/api/login' && method === 'POST') return login(request, env, now);
   if (pathname === '/api/register' && method === 'POST') return register(request, env, now);
 
-  const known = ['/api/logout', '/api/me', '/api/progress'];
+  const known = ['/api/logout', '/api/me', '/api/progress', '/api/me/avatar', '/api/me/name', '/api/me/pin'];
   if (!known.includes(pathname)) return err('not_found', 404);
 
   if (pathname === '/api/logout' && method === 'POST') {
@@ -257,9 +320,10 @@ async function handle(request, env, url, now) {
     return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store', 'Set-Cookie': cookie('', 0) } });
   }
 
-  const allowed = pathname === '/api/progress' ? ['GET', 'PUT'] : pathname === '/api/me' ? ['GET'] : [];
+  const methods = { '/api/progress': ['GET', 'PUT'], '/api/me': ['GET'] };
+  const allowed = methods[pathname] || ['POST'];
   if (!allowed.includes(method)) return err('method_not_allowed', 405);
-  if (method === 'PUT') {
+  if (method !== 'GET') {
     const ct = (request.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
     if (ct !== 'application/json') return err('unsupported_media_type', 415);
   }
@@ -270,9 +334,19 @@ async function handle(request, env, url, now) {
   let res;
   if (pathname === '/api/me') {
     res = json({ user: session.user });
+  } else if (pathname === '/api/me/avatar') {
+    res = await setAvatar(request, env, session);
+  } else if (pathname === '/api/me/name') {
+    res = await rename(request, env, session, now);
+  } else if (pathname === '/api/me/pin') {
+    res = await changePin(request, env, session, now);
   } else if (method === 'GET') {
     const row = await env.DB.prepare('SELECT state, rev, updated_at FROM progress WHERE user_id = ?').bind(session.user.id).first();
-    res = json(row ? { rev: row.rev, state: JSON.parse(row.state), updatedAt: row.updated_at } : { rev: 0, state: null, updatedAt: 0 });
+    const me = await env.DB.prepare('SELECT id, name, avatar FROM users WHERE id = ?').bind(session.user.id).first();
+    const user = me ? publicUser(me) : session.user;
+    res = json(
+      row ? { rev: row.rev, state: JSON.parse(row.state), updatedAt: row.updated_at, user } : { rev: 0, state: null, updatedAt: 0, user },
+    );
   } else {
     res = await putProgress(request, env, session, now);
   }

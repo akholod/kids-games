@@ -131,6 +131,12 @@
       'keeper-wall.desc': 'Зроби 25 сейвів у грі «Воротар»',
       'keeper-gloves.title': 'Нові рукавиці',
       'keeper-gloves.desc': 'Купи нові рукавиці у грі «Воротар»',
+      'words-30.title': 'Збірна слів',
+      'words-30.desc': '30 слів у команді гри «Команда слів»',
+      'math-exam.title': 'Іспит з математики',
+      'math-exam.desc': 'Склади «Examen de mates»: пройди матч-іспит',
+      'planet-notable.title': 'Знавець планети',
+      'planet-notable.desc': 'Іспит «El planeta donde vivimos» на Notable або краще',
     },
     es: {
       'cat.math': 'Matemáticas',
@@ -183,6 +189,12 @@
       'keeper-wall.desc': 'Haz 25 paradas en el juego «Portero»',
       'keeper-gloves.title': 'Guantes nuevos',
       'keeper-gloves.desc': 'Compra guantes nuevos en el juego «Portero»',
+      'words-30.title': 'Selección de palabras',
+      'words-30.desc': '30 palabras en el equipo de «Equipo de palabras»',
+      'math-exam.title': 'Examen de mates',
+      'math-exam.desc': 'Aprueba el «Examen de mates»: termina el partido-examen',
+      'planet-notable.title': 'Experto del planeta',
+      'planet-notable.desc': 'Saca Notable o más en el examen «El planeta donde vivimos»',
     },
   });
 
@@ -375,6 +387,9 @@
   const totalCorrect = (s) => s.stats.correct;
   const playedGames = (s) => s.stats.games;
 
+  const MATH_ROUND = 8; // tasks in a «Examen de mates» training round (the exam has 12)
+  const NOTABLE_NOTA = 7;
+
   const ACHIEVEMENTS = [
     { id: 'first-game', icon: '🎽', title: T('first-game.title'), desc: T('first-game.desc'), check: (s) => playedGames(s) >= 1 },
     { id: 'goals-10', icon: '⚽', title: T('goals-10.title'), desc: T('goals-10.desc'), check: (s) => totalCorrect(s) >= 10 },
@@ -425,6 +440,31 @@
       title: T('keeper-gloves.title'),
       desc: T('keeper-gloves.desc'),
       check: (s) => (s.gameData?.goalkeeper?.gloves?.owned?.length || 0) >= 2,
+    },
+    {
+      // «Команда слів»: a word joins the squad (`team`) after 2 right answers in a row and never leaves.
+      id: 'words-30',
+      icon: '🔤',
+      title: T('words-30.title'),
+      desc: T('words-30.desc'),
+      check: (s) => Object.values(s.gameData?.['word-match-words']?.w || {}).filter((w) => w?.team).length >= 30,
+    },
+    {
+      // The exam match ends (finishGame) only without a red card: 12 tasks, at most one mistake, so ≥ 11/12.
+      // A training round has 8 tasks, so a best score above 8 can only come from a finished exam.
+      id: 'math-exam',
+      icon: '🧮',
+      title: T('math-exam.title'),
+      desc: T('math-exam.desc'),
+      check: (s) => (s.games?.['math-exam']?.best || 0) > MATH_ROUND,
+    },
+    {
+      // Exam records: gameData.exam = { n: nota out of 10, … }; Notable is the 4th grade (nota ≥ 7, see exam.js gradeFor).
+      id: 'planet-notable',
+      icon: '🌍',
+      title: T('planet-notable.title'),
+      desc: T('planet-notable.desc'),
+      check: (s) => (s.gameData?.['sociales-planeta']?.exam?.n || 0) >= NOTABLE_NOTA,
     },
   ];
 
@@ -789,8 +829,23 @@
     if (inflight) return; // a push started meanwhile; it will reconcile
     failures = 0;
     if (r.data.state && r.data.rev !== sync.baseRev) absorb(r.data.state, r.data.rev);
+    adoptServerUser(r.data.user);
     lastPull = Date.now();
     setStatus(needsPush() ? 'pending' : 'synced');
+  };
+
+  // The server's copy of { id, name, avatar } (a rename/new shirt made on another device) replaces the stored one.
+  const adoptServerUser = (u) => {
+    if (!user || !u || u.id !== user.id) return false;
+    if (u.name === user.name && u.avatar === user.avatar) return false;
+    user = { id: user.id, name: u.name, avatar: u.avatar };
+    try {
+      store.setItem(USER_KEY, JSON.stringify(user));
+    } catch {
+      // memory only
+    }
+    emit('auth', { user, status: authStatus });
+    return true;
   };
 
   // Pull, then push whatever is left. Safe to call any time.
@@ -831,6 +886,22 @@
     return { ok: true, user, hasGuestProgress };
   };
 
+  // POST of an account change → KFAuthResult. On success the stored user takes the server's { id, name, avatar }.
+  const account = async (path, body) => {
+    if (!user) return { ok: false, error: 'auth' };
+    const r = await api('POST', path, body);
+    if (r.status === 401 && r.data.error !== 'bad_pin') {
+      setStatus('expired');
+      return { ok: false, error: 'auth' };
+    }
+    if (r.status !== 200) {
+      const { error, attemptsLeft, retryAfter } = r.data;
+      return { ok: false, error: error || 'network', attemptsLeft, retryAfter };
+    }
+    if (r.data.user && !adoptServerUser(r.data.user)) emit('auth', { user, status: authStatus });
+    return { ok: true, user: user ?? undefined };
+  };
+
   const auth = {
     get user() {
       return user;
@@ -840,13 +911,11 @@
     },
 
     async users() {
-      if (TEST_MODE) return { ok: false, error: 'test_mode' };
       const r = await api('GET', '/users');
       return r.status === 200 ? { ok: true, users: r.data.users || [] } : { ok: false, error: r.data.error || 'network' };
     },
 
     async login(userId, pin) {
-      if (TEST_MODE) return { ok: false, error: 'test_mode' };
       const hasGuestProgress = auth.hasGuestProgress();
       const r = await api('POST', '/login', { userId, pin });
       if (r.status !== 200) {
@@ -858,7 +927,6 @@
 
     // Self-registration: creates the account and logs in.
     async register(name, pin, avatar) {
-      if (TEST_MODE) return { ok: false, error: 'test_mode' };
       const hasGuestProgress = auth.hasGuestProgress();
       const r = await api('POST', '/register', { name, pin, avatar });
       if (r.status !== 201) {
@@ -866,6 +934,19 @@
         return { ok: false, error: error || 'network', retryAfter, hasGuestProgress };
       }
       return startSession(r.data.user, hasGuestProgress);
+    },
+
+    // Account changes of the logged-in user (profile page). Online only; a wrong PIN (401 bad_pin) is not a lost session.
+    async setAvatar(avatar) {
+      return account('/me/avatar', { avatar });
+    },
+
+    async rename(name, pin) {
+      return account('/me/name', { name, pin });
+    },
+
+    async changePin(pin, newPin) {
+      return account('/me/pin', { pin, newPin });
     },
 
     // Guest state differs from a fresh one.
@@ -911,6 +992,154 @@
     },
   };
 
+  // ---- Test mode: a per-tab sandbox instead of the server (sessionStorage, never the network) ----
+  const SANDBOX_KEY = 'kf-test-auth';
+  const MAX_FAILS = 5;
+  const LOCK_MS = 5 * 60 * 1000;
+
+  // Same name rule as the Worker (worker/index.js normName): NFC, every apostrophe → ʼ, spaces collapsed.
+  const normName = (raw) => {
+    const name = typeof raw === 'string' ? raw.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim() : '';
+    return /^[\p{L} '’ʼ-]{1,30}$/u.test(name) && /\p{L}/u.test(name) ? name : '';
+  };
+  const validAvatar = (a) => (globalThis.KFKit?.valid ? globalThis.KFKit.valid(a) : true);
+
+  const makeSandboxAuth = () => {
+    /** @typedef {{ id: number, name: string, avatar: string, pin: string, failed: number, lockedUntil: number }} SandboxUser */
+    const seed = () => ({
+      users: [
+        {
+          id: 1,
+          name: LANG === 'es' ? 'Jugador de prueba' : 'Тестовий гравець',
+          avatar: 'k:stripes:blue:yellow:1',
+          pin: '1234',
+          failed: 0,
+          lockedUntil: 0,
+        },
+      ],
+      current: /** @type {number | null} */ (null),
+    });
+    /** @type {{ users: SandboxUser[], current: number | null }} */
+    let box = readJSON(SANDBOX_KEY);
+    if (!box || !Array.isArray(box.users)) box = seed();
+    const saveBox = () => {
+      try {
+        store.setItem(SANDBOX_KEY, JSON.stringify(box));
+      } catch {
+        // memory only
+      }
+    };
+    const pub = (/** @type {SandboxUser} */ u) => ({ id: u.id, name: u.name, avatar: u.avatar });
+    const me = () => box.users.find((u) => u.id === box.current) || null;
+    const status = () => (me() ? 'synced' : 'guest');
+    const changed = () => {
+      saveBox();
+      emit('auth', { user: me() && pub(/** @type {SandboxUser} */ (me())), status: status() });
+    };
+    // The Worker's PIN gate: 5 wrong PINs → locked for 5 min, success resets.
+    const checkPin = (/** @type {SandboxUser} */ u, /** @type {unknown} */ pin) => {
+      const now = Date.now();
+      if (u.lockedUntil > now) return { ok: false, error: 'locked', retryAfter: Math.ceil((u.lockedUntil - now) / 1000) };
+      if (typeof pin === 'string' && /^\d{4}$/.test(pin) && pin === u.pin) {
+        if (u.failed || u.lockedUntil) {
+          u.failed = 0;
+          u.lockedUntil = 0;
+          saveBox();
+        }
+        return null;
+      }
+      u.failed++;
+      if (u.failed >= MAX_FAILS) {
+        u.failed = 0;
+        u.lockedUntil = now + LOCK_MS;
+        saveBox();
+        return { ok: false, error: 'locked', retryAfter: LOCK_MS / 1000 };
+      }
+      saveBox();
+      return { ok: false, error: 'bad_pin', attemptsLeft: MAX_FAILS - u.failed };
+    };
+    const taken = (/** @type {string} */ name, /** @type {number} */ exceptId) =>
+      box.users.some((u) => u.id !== exceptId && u.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+    const pinOk = (/** @type {unknown} */ p) => typeof p === 'string' && /^\d{4}$/.test(p);
+
+    return {
+      get user() {
+        const u = me();
+        return u ? pub(u) : null;
+      },
+      get status() {
+        return status();
+      },
+      async users() {
+        const users = box.users.map(pub).sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id);
+        return { ok: true, users };
+      },
+      async login(userId, pin) {
+        const u = box.users.find((x) => x.id === userId);
+        if (!u) return { ok: false, error: 'no_user', hasGuestProgress: false };
+        const denied = checkPin(u, pin);
+        if (denied) return { ...denied, hasGuestProgress: false };
+        box.current = u.id;
+        changed();
+        return { ok: true, user: pub(u), hasGuestProgress: false };
+      },
+      async register(name, pin, avatar) {
+        const fail = (/** @type {string} */ error) => ({ ok: false, error, hasGuestProgress: false });
+        const n = normName(name);
+        if (!n) return fail('bad_name');
+        if (!pinOk(pin)) return fail('bad_pin_format');
+        const av = avatar == null || avatar === '' ? '⚽' : avatar;
+        if (!validAvatar(av)) return fail('bad_avatar');
+        if (taken(n, 0)) return fail('name_taken');
+        const u = { id: Math.max(0, ...box.users.map((x) => x.id)) + 1, name: n, avatar: av, pin, failed: 0, lockedUntil: 0 };
+        box.users.push(u);
+        box.current = u.id;
+        changed();
+        return { ok: true, user: pub(u), hasGuestProgress: false };
+      },
+      async setAvatar(avatar) {
+        const u = me();
+        if (!u) return { ok: false, error: 'auth' };
+        if (!validAvatar(avatar)) return { ok: false, error: 'bad_avatar' };
+        u.avatar = avatar;
+        changed();
+        return { ok: true, user: pub(u) };
+      },
+      async rename(name, pin) {
+        const u = me();
+        if (!u) return { ok: false, error: 'auth' };
+        const denied = checkPin(u, pin);
+        if (denied) return denied;
+        const n = normName(name);
+        if (!n) return { ok: false, error: 'bad_name' };
+        if (taken(n, u.id)) return { ok: false, error: 'name_taken' };
+        u.name = n;
+        changed();
+        return { ok: true, user: pub(u) };
+      },
+      async changePin(pin, newPin) {
+        const u = me();
+        if (!u) return { ok: false, error: 'auth' };
+        if (!pinOk(newPin)) return { ok: false, error: 'bad_pin_format' };
+        const denied = checkPin(u, pin);
+        if (denied) return denied;
+        u.pin = newPin;
+        changed();
+        return { ok: true, user: pub(u) };
+      },
+      hasGuestProgress: () => false,
+      adoptGuest: () => true,
+      async logout() {
+        box.current = null;
+        changed();
+        return { ok: true, lost: false };
+      },
+    };
+  };
+
+  /** @type {KFAuth} */
+  const authApi = TEST_MODE ? makeSandboxAuth() : auth;
+
   /** @type {KFAPI} */
   const KF = {
     lang: LANG,
@@ -924,7 +1153,7 @@
     PACK_SIZE,
     TEST_MODE,
     AVATARS,
-    auth,
+    auth: authApi,
     _merge3: merge3,
 
     get: () => state,

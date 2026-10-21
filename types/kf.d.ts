@@ -119,6 +119,8 @@ interface KFUser {
 
 type KFAuthStatus = 'guest' | 'pending' | 'synced' | 'offline' | 'expired';
 
+/** Test mode (`?parent`): `KF.auth` is a per-tab sandbox (sessionStorage `kf-test-auth`, never the network) with a demo player
+ * (PIN 1234) and the server's validation/error codes, so `'test_mode'` is no longer returned (kept for compatibility). */
 interface KFAuthResult {
   ok: boolean;
   user?: KFUser;
@@ -134,6 +136,12 @@ interface KFAuth {
   users(): Promise<{ ok: boolean; users?: KFUser[]; error?: string }>;
   login(userId: number, pin: string): Promise<KFAuthResult>;
   register(name: string, pin: string, avatar?: string): Promise<KFAuthResult>;
+  /** Saves a new shirt (`KFKit.format(kit)`, or an old picture avatar). Online only; no PIN needed. */
+  setAvatar(avatar: string): Promise<KFAuthResult>;
+  /** Renames the player; `pin` = the current PIN (wrong PINs count towards the login lockout). */
+  rename(name: string, pin: string): Promise<KFAuthResult>;
+  /** Changes the PIN; `pin` = the current one. Other devices stay logged in. */
+  changePin(pin: string, newPin: string): Promise<KFAuthResult>;
   hasGuestProgress(): boolean;
   adoptGuest(): boolean;
   logout(opts?: { force?: boolean }): Promise<{ ok: boolean; lost?: boolean }>;

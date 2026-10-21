@@ -13,7 +13,7 @@ the Worker code handles `/api/*` and `/shared/site.js` (answers `window.KF_SITE 
   `env.es` → worker `keeper-fun-games-es`, `SITE_LANG: "es"`; envs do not inherit bindings/vars, so assets and D1 are repeated there.
 - `.assetsignore` — never upload: `books/`, `.pi/`, `.git/`, `node_modules/`, `worker/`, `migrations/`, `scripts/`, `tests/`,
   `*.md`, `wrangler.jsonc`, `deploy.sh`, dotfiles, tooling configs (`package.json`, lockfile, `playwright.config.mjs`), test output.
-- `worker/index.js` — ES module Worker, plain JS.
+- `worker/index.js` — ES module Worker, plain JS (imports `shared/kit.js` for avatar validation; wrangler bundles it).
 - `migrations/0001_init.sql` — D1 schema (applied with `wrangler d1 migrations apply`).
 - `migrations/0002_signup.sql` — `users.signup_key` (self-registration abuse guard) + index.
 - `scripts/add-user.mjs` — add a user by hand: `node scripts/add-user.mjs <name> <pin> [avatar] [--local]`.
@@ -46,15 +46,27 @@ Errors: `{ "error": "<code>" }`.
 | `POST /api/register` | `{ name, pin, avatar }` | `201 { user }` + cookie (logged in) · `400 { error: 'bad_name' \| 'bad_pin_format' \| 'bad_avatar' }` · `409 { error: 'name_taken' }` · `429 { error: 'too_many', retryAfter /* s */ }` · `403 { error: 'full' }` |
 | `POST /api/logout` | `{}` | `204`, session deleted, cookie cleared |
 | `GET /api/me` | — | `200 { user }` · `401 { error: 'auth' }` |
-| `GET /api/progress` | — | `200 { rev, state /* object or null */, updatedAt }` |
+| `GET /api/progress` | — | `200 { rev, state /* object or null */, updatedAt, user: { id, name, avatar } /* fresh from the DB */ }` |
+| `POST /api/me/avatar` | `{ avatar }` | `200 { user }` · `400 { error: 'bad_avatar' }` |
+| `POST /api/me/name` | `{ name, pin }` | `200 { user }` · `401 { error: 'bad_pin', attemptsLeft }` · `429 { error: 'locked', retryAfter }` · `400 { error: 'bad_name' }` · `409 { error: 'name_taken' }` |
+| `POST /api/me/pin` | `{ pin, newPin }` | `200 { ok: true }` · `400 { error: 'bad_pin_format' }` · `401 bad_pin` · `429 locked` |
 | `PUT /api/progress` | `{ baseRev, state, results: [{ id, slug, score, max, at }] }` | `200 { rev }` · `409 { error: 'conflict', rev, state }` |
 
 - PIN: exactly 4 digits. 5 wrong PINs in a row → user locked for 5 minutes (`locked_until`); success resets `failed`.
+  One helper (`checkPin`) does this for `login`, `/api/me/name` and `/api/me/pin` — they share the counter and the lock.
+- Avatar: stored in `users.avatar` as `k:<pattern>:<c1>:<c2>:<mark>` (a shirt) or, for old users, a bare picture from the first 12
+  `MARKS`; format, choices and the only server-side check (`KFKit.valid`) are in `shared/kit.js`. Register accepts any valid avatar
+  (missing → `⚽`); `/api/me/avatar` needs a valid one (no default). Special patterns are unlocked on the client only.
+- `/api/me/*` (session required, else `401 { error: 'auth' }`; JSON content-type guard → 415 before the session check):
+  - `name` — same normalisation/rule as register; unique case-insensitively excluding the user himself (changing only the case of
+    one's own name is fine); the PIN is checked first, so a wrong PIN counts toward the lockout even if the name is bad.
+  - `/api/me/pin` — `newPin` must be exactly 4 digits (`400 bad_pin_format`, checked **before** the PIN, so a typo costs no attempt).
+    Stores a fresh pbkdf2 hash; other sessions stay valid (no logout of other devices).
 - `PUT /api/progress`: accepted only if `baseRev` equals the stored rev (0 when there is no row); then `rev + 1`.
   `results` are inserted with `INSERT OR IGNORE` (idempotent by client id), also on 409 — they are history, not state.
   Limits: body ≤ 256 KB, ≤ 100 results per request.
 - `POST /api/register` (self-registration, public):
-  `name` is trimmed and inner whitespace collapsed; must match `/^[\p{L} -]{1,30}$/u` and contain a letter (same rule as
+  `name` is trimmed and inner whitespace collapsed; must match `/^[\p{L} '’ʼ-]{1,30}$/u` (letters, spaces, hyphens, apostrophes) and contain a letter (same rule as
   `add-user.mjs`). `pin` — exactly 4 digits. `avatar` — one of `AVATARS` (`⚽ 🧤 🥅 🏆 ⭐ 🔥 🦁 🐯 🦊 🐼 🚀 ⚡`; missing → `⚽`).
   Name is unique case-insensitively (`COLLATE NOCASE` check + the `UNIQUE` constraint for races) → `409 name_taken`.
   Limits: max 3 registrations per client per 24 h (key = SHA-256 of `CF-Connecting-IP`, `'unknown'` if absent, stored in
@@ -79,7 +91,7 @@ Offline-first: games always read and write a local copy; the server is a backup 
   `cards` counts never drop below 1 if the card was owned in base, local or server (two devices selling the same duplicate);
   arrays = union; other values = local if changed since base, else server. Coins never below 0.
 - 401 → session gone: keep local data, `KF.auth.status = 'expired'`, catalog asks for the PIN again.
-- Test mode (`?parent`) never logs in and never syncs.
+- Test mode (`?parent`) never touches the network and never syncs; `KF.auth` there is the sandbox described below.
 
 `KF.auth`: `user`, `status` (`'guest' | 'synced' | 'pending' | 'offline' | 'expired'`), `users()`, `login(userId, pin)`,
 `register(name, pin, avatar)`, `hasGuestProgress()`, `adoptGuest()` (adds guest progress to the user: merge3 with `base = fresh()`, then clears guest),
@@ -89,4 +101,26 @@ status/user change.
 `KF.auth.register(name, pin, avatar)` mirrors `login()` (login and register share one post-login routine): test mode →
 `{ ok: false, error: 'test_mode' }`; on failure `{ ok: false, error, retryAfter, hasGuestProgress }` (`error` = server code or
 `'network'`); on success the user is stored, state loaded, synced, and `{ ok: true, user, hasGuestProgress }` is returned.
-`KF.AVATARS` is the list of allowed avatars for the UI.
+`KF.AVATARS` is the list of old picture avatars for the UI.
+
+Account changes (profile page) — `KF.auth.setAvatar(avatar)`, `rename(name, pin)`, `changePin(pin, newPin)` → `KFAuthResult`:
+test mode → `{ ok: false, error: 'test_mode' }`; not logged in → `{ ok: false, error: 'auth' }`; offline / fetch failure →
+`{ ok: false, error: 'network' }`; server errors → `{ ok: false, error, attemptsLeft?, retryAfter? }` (`bad_avatar`, `bad_name`,
+`name_taken`, `bad_pin_format`, `bad_pin`, `locked`). A `401 bad_pin` is **not** a lost session; a `401 auth` is
+(`status = 'expired'`, error `'auth'`). On success `{ ok: true, user }` (`changePin`: `user` = the current one): the stored user
+(`localStorage['kf-user']` + `KF.auth.user`) takes the server's `{ id, name, avatar }` and `'auth'` is emitted. Online only.
+Every pull (`GET /api/progress`) also compares the server's `user` with the stored one — a rename / new shirt made on another
+device replaces it and emits `'auth'`.
+
+### Test-mode sandbox auth
+
+In `KF.TEST_MODE` the same `KF.auth` API (`users`, `login`, `register`, `logout`, `setAvatar`, `rename`, `changePin`,
+`hasGuestProgress` = false, `adoptGuest` = no-op `true`) runs on a per-tab sandbox in `sessionStorage['kf-test-auth']`:
+`{ users: [{ id, name, avatar, pin, failed, lockedUntil }], current }`. It is seeded with one player
+(`Тестовий гравець` / `Jugador de prueba` by `KF.lang`, PIN `1234`, avatar `k:stripes:blue:yellow:1`; nobody logged in at first).
+It mirrors the server: the same name normalisation/rule, case-insensitive uniqueness (excluding the player himself), 4-digit PINs,
+`KFKit.valid` for avatars (accepts anything if `kit.js` is not loaded), the same error codes and fields (`bad_pin` + `attemptsLeft`,
+`locked` + `retryAfter` after 5 fails for 5 min, per player, shared by login/rename/changePin; `no_user`, `bad_name`, `name_taken`,
+`bad_pin_format`, `bad_avatar`; `auth` when nobody is logged in). `status` is `'synced'` while a player is logged in, else `'guest'`;
+`'auth'` is emitted on every successful change. Progress stays the single per-tab sandbox progress (no per-player split, no sync,
+login/register do not reset the sandbox coins). `'test_mode'` is no longer returned.

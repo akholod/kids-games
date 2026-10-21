@@ -72,7 +72,10 @@ test('uk: texts byte-identical to HEAD', () => {
   const now = load(code, { site: { lang: 'uk' } });
   const old = load(oldCode);
   assert.equal(now.lang, 'uk');
-  assert.deepEqual(plain(texts(now)), plain(texts(old)));
+  // achievements added after the i18n migration are checked in achievements.test.mjs
+  const same = plain(texts(now));
+  same.ach = same.ach.slice(0, old.ACHIEVEMENTS.length);
+  assert.deepEqual(same, plain(texts(old)));
 });
 
 test('uk: default without site.js, and unknown lang falls back to uk', () => {
@@ -93,7 +96,7 @@ test('uk: siteGames = previous catalog (listed games), uk texts', () => {
 test('es: achievements, categories, card categories are Spanish, no Cyrillic', () => {
   const KF = load(code, { site: { lang: 'es' } });
   assert.equal(KF.lang, 'es');
-  assert.equal(KF.ACHIEVEMENTS.length, 20);
+  assert.equal(KF.ACHIEVEMENTS.length, 23);
   const uk = load(code, { site: { lang: 'uk' } });
   KF.ACHIEVEMENTS.forEach((a, i) => {
     assert.equal(a.id, uk.ACHIEVEMENTS[i].id);

@@ -3,6 +3,7 @@
 // Usage: node scripts/add-user.mjs <name> <pin> [avatar] [--local] [--update]
 import { pbkdf2Sync, randomBytes } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import '../shared/kit.js';
 
 const ITER = 100000;
 const args = process.argv.slice(2);
@@ -20,7 +21,7 @@ const die = (m) => {
 if (!name || !pin) die('Usage: node scripts/add-user.mjs <name> <pin> [avatar] [--local] [--update]');
 if (!/^[\p{L} '’ʼ-]{1,30}$/u.test(name)) die('Name: letters, spaces, hyphen, apostrophe, up to 30 chars');
 if (!/^\d{4}$/.test(pin)) die('PIN must be exactly 4 digits');
-if (avatar.length > 16 || /['"\\;]/.test(avatar)) die('Bad avatar');
+if (!globalThis.KFKit.valid(avatar)) die('Bad avatar (a picture from KFKit.MARKS or k:<pattern>:<c1>:<c2>:<mark>)');
 
 const salt = randomBytes(16);
 const hash = pbkdf2Sync(pin, salt, ITER, 32, 'sha256');

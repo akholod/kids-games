@@ -55,8 +55,17 @@ const makeServer = () => {
     }
     const uid = srv.sessions.get(device.token);
     if (!uid) return json(401, { error: 'auth' });
+    const me = srv.users.find((x) => x.id === uid);
+    if (path.startsWith('/api/me/')) {
+      if (path === '/api/me/avatar') me.avatar = body.avatar;
+      else if (me.pin !== body.pin) return json(401, { error: 'bad_pin', attemptsLeft: 4 });
+      else if (path === '/api/me/name') me.name = body.name;
+      else me.pin = body.newPin;
+      return json(200, path === '/api/me/pin' ? { ok: true } : { user: { id: me.id, name: me.name, avatar: me.avatar } });
+    }
     const row = srv.progress.get(uid) || { rev: 0, state: null };
-    if (method === 'GET') return json(200, { rev: row.rev, state: row.state, updatedAt: 0 });
+    if (method === 'GET')
+      return json(200, { rev: row.rev, state: row.state, updatedAt: 0, user: { id: me.id, name: me.name, avatar: me.avatar } });
     srv.puts.push(body);
     for (const r of body.results) srv.results.set(r.id, { ...r, uid });
     if (body.baseRev !== row.rev) return json(409, { error: 'conflict', rev: row.rev, state: row.state });
@@ -309,6 +318,78 @@ test('401 -> expired, local kept; re-login resumes push', async () => {
   assert.equal(srv.progress.get(1).state.coins, 2);
 });
 
+test('account changes: setAvatar / rename / changePin', async () => {
+  const srv = makeServer();
+  const d = loadDevice(srv);
+  const events = [];
+  const stored = () => JSON.parse(d.localStorage.getItem('kf-user'));
+  assert.deepEqual(plain(await d.KF.auth.setAvatar('⚽')), { ok: false, error: 'auth' }, 'guest');
+  await d.KF.auth.login(1, '1234');
+  d.KF.on('auth', (e) => events.push(e));
+
+  const a = await d.KF.auth.setAvatar('k:stripes:red:white:10');
+  assert.equal(a.ok, true);
+  assert.equal(a.user.avatar, 'k:stripes:red:white:10');
+  assert.equal(d.KF.auth.user.avatar, 'k:stripes:red:white:10');
+  assert.equal(stored().avatar, 'k:stripes:red:white:10');
+  assert.equal(events.length, 1);
+  assert.equal(events.at(-1).user.avatar, 'k:stripes:red:white:10');
+
+  const bad = await d.KF.auth.rename('Marko', '0000');
+  assert.deepEqual(plain(bad), { ok: false, error: 'bad_pin', attemptsLeft: 4 });
+  assert.equal(d.KF.auth.status, 'synced', 'wrong PIN is not a lost session');
+  assert.equal(d.KF.auth.user.name, 'Keeper');
+  const n = await d.KF.auth.rename('Marko', '1234');
+  assert.equal(n.ok, true);
+  assert.equal(d.KF.auth.user.name, 'Marko');
+  assert.equal(stored().name, 'Marko');
+  assert.equal(events.length, 2);
+
+  assert.equal((await d.KF.auth.changePin('0000', '4321')).error, 'bad_pin');
+  assert.equal(d.KF.auth.status, 'synced');
+  const p = await d.KF.auth.changePin('1234', '4321');
+  assert.equal(p.ok, true);
+  assert.equal(srv.users[0].pin, '4321');
+
+  srv.down = true;
+  const net = await d.KF.auth.setAvatar('⚽');
+  assert.deepEqual(plain(net), { ok: false, error: 'network' });
+  assert.equal(d.KF.auth.user.avatar, 'k:stripes:red:white:10');
+  srv.down = false;
+
+  srv.sessions.clear();
+  const lost = await d.KF.auth.setAvatar('⚽');
+  assert.equal(lost.ok, false);
+  assert.equal(lost.error, 'auth');
+  assert.equal(d.KF.auth.status, 'expired');
+});
+
+test('pull with a changed user (rename on another device) updates the stored user', async () => {
+  const srv = makeServer();
+  const A = loadDevice(srv);
+  const B = loadDevice(srv);
+  await A.KF.auth.login(1, '1234');
+  await B.KF.auth.login(1, '1234');
+  const events = [];
+  B.KF.on('auth', (e) => events.push(e));
+  await A.KF.auth.rename('Marko', '1234');
+  await A.KF.auth.setAvatar('k:hoops:blue:navy:7');
+  assert.equal(B.KF.auth.user.name, 'Keeper');
+  await B.tick(5000);
+  B.fire('focus');
+  await settle();
+  assert.equal(B.KF.auth.user.name, 'Marko');
+  assert.equal(B.KF.auth.user.avatar, 'k:hoops:blue:navy:7');
+  assert.equal(JSON.parse(B.localStorage.getItem('kf-user')).name, 'Marko');
+  assert.ok(events.some((e) => e.user.name === 'Marko'));
+  // unchanged user: no extra 'auth' event
+  const n = events.length;
+  await B.tick(5000);
+  B.fire('focus');
+  await settle();
+  assert.equal(events.length, n);
+});
+
 test('results outbox sent once', async () => {
   const srv = makeServer();
   const d = loadDevice(srv);
@@ -435,8 +516,9 @@ test('test mode never logs in or touches network', async () => {
   assert.equal(KF.auth.user, null);
   assert.equal(KF.auth.status, 'guest');
   assert.equal(KF.get().coins, 100);
-  assert.deepEqual(plain(await KF.auth.login(1, '1234')), { ok: false, error: 'test_mode' });
-  assert.deepEqual(plain(await KF.auth.users()), { ok: false, error: 'test_mode' });
+  // the test-mode auth is a sandbox (tests/unit/kf-sandbox.test.mjs): the real server is not asked
+  assert.equal((await KF.auth.login(1, '1234')).ok, true, 'sandbox demo player, not the server user');
+  assert.equal((await KF.auth.users()).users[0].id, 1);
   KF.answer('x', true);
   KF.finishGame('x', { score: 1, max: 1 });
   d.fire('focus');
