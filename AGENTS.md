@@ -10,7 +10,9 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 - Interests: football.
 
 ## Structure
-- `index.html` + `catalog.js` — catalog (game list, coins, football-card album with packs, achievements).
+- `index.html` + `catalog.js` — catalog (game list, coins, football-card album with packs, achievements, login/new player with a quick shirt choice).
+- `profile/` (`index.html` + `profile.js`) — player profile: FIFA-style player card with stats, shirt editor (patterns, colours, picture or number 1–99, special shirts unlocked by achievements), rename and PIN change (both need the current PIN).
+- `shared/kit.js` — shirt avatars (`globalThis.KFKit`): the stored format `k:<pattern>:<c1>:<c2>:<mark>` (old bare-emoji avatars stay valid), choices, `valid`/`parse`/`format`, special-shirt unlocks and the SVG renderer `KFKit.svg(kit, opts)`; also imported by the Worker to validate avatars, so no DOM at load time. Loaded before `kf.js` on the catalog and the profile.
 - `games/<slug>/` — one game per folder, no build step: `index.html` (markup + inline CSS), `game.js` (game code, classic script, IIFE),
   optional `content.js` (data), `art.js` (drawings), `engine.js` (pure logic with unit tests). No inline `<script>` blocks (tsc/Biome can't check them).
 - `shared/kf.js` — progress core (`window.KF`): coins, cards/packs, achievements, game registry `KF.GAMES`.
@@ -50,7 +52,7 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
   Texts: `const T = KF.i18n({ uk: {...}, es: {...} })`, `T('key', { n })`, `T.apply()` for `[data-i18n*]`; missing es key → uk. The uk dictionary keeps today's exact text. Spanish site: Spain Spanish, «tú», no Cyrillic.
 - `GAMES` entries have `sites: ['uk']` or `['uk','es']` and `es: { title, desc }`; catalog uses `KF.siteGames()` (filtered by `KF.lang`, title/desc in that language).
 - Move a game to the Spanish site: translate its dictionary (`KF.i18n({ uk, es })`, no Cyrillic on `?lang=es`), add `'es'` to its `sites`, check `tests/unit/i18n.test.mjs`.
-- Test mode for parents: any page with `?parent` (off: `?parent=off`) — per-tab sandbox progress (100 coins), real progress untouched.
+- Test mode for parents: any page with `?parent` (off: `?parent=off`) — per-tab sandbox progress (100 coins), real progress untouched; `KF.auth` is a per-tab sandbox too (demo player, PIN 1234, no network: login, new player, shirt, rename, PIN change all testable); the profile has a switch that opens every special shirt.
 - Progress: guest = localStorage only; logged-in user = local copy synced to D1 in the background (offline-first).
   Games keep using the synchronous `KF` API and never call the network themselves.
 - Users are added by hand: `node scripts/add-user.mjs <name> <pin> [avatar]` (`--update` changes the PIN).

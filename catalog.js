@@ -106,6 +106,7 @@ const T = KF.i18n({
     'test.onText':
       'Зараз увімкнено: статистика, код і скидання нижче стосуються тільки тестового прогресу. Вхід у профіль і синхронізація в тест-режимі вимкнені.',
     'test.off': 'Вимкнути тест-режим',
+    'test.pinHint': '🧪 Тест: PIN демо-гравця — 1234',
     'sync.local': 'Прогрес зберігається лише в цьому браузері. Щоб перенести його на інший пристрій, скопіюйте код.',
     'sync.user': 'Профіль «{name}»: прогрес зберігається на сервері й сам переходить на інші пристрої. Код нижче — запасний варіант.',
     'sync.guest':
@@ -136,6 +137,7 @@ const T = KF.i18n({
     'who.login': 'Увійти',
     'who.now': 'Зараз грає',
     'who.logout': '👋 Вийти',
+    'who.profile': '👕 Мій профіль',
     'who.saving': 'Зберігаю…',
     'unsaved.title': 'Ще не все збережено',
     'unsaved.text':
@@ -172,7 +174,20 @@ const T = KF.i18n({
     'pin.locked': 'Багато спроб підряд. Зачекай {min} хв і спробуй ще ⏳',
     'new.title': 'Як тебе звати?',
     'new.placeholder': 'Твоє імʼя',
-    'new.avatar': 'Обери значок',
+    'new.avatar': 'Обери картинку на футболку',
+    'new.color': 'Колір футболки',
+    'color.red': 'Червоний',
+    'color.orange': 'Помаранчевий',
+    'color.yellow': 'Жовтий',
+    'color.green': 'Зелений',
+    'color.teal': 'Бірюзовий',
+    'color.sky': 'Блакитний',
+    'color.blue': 'Синій',
+    'color.navy': 'Темно-синій',
+    'color.purple': 'Фіолетовий',
+    'color.pink': 'Рожевий',
+    'color.white': 'Білий',
+    'color.black': 'Чорний',
     'new.next': 'Далі →',
     'new.step': 'Крок {n} з 3',
     'new.empty': 'Напиши своє імʼя 🙂',
@@ -301,6 +316,7 @@ const T = KF.i18n({
     'test.onText':
       'Está activado: las estadísticas, el código y el borrado de abajo solo afectan al progreso de prueba. En el modo de prueba no se puede entrar en un perfil ni sincronizar.',
     'test.off': 'Desactivar el modo de prueba',
+    'test.pinHint': '🧪 Prueba: el PIN del jugador de prueba es 1234',
     'sync.local': 'El progreso se guarda solo en este navegador. Para pasarlo a otro dispositivo, copia el código.',
     'sync.user':
       'Perfil «{name}»: el progreso se guarda en el servidor y pasa solo a otros dispositivos. El código de abajo es una copia de reserva.',
@@ -332,6 +348,7 @@ const T = KF.i18n({
     'who.login': 'Entrar',
     'who.now': 'Está jugando',
     'who.logout': '👋 Salir',
+    'who.profile': '👕 Mi perfil',
     'who.saving': 'Guardando…',
     'unsaved.title': 'Aún no está todo guardado',
     'unsaved.text':
@@ -368,7 +385,20 @@ const T = KF.i18n({
     'pin.locked': 'Muchos intentos seguidos. Espera {min} min y prueba otra vez ⏳',
     'new.title': '¿Cómo te llamas?',
     'new.placeholder': 'Tu nombre',
-    'new.avatar': 'Elige tu icono',
+    'new.avatar': 'Elige un dibujo para tu camiseta',
+    'new.color': 'Color de la camiseta',
+    'color.red': 'Rojo',
+    'color.orange': 'Naranja',
+    'color.yellow': 'Amarillo',
+    'color.green': 'Verde',
+    'color.teal': 'Turquesa',
+    'color.sky': 'Celeste',
+    'color.blue': 'Azul',
+    'color.navy': 'Azul marino',
+    'color.purple': 'Morado',
+    'color.pink': 'Rosa',
+    'color.white': 'Blanco',
+    'color.black': 'Negro',
     'new.next': 'Siguiente →',
     'new.step': 'Paso {n} de 3',
     'new.empty': 'Escribe tu nombre 🙂',
@@ -1128,9 +1158,9 @@ function askDialog({ icon, title, text, primary, secondary }) {
 })();
 
 // Who is playing: header chip, login (player cards + PIN), guest progress merge, logout.
-// Talks only to KF.auth (contract at the end of BACKEND.md). Test mode never logs in.
+// Talks only to KF.auth (contract at the end of BACKEND.md). In test mode KF.auth is a per-tab sandbox (no network).
 (() => {
-  const auth = KF.TEST_MODE ? null : KF.auth;
+  const auth = KF.auth;
   if (!auth) return;
   /** Elements are looked up by id and used as HTMLInputElement / HTMLDialogElement / ... as needed. @returns {any} */
   const $ = (id) => document.getElementById(id);
@@ -1142,17 +1172,10 @@ function askDialog({ icon, title, text, primary, secondary }) {
   const count = (n) => (Number.isFinite(Number(n)) ? Math.max(0, Number(n)) : 0);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  // Names and avatars come from the server: always set them as text, never as markup.
-  const KITS = ['#e2463f', '#2f7de1', '#f2b632', '#8a5ad8', '#18a06a', '#f07a2a', '#e85b9a', '#1c9fb0'];
-  const kitColor = (u) =>
-    KITS[(Math.abs(parseInt(u.id, 10)) || [...String(u.name)].reduce((a, c) => a + c.codePointAt(0), 0)) % KITS.length];
-  const face = (u) => {
-    const a = String(u.avatar || '').trim();
-    return a && [...a].length <= 8 ? a : (String(u.name || '?').trim()[0] || '?').toUpperCase();
-  };
+  // Names and avatars come from the server: always set them as text, never as markup (KFKit.svg draws the mark as text).
+  const shirt = (u) => KFKit.svg(KFKit.parse(u.avatar, u));
   function avatar(u, size = '') {
-    const el = h('span', { className: `kf-avatar ${size}`, textContent: face(u) });
-    el.style.setProperty('--kit', kitColor(u));
+    const el = h('span', { className: `kf-avatar ${size}` }, shirt(u));
     el.setAttribute('aria-hidden', 'true');
     return el;
   }
@@ -1210,6 +1233,12 @@ function askDialog({ icon, title, text, primary, secondary }) {
           textContent: T('who.logout'),
         });
         logout.addEventListener('click', doLogout);
+        const profile = h('a', {
+          className: 'btn btn-dark who-profile',
+          id: 'profile-link',
+          href: 'profile/',
+          textContent: T('who.profile'),
+        });
         who.append(
           h(
             'div',
@@ -1221,6 +1250,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
               h('div', {}, h('strong', { textContent: user.name }), h('span', { textContent: T('who.now') })),
             ),
             status,
+            profile,
             logout,
           ),
         );
@@ -1239,7 +1269,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (!menu || menu.hidden === !open) return;
     menu.hidden = !open;
     $('who-btn').setAttribute('aria-expanded', open);
-    if (open && fromKeyboard) $('logout-btn').focus();
+    if (open && fromKeyboard) $('profile-link').focus();
     else if (refocus) $('who-btn').focus();
   }
   document.addEventListener('pointerdown', (e) => {
@@ -1319,7 +1349,8 @@ function askDialog({ icon, title, text, primary, secondary }) {
     toggleMenu(false, false);
     direct = !!user;
     draft.name = '';
-    draft.avatar = AVATARS[0];
+    draft.mark = MARKS[0];
+    draft.color = '';
     signupClosed = '';
     if (!dlg.open) dlg.showModal();
     if (user) showPin(user);
@@ -1350,6 +1381,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     showStep('step-pick');
     dlg.setAttribute('aria-labelledby', 'pick-title');
     $('pick-retry').hidden = true;
+    $('pick-test-hint').hidden = !KF.TEST_MODE;
     $('pick-text').textContent = T('pick.text');
     $('pick-msg').dataset.kind = message ? 'net' : '';
     $('pick-msg').textContent = message;
@@ -1386,7 +1418,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (!users.length) $('pick-text').textContent = T('pick.emptyAdd');
     $('players').replaceChildren(
       ...users.map((u, i) => {
-        const kit = h('span', { className: 'kit', textContent: face(u) });
+        const kit = h('span', { className: 'kit' }, shirt(u));
         const card = h(
           'button',
           { type: 'button', className: 'player' },
@@ -1394,7 +1426,6 @@ function askDialog({ icon, title, text, primary, secondary }) {
           kit,
           h('b', { textContent: u.name }),
         );
-        card.style.setProperty('--kit', kitColor(u));
         kit.setAttribute('aria-hidden', 'true');
         card.addEventListener('click', () => showPin(u));
         return card;
@@ -1438,6 +1469,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('pin-text').textContent = text;
     $('pin-back').textContent = back;
     $('pin-steps').hidden = mode === 'login';
+    $('pin-test-hint').hidden = !KF.TEST_MODE || mode !== 'login'; // the demo PIN helps only to log in
     drawSteps($('pin-steps'), mode === 'confirm' ? 3 : 2);
     dots.className = 'pin-dots';
     drawDots();
@@ -1539,10 +1571,14 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('pin-clock').hidden = true;
   }
 
-  // ---- New player: name + avatar → make up a PIN → repeat it → KF.auth.register ----
-  const AVATARS =
-    Array.isArray(KF.AVATARS) && KF.AVATARS.length ? KF.AVATARS : ['⚽', '🧤', '🥅', '🏆', '⭐', '🔥', '🦁', '🐯', '🦊', '🐼', '🚀', '⚡'];
-  const draft = { name: '', avatar: AVATARS[0] };
+  // ---- New player: name + shirt (colour + picture) → make up a PIN → repeat it → KF.auth.register ----
+  // The full shirt editor is on the profile page; here a plain shirt in one colour.
+  const MARKS = KFKit.MARKS;
+  const COLORS = /** @type {KFKitColor[]} */ (Object.keys(KFKit.COLORS));
+  const draft = { name: '', mark: MARKS[0], color: /** @type {KFKitColor | ''} */ ('') };
+  const draftKit = () =>
+    /** @type {KFKit} */ ({ pattern: 'plain', c1: draft.color || 'blue', c2: draft.color || 'blue', mark: draft.mark });
+  const draftUser = () => ({ name: draft.name, avatar: KFKit.format(draftKit()) });
   let firstPin = '',
     regToken = 0,
     signupClosed = '';
@@ -1552,16 +1588,26 @@ function askDialog({ icon, title, text, primary, secondary }) {
   const cleanName = (s) => s.normalize('NFC').replace(/['’]/g, 'ʼ').replace(/\s+/g, ' ').trim(); // same as the server
   const nameOk = (s) => /^[\p{L} '’ʼ-]{1,30}$/u.test(s) && /\p{L}/u.test(s);
   const sameName = (a, b) => cleanName(String(a)).toLocaleLowerCase('uk') === b.toLocaleLowerCase('uk');
-  // Shirt colour of the id the server will most likely give (SQLite: max + 1), so it stays the same after sign-up.
-  const draftKit = () => kitColor({ id: users.reduce((m, u) => Math.max(m, parseInt(u.id, 10) || 0), 0) + 1 });
+  // First colour = the one an old-style avatar of the next id would get (SQLite: max + 1), as before shirts.
+  const firstColor = () => KFKit.legacyColor({ id: users.reduce((m, u) => Math.max(m, parseInt(u.id, 10) || 0), 0) + 1 });
   const nameInput = $('new-name');
-  const avatarBtns = AVATARS.map((a, i) => {
+  const avatarBtns = MARKS.map((a, i) => {
     const b = h('button', { type: 'button', textContent: a });
     b.setAttribute('role', 'radio');
     b.addEventListener('click', () => pickAvatar(i));
     return b;
   });
   $('new-avatars').append(...avatarBtns);
+  const colorBtns = COLORS.map((c, i) => {
+    const b = h('button', { type: 'button', className: 'swatch' });
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-label', T(`color.${c}`));
+    b.dataset.color = c;
+    b.style.setProperty('--sw', KFKit.COLORS[c]);
+    b.addEventListener('click', () => pickColor(i));
+    return b;
+  });
+  $('new-colors').append(...colorBtns);
 
   function drawSteps(el, at) {
     el.replaceChildren(...[1, 2, 3].map((n) => h('i', { className: n <= at ? 'on' : '' })));
@@ -1577,6 +1623,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     dlg.setAttribute('aria-labelledby', 'new-title');
     drawSteps($('step-new').querySelector('.new-steps'), 1);
     nameInput.value = draft.name;
+    if (!draft.color) draft.color = firstColor();
     drawAvatars();
     drawPreview();
     setHint(hint);
@@ -1590,8 +1637,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
   function drawPreview(pop = false) {
     const name = cleanName(nameInput.value);
     const card = $('new-card');
-    card.style.setProperty('--kit', draftKit());
-    $('new-kit').textContent = draft.avatar;
+    $('new-kit').replaceChildren(KFKit.svg(draftKit()));
     $('new-card-name').textContent = name || T('new.placeholder');
     $('new-card-name').classList.toggle('empty', !name);
     if (pop) {
@@ -1601,17 +1647,24 @@ function askDialog({ icon, title, text, primary, secondary }) {
     }
   }
   function drawAvatars() {
-    avatarBtns.forEach((b) => {
-      const on = b.textContent === draft.avatar;
+    const check = (b, on) => {
       b.setAttribute('aria-checked', String(on));
       b.tabIndex = on ? 0 : -1;
-    });
+    };
+    avatarBtns.forEach((b) => check(b, b.textContent === draft.mark));
+    colorBtns.forEach((b) => check(b, b.dataset.color === draft.color));
   }
   function pickAvatar(i, focus = false) {
-    draft.avatar = AVATARS[i];
+    draft.mark = MARKS[i];
     drawAvatars();
     drawPreview(true);
     if (focus) avatarBtns[i].focus();
+  }
+  function pickColor(i, focus = false) {
+    draft.color = COLORS[i];
+    drawAvatars();
+    drawPreview(true);
+    if (focus) colorBtns[i].focus();
   }
   function nameNext() {
     const name = cleanName(nameInput.value);
@@ -1625,8 +1678,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
   function showNewPin(confirm, msg = '') {
     mode = confirm ? 'confirm' : 'create';
     if (!confirm) firstPin = '';
-    const face = avatar(draft, 'xl');
-    face.style.setProperty('--kit', draftKit());
+    const face = avatar(draftUser(), 'xl');
     pinStep(draft, T(confirm ? 'new.repeat' : 'new.create'), T(confirm ? 'new.repeatText' : 'new.createText'), T('back'), face);
     stopLock();
     setKeys(true);
@@ -1651,7 +1703,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     const token = ++regToken;
     let r;
     try {
-      r = typeof auth.register === 'function' ? await auth.register(draft.name, pin, draft.avatar) : { ok: false, error: 'network' };
+      r = typeof auth.register === 'function' ? await auth.register(draft.name, pin, draftUser().avatar) : { ok: false, error: 'network' };
     } catch {
       r = { ok: false, error: 'network' };
     }
@@ -1751,14 +1803,17 @@ function askDialog({ icon, title, text, primary, secondary }) {
     setHint(name && !nameOk(name) ? BAD_NAME : '');
     drawPreview();
   });
-  $('new-avatars').addEventListener('keydown', (e) => {
-    const cols = getComputedStyle($('new-avatars')).gridTemplateColumns.split(' ').length;
-    const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
-    if (!step) return;
-    e.preventDefault();
-    const n = AVATARS.length;
-    pickAvatar((AVATARS.indexOf(draft.avatar) + step + n) % n, true);
-  });
+  // Arrow keys in the two radio grids (pictures, colours).
+  const gridKeys = (id, n, at, pick) =>
+    $(id).addEventListener('keydown', (e) => {
+      const cols = getComputedStyle($(id)).gridTemplateColumns.split(' ').length;
+      const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      pick((at() + step + n) % n, true);
+    });
+  gridKeys('new-avatars', MARKS.length, () => MARKS.indexOf(draft.mark), pickAvatar);
+  gridKeys('new-colors', COLORS.length, () => COLORS.indexOf(/** @type {KFKitColor} */ (draft.color)), pickColor);
   $('play-guest').addEventListener('click', closeLogin);
   $('retry-users').addEventListener('click', () => showPick());
   dlg.addEventListener('cancel', (e) => {
@@ -1814,4 +1869,10 @@ function askDialog({ icon, title, text, primary, secondary }) {
 
   KF.on('auth', renderWho);
   renderWho();
+  // ../#login (the profile page's «sign in» button): open the login dialog once.
+  if (location.hash === '#login') {
+    history.replaceState(null, '', location.pathname + location.search);
+    if (!auth.user) openLogin();
+    else if (auth.status === 'expired') openLogin(auth.user);
+  }
 })();

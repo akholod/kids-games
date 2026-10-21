@@ -330,3 +330,31 @@ test('dictado: 1–n pick, letters + Enter build the word, 0/1–n tilde, Enter 
   await expect(page.locator('#finish')).toBeVisible();
   expect(await page.evaluate(() => __dc.session.results)).toEqual([true, true, true]);
 });
+
+test('profile: arrows pick colours, digits set the number, Enter saves; digits + Enter change the PIN; Esc = back', async ({ page }) => {
+  await open(page, '/');
+  expect(await page.evaluate(() => KF.auth.login(1, '1234').then((r) => r.ok))).toBe(true);
+  await page.goto('/profile/');
+  const avatar = () => page.evaluate(() => KF.auth.user.avatar); // starts as k:stripes:blue:yellow:1
+  await page.locator('#kit-c1 [aria-checked="true"]').focus();
+  await page.keyboard.press('ArrowRight'); // blue → navy
+  await expect(page.locator('#kit-c1 [data-color="navy"]')).toBeFocused();
+  await page.locator('#num-val').focus();
+  await page.keyboard.press('ArrowUp'); // 1 → 2
+  await page.keyboard.type('7'); // typed like a scoreboard: 7
+  await page.locator('#kit-save').focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(avatar).toBe('k:stripes:navy:yellow:7');
+
+  await page.locator('#tab-kit').focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#tab-pin')).toBeFocused();
+  await page.keyboard.type('123443214321');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem('kf-test-auth')).users[0].pin)).toBe('4321');
+
+  await page.keyboard.press('Escape');
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator('#games-list')).toBeVisible();
+});

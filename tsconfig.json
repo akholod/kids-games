@@ -18,6 +18,7 @@
     "types/*.d.ts",
     "shared/**/*.js",
     "catalog.js",
+    "profile/*.js",
     "games/**/*.js"
   ],
   "exclude": [

@@ -90,3 +90,11 @@ test('dictado: hub and the typed final', async ({ page }) => {
   await expect(page.locator('.dc-key[data-k="ñ"]')).toBeVisible();
   await snap(page, 'dictado-write');
 });
+
+test('profile: the player card and the shirt editor', async ({ page }) => {
+  await open(page, '/');
+  await page.evaluate(() => KF.auth.login(1, '1234'));
+  await page.goto('/profile/');
+  await expect(page.locator('#pc-kit svg')).toBeVisible();
+  await snap(page, 'profile');
+});
