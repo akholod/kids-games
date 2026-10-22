@@ -771,7 +771,7 @@
           'text',
           {
             x: 50,
-            y: 59,
+            y: 51, // chest height, like a real kit
             'text-anchor': 'middle',
             'dominant-baseline': 'central',
             'font-family': "Bahnschrift,'DIN Alternate','Arial Narrow',system-ui,sans-serif",
@@ -801,7 +801,7 @@
           'text',
           {
             x: 50,
-            y: 58,
+            y: 52,
             'text-anchor': 'middle',
             'dominant-baseline': 'central',
             'font-family': "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif",
