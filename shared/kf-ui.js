@@ -15,6 +15,8 @@
       'sync.expired.short': 'Введи PIN',
       'sync.expired.long': 'Введи PIN ще раз, щоб прогрес зберігався.',
       'test.label': '🧪 Тест-режим · прогрес не зберігається',
+      'test.sync.short': 'Тест',
+      'test.sync.long': 'Тест-режим: гравець і прогрес живуть лише в цій вкладці, на сервер нічого не йде.',
       'test.exit': 'Вийти',
     },
     es: {
@@ -31,6 +33,8 @@
       'sync.expired.long': 'Escribe tu PIN otra vez para que tu progreso se guarde.',
       'test.label': '🧪 Modo de prueba · el progreso no se guarda',
       'test.exit': 'Salir',
+      'test.sync.short': 'Prueba',
+      'test.sync.long': 'Modo de prueba: el jugador y el progreso solo viven en esta pestaña, no se envía nada al servidor.',
     },
   });
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -105,6 +109,8 @@
   const SYNC = Object.fromEntries(
     ['synced', 'pending', 'offline', 'expired'].map((k) => [k, { short: T(`sync.${k}.short`), long: T(`sync.${k}.long`) }]),
   );
+  // ?parent: the sandbox player never syncs, so don't promise "saved on every device"
+  if (KF.TEST_MODE) SYNC.synced = { short: T('test.sync.short'), long: T('test.sync.long') };
 
   function updateSync() {
     const status = KF.auth?.status || 'guest';
