@@ -8,12 +8,15 @@
 // Phrases: en = every distinct `en` of WM_CONTENT.words (games/word-match/content.js) + the coach's English commands,
 //          es = the coach's Spanish commands (SimonEngine.phrases, games/coach-simon/engine.js),
 //          + every word and sentence the coach dictates in games/dictado/content.js (`say` of its tasks),
+//          + every paragraph of every station reading (`station.text`) and the `say` of every `tone` task of games/lengua-mundo/content.js
+//            (a paragraph is far too long for a file name: slugs over 60 characters are cut to 48 + '-' + a hash, see slug()),
 //          es-slow = the dictado sentences again, slower (KFG.say(text, 'es', { slow: true })),
 //          uk = the words and short texts of games/chytanka/content.js; the voice gets the words without the stress mark
 //          (after U+0301 Polina spells the next consonants: «діду́сь» → «дідус м'який знак», «пирі́г» → «пирі ге»),
 //          except the homographs of UK_STRESSED (the mark inside them is followed by a consonant + vowel: safe).
 // Voices:  en-GB-SoniaNeural (British English, like the school), es-ES-ElviraNeural, uk-UA-PolinaNeural.
-// Output:  audio/<lang>/<slug>.mp3 (slug = Ukrainian transliterated, accents dropped, lowercase, runs of non [a-z0-9] → '-'),
+// Output:  audio/<lang>/<slug>.mp3 (slug = Ukrainian transliterated, accents dropped, lowercase, runs of non [a-z0-9] → '-';
+//          over 60 characters: the first 48 (no trailing '-') + '-' + the FNV-1a 32-bit hash of the full slug in base 36),
 //          stale clips are deleted, shared/audio.js = window.KF_AUDIO = { en: [slugs], … } — the manifest KFG.say checks.
 // The clips (~10 KB each) are committed and deployed. When Microsoft answers HTTP 403, update edge-tts
 // (`~/.cache/kf-tts/bin/pip install -U edge-tts`) — old versions get blocked.
@@ -79,9 +82,16 @@ const UA = {
   ю: 'yu',
   я: 'ya',
 };
+// FNV-1a 32-bit of an ASCII string, base 36 (long clip names, see slug()).
+const fnv = (s) => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0;
+  return h.toString(36);
+};
 // Same rule as slug() in shared/kf-game.js: apostrophes dropped, Ukrainian transliterated, accents and stress marks dropped.
-const slug = (text) =>
-  text
+// A slug over 60 characters (a whole paragraph) is cut to its first 48 (no trailing '-') + '-' + the FNV-1a hash of the full slug.
+const slug = (text) => {
+  const s = text
     .toLowerCase()
     .replace(/[’'ʼ]/g, '')
     .replace(/[а-яґєії]/g, (c) => UA[c] ?? c)
@@ -89,6 +99,8 @@ const slug = (text) =>
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+  return s.length > 60 ? `${s.slice(0, 48).replace(/-+$/, '')}-${fnv(s)}` : s;
+};
 
 // ---------- phrases ----------
 const sb = { console, Math, KF: { lang: 'uk', i18n: () => (key) => key }, KFG: { shuffle: (a) => [...a] } };
@@ -101,6 +113,7 @@ const FILES = [
   'games/coach-simon/engine.js',
   'games/chytanka/content.js',
   'games/dictado/content.js',
+  'games/lengua-mundo/content.js',
 ];
 for (const f of FILES) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sb, { filename: f });
 
@@ -108,10 +121,15 @@ const same = (/** @type {string} */ t) => [t, t];
 /** Chytanka words the voice may stress wrongly without the mark (за́мок, not замо́к). */
 const UK_STRESSED = new Set(['замок']);
 const dictado = sb.DC_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.say));
+// Lengua: the station readings (read paragraph by paragraph) and what the «tone» tasks say.
+const lengua = [
+  ...sb.LE_CONTENT.stations.flatMap((s) => s.text?.paragraphs ?? []),
+  ...sb.LE_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'tone').map((t) => t.say)),
+];
 // [the text the game says (→ the file name), what the voice reads]
 const SOURCES = {
   en: [...Object.values(sb.WM_CONTENT.words).map((w) => w.en), ...sb.SimonEngine.phrases('en')].map(same),
-  es: [...sb.SimonEngine.phrases('es'), ...dictado.map((t) => t.say)].map(same),
+  es: [...sb.SimonEngine.phrases('es'), ...dictado.map((t) => t.say), ...lengua].map(same),
   'es-slow': dictado.filter((t) => t.type === 'cloze').map((t) => same(t.say)),
   uk: [
     ...Object.values(sb.CH_CONTENT.words).map((w) => [w.word, UK_STRESSED.has(w.word) ? w.syl.join('') : w.word]),

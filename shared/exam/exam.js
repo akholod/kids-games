@@ -3,7 +3,7 @@
 //   KFExam.mount(unit, { art, types, root, weight, onAnswer })   renders hub / play / finish / dialogs into root (default #exam-root)
 //     weight(task) ≥ 0 = how likely a task is drawn; onAnswer(task, correct) = after each resolved task; task.key = learning item (no repeats in a draw)
 //   KFExam.validate(unit, types?) → string[]   content errors tsc can't see (empty = fine)
-//   KFExam.types                               generic renderers {choice, tf, sort, order, pairs, label, fill} (types.js)
+//   KFExam.types                               generic renderers {choice, tf, sort, order, pairs, label, fill, pick} (types.js)
 // The unit is plain data (see types/exam.d.ts ExamUnit); its own task types come as renderers in `types`
 // (task, work, ctx) → void, see ExamRendererCtx. Records live in KF.gameData(unit.slug): { v, st, exam, topics }.
 // @ts-check
@@ -16,7 +16,7 @@
   const NOTA_MAX = 10;
   const PERFECT_BONUS = 5;
   const LETTERS = 'ABCDEFGH';
-  const GENERIC = ['choice', 'tf', 'sort', 'order', 'pairs', 'label', 'fill'];
+  const GENERIC = ['choice', 'tf', 'sort', 'order', 'pairs', 'label', 'fill', 'pick'];
   const CYRILLIC = /[\u0400-\u04FF]/;
   const FILL_WORD = /^[a-záéíóúüñ]{2,11}$/;
   const FILL_EXTRA = /^[a-záéíóúüñ]{1,4}$/;
@@ -92,6 +92,18 @@
     fillGreen: 'Las letras verdes están bien. Prueba con las demás.',
     fillAgain: 'Todavía no. ¡Prueba otra vez!',
     fillErase: '⌫ Borrar',
+    kPick: 'Toca las palabras y pulsa Comprobar. Teclado: ← → para moverte, Espacio para marcar, Enter para comprobar, ⌫ para quitar todo',
+    pickNeed: 'Toca primero las palabras y luego pulsa Comprobar.',
+    pickGreen: 'Las verdes están bien. ¿Falta alguna o sobra otra? ¡Prueba otra vez!',
+    pickAgain: 'Todavía no. ¡Prueba otra vez!',
+    pickClear: '↶ Quitar todo',
+    textBtn: 'Texto',
+    readEyebrow: 'Lectura',
+    readNotes: 'Palabras',
+    readListen: '🔊 Escuchar',
+    readStop: '⏹ Parar',
+    readStart: 'Empezar las preguntas',
+    readClose: 'Cerrar',
     stationDone: '¡Estación terminada!',
     stationPassed: '¡Estación superada!',
     stationMsg: ({ coins }) => `Has ganado ${coins} 🪙.`,
@@ -160,6 +172,7 @@
       else stationIds.add(s.id);
       for (const k of /** @type {const} */ (['title', 'icon', 'intro'])) if (!text(s?.[k])) err(sw, `${k} missing`);
       if (s?.vocab !== undefined) checkVocab(sw, s.vocab, err, text);
+      if (s?.text !== undefined) checkReading(sw, s.text, err, text);
       if (!Array.isArray(s?.tasks) || !s.tasks.length) {
         err(sw, 'tasks missing');
         return;
@@ -169,7 +182,11 @@
         if (!text(t?.q)) err(w, 'q missing');
         if (!text(t?.type)) return err(w, 'type missing');
         if (types && !GENERIC.includes(t.type) && !types[t.type]) return err(w, `no renderer for type «${t.type}»`);
-        checkTask(w, t, err, text, int);
+        if (t.passage !== undefined) checkPassage(w, t.passage, err, text);
+        // A unit's own renderer of a generic type name (dictado has its own «pick») brings its own data: only the generic shape is checked here.
+        // Without `types` the engine can't tell, so a «pick» without `text` is taken for the unit's own.
+        const own = types ? !!types[t.type] && types[t.type] !== KFExam.types[t.type] : t.type === 'pick' && t.text === undefined;
+        if (!own) checkTask(w, t, err, text, int);
       });
     });
 
@@ -188,6 +205,61 @@
     }
     for (const id of Object.keys(unit.hues || {})) if (!stationIds.has(id)) err('hues', `no station «${id}»`);
     return errs;
+  };
+
+  /**
+   * Brackets of a text: balanced and not nested. Returns what is wrong, or null.
+   * @param {string} t
+   * @returns {string | null}
+   */
+  const bracketError = (t) => {
+    let open = false;
+    for (const c of t) {
+      if (c === '[') {
+        if (open) return 'brackets are nested';
+        open = true;
+      } else if (c === ']') {
+        if (!open) return 'a ] without its [';
+        open = false;
+      }
+    }
+    return open ? 'a [ without its ]' : null;
+  };
+
+  /**
+   * A task's passage: text with \n paragraphs and [marked] parts, brackets balanced and not nested, no Cyrillic.
+   * @param {string} w
+   * @param {any} passage
+   * @param {(where: string, msg: string) => void} err
+   * @param {(x: any) => boolean} text
+   */
+  const checkPassage = (w, passage, err, text) => {
+    if (!text(passage)) return err(w, 'passage must be a non-empty text');
+    const bad = bracketError(passage);
+    if (bad) err(w, `passage: ${bad}`);
+    else if (/\[\s*\]/.test(passage)) err(w, 'passage: an empty [ ]');
+    if (CYRILLIC.test(passage)) err(w, 'passage must be Spanish (no Cyrillic)');
+  };
+
+  /**
+   * A station's reading: title, ≥ 1 paragraph, notes [word, meaning]; Spanish only.
+   * @param {string} w
+   * @param {any} tx
+   * @param {(where: string, msg: string) => void} err
+   * @param {(x: any) => boolean} text
+   */
+  const checkReading = (w, tx, err, text) => {
+    if (!tx || typeof tx !== 'object') return err(w, 'text must be { title, paragraphs, notes? }');
+    if (!text(tx.title)) err(w, 'text: title missing');
+    if (!Array.isArray(tx.paragraphs) || !tx.paragraphs.length || !tx.paragraphs.every(text))
+      err(w, 'text: paragraphs must be 1+ non-empty texts');
+    if (tx.notes !== undefined) {
+      if (!Array.isArray(tx.notes) || !tx.notes.every((n) => Array.isArray(n) && n.length === 2 && text(n[0]) && text(n[1]))) {
+        err(w, 'text: notes must be [word, meaning] pairs with both texts');
+      }
+    }
+    const all = [tx.title, ...(Array.isArray(tx.paragraphs) ? tx.paragraphs : []), ...(Array.isArray(tx.notes) ? tx.notes.flat() : [])];
+    if (all.some((x) => typeof x === 'string' && CYRILLIC.test(x))) err(w, 'text must be Spanish (no Cyrillic)');
   };
 
   /**
@@ -256,6 +328,16 @@
           return err(w, 'labels must be 2+ with an id and a text');
         if (new Set(labels.map((l) => l.id)).size !== labels.length) err(w, 'label ids must be unique');
         if (new Set(labels.map((l) => l.text)).size !== labels.length) err(w, 'label texts must be unique');
+        break;
+      }
+      case 'pick': {
+        if (!text(t.text)) return err(w, 'text missing');
+        const bad = bracketError(t.text);
+        if (bad) return err(w, `text: ${bad}`);
+        const marked = [...t.text.matchAll(/\[([^\]]*)\]/g)].map((m) => m[1]);
+        if (!marked.length) err(w, 'text needs at least one [right word]');
+        if (marked.some((m) => !/^\S+$/.test(m))) err(w, 'text: every [bracket] holds exactly one word');
+        if (CYRILLIC.test(t.text)) err(w, 'text must be Spanish (no Cyrillic)');
         break;
       }
       case 'fill':
@@ -357,9 +439,11 @@
             h('span', { class: 'goals', id: 'goals', 'aria-label': T('goalsLabel') }, '⚽ ', h('b', { id: 'goals-n', text: '0' })),
           ),
           h('div', { class: 'prompt' }, h('p', { class: 'prompt-text', id: 'prompt' })),
+          h('div', { class: 'passage', id: 'passage', hidden: true }),
           h('div', { class: 'work', id: 'work' }),
           h('div', { class: 'feedback', id: 'feedback', role: 'status', 'aria-live': 'polite' }),
         ),
+        h('section', { class: 'exam-read', id: 'read-screen', hidden: true, 'aria-labelledby': 'read-title' }),
         h('section', { class: 'finish', id: 'finish', hidden: true }),
       ),
       h(
@@ -559,6 +643,204 @@
       $('play').querySelector('.play-head').append(vocabBtn);
     };
 
+    // ---------- Station reading ----------
+    // station.text: a reading screen before a station round (after the intro dialog), and behind a «📜» button in the play head
+    // whenever the current task's station has one (rounds and the exam). «🔊» reads the paragraphs one after the other.
+    /** @type {{ btn: HTMLButtonElement, stop: () => void } | null} */
+    let reader = null;
+    const stopReader = () => {
+      reader?.stop();
+      reader = null;
+    };
+    const textLang = unit.lang || 'es';
+    /**
+     * The «🔊 Escuchar» / «⏹ Parar» button of a reading (hidden when nothing can say it). Reads the paragraphs one by one with
+     * KFG.say, polling KFG.speaking() to chain them; the paragraph being read gets .is-reading.
+     * @param {string} id
+     * @param {string[]} texts
+     * @param {HTMLElement[]} paras
+     */
+    const listenBtn = (id, texts, paras) => {
+      const btn = /** @type {HTMLButtonElement} */ (
+        h('button', { class: 'btn btn-light read-listen', type: 'button', id, text: T('readListen') })
+      );
+      btn.hidden = !KFG.canSay('es', texts[0]);
+      const mark = (/** @type {number} */ k) => paras.forEach((el, j) => el.classList.toggle('is-reading', j === k));
+      const play = () => {
+        stopReader();
+        let i = 0;
+        let alive = true;
+        let timer = 0;
+        reader = {
+          btn,
+          stop: () => {
+            alive = false;
+            clearTimeout(timer);
+            KFG.hush();
+            mark(-1);
+            btn.textContent = T('readListen');
+            btn.classList.remove('is-on');
+          },
+        };
+        btn.textContent = T('readStop');
+        btn.classList.add('is-on');
+        const step = () => {
+          if (!alive) return;
+          if (i >= texts.length || !KFG.say(texts[i], 'es')) return stopReader();
+          mark(i);
+          let started = false;
+          let idle = 0;
+          const poll = () => {
+            if (!alive) return;
+            if (KFG.speaking()) {
+              started = true;
+              idle = 0;
+            } else if (started || ++idle > 12) {
+              i++;
+              return step();
+            }
+            timer = window.setTimeout(poll, 150);
+          };
+          timer = window.setTimeout(poll, 150);
+        };
+        step();
+      };
+      btn.addEventListener('click', () => (reader?.btn === btn ? stopReader() : play()));
+      return btn;
+    };
+    /** The paragraphs and the notes box of a reading (screen and dialog share it). @param {ExamText} tx */
+    const readingBody = (tx) => {
+      const paras = tx.paragraphs.map((p) => h('p', { class: 'read-p', text: p }));
+      const notes = tx.notes?.length
+        ? h(
+            'aside',
+            { class: 'read-notes', 'aria-label': T('readNotes') },
+            h('h3', { text: T('readNotes') }),
+            h(
+              'dl',
+              {},
+              tx.notes.map(([word, meaning]) => h('div', { class: 'read-note' }, h('dt', { text: word }), h('dd', { text: meaning }))),
+            ),
+          )
+        : null;
+      return { paras, el: h('div', { class: 'read-body' }, h('div', { class: 'read-text', lang: textLang }, paras), notes) };
+    };
+    // Where the reading's box starts: exam.css lets it scroll inside instead of making the page scroll (laptops).
+    const fitRead = () => {
+      const screen = $('read-screen');
+      const box = screen.querySelector('.read-body');
+      if (screen.hidden || !box) return;
+      screen.style.setProperty('--read-top', `${Math.round(box.getBoundingClientRect().top + scrollY)}px`);
+    };
+    addEventListener('resize', fitRead);
+    const openReading = (/** @type {ExamStation} */ s) => {
+      const tx = /** @type {ExamText} */ (s.text);
+      stopReader();
+      const body = readingBody(tx);
+      $('read-screen').replaceChildren(
+        h(
+          'div',
+          { class: 'read-head' },
+          h('span', { class: 'st-icon', 'aria-hidden': 'true', style: `--hue:${hueOf(s.id)}`, text: s.icon }),
+          h('div', {}, h('p', { class: 'eyebrow', text: T('readEyebrow') }), h('h2', { id: 'read-title', text: tx.title })),
+        ),
+        body.el,
+        h(
+          'div',
+          { class: 'read-actions' },
+          listenBtn('read-listen', tx.paragraphs, body.paras),
+          h('button', { class: 'btn btn-dark', type: 'button', id: 'read-start', text: T('readStart'), onclick: () => startStation(s.id) }),
+        ),
+      );
+      show('read');
+      fitRead();
+      $('read-start').focus({ preventScroll: true });
+    };
+
+    /** @type {HTMLButtonElement | null} */
+    let textBtn = null;
+    /** @type {HTMLDialogElement | null} */
+    let textDlg = null;
+    const openText = (/** @type {ExamStation | undefined} */ s) => {
+      const tx = s?.text;
+      if (!tx || textDlg) return;
+      const opener = document.activeElement;
+      const body = readingBody(tx);
+      const dlg = /** @type {HTMLDialogElement} */ (
+        h(
+          'dialog',
+          { id: 'text-dlg', class: 'vocab-dlg text-dlg', 'aria-labelledby': 'text-title' },
+          h(
+            'div',
+            { class: 'dlg' },
+            h('h2', { id: 'text-title', text: tx.title }),
+            body.el,
+            h(
+              'div',
+              { class: 'dlg-actions' },
+              listenBtn('text-listen', tx.paragraphs, body.paras),
+              h('button', { class: 'btn btn-dark', type: 'button', id: 'text-close', text: T('readClose'), onclick: () => dlg.close() }),
+            ),
+          ),
+        )
+      );
+      dlg.addEventListener('close', () => {
+        stopReader();
+        dlg.remove();
+        textDlg = null;
+        if (opener === textBtn && textBtn?.isConnected) textBtn.focus({ preventScroll: true });
+      });
+      textDlg = dlg;
+      root.append(dlg);
+      dlg.showModal();
+      $('text-close').focus();
+    };
+    // The «📜 Texto» button: in the play head while the current task belongs to a station with a text (it comes and goes per task in the exam).
+    const syncTextBtn = () => {
+      if (!session?.task || !stationOf(session.task.station)?.text) {
+        textBtn?.remove();
+        textBtn = null;
+        return;
+      }
+      if (textBtn) return;
+      textBtn = /** @type {HTMLButtonElement} */ (
+        h(
+          'button',
+          {
+            class: 'play-text',
+            type: 'button',
+            id: 'play-text',
+            'aria-label': T('textBtn'),
+            onmousedown: (/** @type {MouseEvent} */ e) => e.preventDefault(),
+            onclick: () => openText(stationOf(session?.task?.station)),
+          },
+          h('span', { 'aria-hidden': 'true', text: '📜' }),
+          h('span', { class: 'pv-text', text: ` ${T('textBtn')}` }),
+        )
+      );
+      $('play').querySelector('.play-head').append(textBtn);
+    };
+
+    // The passage of a task (a short text above its work area): \n = paragraph, [x] = a marked part, a lone [.] = a full stop.
+    const renderPassage = (/** @type {string | undefined} */ passage) => {
+      const box = $('passage');
+      box.hidden = !passage;
+      box.replaceChildren(
+        ...(passage ? passage.split('\n') : []).map((par) => {
+          /** @type {(Node | string)[]} */
+          const kids = [];
+          let at = 0;
+          for (const m of par.matchAll(/\[([^[\]]*)\]/g)) {
+            if (m.index > at) kids.push(par.slice(at, m.index));
+            kids.push(h('mark', { class: `passage-mark${m[1] === '.' ? ' is-dot' : ''}`, text: m[1] }));
+            at = m.index + m[0].length;
+          }
+          if (at < par.length) kids.push(par.slice(at));
+          return h('p', {}, kids);
+        }),
+      );
+    };
+
     /** @type {ExamStation | null} */
     let introStation = null;
     const intro = /** @type {HTMLDialogElement} */ ($('intro-dlg'));
@@ -581,7 +863,7 @@
     };
     $('intro-go').addEventListener('click', () => {
       intro.close();
-      startStation(introStation.id);
+      startStation(introStation.id, true);
     });
     $('intro-back').addEventListener('click', () => intro.close());
 
@@ -628,10 +910,20 @@
     let session = null;
     /** @type {{ onKey: (e: KeyboardEvent) => unknown } | null} */
     let ctrl = null; // current keyboard handler
-    const show = KFG.screens(['hub', 'play', 'finish']);
+    const showScreen = KFG.screens(['hub', 'read', 'play', 'finish'], { idOf: (name) => (name === 'read' ? 'read-screen' : name) });
+    const show = (/** @type {string} */ name) => {
+      if (name !== 'read') stopReader();
+      if (name !== 'play') {
+        textBtn?.remove();
+        textBtn = null;
+      }
+      showScreen(name);
+    };
 
-    const startStation = (/** @type {string} */ id) => {
+    // From the intro dialog (`read`) a station with a text first shows it; «again» and the test hook go straight to the questions.
+    const startStation = (/** @type {string} */ id, read = false) => {
       const s = stationOf(id);
+      if (read && s.text) return openReading(s);
       const tasks = sampleTasks(s.tasks, round, caps, always).map(withStation(id));
       begin({ mode: 'station', station: id, tasks });
     };
@@ -669,6 +961,8 @@
           : T('roundLabel', { title: stationOf(session.station).title, i: session.index + 1, n });
       $('prompt').textContent = task.q;
       $('prompt').classList.toggle('long', task.q.length > 90);
+      renderPassage(task.passage);
+      syncTextBtn();
       $('feedback').replaceChildren();
       drawDots();
       renderTask(task);
@@ -683,7 +977,9 @@
       play.style.setProperty('--work-top', `${Math.round($('work').getBoundingClientRect().top + scrollY)}px`);
     };
     addEventListener('resize', fitWork);
-    new ResizeObserver(fitWork).observe($('prompt'));
+    const sizes = new ResizeObserver(fitWork);
+    sizes.observe($('prompt'));
+    sizes.observe($('passage'));
 
     // Called once per task.
     const resolve = (/** @type {boolean} */ correct, /** @type {ExamResolveInfo} */ info = {}) => {
@@ -1020,6 +1316,10 @@
       ctrl: () => ctrl,
       active: () => !$('play').hidden,
       onEscape: () => {
+        if (!$('read-screen').hidden) {
+          toHub();
+          return true;
+        }
         if (!$('play').hidden) {
           askQuit();
           return true;
@@ -1035,7 +1335,7 @@
         get session() {
           return session;
         },
-        startStation,
+        startStation: (/** @type {string} */ id, /** @type {boolean} */ read) => startStation(id, read),
         startExam,
         toHub,
         play: (/** @type {ExamSessionTask[]} */ tasks) => begin({ mode: 'station', station: tasks[0].station, tasks }),

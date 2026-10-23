@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { buildSlug } from './slug-impls.mjs';
 
 const read = (rel) => fs.readFileSync(fileURLToPath(new URL(`../../${rel}`, import.meta.url)), 'utf8');
 
@@ -27,7 +28,7 @@ const validate = (...args) => [...KFExam.validate(...args)];
 test('sociales-planeta content is valid (with and without renderers)', () => {
   assert.deepEqual(validate(clone(SP_CONTENT)), []);
   assert.deepEqual(validate(clone(SP_CONTENT), renderers), []);
-  assert.deepEqual(Object.keys(KFExam.types).sort(), ['choice', 'fill', 'label', 'order', 'pairs', 'sort', 'tf']);
+  assert.deepEqual(Object.keys(KFExam.types).sort(), ['choice', 'fill', 'label', 'order', 'pairs', 'pick', 'sort', 'tf']);
   assert.deepEqual(Object.keys(SP_TYPES).sort(), ['mapTap', 'paint', 'walk']);
 });
 
@@ -41,12 +42,17 @@ const unit = () => ({
       title: 'A',
       icon: '🅰️',
       intro: 'Station A',
+      text: {
+        title: 'La leyenda',
+        paragraphs: ['Había una vez un río.', 'El río cantaba.'],
+        notes: [['río', 'corriente de agua']],
+      },
       vocab: [
         ['la roca', 'скеля'],
         ['el relieve', 'рельєф'],
       ],
       tasks: [
-        { type: 'choice', q: 'Pick', options: ['x', 'y', 'z'], answer: 1 },
+        { type: 'choice', q: 'Pick', options: ['x', 'y', 'z'], answer: 1, passage: 'Un [portero] y un [.]\nOtro párrafo.' },
         { type: 'tf', q: 'True?', truth: true },
         {
           type: 'sort',
@@ -79,6 +85,7 @@ const unit = () => ({
           ],
         },
         { type: 'fill', q: 'Fill', text: 'Las ___ son el material sólido.', answer: 'rocas' },
+        { type: 'pick', q: 'Toca los nombres', text: '¿[Pedro] para el [balón], Ana?' },
         { type: 'fill', q: 'Fill 2', text: 'Los animales ___ viven en el agua.', answer: 'acuáticos', extra: 'tm' },
       ],
     },
@@ -127,8 +134,40 @@ const BROKEN = [
   ['fill answer too long', (u) => (u.stations[0].tasks[6].answer = 'electricidades'), 'answer «electricidades»'],
   ['fill answer of one letter', (u) => (u.stations[0].tasks[6].answer = 'a'), 'answer «a»'],
   ['fill answer with Cyrillic', (u) => (u.stations[0].tasks[6].answer = 'скеля'), 'answer «скеля»'],
-  ['fill extra with a capital', (u) => (u.stations[0].tasks[7].extra = 'Tm'), 'extra «Tm»'],
-  ['fill extra too long', (u) => (u.stations[0].tasks[7].extra = 'tmpqr'), 'extra «tmpqr»'],
+  ['fill extra with a capital', (u) => (u.stations[0].tasks[8].extra = 'Tm'), 'extra «Tm»'],
+  ['fill extra too long', (u) => (u.stations[0].tasks[8].extra = 'tmpqr'), 'extra «tmpqr»'],
+  // pick
+  ['pick without a right word', (u) => (u.stations[0].tasks[7].text = 'Pedro para el balón.'), 'at least one [right word]'],
+  ['pick with an unclosed bracket', (u) => (u.stations[0].tasks[7].text = 'El [portero para el balón.'), 'without its ]'],
+  ['pick with a stray closing bracket', (u) => (u.stations[0].tasks[7].text = 'El portero] para el [balón].'), 'without its ['],
+  ['pick with nested brackets', (u) => (u.stations[0].tasks[7].text = 'El [[portero]] para el balón.'), 'nested'],
+  ['pick with two words in a bracket', (u) => (u.stations[0].tasks[7].text = 'Para [el balón].'), 'exactly one word'],
+  ['pick with an empty bracket', (u) => (u.stations[0].tasks[7].text = 'Para [] el [balón].'), 'exactly one word'],
+  ['pick with Cyrillic', (u) => (u.stations[0].tasks[7].text = 'El [портеро] para el [balón].'), 'no Cyrillic'],
+  // passage
+  ['passage with an unclosed bracket', (u) => (u.stations[0].tasks[0].passage = 'Un [portero'), 'passage: a [ without its ]'],
+  ['passage with a stray closing bracket', (u) => (u.stations[0].tasks[0].passage = 'Un portero]'), 'passage: a ] without its ['],
+  ['passage with nested brackets', (u) => (u.stations[0].tasks[0].passage = 'Un [[portero]]'), 'passage: brackets are nested'],
+  ['passage with an empty bracket', (u) => (u.stations[0].tasks[0].passage = 'Un [ ] portero'), 'empty [ ]'],
+  ['passage that is not a text', (u) => (u.stations[0].tasks[0].passage = 3), 'passage must be a non-empty text'],
+  ['empty passage', (u) => (u.stations[0].tasks[0].passage = '  '), 'passage must be a non-empty text'],
+  ['passage with Cyrillic', (u) => (u.stations[0].tasks[0].passage = 'Un [портеро]'), 'no Cyrillic'],
+  [
+    'passage on a unit task type is checked too',
+    (u) => u.stations[1].tasks.push({ type: 'x', q: 'Q', passage: 'a [b' }),
+    'passage: a [ without its ]',
+  ],
+  // station text
+  ['station text that is not an object', (u) => (u.stations[0].text = 'La leyenda'), 'text must be'],
+  ['station text without a title', (u) => (u.stations[0].text.title = ' '), 'title missing'],
+  ['station text without paragraphs', (u) => (u.stations[0].text.paragraphs = []), 'paragraphs must be 1+'],
+  ['station text with an empty paragraph', (u) => (u.stations[0].text.paragraphs[1] = ''), 'paragraphs must be 1+'],
+  ['station text with a paragraph that is not a text', (u) => (u.stations[0].text.paragraphs[0] = 5), 'paragraphs must be 1+'],
+  ['station text with notes that are not pairs', (u) => (u.stations[0].text.notes = ['río']), 'notes must be [word, meaning]'],
+  ['station text with a note of three parts', (u) => (u.stations[0].text.notes = [['río', 'agua', 'x']]), 'notes must be [word, meaning]'],
+  ['station text with a note without meaning', (u) => (u.stations[0].text.notes = [['río', '']]), 'notes must be [word, meaning]'],
+  ['station text with Cyrillic in a paragraph', (u) => (u.stations[0].text.paragraphs[0] = 'Había una річка.'), 'no Cyrillic'],
+  ['station text with Cyrillic in a note', (u) => (u.stations[0].text.notes[0][1] = 'річка'), 'no Cyrillic'],
   // vocab
   ['vocab that is not a list', (u) => (u.stations[0].vocab = 'la roca'), 'vocab must be'],
   ['empty vocab', (u) => (u.stations[0].vocab = []), 'vocab must be'],
@@ -155,6 +194,29 @@ for (const [name, mutate, expected] of BROKEN) {
     );
   });
 }
+
+test('pick, passage and station text: good content passes (a lone [.], several marks, notes optional, no notes at all)', () => {
+  const u = unit();
+  assert.deepEqual(validate(u, KFExam.types), []);
+  u.stations[0].tasks[0].passage = 'Aquí[.] Y otro [mar] y [luz].';
+  u.stations[0].tasks[7].text = 'Pedro y [Ana] van con [Luis], [María] y el [perro].';
+  delete u.stations[0].text.notes;
+  assert.deepEqual(validate(u, KFExam.types), []);
+  u.stations[1].text = { title: 'T', paragraphs: ['Uno.'] };
+  assert.deepEqual(validate(u), []);
+  assert.ok(Object.keys(KFExam.types).includes('pick'));
+});
+
+test('a unit that brings its own renderer for a generic type name (dictado: pick) is not held to the generic shape', () => {
+  const u = unit();
+  delete u.stations[0].tasks[7].text;
+  u.stations[0].tasks[7].options = ['a', 'b'];
+  assert.deepEqual(validate(u), []); // without renderers: a «pick» without text is the unit's own
+  const errs = validate(u, KFExam.types); // generic renderers: it is a broken generic pick
+  assert.equal(errs.length, 1);
+  assert.match(errs[0], /text missing/);
+  assert.deepEqual(validate(u, { ...KFExam.types, pick: () => {} }), []); // the unit's renderer takes over
+});
 
 test('vocab: the translation may be Cyrillic, the Spanish term may not', () => {
   const u = unit();
@@ -246,6 +308,159 @@ test('naturales-entorno: valid with the renderers; every art key and label scene
     const answers = s.tasks.filter((t) => t.type === 'fill').map((t) => t.answer);
     assert.equal(new Set(answers).size, answers.length, `${s.id}: the same fill word twice`);
   }
+});
+
+// ---------- lengua-mundo: Lengua Castellana, Unidad 1 ----------
+
+const bootLengua = () => {
+  const node = () => ({ attrs: {}, dataset: {}, setAttribute() {}, set innerHTML(_) {}, classList: { add() {} } });
+  const sb = {
+    console,
+    Math,
+    KF: { lang: 'uk', i18n: () => (key) => key, gameData: () => ({}) },
+    KFG: { shuffle: (a) => [...a], canSay: () => false },
+    document: { createElementNS: node },
+  };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of [
+    'shared/exam/exam.js',
+    'shared/exam/types.js',
+    'games/lengua-mundo/content.js',
+    'games/lengua-mundo/art.js',
+    'games/lengua-mundo/types.js',
+  ]) {
+    vm.runInContext(read(f), sb, { filename: f });
+  }
+  const audio = { window: {} };
+  vm.createContext(audio);
+  vm.runInContext(read('shared/audio.js'), audio);
+  return {
+    E: sb.KFExam,
+    content: clone(sb.LE_CONTENT),
+    types: sb.LE_TYPES,
+    art: sb.LEArt,
+    es: new Set(audio.window.KF_AUDIO?.es ?? audio.KF_AUDIO.es),
+  };
+};
+
+test('lengua-mundo: valid with and without the renderers; exam, sampling and stations are consistent', () => {
+  const { E, content: u, types } = bootLengua();
+  assert.deepEqual(Object.keys(types).sort(), ['chat', 'fix', 'tone']);
+  assert.deepEqual([...E.validate(clone(u))], []);
+  assert.deepEqual([...E.validate(clone(u), { ...E.types, ...types })], []);
+  assert.equal(u.testHook, '__le');
+  assert.equal(u.stations.length, 8);
+  assert.deepEqual(
+    Object.keys(u.exam.perStation),
+    u.stations.map((s) => s.id),
+  );
+  assert.equal(
+    Object.values(u.exam.perStation).reduce((a, b) => a + b, 0),
+    12,
+  );
+  const tasks = u.stations.flatMap((s) => s.tasks);
+  assert.ok(tasks.length >= 200, `${tasks.length} tasks`);
+  const known = new Set([...Object.keys(E.types), ...Object.keys(types)]);
+  for (const t of tasks) assert.ok(known.has(t.type), `no renderer for ${t.type}`);
+  // every type named in the sampling rules exists in the unit
+  const used = new Set(tasks.map((t) => t.type));
+  for (const k of [...Object.keys(u.sampling.caps), ...Object.keys(u.sampling.examCaps), ...u.sampling.always])
+    assert.ok(used.has(k), `sampling names «${k}»`);
+  // no Cyrillic anywhere in the Spanish content
+  assert.ok(!CYR.test(JSON.stringify(u)), 'Cyrillic in the unit content');
+  // the readings: baobab and midas only, with notes, and the hook of every other station is plain
+  assert.deepEqual(
+    u.stations.filter((s) => s.text).map((s) => s.id),
+    ['baobab', 'midas'],
+  );
+  for (const s of u.stations.filter((x) => x.text)) assert.ok(s.text.paragraphs.length >= 5 && s.text.notes?.length >= 1, s.id);
+});
+
+test('lengua-mundo: every art key and label scene exists, hotspots match the labels', () => {
+  const { content: u, art } = bootLengua();
+  const tasks = u.stations.flatMap((s) => s.tasks);
+  const keys = [...new Set(tasks.filter((t) => t.art).map((t) => t.art))];
+  assert.deepEqual(keys.sort(), ['baobab', 'baobab-reves', 'midas', 'telefono']);
+  for (const k of keys) assert.ok(art.has(k), `art «${k}» does not exist`);
+  assert.ok(!art.has('nope'));
+  const labels = tasks.filter((t) => t.type === 'label');
+  assert.deepEqual(labels.map((t) => t.scene).sort(), ['aviso', 'nota']);
+  for (const t of labels) {
+    const sc = art.scene(t.scene);
+    assert.ok(sc, `scene «${t.scene}» does not exist`);
+    const spots = new Set(sc.spots.map((p) => p.id));
+    assert.equal(spots.size, sc.spots.length, `${t.scene}: duplicate hotspots`);
+    assert.deepEqual([...spots].sort(), t.labels.map((l) => l.id).sort(), `${t.scene}: labels and hotspots differ`);
+  }
+  assert.deepEqual([...art.scene('nota').spots.map((p) => p.id)].sort(), ['destinatario', 'firma', 'mensaje']);
+  assert.deepEqual([...art.scene('aviso').spots.map((p) => p.id)].sort(), ['disculpa', 'hecho', 'responsable']);
+  assert.equal(art.scene('nope'), null);
+});
+
+test('lengua-mundo: every tone sentence and every reading paragraph has a clip in shared/audio.js', () => {
+  const { content: u, es } = bootLengua();
+  const texts = [
+    ...u.stations.flatMap((s) => s.text?.paragraphs ?? []),
+    ...u.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'tone').map((t) => t.say)),
+  ];
+  assert.ok(texts.length >= 20);
+  for (const t of texts) {
+    const slug = buildSlug(t);
+    assert.ok(slug.length <= 60, `«${t.slice(0, 30)}…»: ${slug.length} characters`);
+    assert.ok(es.has(slug), `no clip for «${t.slice(0, 50)}…» (${slug}): run scripts/build-audio.mjs`);
+  }
+});
+
+test('lengua-mundo: fix texts are well formed (capital first, only letters, spaces and . , ¡ ! ¿ ?), with a stop to find', () => {
+  const { content: u } = bootLengua();
+  const fixes = u.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'fix').map((t) => ({ ...t, st: s.id })));
+  assert.ok(fixes.length >= 5);
+  for (const t of fixes) {
+    assert.match(t.text, /^[\p{Lu}¡¿]/u, `«${t.text}»: must start with a capital`);
+    assert.match(t.text, /^[\p{L} .,¡!¿?]+$/u, `«${t.text}»: other characters`);
+    assert.ok(t.text.endsWith('.'), `«${t.text}»: ends with a full stop`);
+    assert.ok(!/\s{2,}|\s$/.test(t.text), `«${t.text}»: spaces`);
+    assert.ok(t.text.length <= 120, `«${t.text}»: ${t.text.length} characters is too long for a screen`);
+    // after a full stop the next sentence starts with a capital
+    for (const m of t.text.matchAll(/\. (\S)/gu))
+      assert.ok(m[1] === m[1].toUpperCase() && m[1] !== m[1].toLowerCase(), `«${t.text}»: lowercase after a stop`);
+    assert.equal(t.st, 'punto');
+  }
+});
+
+test('lengua-mundo: chat turns have 2–3 distinct replies and a valid answer; tone tasks have a sentence and a direction', () => {
+  const { content: u } = bootLengua();
+  const tasks = u.stations.flatMap((s) => s.tasks);
+  const chats = tasks.filter((t) => t.type === 'chat');
+  assert.ok(chats.length >= 5);
+  for (const t of chats) {
+    assert.ok(t.who && t.icon, t.q);
+    assert.ok(t.turns.length >= 2 && t.turns.length <= 4, `${t.who}: ${t.turns.length} turns`);
+    for (const [i, turn] of t.turns.entries()) {
+      const w = `${t.who} turn ${i + 1}`;
+      assert.ok(turn.them?.trim(), `${w}: what they say`);
+      assert.ok(turn.options.length >= 2 && turn.options.length <= 3, `${w}: ${turn.options.length} options`);
+      assert.equal(new Set(turn.options).size, turn.options.length, `${w}: repeated options`);
+      assert.ok(
+        turn.options.every((o) => typeof o === 'string' && o.trim()),
+        `${w}: empty option`,
+      );
+      assert.ok(Number.isInteger(turn.answer) && turn.answer >= 0 && turn.answer < turn.options.length, `${w}: answer ${turn.answer}`);
+      // `why` is optional (the screen falls back to «Mejor así:»), but never an empty text
+      if (turn.why !== undefined) assert.ok(typeof turn.why === 'string' && turn.why.trim(), `${w}: empty why`);
+    }
+  }
+  const tones = tasks.filter((t) => t.type === 'tone');
+  assert.ok(tones.length >= 10);
+  assert.ok(tones.some((t) => t.rising) && tones.some((t) => !t.rising), 'both directions');
+  for (const t of tones) {
+    assert.equal(typeof t.rising, 'boolean', t.say);
+    assert.ok(t.say?.trim() && /[?!.]$/.test(t.say), `tone «${t.say}»`);
+    // the intonation is read from the signs at the end: a question rises, a statement falls
+    assert.equal(t.rising, /\?$/.test(t.say), `«${t.say}»: ${t.rising ? 'rising' : 'falling'}`);
+  }
+  assert.equal(new Set(tones.map((t) => t.say)).size, tones.length, 'a tone sentence twice');
 });
 
 test('validate checks unit task types against the renderers only when they are given', () => {

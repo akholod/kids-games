@@ -623,7 +623,109 @@ export const examPlayer = (hook) => {
     }
   };
 
-  const BY_TYPE = { choice, tf, sort, order, pairs, label, fill, filter };
+  // pick: the right words are `[bracketed]` in t.text; word buttons are the chunks with a letter or digit, in order.
+  const pickWords = (text) =>
+    text
+      .split(/\s+/)
+      .filter(Boolean)
+      .flatMap((c) => (c.includes('[') ? [{ right: true }] : /[\p{L}\p{N}]/u.test(c) ? [{ right: false }] : []));
+  const pick = async (page, tap, t, { wrong, keyboard }) => {
+    const words = pickWords(t.text);
+    // wrong: a trap too in the first check (the right picks stay, the trap goes back), then the check that is right: soft
+    const trap = wrong ? words.findIndex((w) => !w.right) : -1;
+    if (keyboard) {
+      for (const [i, w] of words.entries()) {
+        await page.keyboard.press('ArrowRight');
+        if (w.right || i === trap) await page.keyboard.press(' ');
+      }
+      await page.keyboard.press('Enter');
+      if (wrong) await page.keyboard.press('Enter');
+      return;
+    }
+    for (const [i, w] of words.entries()) if (w.right || i === trap) await tap(page.locator('#work .pick-word').nth(i));
+    await tap(page.locator('#work .pick-check'));
+    if (wrong) await tap(page.locator('#work .pick-check'));
+  };
+
+  // fix (lengua-mundo «Corrige el texto»): t.text is the correct text; capitals on `.le-w[data-i]`, full stops on `.le-g[data-i]`,
+  // in the unit's own tokenization (words split on spaces, punctuation around them stays).
+  const fixTokens = (text) =>
+    String(text)
+      .split(/\n+/)
+      .flatMap((line) =>
+        line
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((raw) => {
+            const m = raw.match(/^([¡¿«"“(—-]*)(.*?)([.,;:!?»"”)…]*)$/u) || ['', '', raw, ''];
+            const letter = /\p{L}/u.test(m[2].charAt(0));
+            return { letter, cap: letter && m[2].charAt(0) !== m[2].charAt(0).toLowerCase(), dot: m[3].includes('.') };
+          }),
+      );
+  // mistakes: how many wrong things to do first (extra full stops where none belongs); then `retry`:
+  //   'again' (default) = check once more as it is (with ≥ 2 mistakes the round says false), 'fix' = undo the mistakes and check again (soft).
+  const fix = async (page, tap, t, { keyboard, mistakes = 0, retry = 'again' }) => {
+    const toks = fixTokens(t.text);
+    const steps = toks.flatMap((tk, i) => [
+      ...(tk.letter ? [{ sel: `.le-w[data-i="${i}"]`, on: tk.cap }] : []),
+      { sel: `.le-g[data-i="${i}"]`, on: tk.dot },
+    ]);
+    const flips = new Set(steps.filter((s) => !s.on).slice(0, mistakes));
+    expect(flips.size, 'room for the mistakes').toBe(mistakes);
+    const toggleAll = async (want) => {
+      for (const st of steps) {
+        if (keyboard) await page.keyboard.press('ArrowRight');
+        if (want(st)) {
+          if (keyboard) await page.keyboard.press(' ');
+          else await tap(page.locator(`#work ${st.sel}`));
+        }
+      }
+    };
+    const check = () => (keyboard ? page.keyboard.press('Enter') : tap(page.locator('#work .le-fix-check')));
+    await toggleAll((st) => st.on !== flips.has(st));
+    await check();
+    if (mistakes === 0 || (mistakes === 1 && retry !== 'fix')) return;
+    if (retry === 'fix') {
+      // the unit lets the player go on after the first check: undo the extra stops (the cursor continues from the last toggle)
+      for (const st of flips) {
+        if (keyboard) {
+          await page.locator(`#work ${st.sel}`).focus();
+          await page.keyboard.press(' ');
+        } else await tap(page.locator(`#work ${st.sel}`));
+      }
+    }
+    await check();
+  };
+
+  // chat (lengua-mundo phone call): one reply per turn by the task's own turns[i].answer; wrongTurns = turn indexes answered wrong,
+  // stopAt = answer only the turns before this index.
+  const chat = async (page, tap, t, { keyboard, wrong, wrongTurns = wrong ? [0, 1] : [], stopAt = Number.POSITIVE_INFINITY }) => {
+    for (const [k, turn] of t.turns.entries()) {
+      if (k >= stopAt) return; // stopAt: leave the call open before this turn
+      await expect(page.locator(`#work .le-chat[data-turn="${k}"] .le-reply`).first(), `turn ${k + 1} replies`).toBeVisible();
+      const shown = await page.evaluate(() =>
+        [...document.querySelectorAll('#work .le-reply')].map((b) =>
+          [...b.childNodes]
+            .filter((n) => n.nodeName !== 'KBD')
+            .map((n) => n.textContent)
+            .join(''),
+        ),
+      );
+      const right = shown.indexOf(turn.options[turn.answer]);
+      expect(right, `turn ${k + 1}: «${turn.options[turn.answer]}» on screen`).toBeGreaterThanOrEqual(0);
+      const i = wrongTurns.includes(k) ? shown.findIndex((_, j) => j !== right) : right;
+      if (keyboard) await page.keyboard.press(String(i + 1));
+      else await tap(page.locator('#work .le-reply').nth(i));
+    }
+  };
+
+  // tone (lengua-mundo intonation): t.rising = the voice goes up
+  const tone = (page, tap, t, { keyboard, wrong }) => {
+    const up = wrong ? !t.rising : t.rising;
+    return keyboard ? page.keyboard.press(up ? '1' : '2') : tap(page.locator(`#work .le-tone-ans[data-rising="${up}"]`));
+  };
+
+  const BY_TYPE = { choice, tf, sort, order, pairs, label, fill, filter, pick, fix, chat, tone };
 
   const answerTask = async (page, tap, opts = {}) => {
     const t = await sessionTask(page);
@@ -657,4 +759,34 @@ export const examPlayer = (hook) => {
   };
 
   return { session, sessionTask, answerTask, next, playSession };
+};
+
+// ---------- one exam unit: stations, intro dialog, single tasks ----------
+
+// Helpers of a unit page: `content` = the global of its content (e.g. 'LE_CONTENT'), `hook` = its test hook ('__le').
+export const unitPage = (content, hook) => {
+  const stationIndex = (page, id) => page.evaluate(([c, s]) => window[c].stations.findIndex((x) => x.id === s), [content, id]);
+  // Taps a station tile: the intro dialog opens.
+  const openIntro = async (page, tap, id) => tap(page.locator('#stations .station').nth(await stationIndex(page, id)));
+  // Tile, then the dialog's «Empezar»: a round of a station without a text is playing; one with a text shows its reading first.
+  const startFromIntro = async (page, tap, id) => {
+    await openIntro(page, tap, id);
+    await tap(page.locator('#intro-go'));
+  };
+  const allTasks = (page) =>
+    page.evaluate((c) => window[c].stations.flatMap((s) => s.tasks.map((t) => ({ ...t, station: s.id }))), content);
+  // The first task of the content with this type (and test), tagged with its station.
+  const taskWhere = async (page, type, ok = () => true) => (await allTasks(page)).find((t) => t.type === type && ok(t)) ?? null;
+  // Plays exactly these tasks as one round (tagged with their station).
+  const playOnly = (page, ...tasks) => page.evaluate(([h, t]) => window[h].play(t), [hook, tasks]);
+  // Starts the station round (no reading) again and again until it has all the wanted types, then returns its session (the draw is random).
+  const startStationWith = async (page, id, types) => {
+    for (let i = 0; i < 60; i++) {
+      await page.evaluate(([h, s]) => window[h].startStation(s), [hook, id]);
+      const have = await page.evaluate((h) => window[h].session.tasks.map((t) => t.type), hook);
+      if (types.every((t) => have.includes(t))) return have;
+    }
+    throw new Error(`no ${id} round with ${types.join(' + ')} in 60 draws`);
+  };
+  return { stationIndex, openIntro, startFromIntro, allTasks, taskWhere, playOnly, startStationWith };
 };

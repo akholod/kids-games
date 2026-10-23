@@ -11,6 +11,10 @@ interface ExamTaskBase {
   fact?: string;
   /** Id of the learning item the task trains (e.g. a word): one draw avoids tasks with the same key while others exist. */
   key?: string;
+  /** A short text the engine shows between the question and the work area, for every task type (built-in or the unit's own):
+   *  `\n` starts a new paragraph, `[x]` highlights x (a word, or a single `.` to point at a full stop). Brackets balanced,
+   *  not nested; Spanish only (no Cyrillic). Keep it to a sentence or two: it takes room from the work area. */
+  passage?: string;
 }
 
 /** One correct option; the UI shuffles unless `fixed`. */
@@ -61,12 +65,29 @@ interface ExamFillTask extends ExamTaskBase {
   extra?: string;
 }
 
+/** Tap the asked words of a sentence (e.g. «Toca los nombres»). `text` is one or two sentences; every `[word]` is a right
+ *  word (one word per bracket, ≥ 1), the other words are traps; punctuation is never tappable. One retry after a wrong
+ *  first check (right picks lock, wrong ones go back), the second wrong check shows the answer and resolves false. */
+interface ExamPickTask extends ExamTaskBase {
+  type: 'pick';
+  text: string;
+}
+
 /** A task of a type only the unit knows (its renderer comes from ExamMountOptions.types). */
 interface ExamUnitTask extends ExamTaskBase {
   [key: string]: any;
 }
 
-type ExamTask = ExamChoiceTask | ExamTfTask | ExamSortTask | ExamOrderTask | ExamPairsTask | ExamLabelTask | ExamFillTask | ExamUnitTask;
+type ExamTask =
+  | ExamChoiceTask
+  | ExamTfTask
+  | ExamSortTask
+  | ExamOrderTask
+  | ExamPairsTask
+  | ExamLabelTask
+  | ExamFillTask
+  | ExamPickTask
+  | ExamUnitTask;
 
 /** A task of a running session: tagged with its station. */
 type ExamSessionTask = ExamTask & { station: string };
@@ -82,7 +103,19 @@ interface ExamStation {
   /** Glossary [Spanish term, Ukrainian translation]. Shown only on the Ukrainian site (KF.lang === 'uk'): in the intro dialog and
    *  behind a «📖 Словничок» button during a station round (not in the exam). Not in the DOM at all on the Spanish site. */
   vocab?: [string, string][];
+  /** The station's reading (e.g. a legend): a screen after the intro dialog's «Empezar» (before the first task of a station
+   *  round; «Otra vez» skips it), and a «📜 Texto» button in the play head whenever the current task belongs to this station
+   *  (rounds and the exam). «🔊 Escuchar» reads the paragraphs one by one with KFG.say(p, 'es') when a clip or voice exists
+   *  (include shared/audio.js before kf-game.js). Spanish only (no Cyrillic). */
+  text?: ExamText;
   tasks: ExamTask[];
+}
+
+interface ExamText {
+  title: string;
+  paragraphs: string[];
+  /** Word notes shown beside the text: [word, meaning]. */
+  notes?: [string, string][];
 }
 
 interface ExamConfig {
@@ -329,7 +362,7 @@ interface KFExamAPI {
   mount(unit: ExamUnit | undefined, opts?: ExamMountOptions): void;
   /** Checks a unit for what tsc can't: answers in range, sort bins, pairs, order items, exam stations, unique ids, renderers. */
   validate(unit: ExamUnit, types?: ExamRenderers): string[];
-  /** The generic renderers (choice, tf, sort, order, pairs, label, fill), set by shared/exam/types.js. */
+  /** The generic renderers (choice, tf, sort, order, pairs, label, fill, pick), set by shared/exam/types.js. */
   types: ExamRenderers;
   /** The word builder (tiles / keys → slots, check, one retry), set by shared/exam/types.js. */
   builder?: ExamBuilderFactory;

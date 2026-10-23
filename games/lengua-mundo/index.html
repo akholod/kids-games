@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#174d37">
+<title>Lenguas por el mundo — Keeper Fun Games</title>
+<link rel="stylesheet" href="../../shared/kf.css">
+<link rel="stylesheet" href="../../shared/exam/exam.css">
+<style>
+/* Hub hero: the airport window (art.js hero) — a passed station is a plane in the sky, the others wait at their gates */
+.hero{grid-template-columns:minmax(0,1fr) min(330px,42%)}
+.hero-art{width:100%;transform:rotate(-1deg)}
+@media(prefers-reduced-motion:no-preference){
+  .le-hero .le-flying{animation:le-fly 4s ease-in-out infinite;animation-delay:calc(var(--d) * -1)}
+  .le-hero .le-trail{animation:le-trail 1.2s linear infinite}
+}
+@keyframes le-fly{50%{transform:translateY(-4px)}}
+@keyframes le-trail{to{stroke-dashoffset:30}}
+
+/* Station tiles: boarding passes — a tinted stub with the icon, a perforation, a small plane in the corner */
+.stations .station{padding-right:34px;background:
+  radial-gradient(circle at 80px 0,var(--map) 8px,transparent 8.5px),
+  radial-gradient(circle at 80px 100%,var(--map) 8px,transparent 8.5px),
+  linear-gradient(90deg,color-mix(in srgb,var(--hue) 11%,#fff) 0 80px,#fff 80px)}
+.stations .station:before{content:"";position:absolute;left:79px;top:14px;bottom:14px;border-left:2px dashed color-mix(in srgb,var(--hue) 40%,#e3e8e0)}
+.stations .station:after{content:"✈";position:absolute;right:12px;top:10px;font-size:1rem;line-height:1;color:color-mix(in srgb,var(--hue) 75%,#fff);rotate:-35deg}
+
+/* Task art: postcards (art.js) */
+.art .le-card{max-width:400px}
+@media(max-width:600px){
+  .art .le-card{max-height:clamp(150px,calc(100vh - 580px),214px)}
+  @supports(height:100svh){.art .le-card{max-height:clamp(150px,calc(100svh - 580px),214px)}}
+  .with-art:has(.le-card){gap:10px}
+}
+
+/* Label scenes: a note and a notice on a corkboard (600 × 400) */
+.le-hand{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',ui-rounded,system-ui,sans-serif}
+.scene.le-scene .slot{min-height:44px}
+
+/* ---------- fix: «Corrige el texto» ---------- */
+.le-fix{display:grid;gap:12px;justify-items:center;width:min(100%,900px)}
+/* A notebook page: a red margin and a ruled line under every row of words (rows are 52px: 48px targets + 4px gap) */
+.le-fix-page{display:flex;flex-wrap:wrap;align-items:flex-end;row-gap:4px;width:100%;padding:8px 14px 10px 38px;border-radius:18px;
+  background:linear-gradient(90deg,transparent 24px,#f2b7b2 24px 26px,transparent 26px),repeating-linear-gradient(transparent 0 50px,#d4e3ee 50px 52px) 0 6px,#fffef9;
+  box-shadow:0 0 0 1px var(--line),0 8px 18px #12302012}
+.le-nl{flex-basis:100%;height:0}
+.le-tok{display:inline-flex;align-items:center;white-space:nowrap}
+.le-w,.le-p,.le-plain{font:700 clamp(1.12rem,3.6vw,1.4rem)/1 var(--display);color:var(--ink)}
+.le-w{min-height:48px;padding:0 4px;border:0;border-radius:10px;background:transparent;transition:background-color .15s,box-shadow .15s}
+.le-w:hover:not(:disabled){background:#e3f1fc}
+.le-w[aria-pressed=true] .le-cap{color:var(--red);font-weight:900}
+.le-g{position:relative;width:34px;min-height:48px;padding:0;border:0;border-radius:10px;background:transparent;transition:background-color .15s,box-shadow .15s}
+.le-g:hover:not(:disabled){background:#e3f1fc}
+/* The empty gap: a faint dotted ring on the line; a full stop: a bold red dot */
+.le-dot{position:absolute;left:50%;bottom:13px;width:9px;height:9px;translate:-50% 0;border-radius:50%;border:1.6px dashed #b9c9d3;transition:background-color .15s,border-color .15s,transform .15s}
+.le-g:hover:not(:disabled) .le-dot{border-color:var(--sea)}
+.le-g[aria-pressed=true] .le-dot{left:7px;translate:0 0;width:10px;height:10px;border:0;background:var(--red)}
+.le-w.is-wrong,.le-g.is-wrong{background:#fff3d6;box-shadow:inset 0 0 0 2.5px var(--missd)}
+.le-w.is-fixed,.le-g.is-fixed{background:var(--miss)}
+.le-fix.is-done .le-w,.le-fix.is-done .le-g{cursor:default}
+.le-fix.is-done .le-g:not([aria-pressed=true]):not(.is-fixed) .le-dot{display:none}
+.le-fix-side{display:grid;gap:8px;justify-items:center;width:100%}
+.le-fix-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.le-fix-actions .btn{min-width:160px}
+@media(max-width:600px){
+  .le-fix-page{padding:6px 8px 8px 28px;background:linear-gradient(90deg,transparent 16px,#f2b7b2 16px 18px,transparent 18px),repeating-linear-gradient(transparent 0 50px,#d4e3ee 50px 52px) 0 6px,#fffef9}
+  .le-g{width:28px}
+  .le-fix-actions{width:100%;flex-wrap:nowrap}
+  .le-fix-actions .btn{flex:1 1 0;min-width:0;padding-inline:12px}
+}
+
+/* ---------- chat: a phone call ---------- */
+.le-chat{display:grid;gap:12px;justify-items:center;width:min(100%,820px)}
+.le-phone{display:grid;grid-template-rows:auto minmax(0,1fr);width:min(100%,320px);height:clamp(190px,calc(100vh - 590px),300px);padding:8px;border-radius:30px;background:#1d2b36;box-shadow:0 0 0 2px #3a4a56,0 14px 26px #12302033}
+@supports(height:100svh){.le-phone{height:clamp(190px,calc(100svh - 590px),300px)}}
+.le-phone-top{display:flex;align-items:center;gap:10px;padding:4px 10px 8px;color:#fff}
+.le-ava{flex:none;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:#ffffff1f;font-size:1.35rem}
+.le-who{display:grid;gap:1px;min-width:0}
+.le-who strong{font-family:var(--display);font-size:1.05rem;line-height:1.1}
+.le-live{font-size:.78rem;font-weight:800;color:#8ee07a;font-variant-numeric:tabular-nums}
+.le-chat.is-over .le-live{color:#c9d4dc}
+.le-bubbles{display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 10px;border-radius:22px;background:#eef3f6}
+.le-b{max-width:86%;padding:8px 12px;border-radius:16px;font-weight:700;font-size:.98rem;line-height:1.3;text-wrap:pretty}
+.le-them{align-self:flex-start;background:#fff;border-bottom-left-radius:5px;box-shadow:0 1px 0 #0000000f}
+.le-me{align-self:flex-end;background:var(--ok);border-bottom-right-radius:5px}
+.le-me-fixed{background:var(--miss)}
+.le-why{align-self:center;max-width:94%;padding:2px 6px;font-size:.84rem;color:#8a5a00;text-align:center}
+.le-sys{align-self:center;padding:4px 12px;border-radius:100px;background:#fff;color:var(--muted);font-size:.82rem}
+.le-typing span{display:inline-flex;gap:4px;padding:4px 0}
+.le-typing i{width:7px;height:7px;border-radius:50%;background:#9aaeb8}
+@media(prefers-reduced-motion:no-preference){
+  .le-typing i{animation:le-dots 1s ease-in-out infinite}
+  .le-typing i:nth-child(2){animation-delay:.15s}.le-typing i:nth-child(3){animation-delay:.3s}
+  .le-b{animation:le-pop .22s ease-out both}
+}
+@keyframes le-dots{50%{translate:0 -4px;opacity:.5}}
+@keyframes le-pop{from{opacity:0;translate:0 6px}}
+.le-chat-side{display:grid;gap:10px;justify-items:center;width:100%}
+.le-replies{display:grid;gap:10px;width:min(100%,460px)}
+.le-reply{min-height:58px;font-size:clamp(1rem,3.4vw,1.12rem)}
+/* Stage directions («(Cuelgas sin decir nada.)») are actions, not words */
+.le-act{font-style:italic;font-weight:650;color:#5d6f78}
+.le-reply.is-action{border-style:dashed;background:#fbfaf6;box-shadow:0 5px 0 #e3e6df}
+.le-reply.is-action.right{background:var(--ok)}.le-reply.is-action.wrong{background:var(--miss)}
+.le-b.is-action{background:transparent;box-shadow:inset 0 0 0 1.5px #9aaeb8}
+@media(min-width:760px){
+  .le-chat{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:30px}
+  /* The phone gets the height left on screen; its bubble list scrolls inside */
+  .le-phone{width:300px;height:min(var(--avail),420px)}
+}
+@media(max-width:600px){
+  .le-reply{min-height:52px;padding-block:8px}
+  .le-replies{gap:8px}
+}
+
+/* ---------- tone: does the voice go up or down? ---------- */
+.le-tone{display:grid;gap:14px;justify-items:center;width:min(100%,640px)}
+.le-tone-top{display:grid;justify-items:center;gap:12px;width:100%}
+.le-tone-play{width:96px;height:96px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--sea-d);color:#fff;font-size:2.5rem;line-height:1;box-shadow:0 6px 0 #0f3550;transition:transform .15s,box-shadow .2s}
+.le-tone-play:hover{background:#245e88}
+.le-tone-play:active{transform:scale(.96)}
+.le-tone-play.is-playing{box-shadow:0 6px 0 #0f3550,0 0 0 9px #3f8fc94d}
+@media(prefers-reduced-motion:no-preference){.le-tone-play.is-playing{animation:le-ring 1s ease-out infinite}}
+@keyframes le-ring{50%{box-shadow:0 6px 0 #0f3550,0 0 0 16px #3f8fc91a}}
+/* The sentence keeps its room while hidden, so nothing moves when it shows up */
+.le-tone-say{padding-bottom:22px}
+.le-tone-say:not(.is-shown){visibility:hidden}
+.le-tone-text{margin:0;font:800 clamp(1.3rem,4.4vw,1.8rem)/1.3 var(--display);text-align:center;text-wrap:balance}
+.le-tone-end{position:relative;display:inline-block}
+.le-tone-arrow{position:absolute;left:-40%;right:-12%;top:100%;height:22px;display:none}
+.le-tone.is-done .le-tone-arrow{display:block}
+.le-tone-arrow svg{display:block;width:100%;height:100%;overflow:visible}
+.le-arc,.le-head{fill:none;stroke:var(--red);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.le-tone.is-falling .le-tone-arrow svg{scale:1 -1}
+.le-tone-note{margin:0;padding:6px 14px;border-radius:12px;background:#fff3d6;color:#8a5a00;font-weight:800;font-size:.92rem;text-align:center}
+.le-tone-answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+.le-tone-ans{display:grid;justify-items:center;align-content:center;gap:2px;min-height:100px;padding:12px 10px;text-align:center}
+.le-tone-ans b{font-family:var(--display);font-size:1.45rem;line-height:1.1}
+.le-tone-ans .le-term{color:var(--sea-d);font-weight:900}
+.le-tone-ans small{color:var(--muted);font-size:.8rem;font-weight:700;line-height:1.2}
+.le-tone-ans kbd{top:10px;left:10px;translate:none}
+@media(min-width:760px) and (max-height:760px){
+  .le-tone{gap:10px}
+  .le-tone-play{width:80px;height:80px;font-size:2.1rem}
+  .le-tone-ans{min-height:88px}
+}
+
+@media(max-width:600px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .hero-art{width:min(100%,280px);justify-self:center;align-self:auto;transform:none}
+  .stations .station{padding-right:28px}
+}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Monedas" data-i18n-aria-label="coins">🪙 <span data-kf-coins>0</span></div></div></header>
+<main class="wrap game-shell" id="exam-root"></main>
+
+<script src="../../shared/site.js"></script><script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
+<script src="../../shared/kf-ui.js"></script>
+<script src="../../shared/audio.js"></script>
+<script src="../../shared/kf-game.js"></script>
+<script src="../../shared/exam/exam.js"></script>
+<script src="../../shared/exam/types.js"></script>
+<script src="content.js"></script>
+<script src="art.js"></script>
+<script src="types.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

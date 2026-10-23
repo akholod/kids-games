@@ -311,11 +311,11 @@ dialog::backdrop{background:#0b2a3a99}
 .dlg-actions .btn{flex:1 1 160px}
 
 /* Glossary (Ukrainian site): in the station dialog and behind the «📖» button of the play head */
-.play-vocab{flex:none;min-height:44px;padding:4px 14px;border:0;border-radius:100px;background:#ffffff1a;color:#fff;font-weight:900;font-size:.9rem;line-height:1.1;transition:background-color .16s,transform .16s}
-.play-vocab{position:relative}
-.play-vocab:hover{background:#ffffff33}
-.play-vocab:active{transform:scale(.96)}
-.play-vocab:focus-visible{outline-color:#ffd23f}
+.play-vocab,.play-text{flex:none;min-height:44px;padding:4px 14px;border:0;border-radius:100px;background:#ffffff1a;color:#fff;font-weight:900;font-size:.9rem;line-height:1.1;transition:background-color .16s,transform .16s}
+.play-vocab,.play-text{position:relative}
+.play-vocab:hover,.play-text:hover{background:#ffffff33}
+.play-vocab:active,.play-text:active{transform:scale(.96)}
+.play-vocab:focus-visible,.play-text:focus-visible{outline-color:#ffd23f}
 .vocab{margin:0 0 12px;padding:10px 14px 12px;border-radius:16px;background:#fff;box-shadow:0 0 0 1px var(--line)}
 .vocab h3{margin:0 0 6px;font:900 .9rem/1.2 var(--display);letter-spacing:.04em;color:var(--sea-d)}
 .vocab-list{display:grid;gap:3px 18px;margin:0}
@@ -330,6 +330,75 @@ dialog::backdrop{background:#0b2a3a99}
 .vocab-dlg .dlg h2{margin-bottom:12px}
 .vocab-dlg .vocab-list{margin-bottom:16px;padding:8px 14px;border-radius:16px;background:#fff;box-shadow:0 0 0 1px var(--line)}
 @media(min-width:560px){.vocab-dlg{max-width:min(660px,calc(100vw - 24px))}}
+
+/* A task's passage: a short text between the question and the work area; [x] marks a part, a lone [.] a full stop */
+.passage{padding:8px clamp(16px,3vw,24px) 10px;background:#fff8e1;box-shadow:inset 0 -1px 0 #f0e2b0;font-size:1.05rem;line-height:1.45;font-weight:650;text-align:left}
+.passage p{margin:0 0 3px}
+.passage p:last-child{margin:0}
+.passage-mark{padding:0 .18em;border-radius:6px;background:#ffd86b;color:inherit;font-weight:900}
+.passage-mark.is-dot{display:inline-block;min-width:1.05em;padding:0;border-radius:50%;background:#ffe08a;box-shadow:0 0 0 3px #f2a516;line-height:1.05;text-align:center}
+
+/* Pick: tap the right words of a sentence */
+.pick-task{display:grid;gap:12px;justify-items:center;width:min(100%,780px)}
+.pick-text{margin:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 4px;font-family:var(--display);font-size:clamp(1.15rem,3.6vw,1.45rem);font-weight:800;line-height:1.3}
+.pick-chunk{display:inline-flex;align-items:center;white-space:nowrap}
+.pick-word{min-width:48px;min-height:48px;padding:6px 12px;margin:0 1px;border:2px solid #c8d6d9;border-radius:14px;background:#fff;color:var(--ink);font:inherit;box-shadow:0 4px 0 #d3dfe2;touch-action:manipulation;transition:transform .14s,background-color .14s,border-color .14s,box-shadow .14s}
+.pick-word:hover:not(:disabled){border-color:#8ec1e2;background:#f0f8ff}
+.pick-word[aria-pressed=true]{border-color:var(--sea-d);background:#e3f1fc;box-shadow:0 0 0 4px #3f8fc955,0 4px 0 #9cc3dd;transform:translateY(-2px)}
+.pick-word.is-good{border-color:var(--okd);background:var(--ok);box-shadow:0 4px 0 #a5c96a;transform:none}
+.pick-word.is-wrong{border-color:var(--red);background:#ffd3cf;box-shadow:0 4px 0 #e9a8a2;transform:none}
+.pick-word.is-missed{border:3px dashed var(--okd);background:#fff;box-shadow:none;transform:none}
+.pick-word:disabled{color:var(--ink);cursor:default}
+.pick-word.missed{animation:fill-missed 1s ease-out}
+.pick-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pick-actions .btn{min-width:150px}
+@media(max-width:600px){
+  .pick-actions{width:100%;flex-wrap:nowrap}
+  .pick-actions .btn{flex:1 1 0;min-width:0;padding-inline:12px}
+}
+
+/* Station reading: a screen before the round and a dialog («📜 Texto») during it. The text box scrolls inside when it is long
+   (--read-top = where it starts, measured by exam.js), so the screen never scrolls the page on a laptop. */
+.exam-read{display:grid;gap:12px;padding:clamp(14px,3vw,24px);background:linear-gradient(var(--map),#fff)}
+.game-shell:has(#read-screen:not([hidden])){padding-top:10px;padding-bottom:16px}
+.game-shell:has(#read-screen:not([hidden]))>.game-top{display:none}
+.read-head{display:flex;gap:14px;align-items:center}
+.read-head .st-icon{grid-row:auto;flex:none}
+.read-head .eyebrow{margin:0 0 2px;color:var(--sea-d)}
+.read-head h2{margin:0;font-size:clamp(1.3rem,4vw,1.7rem);line-height:1.1}
+.read-body{display:grid;gap:12px;align-items:start}
+.read-text{padding:14px 18px;border-radius:16px;background:#fff;box-shadow:0 0 0 1px var(--line);font-size:1.12rem;line-height:1.55;font-weight:600}
+.read-p{margin:0 0 .6em;border-radius:8px;transition:background-color .2s}
+.read-p:last-child{margin:0}
+.read-p.is-reading{background:#fff3c4;box-shadow:-6px 0 0 #fff3c4,6px 0 0 #fff3c4}
+.read-notes{padding:10px 14px;border-radius:16px;background:#f6f2e3}
+.read-notes h3{margin:0 0 6px;font:900 .8rem/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--sea-d)}
+.read-notes dl{display:grid;gap:5px;margin:0}
+.read-note{line-height:1.3}
+.read-note dt{display:inline;font-weight:900}
+.read-note dd{display:inline;margin:0;color:var(--muted);font-weight:700}
+.read-note dd:before{content:" — "}
+.read-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.read-actions .btn{min-height:54px}
+.read-actions #read-start{flex:1 1 260px;max-width:420px}
+.read-listen.is-on{background:#fff3c4;border-color:var(--missd)}
+.text-dlg .read-body{max-height:calc(100vh - 250px);overflow:auto;margin-bottom:14px}
+@supports(height:100dvh){.text-dlg .read-body{max-height:calc(100dvh - 250px)}}
+@media(min-width:760px){
+  .exam-read .read-body{max-height:max(180px,calc(100vh - var(--read-top,170px) - 110px));overflow:auto}
+  .exam-read .read-body:has(>.read-notes){grid-template-columns:minmax(0,1fr) minmax(200px,260px)}
+  .exam-read .read-notes{position:sticky;top:0}
+}
+@supports(height:100dvh){@media(min-width:760px){.exam-read .read-body{max-height:max(180px,calc(100dvh - var(--read-top,170px) - 110px))}}}
+/* Phones: the reading flows down the page, so its buttons ride in a bar stuck to the bottom of the screen (one row), with a
+   soft fade over the text above. At the end of the page the bar is back in its place below the text: nothing stays covered. */
+@media(max-width:600px){
+  .exam-read .read-actions{--pad:clamp(14px,3vw,24px);position:sticky;bottom:0;z-index:3;flex-wrap:nowrap;margin:0 calc(-1 * var(--pad)) calc(-1 * var(--pad));
+    padding:26px var(--pad) calc(12px + env(safe-area-inset-bottom));background:linear-gradient(#fff0,#fff 24px);border-radius:0 0 22px 22px}
+  .exam-read .read-actions .btn{min-width:0;padding-inline:14px;line-height:1.15}
+  .exam-read .read-listen{flex:none}
+  .exam-read .read-actions #read-start{flex:1 1 auto}
+}
 
 /* Short laptop screens: slimmer cards and bins (still 48px+ to tap) */
 @media(min-width:760px) and (max-height:860px){
@@ -350,8 +419,8 @@ dialog::backdrop{background:#0b2a3a99}
   .play-head .label{flex:1 1 0}
   .play-head .dots{order:9;flex-basis:100%;justify-content:flex-start}
   /* the glossary button shrinks to its book, like the quit button: the label keeps its room */
-  .play-vocab{width:44px;padding:0;display:grid;place-items:center;border-radius:50%;font-size:1.25rem}
-  .play-vocab .pv-text{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .play-vocab,.play-text{width:44px;padding:0;display:grid;place-items:center;border-radius:50%;font-size:1.25rem}
+  .play-vocab .pv-text,.play-text .pv-text{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
   .panel{border-radius:22px}
   .hero{grid-template-columns:minmax(0,1fr) 92px;gap:10px}
   .hero-art{width:92px;align-self:start}

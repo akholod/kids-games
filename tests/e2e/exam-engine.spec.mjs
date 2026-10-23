@@ -126,6 +126,16 @@ const answerByKeys = async (page, { wrong = false } = {}) => {
       }
       return;
     }
+    case 'pick': {
+      // arrows to every word, Space on the right ones, Enter
+      const right = [...t.text.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1]);
+      const shown = await ownTexts(page, '#work .pick-word');
+      for (const w of shown) {
+        await key('ArrowRight');
+        if (right.includes(w)) await key(' ');
+      }
+      return key('Enter');
+    }
     default:
       throw new Error(`unsupported task type ${t.type}`);
   }
@@ -720,4 +730,435 @@ test('vocab: nothing of it is in the DOM on the Spanish site (?lang=es)', async 
   expect(await page.evaluate(() => /[\u0400-\u04FF]/.test(document.getElementById('exam-root').innerHTML))).toBe(false);
   await page.evaluate(() => __exam.startExam());
   await expect(page.locator('#play-vocab')).toHaveCount(0);
+});
+
+// ---- station reading (station.text), passage, pick ----
+
+const READING = {
+  title: 'La leyenda del río',
+  paragraphs: ['Había una vez un río muy largo.', 'El río cantaba por las noches.'],
+  notes: [
+    ['río', 'corriente de agua'],
+    ['cantar', 'hacer música con la voz'],
+  ],
+};
+const PICK = 'El [portero] para el [balón], dice Ana.';
+const pickTask = (extra = {}) => ({ type: 'pick', q: 'Toca los nombres', text: PICK, ...extra });
+// A station with a reading: four choices (the first with a passage) plus a pick.
+const readStation = (extra = {}) => ({
+  ...station('t', [
+    { ...choice('T1', ['x', 'y'], 1), passage: 'Un [portero] y un [.]\nOtro párrafo.' },
+    choice('T2', ['x', 'y', 'z'], 0),
+    choice('T3', ['x', 'y'], 0),
+    pickTask(),
+  ]),
+  text: READING,
+  ...extra,
+});
+const plainStation = () =>
+  station('p', [choice('P1', ['x', 'y'], 1), choice('P2', ['x', 'y'], 0), choice('P3', ['x', 'y'], 0), choice('P4', ['x', 'y'], 1)]);
+// What the page does for speech: a fake voice that says each paragraph for 900 ms and counts hushes.
+const fakeVoice = (page, can = true) =>
+  page.evaluate((can) => {
+    window.__said = [];
+    window.__hushed = 0;
+    window.__until = 0;
+    KFG.canSay = () => can;
+    KFG.say = (t) => {
+      window.__said.push(t);
+      window.__until = Date.now() + 900;
+      return true;
+    };
+    KFG.speaking = () => Date.now() < window.__until;
+    KFG.hush = () => {
+      window.__hushed++;
+      window.__until = 0;
+    };
+  }, can);
+const startRead = async (page) => {
+  await page.locator('#stations .station').nth(0).click();
+  await page.locator('#intro-go').click();
+  await expect(page.locator('#read-screen')).toBeVisible();
+};
+
+test('reading: after «Empezar» of the intro dialog the reading screen comes first; «Empezar las preguntas» starts the round (click and Enter)', async ({
+  page,
+}) => {
+  await openUnit(page, [readStation(), plainStation()], { exam: { t: 1, p: 1 } });
+  await page.locator('#stations .station').nth(1).click(); // a station without a text: straight to the questions
+  await page.locator('#intro-go').click();
+  await expect(page.locator('#play')).toBeVisible();
+  await expect(page.locator('#read-screen')).toBeHidden();
+  await expect(page.locator('#play-text')).toHaveCount(0);
+  await page.evaluate(() => __exam.toHub());
+
+  // a station with a text: the reading first, nothing started yet
+  await startRead(page);
+  await expect(page.locator('#play')).toBeHidden();
+  await expect(page.locator('#hub')).toBeHidden();
+  expect(await page.evaluate(() => __exam.session)).toBeNull();
+  await expect(page.locator('#read-title')).toHaveText('La leyenda del río');
+  await expect(page.locator('#read-screen .read-p')).toHaveText(READING.paragraphs);
+  await expect(page.locator('#read-screen .read-text')).toHaveAttribute('lang', 'es');
+  await expect(page.locator('#read-screen .read-note')).toHaveCount(2);
+  await expect(page.locator('#read-screen .read-note dt').first()).toHaveText('río');
+  await expect(page.locator('#read-screen .read-note dd').first()).toHaveText('corriente de agua');
+  await expect(page.locator('#read-start')).toHaveText('Empezar las preguntas');
+  await expect(page.locator('#read-start')).toBeFocused();
+  await page.locator('#read-start').click();
+  await expect(page.locator('#play')).toBeVisible();
+  await expect(page.locator('#read-screen')).toBeHidden();
+  expect(await page.evaluate(() => __exam.session.station)).toBe('t');
+
+  // by keyboard: Enter on «Empezar», Enter on «Empezar las preguntas»; Esc on the reading goes back to the hub
+  await page.evaluate(() => __exam.toHub());
+  await page.locator('#stations .station').nth(0).focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#read-screen')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+  await expect(page.locator('#read-screen')).toBeHidden();
+  await page.locator('#stations .station').nth(0).focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#read-screen')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  await expect(page.locator('#play-label')).toContainText('Estación t');
+  // the whole round by keys (choices and the pick), then «Otra vez» goes straight to the questions
+  await playRound(page);
+  await page.locator('#finish .actions .btn', { hasText: 'Otra vez' }).click();
+  await expect(page.locator('#play')).toBeVisible();
+  await expect(page.locator('#read-screen')).toBeHidden();
+});
+
+test('reading: «Escuchar» reads the paragraphs one by one with a highlight, «Parar» stops, leaving stops; hidden when nothing can say it', async ({
+  page,
+}) => {
+  await openUnit(page, [readStation()]);
+  await fakeVoice(page, false);
+  await startRead(page);
+  await expect(page.locator('#read-listen')).toBeHidden();
+  await page.keyboard.press('Escape');
+
+  await fakeVoice(page);
+  await startRead(page);
+  const listen = page.locator('#read-listen');
+  await expect(listen).toBeVisible();
+  await expect(listen).toHaveText('🔊 Escuchar');
+  await listen.click();
+  await expect(listen).toHaveText('⏹ Parar');
+  await expect(page.locator('#read-screen .read-p.is-reading')).toHaveText(READING.paragraphs[0]);
+  await expect(page.locator('#read-screen .read-p.is-reading')).toHaveText(READING.paragraphs[1]); // the next one, chained
+  expect(await page.evaluate(() => __said)).toEqual(READING.paragraphs);
+  await expect(listen).toHaveText('🔊 Escuchar'); // the end
+  await expect(page.locator('#read-screen .is-reading')).toHaveCount(0);
+
+  // Parar in the middle
+  await page.evaluate(() => (__said.length = 0));
+  await listen.click();
+  await expect(page.locator('#read-screen .is-reading')).toHaveCount(1);
+  const hushed = await page.evaluate(() => __hushed);
+  await listen.click();
+  await expect(listen).toHaveText('🔊 Escuchar');
+  await expect(page.locator('#read-screen .is-reading')).toHaveCount(0);
+  expect(await page.evaluate(() => __hushed)).toBeGreaterThan(hushed);
+  await page.waitForTimeout(1300);
+  expect(await page.evaluate(() => __said)).toEqual([READING.paragraphs[0]]); // nothing chained after Parar
+
+  // leaving the screen stops it
+  await listen.click();
+  const before = await page.evaluate(() => __hushed);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+  expect(await page.evaluate(() => __hushed)).toBeGreaterThan(before);
+  await page.waitForTimeout(1300);
+  expect(await page.evaluate(() => __said.length)).toBe(2);
+});
+
+test('reading: «📜 Texto» in a station round opens the text, Esc / the button close it and give the focus back', async ({ page, tap }) => {
+  await openUnit(page, [readStation()]);
+  await fakeVoice(page);
+  await page.evaluate(() => __exam.startStation('t'));
+  const btn = page.locator('#play-text');
+  await expect(btn).toBeVisible();
+  await expect(btn).toHaveAttribute('aria-label', 'Texto');
+  await expect(page.locator('#text-dlg')).toHaveCount(0);
+  // keyboard: focus, Enter opens, a key meant for the task is not taken, Esc closes and the focus is back
+  await btn.focus();
+  await page.keyboard.press('Enter');
+  const dlg = page.locator('#text-dlg');
+  await expect(dlg).toBeVisible();
+  await expect(dlg.locator('h2')).toHaveText('La leyenda del río');
+  await expect(dlg.locator('.read-p')).toHaveText(READING.paragraphs);
+  await expect(dlg.locator('.read-note')).toHaveCount(2);
+  await page.keyboard.press('1');
+  expect(await page.evaluate(() => __exam.session.answered)).toBe(false);
+  await dlg.locator('#text-listen').click();
+  await expect(dlg.locator('.read-p.is-reading')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(dlg).toHaveCount(0);
+  await expect(btn).toBeFocused();
+  const said = await page.evaluate(() => __said.length);
+  await page.waitForTimeout(1300);
+  expect(await page.evaluate(() => __said.length)).toBe(said); // closing stopped the reading
+  expect(await page.evaluate(() => __exam.session.index)).toBe(0); // Esc closed the dialog, it did not ask to quit
+  await expect(page.locator('#quit-dlg')).not.toHaveJSProperty('open', true);
+  // a tap: the close button, the focus is left alone
+  await btn.blur();
+  await tap(btn);
+  await expect(dlg).toBeVisible();
+  await tap(page.locator('#text-close'));
+  await expect(dlg).toHaveCount(0);
+  await expect(btn).not.toBeFocused();
+  // the round goes on and the text stays reachable
+  await page.evaluate(() => __exam.session.task);
+  await answerByKeys(page);
+  await page.keyboard.press('Enter');
+  await expect(btn).toBeVisible();
+});
+
+test('reading: in the exam «📜 Texto» comes and goes with the task’s station', async ({ page }) => {
+  await openUnit(page, [readStation(), plainStation()], { exam: { t: 2, p: 2 } });
+  await page.evaluate(() => __exam.startExam());
+  const stations = await page.evaluate(() => __exam.session.tasks.map((t) => t.station));
+  expect([...stations].sort()).toEqual(['p', 'p', 't', 't']);
+  for (const [i, st] of stations.entries()) {
+    expect(await page.evaluate(() => __exam.session.index)).toBe(i);
+    await expect(page.locator('#play-text')).toHaveCount(st === 't' ? 1 : 0);
+    if (st === 't') {
+      await page.locator('#play-text').click();
+      await expect(page.locator('#text-dlg .read-p')).toHaveText(READING.paragraphs);
+      await page.keyboard.press('Escape');
+      await expect(page.locator('#text-dlg')).toHaveCount(0);
+    }
+    await answerByKeys(page);
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('#finish')).toBeVisible();
+  await expect(page.locator('#play-text')).toHaveCount(0);
+  // a round of the plain station never has it; no reading screen in the exam
+  await page.evaluate(() => __exam.startStation('p'));
+  await expect(page.locator('#play-text')).toHaveCount(0);
+});
+
+test('reading screen: a long text scrolls inside its box, not the page (1366×657, 1280×650); a phone has no sideways overflow', async ({
+  page,
+}) => {
+  const long = {
+    title: 'Una lectura muy larga',
+    paragraphs: Array.from(
+      { length: 9 },
+      (_, i) => `Párrafo ${i + 1}. ${'El río bajaba de la montaña y cantaba por las noches a los animales del bosque. '.repeat(3)}`,
+    ),
+    notes: Array.from({ length: 8 }, (_, i) => [`palabra${i}`, `un significado un poco largo número ${i}`]),
+  };
+  await openUnit(page, [readStation({ text: long })]);
+  for (const [w, h] of [
+    [1366, 657],
+    [1280, 650],
+  ]) {
+    await page.setViewportSize({ width: w, height: h });
+    await startRead(page);
+    await page.waitForTimeout(150);
+    expect(await page.evaluate(() => document.scrollingElement.scrollHeight - innerHeight), `${w}×${h}: page scroll`).toBeLessThanOrEqual(
+      2,
+    );
+    const box = await page.locator('#read-screen .read-body').evaluate((e) => ({ inner: e.scrollHeight - e.clientHeight }));
+    expect(box.inner, 'the text box scrolls inside').toBeGreaterThan(0);
+    const start = await page.locator('#read-start').boundingBox();
+    expect(start.y + start.height, `${w}×${h}: «Empezar las preguntas» on screen`).toBeLessThanOrEqual(h);
+    await page.keyboard.press('Escape');
+  }
+  // a short text does not need to scroll at all
+  await page.setViewportSize({ width: 1366, height: 657 });
+  await openUnit(page, [readStation()]);
+  await startRead(page);
+  await page.waitForTimeout(150);
+  expect(await page.locator('#read-screen .read-body').evaluate((e) => e.scrollHeight - e.clientHeight)).toBeLessThanOrEqual(1);
+  expect(await page.evaluate(() => document.scrollingElement.scrollHeight - innerHeight)).toBeLessThanOrEqual(2);
+  // phone: scrolling the page is fine, a sideways overflow is not
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+});
+
+test('passage: between the question and the work area, \\n = paragraph, [x] = a mark, a lone [.] is a ringed full stop, text only', async ({
+  page,
+}) => {
+  const t1 = { ...choice('Q1', ['x', 'y'], 0), passage: 'Un [portero] y un [.]\nOtro [párrafo] aquí.' };
+  const t2 = { ...choice('Q2', ['x', 'y'], 0), passage: '<b>no html</b> y <img src=x onerror=alert(1)> [<i>x</i>]' };
+  const t3 = { ...sort('Q3'), passage: 'Pasaje de un [sort].' };
+  const t4 = choice('Q4', ['x', 'y'], 0);
+  await openUnit(page, [station('s', [t1, t2, t3, t4])]);
+  await page.evaluate((t) => __exam.play(t.map((x) => ({ ...x, station: 's' }))), [t1, t2, t3, t4]);
+  const passage = page.locator('#passage');
+  await expect(passage).toBeVisible();
+  await expect(passage.locator('p')).toHaveCount(2);
+  await expect(passage.locator('mark.passage-mark')).toHaveText(['portero', '.', 'párrafo']);
+  await expect(passage.locator('mark.is-dot')).toHaveCount(1);
+  await expect(passage.locator('mark.is-dot')).toHaveText('.');
+  // it sits between the prompt and the work area
+  const order = await page.evaluate(() => {
+    const y = (id) => document.getElementById(id).getBoundingClientRect().top;
+    return [y('prompt'), y('passage'), y('work')];
+  });
+  expect(order[0]).toBeLessThan(order[1]);
+  expect(order[1]).toBeLessThan(order[2]);
+  // the mark of a lone full stop is visible: a ring (box-shadow) round it
+  expect(await passage.locator('mark.is-dot').evaluate((e) => getComputedStyle(e).boxShadow)).not.toBe('none');
+  await answerByKeys(page);
+  await page.keyboard.press('Enter');
+  // markup in the text stays text
+  await expect(passage.locator('b, img, i')).toHaveCount(0);
+  await expect(passage).toContainText('<b>no html</b>');
+  await expect(passage.locator('mark')).toHaveText(['<i>x</i>']);
+  await answerByKeys(page);
+  await page.keyboard.press('Enter');
+  // a built-in type that is not choice gets it as well
+  await expect(passage).toBeVisible();
+  await expect(passage.locator('mark')).toHaveText(['sort']);
+  await expect(page.locator('#work .bin').first()).toBeVisible();
+  await answerByKeys(page);
+  await page.keyboard.press('Enter');
+  // none: the passage box is gone
+  await expect(passage).toBeHidden();
+  await expect(passage.locator('p')).toHaveCount(0);
+});
+
+test('passage: a task with a passage fits a short laptop window without page scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 650 });
+  const t = {
+    ...choice('¿Qué hace el portero con el balón?', ['Lo para', 'Lo pierde', 'Lo canta'], 0),
+    passage: 'El [portero] para el [balón].\nLa afición grita.',
+  };
+  await openUnit(page, [station('s', [t])]);
+  await page.evaluate((x) => __exam.play([{ ...x, station: 's' }]), t);
+  await page.waitForTimeout(150);
+  expect(await page.evaluate(() => document.scrollingElement.scrollHeight - innerHeight)).toBeLessThanOrEqual(2);
+});
+
+const pickWord = (page, w) => page.locator('#work .pick-word', { hasText: new RegExp(`^${w}$`) });
+const pickState = (page) =>
+  page.locator('#work .pick-word').evaluateAll((els) => els.map((e) => e.getAttribute('aria-pressed') === 'true'));
+
+test('pick: words are buttons, punctuation stays beside them but is not tappable; right first time is a full cheer', async ({ page }) => {
+  await openUnit(page, [station('k', [pickTask()])]);
+  await page.evaluate((t) => __exam.play([{ ...t, station: 'k' }]), pickTask());
+  await expect(page.locator('#work .pick-word')).toHaveText(['El', 'portero', 'para', 'el', 'balón', 'dice', 'Ana']);
+  await expect(page.locator('#work .pick-text')).toHaveText('El portero para el balón, dice Ana.'); // brackets stripped, punctuation kept
+  await expect(page.locator('#work .pick-text')).toHaveAttribute('lang', 'es');
+  expect(await page.locator('#work .pick-word').evaluateAll((els) => els.some((e) => /[,.[\]]/.test(e.textContent)))).toBe(false);
+  for (const b of await page.locator('#work .pick-word').all()) expect((await b.boundingBox()).height).toBeGreaterThanOrEqual(48);
+  await expect(page.locator('#work .kbd-hint')).toContainText('Espacio');
+  // nothing picked: asks for picks
+  await page.locator('#work .pick-check').click();
+  await expect(page.locator('#work .inline-hint')).toHaveText('Toca primero las palabras y luego pulsa Comprobar.');
+  expect(await page.evaluate(() => __exam.session.answered)).toBe(false);
+  // a tap toggles
+  await pickWord(page, 'portero').click();
+  await expect(pickWord(page, 'portero')).toHaveAttribute('aria-pressed', 'true');
+  await pickWord(page, 'portero').click();
+  await expect(pickWord(page, 'portero')).toHaveAttribute('aria-pressed', 'false');
+  await pickWord(page, 'portero').click();
+  await pickWord(page, 'balón').click();
+  await page.locator('#work .pick-check').click();
+  await expect(page.locator('#feedback .fb.ok .fb-title')).toHaveText('¡Hurra! ⚽');
+  await expect(page.locator('#work .pick-word.is-good')).toHaveCount(2);
+  expect(await page.evaluate(() => __exam.session.results)).toEqual([true]);
+});
+
+test('pick: a wrong first check locks the right picks and takes the wrong back; then right is soft', async ({ page }) => {
+  await openUnit(page, [station('k', [pickTask()])]);
+  await page.evaluate((t) => __exam.play([{ ...t, station: 'k' }]), pickTask());
+  await pickWord(page, 'portero').click();
+  await pickWord(page, 'dice').click();
+  await page.locator('#work .pick-check').click();
+  await expect(page.locator('#work .inline-hint')).toHaveText('Las verdes están bien. ¿Falta alguna o sobra otra? ¡Prueba otra vez!');
+  await expect(page.locator('#work .pick-word.is-good')).toHaveText(['portero']);
+  await expect(pickWord(page, 'portero')).toBeDisabled();
+  await expect(pickWord(page, 'dice')).toHaveAttribute('aria-pressed', 'false'); // back
+  await expect(page.locator('#feedback .fb')).toHaveCount(0); // not resolved yet
+  await pickWord(page, 'balón').click();
+  await page.locator('#work .pick-check').click();
+  await expect(page.locator('#feedback .fb.ok .fb-title')).toHaveText('¡Bien hecho! ⚽');
+  await expect(page.locator('#work .pick-word.is-good')).toHaveText(['portero', 'balón']);
+  expect(await page.evaluate(() => __exam.session.results)).toEqual([true]);
+});
+
+test('pick: wrong twice shows the answer — right green, missed outlined, wrong red — and is false', async ({ page }) => {
+  await openUnit(page, [station('k', [pickTask({ fact: 'El portero usa las manos.' })])]);
+  await page.evaluate((t) => __exam.play([{ ...t, station: 'k' }]), pickTask({ fact: 'El portero usa las manos.' }));
+  await pickWord(page, 'dice').click();
+  await page.locator('#work .pick-check').click();
+  await expect(page.locator('#work .inline-hint')).toHaveText('Todavía no. ¡Prueba otra vez!'); // nothing was right: no greens
+  await expect(page.locator('#work .pick-word.is-good')).toHaveCount(0);
+  expect(await pickState(page)).toEqual(Array(7).fill(false));
+  await pickWord(page, 'portero').click();
+  await pickWord(page, 'Ana').click();
+  await page.locator('#work .pick-check').click();
+  await expect(page.locator('#feedback .fb.miss')).toBeVisible();
+  await expect(page.locator('#feedback .fb-title')).toContainText('La respuesta es: portero, balón.');
+  await expect(page.locator('#work .pick-word.is-good')).toHaveText(['portero']);
+  await expect(page.locator('#work .pick-word.is-missed')).toHaveText(['balón']);
+  await expect(page.locator('#work .pick-word.is-wrong')).toHaveText(['Ana']);
+  await expect(page.locator('#work .pick-word:not([disabled])')).toHaveCount(0);
+  await expect(page.locator('#feedback .fb-fact')).toContainText('manos');
+  expect(await page.evaluate(() => __exam.session.results)).toEqual([false]);
+});
+
+test('pick by keyboard: ← → move between words, Space marks, Enter checks (also on a focused word), Backspace clears', async ({ page }) => {
+  await openUnit(page, [station('k', [pickTask()])]);
+  await page.evaluate((t) => __exam.play([{ ...t, station: 'k' }]), pickTask());
+  const focused = () => page.evaluate(() => document.activeElement?.textContent);
+  await page.keyboard.press('ArrowRight');
+  expect(await focused()).toBe('El');
+  await page.keyboard.press('ArrowRight');
+  expect(await focused()).toBe('portero');
+  await page.keyboard.press(' ');
+  expect(await pickState(page)).toEqual([false, true, false, false, false, false, false]);
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  expect(await focused()).toBe('Ana'); // wraps round
+  await page.keyboard.press(' ');
+  await page.keyboard.press(' '); // toggled twice: off again
+  expect((await pickState(page)).filter(Boolean)).toHaveLength(1);
+  await page.keyboard.press('Backspace');
+  expect(await pickState(page)).toEqual(Array(7).fill(false));
+  await page.keyboard.press('ArrowRight'); // from Ana: wraps to El
+  expect(await focused()).toBe('El');
+  for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
+  expect(await focused()).toBe('balón');
+  await page.keyboard.press(' ');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  expect(await focused()).toBe('portero');
+  await page.keyboard.press(' ');
+  expect(await pickState(page)).toEqual([false, true, false, false, true, false, false]);
+  await page.keyboard.press('Enter'); // on a focused word: checks, does not toggle
+  await expect(page.locator('#feedback .fb.ok .fb-title')).toHaveText('¡Hurra! ⚽');
+  await expect(page.locator('#work .pick-word.is-good')).toHaveText(['portero', 'balón']);
+  await expect(page.locator('#feedback .fb-actions .btn').first()).toBeFocused();
+  await page.keyboard.press('Enter');
+});
+
+test('pick: wraps at 360px without sideways overflow, every word 48px+ and inside the screen', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const t = pickTask({ text: 'Los [jugadores] del equipo corren por el campo, pasan el [balón] y gritan [gol] con mucha alegría.' });
+  await openUnit(page, [station('k', [t])]);
+  await page.evaluate((x) => __exam.play([{ ...x, station: 'k' }]), t);
+  const boxes = await page.locator('#work .pick-word').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON()));
+  expect(boxes.length).toBe(17);
+  for (const b of boxes) {
+    expect(b.left).toBeGreaterThanOrEqual(0);
+    expect(b.right).toBeLessThanOrEqual(360);
+    expect(b.height).toBeGreaterThanOrEqual(48);
+  }
+  expect(new Set(boxes.map((b) => Math.round(b.top))).size).toBeGreaterThan(1); // wrapped onto several lines
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+  for (const w of ['jugadores', 'balón', 'gol']) await pickWord(page, w).click();
+  await page.locator('#work .pick-check').click();
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
 });

@@ -4,27 +4,12 @@ import vm from 'node:vm';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { buildSlug as slug } from './slug-impls.mjs';
 
 const path = (rel) => fileURLToPath(new URL(`../../${rel}`, import.meta.url));
 const read = (rel) => fs.readFileSync(path(rel), 'utf8');
 
-// Same rule as slug() in shared/kf-game.js and scripts/build-audio.mjs.
-const UA = Object.fromEntries(
-  [...'абвгґдеєжзиіїйклмнопрстуфхцчшщьюя'].map((c, i) => [
-    c,
-    'a b v h g d e ye zh z y i yi i k l m n o p r s t u f kh ts ch sh shch _ yu ya'.split(' ')[i].replace('_', ''),
-  ]),
-);
-const slug = (text) =>
-  text
-    .toLowerCase()
-    .replace(/[’'ʼ]/g, '')
-    .replace(/[а-яґєії]/g, (c) => UA[c] ?? c)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
+// The real slug() of scripts/build-audio.mjs (tests/unit/slug.test.mjs checks that kf-game.js agrees).
 const boot = (files, extra = {}) => {
   const sb = { console, Math, KF: { lang: 'uk', i18n: () => (key) => key }, KFG: { shuffle: (a) => [...a] }, ...extra };
   sb.window = sb;
@@ -91,6 +76,21 @@ test('audio: everything the dictado coach says has a Spanish clip, every sentenc
     if (t.type === 'cloze') assert.ok([...AUDIO['es-slow']].includes(s), `es-slow «${t.say}»`);
   }
   assert.equal(slug('compañero'), 'companero');
+});
+
+test('audio: every lengua-mundo reading paragraph and tone sentence has a Spanish clip (long ones under a short hashed name)', () => {
+  const { LE_CONTENT: le } = boot(['shared/exam/exam.js', 'shared/exam/types.js', 'games/lengua-mundo/content.js']);
+  const texts = [
+    ...le.stations.flatMap((s) => s.text?.paragraphs ?? []),
+    ...le.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'tone').map((t) => t.say)),
+  ];
+  assert.ok(texts.length >= 20, `${texts.length} texts`);
+  for (const t of texts) {
+    const s = slug(t);
+    assert.ok(s.length <= 60, `«${t.slice(0, 30)}…»: slug of ${s.length} characters`);
+    assert.ok([...AUDIO.es].includes(s), `es «${t.slice(0, 40)}…»: «${s}» is not in KF_AUDIO.es (run scripts/build-audio.mjs)`);
+    assert.ok(fs.statSync(path(`audio/es/${s}.mp3`)).size > 1000, `es/${s}.mp3 is empty`);
+  }
 });
 
 test('audio: manifest and audio/<lang>/ agree, slugs are sorted and unique', () => {

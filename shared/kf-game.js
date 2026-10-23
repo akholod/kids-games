@@ -294,11 +294,19 @@
     ю: 'yu',
     я: 'ya',
   };
+  /** FNV-1a 32-bit of an ASCII string, base 36 (long clip names, see slug()).
+   * @param {string} s */
+  const fnv = (s) => {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193) >>> 0;
+    return h.toString(36);
+  };
   /** Same rule as slug() in scripts/build-audio.mjs: apostrophes dropped, Ukrainian transliterated, accents and stress
-   * marks dropped; surrounding punctuation ('¡Hola!') drops out with it.
+   * marks dropped; surrounding punctuation ('¡Hola!') drops out with it. A slug over 60 characters (a whole paragraph) is
+   * cut to its first 48 (no trailing '-') + '-' + the FNV-1a hash of the full slug.
    * @param {string} text */
-  const slug = (text) =>
-    text
+  const slug = (text) => {
+    const s = text
       .toLowerCase()
       .replace(/[’'ʼ]/g, '')
       .replace(/[а-яґєії]/g, (c) => UA[c] ?? c)
@@ -306,6 +314,8 @@
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
+    return s.length > 60 ? `${s.slice(0, 48).replace(/-+$/, '')}-${fnv(s)}` : s;
+  };
   /** @param {string} text @param {string} lang @returns {string | null} url of the clip, null without one */
   const clipUrl = (text, lang) => {
     const s = slug(text);

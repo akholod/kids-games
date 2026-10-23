@@ -7,6 +7,7 @@ import {
   answerDcTask,
   answerWordTask,
   examPlayer,
+  unitPage,
   openStation,
   playChTasks,
   playDcTasks,
@@ -201,4 +202,63 @@ test('naturales-entorno: intro dialogs, first task of every station, label / fil
     await cn.answerTask(page, tap);
     await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what} next`);
   }
+});
+
+test('lengua-mundo: hub, readings, the longest fix, a chat after all turns, a tone, the nota label and sort fit; next button visible', async ({
+  page,
+  tap,
+}) => {
+  const le = examPlayer('__le');
+  const { startFromIntro, allTasks, playOnly } = unitPage('LE_CONTENT', '__le');
+  await open(page, '/games/lengua-mundo/');
+  await page.evaluate(() => {
+    KFG.say = () => true; // no sound needed here
+    KFG.speaking = () => false;
+  });
+  // The hub is a list of stations (it scrolls like every exam hub), but it never overflows sideways
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+
+  // The readings: the page does not scroll (a long text scrolls inside its box), «Empezar las preguntas» is on screen
+  for (const id of ['baobab', 'midas']) {
+    await open(page, '/games/lengua-mundo/');
+    await startFromIntro(page, tap, id);
+    await expect(page.locator('#read-screen')).toBeVisible();
+    await expectFits(page, `${id} reading`);
+    await expectOnScreen(page, page.locator('#read-start'), `${id} start button`);
+    await tap(page.locator('#read-start'));
+    await expect(page.locator('#play')).toBeVisible();
+    await expectFits(page, `${id} first task`);
+  }
+
+  const tasks = await allTasks(page);
+  const by = (type) => tasks.filter((t) => t.type === type);
+  const longest = (list, size) => [...list].sort((a, b) => size(b) - size(a))[0];
+  const picks = [
+    ['the longest fix', longest(by('fix'), (t) => t.text.length)],
+    ['the chat with most turns and longest replies', longest(by('chat'), (t) => t.turns.length * 1000 + JSON.stringify(t.turns).length)],
+    ['a tone', by('tone')[0]],
+    ['the nota label', by('label').find((t) => t.scene === 'nota')],
+    ['the aviso label', by('label').find((t) => t.scene === 'aviso')],
+    ['the nota / aviso sort', by('sort').find((t) => t.station === 'nota' && /nota o un aviso/.test(t.q))],
+    ['the longest pick', longest(by('pick'), (t) => t.text.length)],
+  ];
+  for (const [what, t] of picks) {
+    expect(t, what).toBeTruthy();
+    await open(page, '/games/lengua-mundo/');
+    await page.evaluate(() => {
+      KFG.say = () => true;
+      KFG.speaking = () => false;
+    });
+    await playOnly(page, t);
+    await expectFits(page, what);
+    await le.answerTask(page, tap);
+    // a chat is only over after all its turns: the call, the replies and the sheet are on screen together
+    await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what}: next`);
+  }
+
+  // The chat once more, looked at after every turn is answered, with the page scroll measured (the sheet may scroll a few px)
+  await open(page, '/games/lengua-mundo/');
+  await playOnly(page, picks[1][1]);
+  await le.answerTask(page, tap, { stopAt: picks[1][1].turns.length - 1 });
+  await expectFits(page, 'the chat before its last answer');
 });

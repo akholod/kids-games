@@ -277,6 +277,19 @@
       },
     },
     {
+      slug: 'lengua-mundo',
+      title: 'Lenguas por el mundo',
+      emoji: '✈️',
+      category: 'lengua',
+      desc: 'Готуємось до іспиту з Lengua Castellana: Unidad 1 — легенди, синоніми й антоніми, крапка і велика літера, іменник, розмова, записка й оголошення.',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: {
+        title: 'Lenguas por el mundo',
+        desc: 'Prepárate para el examen de Lengua, Unidad 1: leyendas, sinónimos y antónimos, el punto y la mayúscula, el nombre, la conversación, la nota y el aviso.',
+      },
+    },
+    {
       slug: 'coach-simon',
       title: 'Тренер-Саймон',
       emoji: '🚦',

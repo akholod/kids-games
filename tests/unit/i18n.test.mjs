@@ -65,7 +65,7 @@ const texts = (KF) => ({
 
 const plain = (x) => JSON.parse(JSON.stringify(x));
 // Games added after the i18n migration: the snapshot checks below are about the games that existed then.
-const NEW_GAMES = new Set(['sociales-planeta', 'coach-simon', 'word-match', 'chytanka', 'dictado', 'naturales-entorno']);
+const NEW_GAMES = new Set(['sociales-planeta', 'coach-simon', 'word-match', 'chytanka', 'dictado', 'naturales-entorno', 'lengua-mundo']);
 const legacy = (list) => list.filter((g) => !NEW_GAMES.has(g.slug));
 
 test('uk: texts byte-identical to HEAD', () => {

@@ -1,6 +1,15 @@
 // Laptop only: every game must be playable with the keyboard (AGENTS.md conventions).
 import { test, expect, open, record } from './helpers.mjs';
-import { examPlayer, playChTasks, playDcTasks, playMathSession, playSimonCommands, playSimonMemory, playWordTasks } from './drivers.mjs';
+import {
+  examPlayer,
+  unitPage,
+  playChTasks,
+  playDcTasks,
+  playMathSession,
+  playSimonCommands,
+  playSimonMemory,
+  playWordTasks,
+} from './drivers.mjs';
 
 const tapNever = () => {
   throw new Error('keyboard test must not tap');
@@ -202,6 +211,70 @@ test('naturales-entorno: stations, dialogs, choice, label, filter and fill by ke
   await expect(page.locator('#finish .grade b')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('#hub')).toBeVisible();
+});
+
+test('lengua-mundo: reading by keys, then fix, chat, tone and pick with keys only; Esc goes back', async ({ page }) => {
+  const le = examPlayer('__le');
+  const { taskWhere, playOnly } = unitPage('LE_CONTENT', '__le');
+  await open(page, '/games/lengua-mundo/');
+  const tile = page.locator('#stations .station').nth(await page.evaluate(() => LE_CONTENT.stations.findIndex((s) => s.id === 'baobab')));
+
+  // Enter opens the intro, Enter starts: the reading screen comes first; Esc on it goes back to the hub
+  await tile.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#read-screen')).toBeVisible();
+  await expect(page.locator('#read-start')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+  // again, then Enter on «Empezar las preguntas» starts the round
+  await tile.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+
+  // 📜: Enter opens the text, Esc closes it and the focus comes back; Esc did not ask to quit
+  const book = page.locator('#play-text');
+  await book.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#text-dlg')).toHaveJSProperty('open', true);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#text-dlg')).toHaveCount(0);
+  await expect(book).toBeFocused();
+  await expect(page.locator('#quit-dlg')).toHaveJSProperty('open', false);
+  await book.blur();
+
+  // the whole baobab round by keys
+  await le.playSession(page, tapNever, { keyboard: true });
+  await expect(page.locator('#finish .score-pill')).toContainText('8 / 8');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // the unit's own types and pick, one by one, keys only
+  const tasks = [await taskWhere(page, 'fix'), await taskWhere(page, 'chat'), await taskWhere(page, 'tone'), await taskWhere(page, 'pick')];
+  await page.evaluate(() => {
+    KFG.say = () => true; // no sound needed
+    KFG.speaking = () => false;
+  });
+  await playOnly(page, ...tasks);
+  expect(await le.playSession(page, tapNever, { keyboard: true })).toEqual(['fix', 'chat', 'tone', 'pick']);
+  await expect(page.locator('#finish .score-pill')).toContainText('4 / 4');
+
+  // the fix by hand: ← → move, Space toggles, ⌫ undoes, Enter checks (also on a focused word)
+  await page.keyboard.press('Escape');
+  await playOnly(page, tasks[0]);
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#work .le-w').first()).toBeFocused();
+  await page.keyboard.press(' ');
+  await expect(page.locator('#work .le-w').first()).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Backspace');
+  await expect(page.locator('#work .le-w').first()).toHaveAttribute('aria-pressed', 'false');
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#work .le-g').first()).toBeFocused();
+  await page.keyboard.press('Enter'); // on a focused gap: checks, does not toggle
+  await expect(page.locator('#work .is-wrong').first()).toBeVisible();
+  await expect(page.locator('#work .le-g').first()).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('penalty-multiply: Enter starts, 1–3 pick a goal target, Enter = next kick, Esc goes back', async ({ page }) => {

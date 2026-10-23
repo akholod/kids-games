@@ -2,7 +2,7 @@
 // Baselines live in tests/e2e/screenshots.spec.mjs-snapshots/ (Linux Chrome); refresh with
 //   pnpm test:e2e screenshots --update-snapshots
 import { test, expect, open } from './helpers.mjs';
-import { openStation, playChTasks, playDcTasks, playWordTasks } from './drivers.mjs';
+import { openStation, playChTasks, playDcTasks, playWordTasks, unitPage } from './drivers.mjs';
 
 const snap = async (page, name) => {
   await page.waitForLoadState('networkidle');
@@ -61,6 +61,19 @@ test('naturales-entorno-hub: stations and the hero', async ({ page }) => {
   await open(page, '/games/naturales-entorno/');
   await expect(page.locator('#hero-art svg.cn-hero')).toBeVisible();
   await snap(page, 'naturales-entorno-hub');
+});
+
+test('lengua-mundo-hub: stations and the hero', async ({ page }) => {
+  await open(page, '/games/lengua-mundo/');
+  await expect(page.locator('#hero-art svg.le-hero')).toBeVisible();
+  await snap(page, 'lengua-mundo-hub');
+});
+
+test('lengua-mundo-read: the reading screen of the baobab legend', async ({ page, tap }) => {
+  await open(page, '/games/lengua-mundo/');
+  await unitPage('LE_CONTENT', '__le').startFromIntro(page, tap, 'baobab');
+  await expect(page.locator('#read-screen')).toBeVisible();
+  await snap(page, 'lengua-mundo-read');
 });
 
 test('coach-simon: start screen and the memory turn', async ({ page, tap }) => {

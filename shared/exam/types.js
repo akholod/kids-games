@@ -1,4 +1,4 @@
-// Keeper Fun Games — generic exam task renderers: KFExam.types.{choice, tf, sort, order, pairs, label, fill}, and KFExam.builder (word from tiles).
+// Keeper Fun Games — generic exam task renderers: KFExam.types.{choice, tf, sort, order, pairs, label, fill, pick}, and KFExam.builder (word from tiles).
 // Include after shared/exam/exam.js. Each is (task, work, ctx) → void, see ExamRendererCtx in types/exam.d.ts.
 // @ts-check
 'use strict';
@@ -786,6 +786,179 @@
     b.setKeys();
   };
 
-  window.KFExam.types = { choice, tf, sort, order, pairs: pairsTask, label, fill };
+  // ---------- pick ----------
+  // Tap the right words of a sentence: `[word]` in the text marks a right one, the others are traps. Punctuation stays beside its
+  // word but is not tappable. Check: all right = done; the 1st miss locks the right picks (green), takes the wrong ones back and
+  // lets the player try once more; the 2nd miss shows the answer (right green, missed outlined, wrong red) and resolves false.
+  /** @typedef {{ pre: string, word: string, post: string, right: boolean }} PickWord */
+  /**
+   * The sentence as chunks: a word with the punctuation stuck to it, or a bare string (a dash on its own).
+   * @param {string} text
+   * @returns {(PickWord | string)[]}
+   */
+  const pickChunks = (text) =>
+    text
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((chunk) => {
+        const m = /^([^[]*)\[([^\]]+)\](.*)$/.exec(chunk);
+        if (m) return { pre: m[1], word: m[2], post: m[3], right: true };
+        const w = /^([^\p{L}\p{N}]*)(.*?)([^\p{L}\p{N}]*)$/u.exec(chunk);
+        return w?.[2] ? { pre: w[1], word: w[2], post: w[3], right: false } : chunk;
+      });
+
+  /** @type {ExamRenderer<ExamPickTask>} */
+  const pick = (task, work, ctx) => {
+    const { h, T, shake, hint: mkHint, kbdHint, resolve, answered, setKeys } = ctx;
+    const chunks = pickChunks(task.text);
+    /** @type {{ word: string, right: boolean, el: HTMLButtonElement }[]} */
+    const words = [];
+    /** @type {Set<number>} */
+    const sel = new Set();
+    /** @type {Set<number>} the right picks of a checked try: locked */
+    const locked = new Set();
+    let checks = 0;
+    const hint = mkHint();
+    const stop = (/** @type {Event} */ e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    const line = chunks.map((c) => {
+      if (typeof c === 'string') return h('span', { class: 'pick-chunk', text: c });
+      const i = words.length;
+      const el = /** @type {HTMLButtonElement} */ (
+        h('button', {
+          type: 'button',
+          class: 'pick-word',
+          'aria-pressed': 'false',
+          text: c.word,
+          onclick: () => toggle(i),
+          // Enter on a focused word checks (it must not click the word), Space toggles it: both handled here, before the engine's key handler
+          onkeydown: (/** @type {KeyboardEvent} */ e) => {
+            if (e.key === 'Enter') {
+              stop(e);
+              check();
+            } else if (e.key === ' ') {
+              stop(e);
+              toggle(i);
+            }
+          },
+          onkeyup: (/** @type {KeyboardEvent} */ e) => e.key === ' ' && stop(e),
+        })
+      );
+      words.push({ word: c.word, right: c.right, el });
+      return h('span', { class: 'pick-chunk' }, c.pre, el, c.post);
+    });
+    const draw = () => {
+      words.forEach((w, i) => {
+        w.el.setAttribute('aria-pressed', String(sel.has(i)));
+        w.el.classList.toggle('is-good', locked.has(i));
+        w.el.disabled = locked.has(i) || answered();
+      });
+      clearBtn.disabled = answered() || [...sel].every((i) => locked.has(i));
+    };
+    const toggle = (/** @type {number} */ i) => {
+      if (answered() || locked.has(i)) return;
+      if (sel.has(i)) sel.delete(i);
+      else sel.add(i);
+      hint.textContent = '';
+      draw();
+    };
+    const clear = () => {
+      if (answered()) return;
+      for (const i of [...sel]) if (!locked.has(i)) sel.delete(i);
+      hint.textContent = '';
+      draw();
+    };
+    const check = () => {
+      if (answered()) return;
+      if (!sel.size) {
+        hint.textContent = T('pickNeed');
+        shake(line[0]);
+        return;
+      }
+      checks++;
+      const wrong = [...sel].filter((i) => !words[i].right);
+      const missed = words.map((w, k) => k).filter((k) => words[k].right && !sel.has(k));
+      if (!wrong.length && !missed.length) {
+        for (const i of sel) locked.add(i);
+        draw();
+        resolve(true, { soft: checks > 1 });
+        return;
+      }
+      if (checks >= 2) {
+        // The answer: right picks green, missed right words outlined, wrong picks red.
+        words.forEach((w, i) => {
+          w.el.disabled = true;
+          w.el.classList.toggle('is-good', sel.has(i) && w.right);
+          w.el.classList.toggle('is-wrong', sel.has(i) && !w.right);
+          w.el.classList.toggle('is-missed', !sel.has(i) && w.right);
+        });
+        clearBtn.disabled = true;
+        checkBtn.disabled = true;
+        hint.textContent = '';
+        resolve(false, {
+          answer: words
+            .filter((w) => w.right)
+            .map((w) => w.word)
+            .join(', '),
+        });
+        return;
+      }
+      // One more try: the right picks lock green, the wrong ones go back (flashing amber).
+      for (const i of sel) if (words[i].right) locked.add(i);
+      for (const i of wrong) {
+        sel.delete(i);
+        KFG.restart(words[i].el, 'missed');
+      }
+      hint.textContent = locked.size ? T('pickGreen') : T('pickAgain');
+      draw();
+      shake(...wrong.map((i) => words[i].el));
+    };
+    const checkBtn = /** @type {HTMLButtonElement} */ (
+      h('button', { type: 'button', class: 'btn btn-dark pick-check', onclick: () => check() }, T('check'))
+    );
+    const clearBtn = /** @type {HTMLButtonElement} */ (
+      h('button', { type: 'button', class: 'btn btn-light pick-clear', onclick: () => clear() }, T('pickClear'))
+    );
+    // Words are the only tab stops that matter: a tap on the buttons must not steal the focus from the keyboard flow.
+    clearBtn.addEventListener('mousedown', (e) => e.preventDefault());
+    draw();
+    work.append(
+      h(
+        'div',
+        { class: 'pick-task' },
+        // spaces between the chunks are real text (copy, screen readers); the flex layout does not draw them
+        h(
+          'p',
+          { class: 'pick-text', lang: ctx.content.lang || 'es' },
+          line.flatMap((c, i) => (i ? [' ', c] : [c])),
+        ),
+        hint,
+        h('div', { class: 'pick-actions' }, clearBtn, checkBtn),
+      ),
+      kbdHint(T('kPick')),
+    );
+    const focusAt = (/** @type {number} */ d) => {
+      const live = words.map((w) => w.el).filter((el) => !el.disabled);
+      if (!live.length) return;
+      const at = live.indexOf(/** @type {HTMLButtonElement} */ (document.activeElement));
+      live[at < 0 ? (d > 0 ? 0 : live.length - 1) : (at + d + live.length) % live.length].focus();
+    };
+    setKeys((e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') focusAt(1);
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') focusAt(-1);
+      else if (e.key === 'Enter') check();
+      else if (e.key === 'Backspace' || e.key === 'Delete') clear();
+      else if (e.key === ' ') {
+        const i = words.findIndex((w) => w.el === document.activeElement);
+        if (i >= 0) toggle(i);
+        else focusAt(1);
+      } else return false;
+      return true;
+    });
+  };
+
+  window.KFExam.types = { choice, tf, sort, order, pairs: pairsTask, label, fill, pick };
   window.KFExam.builder = builder;
 })();
