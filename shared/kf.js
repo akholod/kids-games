@@ -269,7 +269,7 @@
       emoji: '🌿',
       category: 'sociales',
       desc: 'Готуємось до іспиту з Ciencias de la Naturaleza: Unidad 1 — екосистеми, рельєф і скелі, п’ять царств, бережемо довкілля.',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: {
         title: 'Conozco mi entorno',
