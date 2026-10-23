@@ -279,7 +279,7 @@
       emoji: '🧭',
       category: 'ukrainian',
       desc: 'Мандруй Україною і читай по складах: за кожне місто — печатка в паспорті!',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk'],
       es: { title: 'Lectura en ucraniano', desc: 'Lee palabras en ucraniano por sílabas viajando por Ucrania.' },
     },
