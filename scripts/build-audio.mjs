@@ -9,7 +9,9 @@
 //          es = the coach's Spanish commands (SimonEngine.phrases, games/coach-simon/engine.js),
 //          + every word and sentence the coach dictates in games/dictado/content.js (`say` of its tasks),
 //          es-slow = the dictado sentences again, slower (KFG.say(text, 'es', { slow: true })),
-//          uk = the words and short texts of games/chytanka/content.js; the voice reads the words with their stress marks.
+//          uk = the words and short texts of games/chytanka/content.js; the voice gets the words without the stress mark
+//          (after U+0301 Polina spells the next consonants: «діду́сь» → «дідус м'який знак», «пирі́г» → «пирі ге»),
+//          except the homographs of UK_STRESSED (the mark inside them is followed by a consonant + vowel: safe).
 // Voices:  en-GB-SoniaNeural (British English, like the school), es-ES-ElviraNeural, uk-UA-PolinaNeural.
 // Output:  audio/<lang>/<slug>.mp3 (slug = Ukrainian transliterated, accents dropped, lowercase, runs of non [a-z0-9] → '-'),
 //          stale clips are deleted, shared/audio.js = window.KF_AUDIO = { en: [slugs], … } — the manifest KFG.say checks.
@@ -103,6 +105,8 @@ const FILES = [
 for (const f of FILES) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sb, { filename: f });
 
 const same = (/** @type {string} */ t) => [t, t];
+/** Chytanka words the voice may stress wrongly without the mark (за́мок, not замо́к). */
+const UK_STRESSED = new Set(['замок']);
 const dictado = sb.DC_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.say));
 // [the text the game says (→ the file name), what the voice reads]
 const SOURCES = {
@@ -110,7 +114,7 @@ const SOURCES = {
   es: [...sb.SimonEngine.phrases('es'), ...dictado.map((t) => t.say)].map(same),
   'es-slow': dictado.filter((t) => t.type === 'cloze').map((t) => same(t.say)),
   uk: [
-    ...Object.values(sb.CH_CONTENT.words).map((w) => [w.word, w.syl.join('')]),
+    ...Object.values(sb.CH_CONTENT.words).map((w) => [w.word, UK_STRESSED.has(w.word) ? w.syl.join('') : w.word]),
     ...sb.CH_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'story').map((t) => same(t.text))),
   ],
 };
