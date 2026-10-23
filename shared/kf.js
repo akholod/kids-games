@@ -289,7 +289,7 @@
       emoji: '📝',
       category: 'lengua',
       desc: 'Іспанський диктант від тренера: b чи v, h, ll чи y, тильда, ¿? і ¡!',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: { title: 'Dictado del míster', desc: 'El míster dicta y tú escribes: b o v, h, ll o y, la tilde, ¿? y ¡!' },
     },
