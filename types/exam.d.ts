@@ -45,12 +45,28 @@ interface ExamPairsTask extends ExamTaskBase {
   pairs: [string, string][];
 }
 
+/** Put the name chips on the hotspots of a drawn scene; the scene comes from ExamArt.scene(scene). Ids and texts unique, ≥ 2 labels. */
+interface ExamLabelTask extends ExamTaskBase {
+  type: 'label';
+  scene: string;
+  labels: { id: string; text: string }[];
+}
+
+/** Write one word into a sentence with letter tiles. `text` has exactly one `___`; `answer` is one lowercase Spanish word
+ *  (/^[a-záéíóúüñ]{2,11}$/); `extra` = trap letters (1–4; default: a vowel and a consonant picked by the renderer). */
+interface ExamFillTask extends ExamTaskBase {
+  type: 'fill';
+  text: string;
+  answer: string;
+  extra?: string;
+}
+
 /** A task of a type only the unit knows (its renderer comes from ExamMountOptions.types). */
 interface ExamUnitTask extends ExamTaskBase {
   [key: string]: any;
 }
 
-type ExamTask = ExamChoiceTask | ExamTfTask | ExamSortTask | ExamOrderTask | ExamPairsTask | ExamUnitTask;
+type ExamTask = ExamChoiceTask | ExamTfTask | ExamSortTask | ExamOrderTask | ExamPairsTask | ExamLabelTask | ExamFillTask | ExamUnitTask;
 
 /** A task of a running session: tagged with its station. */
 type ExamSessionTask = ExamTask & { station: string };
@@ -63,6 +79,9 @@ interface ExamStation {
   icon: string;
   /** Short explanation shown in the station dialog and on the tile. */
   intro: string;
+  /** Glossary [Spanish term, Ukrainian translation]. Shown only on the Ukrainian site (KF.lang === 'uk'): in the intro dialog and
+   *  behind a «📖 Словничок» button during a station round (not in the exam). Not in the DOM at all on the Spanish site. */
+  vocab?: [string, string][];
   tasks: ExamTask[];
 }
 
@@ -128,10 +147,21 @@ interface ExamUnit {
 
 // ---- renderers ----
 
-/** What a drawn-scene unit exposes to the engine. Only art(key) and hero() are used by the engine itself. */
+/** A drawing to label (ExamArt.scene): `box` = its size in viewBox units, `spots` = hotspots (x/y = slot centre, w = slot width, same units). */
+interface ExamScene {
+  el: Element;
+  box: [number, number];
+  spots: { id: string; x: number; y: number; w: number }[];
+  /** Extra CSS class on the scene box (unit CSS can size it). */
+  cls?: string;
+}
+
+/** What a drawn-scene unit exposes to the engine. Only art(key), hero() and scene(name) are used by the engine itself. */
 interface ExamArt {
   art(key: string): Element | null;
   hero?(): Element | null;
+  /** Scenes for `label` tasks; null = unknown scene (the task falls back to a plain choice). */
+  scene?(name: string): ExamScene | null;
   [key: string]: any;
 }
 
@@ -299,7 +329,7 @@ interface KFExamAPI {
   mount(unit: ExamUnit | undefined, opts?: ExamMountOptions): void;
   /** Checks a unit for what tsc can't: answers in range, sort bins, pairs, order items, exam stations, unique ids, renderers. */
   validate(unit: ExamUnit, types?: ExamRenderers): string[];
-  /** The generic renderers (choice, tf, sort, order, pairs), set by shared/exam/types.js. */
+  /** The generic renderers (choice, tf, sort, order, pairs, label, fill), set by shared/exam/types.js. */
   types: ExamRenderers;
   /** The word builder (tiles / keys → slots, check, one retry), set by shared/exam/types.js. */
   builder?: ExamBuilderFactory;

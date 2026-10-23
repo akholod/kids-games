@@ -35,24 +35,11 @@
 @media(min-width:760px){.wm-label{font-size:22px}}
 .wm-region,.ae-zone{-webkit-tap-highlight-color:transparent}
 
-/* Label scenes */
-.label-task{display:grid;gap:12px;justify-items:center;width:100%}
-.label-side{display:grid;gap:10px;justify-items:center;width:100%}
+/* Label scenes: the generic look is in exam.css; only the compass rose (a square scene) is sized here */
 @media(min-width:760px){
-  .label-task{grid-template-columns:minmax(200px,290px) minmax(0,1fr);align-items:center;gap:20px}
-  .label-side .tray{justify-content:flex-start}
-  .label-task .scene{width:min(100%,640px,calc((var(--avail) - 32px) * var(--ar,1.5)))}
   .label-task .scene.compass{width:min(100%,400px,calc((var(--avail) - 32px) * var(--ar,1)))}
 }
-.scene{position:relative;width:min(100%,640px);margin:0 auto}
 .scene.compass{width:min(100%,400px)}
-.scene-svg{display:block;width:100%;height:auto}
-.slot{position:absolute;translate:-50% -50%;min-height:46px;padding:4px 8px;border:2.5px dashed #6d8fa3;border-radius:14px;background:#fffffff2;color:var(--ink);font-weight:900;font-size:clamp(.78rem,2.6vw,1rem);line-height:1.15;display:flex;align-items:center;justify-content:center;gap:6px;transition:background-color .16s,border-color .16s}
-.slot:hover:not(:disabled),.slot.over{border-color:var(--sea-d);background:#e3f1fc}
-.slot[aria-pressed=true]{border-style:solid;border-color:var(--sea-d);background:#e3f1fc;box-shadow:0 0 0 4px #3f8fc955}
-.slot.filled{border:2.5px solid var(--okd);background:#f2fae4;cursor:default}
-.slot.fixed{border-color:var(--missd);background:#fff3d6}
-.slot .q{color:#9aaeb8;font-size:1.2rem}
 .scene.compass .slot{font-size:1.5rem;min-height:56px}
 
 /* Paint */

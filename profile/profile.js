@@ -152,7 +152,7 @@
       'abbr.math': 'MAT',
       'abbr.english': 'ING',
       'abbr.fun': 'FÚT',
-      'abbr.sociales': 'SOC',
+      'abbr.sociales': 'CIE',
       'abbr.ukrainian': 'UCR',
       'abbr.lengua': 'LEN',
       'stat.games': 'Partidos',

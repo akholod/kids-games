@@ -6,6 +6,7 @@ import {
   answerCurrentTask,
   answerDcTask,
   answerWordTask,
+  examPlayer,
   openStation,
   playChTasks,
   playDcTasks,
@@ -143,5 +144,61 @@ test('dictado: every task type fits (the longest words and sentences, the keyboa
       await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${station} ${type} next`);
       await tap(page.locator('#feedback .fb-actions .btn').first());
     }
+  }
+});
+
+test('naturales-entorno: intro dialogs, first task of every station, label / filter / fill tasks fit; next button visible', async ({
+  page,
+  tap,
+}) => {
+  const cn = examPlayer('__cn');
+  await open(page, '/games/naturales-entorno/');
+  // The hub is a list of stations (it scrolls like every exam hub), but it never overflows sideways
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  const ids = await page.evaluate(() => CN_CONTENT.stations.map((s) => s.id));
+
+  // The station dialog with its Ukrainian glossary stays inside the window and shows «Empezar» without scrolling
+  // (a long glossary may scroll inside the dialog: the dialog is its own scroll box)
+  for (const [i, id] of ids.entries()) {
+    await tap(page.locator('#stations .station').nth(i));
+    await expect(page.locator('#intro-dlg .vocab')).toBeVisible();
+    const m = await page.evaluate(() => {
+      const d = document.getElementById('intro-dlg').getBoundingClientRect();
+      const g = document.getElementById('intro-go').getBoundingClientRect();
+      return { top: d.top, bottom: d.bottom, goTop: g.top, goBottom: g.bottom, h: innerHeight };
+    });
+    expect(m.top, `${id}: dialog top`).toBeGreaterThanOrEqual(0);
+    expect(m.bottom, `${id}: dialog bottom`).toBeLessThanOrEqual(m.h);
+    expect(m.goTop, `${id}: start button top`).toBeGreaterThanOrEqual(m.top);
+    expect(m.goBottom, `${id}: start button bottom`).toBeLessThanOrEqual(m.bottom);
+    await tap(page.locator('#intro-back'));
+  }
+
+  // First task of every station round (the glossary button is in the head)
+  for (const id of ids) {
+    await open(page, '/games/naturales-entorno/');
+    await page.evaluate((s) => __cn.startStation(s), id);
+    await expect(page.locator('#play')).toBeVisible();
+    await expect(page.locator('#play-vocab')).toBeVisible();
+    await expectFits(page, `${id} first task`);
+  }
+
+  // Every label scene, the filter, the longest fill words: fit, and the next button is on screen after the answer
+  const tasks = await page.evaluate(() => CN_CONTENT.stations.flatMap((s) => s.tasks.map((t) => ({ ...t, station: s.id }))));
+  const fills = tasks.filter((t) => t.type === 'fill').sort((a, b) => b.answer.length - a.answer.length || b.text.length - a.text.length);
+  const picks = [
+    ...tasks.filter((t) => t.type === 'label'),
+    ...tasks.filter((t) => t.type === 'filter'),
+    ...fills.slice(0, 3),
+    ...tasks.filter((t) => t.type === 'fill' && t.text.length > 90).slice(0, 2),
+  ];
+  expect(picks.length).toBeGreaterThanOrEqual(7);
+  for (const t of picks) {
+    await open(page, '/games/naturales-entorno/');
+    await page.evaluate((x) => __cn.play([x]), t);
+    const what = `${t.type} ${t.scene || t.answer || ''}`;
+    await expectFits(page, what);
+    await cn.answerTask(page, tap);
+    await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what} next`);
   }
 });

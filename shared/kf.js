@@ -142,7 +142,7 @@
       'cat.math': 'Matemáticas',
       'cat.english': 'Inglés',
       'cat.fun': 'Fútbol y diversión',
-      'cat.sociales': 'Ciencias Sociales',
+      'cat.sociales': 'Ciencias',
       'cat.ukrainian': 'Ucraniano',
       'cat.lengua': 'Lengua',
       'card.common': 'Común',
@@ -262,6 +262,19 @@
       status: 'ready',
       sites: ['uk', 'es'],
       es: { title: 'El planeta donde vivimos', desc: 'Prepárate para el examen de la Unidad 1: capas de la Tierra, mapas y orientación.' },
+    },
+    {
+      slug: 'naturales-entorno',
+      title: 'Conozco mi entorno',
+      emoji: '🌿',
+      category: 'sociales',
+      desc: 'Готуємось до іспиту з Ciencias de la Naturaleza: Unidad 1 — екосистеми, рельєф і скелі, п’ять царств, бережемо довкілля.',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: {
+        title: 'Conozco mi entorno',
+        desc: 'Prepárate para el examen de Naturales, Unidad 1: ecosistemas, relieve y rocas, los cinco reinos y el cuidado del entorno.',
+      },
     },
     {
       slug: 'coach-simon',

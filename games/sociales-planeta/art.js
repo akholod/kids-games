@@ -648,7 +648,7 @@ window.SPArt = (() => {
   };
 
   // ---------------- Label scenes ----------------
-  // scene(name) → { el: svg, box: [w, h], spots: [{ id, x, y, w }] } — x/y = slot centre, w = slot width (all in viewBox units).
+  // scene(name) → { el: svg, box: [w, h], spots: [{ id, x, y, w }], cls? } (ExamScene) — x/y = slot centre, w = slot width (all in viewBox units).
   const leader = (x1, y1, x2, y2) =>
     `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#2c4a3e" stroke-width="2.4" stroke-dasharray="1 5" stroke-linecap="round"/><circle cx="${x2}" cy="${y2}" r="6" fill="#d9473b" stroke="#fff" stroke-width="2.5"/>`;
 
@@ -722,7 +722,7 @@ window.SPArt = (() => {
         { id: 's', x: 200, y: 368, w: 76 },
         { id: 'o', x: 32, y: 200, w: 76 },
       ];
-      return { el: svgEl('0 0 400 400', inner, 'scene-svg'), box: [400, 400], spots };
+      return { el: svgEl('0 0 400 400', inner, 'scene-svg'), box: [400, 400], spots, cls: 'compass' };
     },
   };
   const scene = (name) => (SCENES[name] ? SCENES[name]() : null);

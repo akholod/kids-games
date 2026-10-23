@@ -1,22 +1,17 @@
 // Renderers of the task types only «El planeta donde vivimos» has: they need its drawings (art.js) and map data (maps.js).
-// window.SP_TYPES = { mapTap, label, paint, walk } → KFExam.mount(..., { types }). Generic types live in shared/exam/types.js.
+// window.SP_TYPES = { mapTap, paint, walk } → KFExam.mount(..., { types }). Generic types (incl. label) live in shared/exam/types.js.
 // @ts-check
 'use strict';
 
 /** @typedef {ExamTaskBase & { type: 'mapTap', map: 'world', target: string, kind: 'continent' | 'ocean' }} SPMapTapTask */
-/** @typedef {ExamTaskBase & { type: 'label', scene: string, labels: { id: string, text: string }[] }} SPLabelTask */
 /** @typedef {ExamTaskBase & { type: 'paint', scene: 'aerial', zones: { id: string, name: string, color: string }[] }} SPPaintTask */
 /** @typedef {ExamTaskBase & { type: 'walk', grid: string, from: string, to?: string, steps?: string[], answer: string }} SPWalkTask */
 
 window.SP_TYPES = (() => {
-  // Texts of these four types (Spanish on both sites, like the engine's).
+  // Texts of these three types (Spanish on both sites, like the engine's).
   const SP = {
     youTapped: ({ name }) => `Has tocado: ${name}.`,
     kMap: 'Toca en el mapa. Teclado: Tab para moverte, Enter para elegir',
-    kLabel: ({ n, l }) => `Toca un nombre y después su sitio. Teclado: 1–${n} para el nombre, A–${l} para el sitio`,
-    pickLabel: 'Primero toca un nombre.',
-    labelTry: 'Ese no es su sitio. Prueba otro.',
-    labelShown: ({ text }) => `Así: «${text}» va aquí.`,
     paletteTitle: 'Leyenda',
     kPaint: 'Elige un color y toca una zona del dibujo. Teclado: 1–6 para el color, Tab y Enter para pintar',
     pickColor: 'Primero elige un color de la leyenda.',
@@ -34,7 +29,6 @@ window.SP_TYPES = (() => {
     arrived: ({ name }) => `¡Has llegado ${name.startsWith('el ') ? `al ${name.slice(3)}` : `a ${name}`}!`,
     youHere: 'Estás aquí',
     walkPlan: 'Sigue los pasos con el dedo:',
-    siteLabel: ({ l }) => `Sitio ${l}`,
     you: 'Tú',
   };
   const U = KF.i18n({ uk: SP, es: SP });
@@ -78,141 +72,6 @@ window.SP_TYPES = (() => {
     });
     const [, , vw, vh] = (m.el.getAttribute('viewBox') || '0 0 2 1').split(/\s+/).map(Number);
     work.append(h('div', { class: 'map-wrap', style: `--ar:${vw / vh}` }, m.el), kbdHint(U('kMap')));
-  };
-
-  // Label a drawn scene: tap a name chip then a slot (or slot then chip). ≤1 mistake = correct.
-  /** @type {ExamRenderer<SPLabelTask>} */
-  const label = (task, work, ctx) => {
-    const { h, shuffle, shake, art, hint: mkHint, kbdHint, draggable, resolve, answered, setKeys, LETTERS } = ctx;
-    const sc = art.scene(task.scene);
-    if (!sc) return ctx.fallback(task, work, [{ text: task.labels[0].text, ok: true }]);
-    const labels = shuffle(task.labels);
-    const spots = sc.spots.filter((/** @type {{ id: string }} */ s) => labels.some((l) => l.id === s.id));
-    const [bw, bh] = sc.box;
-    const hint = mkHint();
-    let selChip = null;
-    let selSlot = null;
-    let mistakes = 0;
-    let placedN = 0;
-    const tries = new Map();
-    const chipEls = labels.map((l, k) => {
-      const b = h(
-        'button',
-        { type: 'button', class: 'chip', 'aria-pressed': 'false', onclick: () => tapChip(k) },
-        h('kbd', { text: String(k + 1) }),
-        l.text,
-      );
-      draggable(b, {
-        onStart: () => {
-          selChip = k;
-          mark();
-        },
-        targets: '.slot',
-        onDrop: (t) => tapSlot(Number(t.dataset.i)),
-      });
-      return b;
-    });
-    const slotEls = spots.map((/** @type {{ id: string, x: number, y: number, w: number }} */ s, /** @type {number} */ k) =>
-      h(
-        'button',
-        {
-          type: 'button',
-          class: 'slot',
-          'data-i': String(k),
-          'data-spot': s.id,
-          'aria-label': U('siteLabel', { l: LETTERS[k] }),
-          'aria-pressed': 'false',
-          style: `left:${(s.x / bw) * 100}%;top:${(s.y / bh) * 100}%;width:${(s.w / bw) * 100}%`,
-          onclick: () => tapSlot(k),
-        },
-        h('span', { class: 'q', 'aria-hidden': 'true', text: '?' }),
-        h('kbd', { text: LETTERS[k] }),
-      ),
-    );
-    const mark = () => {
-      chipEls.forEach((c, k) => c.setAttribute('aria-pressed', String(k === selChip)));
-      slotEls.forEach((s, k) => s.setAttribute('aria-pressed', String(k === selSlot)));
-    };
-    const fill = (/** @type {number} */ chipK, /** @type {number} */ slotK, /** @type {boolean} */ fixed) => {
-      const el = slotEls[slotK];
-      el.replaceChildren(labels[chipK].text);
-      el.classList.add('filled');
-      if (fixed) el.classList.add('fixed');
-      el.disabled = true;
-      el.setAttribute('aria-label', labels[chipK].text);
-      chipEls[chipK].remove();
-      chipEls[chipK].disabled = true;
-      placedN++;
-      selChip = null;
-      selSlot = null;
-      const nextChip = chipEls.findIndex((c) => !c.disabled);
-      if (nextChip >= 0) selChip = nextChip;
-      mark();
-      if (placedN === spots.length) resolve(mistakes <= 1, { soft: mistakes === 1 });
-    };
-    const attempt = () => {
-      if (selChip === null || selSlot === null) return;
-      const chipK = selChip;
-      const slotK = selSlot;
-      if (labels[chipK].id === spots[slotK].id) {
-        hint.textContent = '';
-        fill(chipK, slotK, false);
-        return;
-      }
-      mistakes++;
-      shake(chipEls[chipK], slotEls[slotK]);
-      const t = (tries.get(chipK) || 0) + 1;
-      tries.set(chipK, t);
-      selSlot = null;
-      if (t >= 2) {
-        hint.textContent = U('labelShown', { text: labels[chipK].text });
-        fill(
-          chipK,
-          spots.findIndex((/** @type {{ id: string }} */ s) => s.id === labels[chipK].id),
-          true,
-        );
-      } else {
-        hint.textContent = U('labelTry');
-        mark();
-      }
-    };
-    const tapChip = (/** @type {number} */ k) => {
-      if (answered() || !chipEls[k] || chipEls[k].disabled) return;
-      selChip = k;
-      mark();
-      attempt();
-    };
-    const tapSlot = (/** @type {number} */ k) => {
-      if (answered() || !slotEls[k] || slotEls[k].disabled) return;
-      selSlot = k;
-      mark();
-      if (selChip === null) {
-        hint.textContent = U('pickLabel');
-        return;
-      }
-      attempt();
-    };
-    selChip = 0;
-    mark();
-    const scene = h('div', { class: `scene${task.scene === 'compass-rose' ? ' compass' : ''}`, style: `--ar:${bw / bh}` }, sc.el, slotEls);
-    // Wide screens: the names stand in a column beside the drawing (label-task in index.html).
-    work.append(
-      h('div', { class: 'label-task' }, h('div', { class: 'label-side' }, h('div', { class: 'tray' }, chipEls), hint), scene),
-      kbdHint(U('kLabel', { n: labels.length, l: LETTERS[spots.length - 1] })),
-    );
-    setKeys((e) => {
-      const n = Number(e.key);
-      if (n >= 1 && n <= labels.length) {
-        tapChip(n - 1);
-        return true;
-      }
-      const k = LETTERS.indexOf(e.key.toUpperCase());
-      if (e.key.length === 1 && k >= 0 && k < spots.length) {
-        tapSlot(k);
-        return true;
-      }
-      return false;
-    });
   };
 
   // Paint the aerial view with the legend colours. ≤2 mistakes = correct (6 zones).
@@ -573,5 +432,5 @@ window.SP_TYPES = (() => {
     });
   };
 
-  return { mapTap, label, paint, walk };
+  return { mapTap, paint, walk };
 })();

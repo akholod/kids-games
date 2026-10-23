@@ -3,7 +3,7 @@
 //   KFExam.mount(unit, { art, types, root, weight, onAnswer })   renders hub / play / finish / dialogs into root (default #exam-root)
 //     weight(task) ≥ 0 = how likely a task is drawn; onAnswer(task, correct) = after each resolved task; task.key = learning item (no repeats in a draw)
 //   KFExam.validate(unit, types?) → string[]   content errors tsc can't see (empty = fine)
-//   KFExam.types                               generic renderers {choice, tf, sort, order, pairs} (types.js)
+//   KFExam.types                               generic renderers {choice, tf, sort, order, pairs, label, fill} (types.js)
 // The unit is plain data (see types/exam.d.ts ExamUnit); its own task types come as renderers in `types`
 // (task, work, ctx) → void, see ExamRendererCtx. Records live in KF.gameData(unit.slug): { v, st, exam, topics }.
 // @ts-check
@@ -16,7 +16,10 @@
   const NOTA_MAX = 10;
   const PERFECT_BONUS = 5;
   const LETTERS = 'ABCDEFGH';
-  const GENERIC = ['choice', 'tf', 'sort', 'order', 'pairs'];
+  const GENERIC = ['choice', 'tf', 'sort', 'order', 'pairs', 'label', 'fill'];
+  const CYRILLIC = /[\u0400-\u04FF]/;
+  const FILL_WORD = /^[a-záéíóúüñ]{2,11}$/;
+  const FILL_EXTRA = /^[a-záéíóúüñ]{1,4}$/;
   const DEFAULT_HUE = '#3f8fc9';
   const GRADE_COLORS = ['#e5a12a', '#9fb53a', '#5fa33a', '#2f8a52', '#1d6fb0'];
   const LIMITED = { sort: 1, order: 1, pairs: 1 };
@@ -79,6 +82,16 @@
     kPairs: ({ n, l }) => `Toca una de la izquierda y su pareja de la derecha. Teclado: 1–${n} y A–${l}`,
     pairNo: 'Esas dos no van juntas. ¡Prueba otra vez!',
     pairShown: 'Te enseño esta pareja.',
+    kLabel: ({ n, l }) => `Toca un nombre y después su sitio. Teclado: 1–${n} para el nombre, A–${l} para el sitio`,
+    pickLabel: 'Primero toca un nombre.',
+    labelTry: 'Ese no es su sitio. Prueba otro.',
+    labelShown: ({ text }) => `Así: «${text}» va aquí.`,
+    siteLabel: ({ l }) => `Sitio ${l}`,
+    kFill: 'Teclado: escribe las letras (si lleva tilde, escribe la vocal sin tilde). ⌫ borra, Enter comprueba',
+    fillNeed: 'Rellena todos los huecos antes de comprobar.',
+    fillGreen: 'Las letras verdes están bien. Prueba con las demás.',
+    fillAgain: 'Todavía no. ¡Prueba otra vez!',
+    fillErase: '⌫ Borrar',
     stationDone: '¡Estación terminada!',
     stationPassed: '¡Estación superada!',
     stationMsg: ({ coins }) => `Has ganado ${coins} 🪙.`,
@@ -98,6 +111,14 @@
     byTopic: 'Por temas',
     review2: 'Repasar',
     loadError: 'No se han podido cargar las preguntas. Recarga la página.',
+  };
+
+  // Texts of the Ukrainian help (station glossary): they are only ever rendered on the Ukrainian site, the Spanish dictionary does not get them.
+  /** @type {ExamStrings} */
+  const UK_STRINGS = {
+    vocabTitle: '📖 Словничок',
+    vocabBtn: 'Словничок',
+    vocabClose: 'Закрити',
   };
 
   /** @type {ExamLists} */
@@ -138,6 +159,7 @@
       else if (stationIds.has(s.id)) err(sw, 'duplicate id');
       else stationIds.add(s.id);
       for (const k of /** @type {const} */ (['title', 'icon', 'intro'])) if (!text(s?.[k])) err(sw, `${k} missing`);
+      if (s?.vocab !== undefined) checkVocab(sw, s.vocab, err, text);
       if (!Array.isArray(s?.tasks) || !s.tasks.length) {
         err(sw, 'tasks missing');
         return;
@@ -166,6 +188,22 @@
     }
     for (const id of Object.keys(unit.hues || {})) if (!stationIds.has(id)) err('hues', `no station «${id}»`);
     return errs;
+  };
+
+  /**
+   * A station glossary: [Spanish term, Ukrainian translation] pairs; Cyrillic only in the translation.
+   * @param {string} w
+   * @param {any} vocab
+   * @param {(where: string, msg: string) => void} err
+   * @param {(x: any) => boolean} text
+   */
+  const checkVocab = (w, vocab, err, text) => {
+    if (!Array.isArray(vocab) || !vocab.length) return err(w, 'vocab must be a non-empty list of [term, translation]');
+    vocab.forEach((v, i) => {
+      if (!Array.isArray(v) || v.length !== 2 || !text(v[0]) || !text(v[1]))
+        err(w, `vocab ${i + 1}: must be [term, translation] with both texts`);
+      else if (CYRILLIC.test(v[0])) err(w, `vocab ${i + 1}: the term «${v[0]}» must be Spanish (Cyrillic only in the translation)`);
+    });
   };
 
   /**
@@ -211,6 +249,24 @@
           err(w, 'every pair must be [left, right] with both texts');
         }
         break;
+      case 'label': {
+        const labels = Array.isArray(t.labels) ? t.labels : [];
+        if (!text(t.scene)) err(w, 'scene missing');
+        if (labels.length < 2 || !labels.every((l) => text(l?.id) && text(l?.text)))
+          return err(w, 'labels must be 2+ with an id and a text');
+        if (new Set(labels.map((l) => l.id)).size !== labels.length) err(w, 'label ids must be unique');
+        if (new Set(labels.map((l) => l.text)).size !== labels.length) err(w, 'label texts must be unique');
+        break;
+      }
+      case 'fill':
+        if (!text(t.text) || t.text.split('___').length !== 2) err(w, 'text must have exactly one ___');
+        if (typeof t.answer !== 'string' || !FILL_WORD.test(t.answer)) {
+          err(w, `answer «${t.answer}» must be one lowercase word of 2–11 letters (a–z, á é í ó ú ü ñ)`);
+        }
+        if (t.extra !== undefined && (typeof t.extra !== 'string' || !FILL_EXTRA.test(t.extra))) {
+          err(w, `extra «${t.extra}» must be 1–4 lowercase letters`);
+        }
+        break;
     }
   };
 
@@ -223,7 +279,7 @@
     const { $, h, shuffle, pick, reduced, shake } = KFG;
     const root = opts.root || $('exam-root');
     const dict = { ...DEFAULT_STRINGS, ...unit?.strings };
-    const T = KF.i18n({ uk: dict, es: dict });
+    const T = KF.i18n({ uk: { ...UK_STRINGS, ...dict }, es: dict });
     document.documentElement.lang = unit?.lang || 'es';
     if (!unit || ('art' in opts && !opts.art)) {
       root.replaceChildren(h('p', { text: T('loadError') }));
@@ -430,6 +486,79 @@
       if (data.exam) $('exam-best').textContent = T('examBest', { grade: data.exam.grade, nota: data.exam.nota });
     };
 
+    // ---------- Glossary (Ukrainian help) ----------
+    // A station's vocab is for the Ukrainian site only: on the Spanish one nothing of it is ever put in the DOM.
+    const vocabOf = (/** @type {ExamStation | undefined} */ s) => (KF.lang === 'uk' && s?.vocab?.length ? s.vocab : null);
+    const vocabList = (/** @type {[string, string][]} */ vocab) =>
+      h(
+        'dl',
+        { class: 'vocab-list' },
+        vocab.map(([es, uk]) => h('div', { class: 'vocab-row' }, h('dt', { lang: 'es', text: es }), h('dd', { lang: 'uk', text: uk }))),
+      );
+    /** @type {HTMLButtonElement | null} */
+    let vocabBtn = null;
+    /** @type {HTMLDialogElement | null} */
+    let vocabDlg = null;
+    const openVocab = () => {
+      const vocab = vocabOf(stationOf(session?.station));
+      if (!vocab || vocabDlg) return;
+      const opener = document.activeElement;
+      const dlg = /** @type {HTMLDialogElement} */ (
+        h(
+          'dialog',
+          { id: 'vocab-dlg', class: 'vocab-dlg', 'aria-labelledby': 'vocab-title' },
+          h(
+            'div',
+            { class: 'dlg' },
+            h('h2', { id: 'vocab-title', text: T('vocabTitle') }),
+            vocabList(vocab),
+            h(
+              'div',
+              { class: 'dlg-actions' },
+              h('button', { class: 'btn btn-dark', type: 'button', id: 'vocab-close', text: T('vocabClose'), onclick: () => dlg.close() }),
+            ),
+          ),
+        )
+      );
+      dlg.addEventListener('close', () => {
+        dlg.remove();
+        vocabDlg = null;
+        // Back to the button only when it had the focus (keyboard); a tap leaves the keys to the task.
+        if (opener === vocabBtn && vocabBtn?.isConnected) vocabBtn.focus({ preventScroll: true });
+      });
+      vocabDlg = dlg;
+      root.append(dlg);
+      dlg.showModal();
+      $('vocab-close').focus();
+    };
+    // The «📖» button lives in the play head during a station round only (never in the exam), and only when the station has a glossary.
+    const syncVocabBtn = () => {
+      const vocab = session?.mode === 'station' ? vocabOf(stationOf(session.station)) : null;
+      if (!vocab) {
+        vocabBtn?.remove();
+        vocabBtn = null;
+        return;
+      }
+      if (vocabBtn) return;
+      // A tap must not move the focus onto the button: Enter would then reopen the glossary instead of going on with the task.
+      vocabBtn = /** @type {HTMLButtonElement} */ (
+        h(
+          'button',
+          {
+            class: 'play-vocab',
+            type: 'button',
+            id: 'play-vocab',
+            'aria-label': T('vocabTitle'),
+            onmousedown: (/** @type {MouseEvent} */ e) => e.preventDefault(),
+            onclick: openVocab,
+          },
+          h('span', { 'aria-hidden': 'true', text: '📖' }),
+          h('span', { class: 'pv-text', text: ` ${T('vocabBtn')}` }),
+        )
+      );
+      $('play').querySelector('.play-head').append(vocabBtn);
+    };
+
     /** @type {ExamStation | null} */
     let introStation = null;
     const intro = /** @type {HTMLDialogElement} */ ($('intro-dlg'));
@@ -439,6 +568,13 @@
       $('intro-icon').style.setProperty('--hue', hueOf(s.id));
       $('intro-title').textContent = s.title;
       $('intro-text').textContent = s.intro;
+      intro.querySelector('.vocab')?.remove();
+      const vocab = vocabOf(s);
+      if (vocab)
+        $('intro-text').after(
+          h('section', { class: 'vocab', 'aria-label': T('vocabTitle') }, h('h3', { text: T('vocabTitle') }), vocabList(vocab)),
+        );
+      intro.classList.toggle('has-vocab', !!vocab);
       $('intro-meta').textContent = T('introMeta', { n: Math.min(round, s.tasks.length) });
       intro.showModal();
       $('intro-go').focus();
@@ -510,6 +646,7 @@
     };
     const begin = (/** @type {{ mode: 'station' | 'exam', station?: string, tasks: ExamSessionTask[] }} */ o) => {
       session = { ...o, index: 0, score: 0, results: [], cards: 0, byStation: {}, startCoins: KF.get().coins };
+      syncVocabBtn();
       $('goals-n').textContent = '0';
       drawCards();
       show('play');

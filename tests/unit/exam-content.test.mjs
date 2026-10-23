@@ -27,8 +27,8 @@ const validate = (...args) => [...KFExam.validate(...args)];
 test('sociales-planeta content is valid (with and without renderers)', () => {
   assert.deepEqual(validate(clone(SP_CONTENT)), []);
   assert.deepEqual(validate(clone(SP_CONTENT), renderers), []);
-  assert.deepEqual(Object.keys(KFExam.types).sort(), ['choice', 'order', 'pairs', 'sort', 'tf']);
-  assert.deepEqual(Object.keys(SP_TYPES).sort(), ['label', 'mapTap', 'paint', 'walk']);
+  assert.deepEqual(Object.keys(KFExam.types).sort(), ['choice', 'fill', 'label', 'order', 'pairs', 'sort', 'tf']);
+  assert.deepEqual(Object.keys(SP_TYPES).sort(), ['mapTap', 'paint', 'walk']);
 });
 
 // A small valid unit with one task of every generic type, to break one thing at a time.
@@ -41,6 +41,10 @@ const unit = () => ({
       title: 'A',
       icon: '🅰️',
       intro: 'Station A',
+      vocab: [
+        ['la roca', 'скеля'],
+        ['el relieve', 'рельєф'],
+      ],
       tasks: [
         { type: 'choice', q: 'Pick', options: ['x', 'y', 'z'], answer: 1 },
         { type: 'tf', q: 'True?', truth: true },
@@ -65,6 +69,17 @@ const unit = () => ({
             ['b', '2'],
           ],
         },
+        {
+          type: 'label',
+          q: 'Label',
+          scene: 'globe',
+          labels: [
+            { id: 'n', text: 'North' },
+            { id: 's', text: 'South' },
+          ],
+        },
+        { type: 'fill', q: 'Fill', text: 'Las ___ son el material sólido.', answer: 'rocas' },
+        { type: 'fill', q: 'Fill 2', text: 'Los animales ___ viven en el agua.', answer: 'acuáticos', extra: 'tm' },
       ],
     },
     {
@@ -98,6 +113,29 @@ const BROKEN = [
   ['exam without perStation', (u) => delete u.exam.perStation, 'perStation'],
   ['hue of a missing station', (u) => (u.hues = { zz: '#fff' }), 'no station «zz»'],
   ['no slug', (u) => delete u.slug, 'slug'],
+  // label
+  ['label without scene', (u) => delete u.stations[0].tasks[5].scene, 'scene missing'],
+  ['label with one label', (u) => (u.stations[0].tasks[5].labels = [{ id: 'n', text: 'North' }]), 'labels must be 2+'],
+  ['label with a label without text', (u) => (u.stations[0].tasks[5].labels[1] = { id: 's' }), 'labels must be 2+'],
+  ['label ids not unique', (u) => (u.stations[0].tasks[5].labels[1].id = 'n'), 'label ids must be unique'],
+  ['label texts not unique', (u) => (u.stations[0].tasks[5].labels[1].text = 'North'), 'label texts must be unique'],
+  // fill
+  ['fill without a gap', (u) => (u.stations[0].tasks[6].text = 'Las rocas son sólidas.'), 'exactly one ___'],
+  ['fill with two gaps', (u) => (u.stations[0].tasks[6].text = 'Las ___ y las ___.'), 'exactly one ___'],
+  ['fill answer with a capital', (u) => (u.stations[0].tasks[6].answer = 'Rocas'), 'answer «Rocas»'],
+  ['fill answer of two words', (u) => (u.stations[0].tasks[6].answer = 'las rocas'), 'answer «las rocas»'],
+  ['fill answer too long', (u) => (u.stations[0].tasks[6].answer = 'electricidades'), 'answer «electricidades»'],
+  ['fill answer of one letter', (u) => (u.stations[0].tasks[6].answer = 'a'), 'answer «a»'],
+  ['fill answer with Cyrillic', (u) => (u.stations[0].tasks[6].answer = 'скеля'), 'answer «скеля»'],
+  ['fill extra with a capital', (u) => (u.stations[0].tasks[7].extra = 'Tm'), 'extra «Tm»'],
+  ['fill extra too long', (u) => (u.stations[0].tasks[7].extra = 'tmpqr'), 'extra «tmpqr»'],
+  // vocab
+  ['vocab that is not a list', (u) => (u.stations[0].vocab = 'la roca'), 'vocab must be'],
+  ['empty vocab', (u) => (u.stations[0].vocab = []), 'vocab must be'],
+  ['vocab entry with three parts', (u) => (u.stations[0].vocab[0] = ['la roca', 'скеля', 'x']), 'vocab 1'],
+  ['vocab entry without translation', (u) => (u.stations[0].vocab[1] = ['el relieve', ' ']), 'vocab 2'],
+  ['vocab entry that is a string', (u) => (u.stations[0].vocab[0] = 'la roca'), 'vocab 1'],
+  ['vocab term in Cyrillic', (u) => (u.stations[0].vocab[0] = ['скеля', 'скеля']), 'Cyrillic only in the translation'],
 ];
 
 test('a valid fixture passes', () => {
@@ -117,6 +155,98 @@ for (const [name, mutate, expected] of BROKEN) {
     );
   });
 }
+
+test('vocab: the translation may be Cyrillic, the Spanish term may not', () => {
+  const u = unit();
+  u.stations[0].vocab.push(['la capa', 'шар'], ['el CO₂', 'вуглекислий газ']);
+  assert.deepEqual(validate(u), []);
+  u.stations[0].vocab.push(['скеля', 'скеля']);
+  assert.equal(validate(u).length, 1);
+});
+
+test('sociales-planeta (shared by both sites): Cyrillic nowhere, except in vocab translations', () => {
+  const seen = [];
+  const walk = (x, path) => {
+    if (typeof x === 'string') {
+      if (CYR.test(x) && !/\.vocab\.\d+\.1$/.test(path)) seen.push(path);
+    } else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) walk(v, `${path}.${k}`);
+  };
+  walk(clone(SP_CONTENT), 'sp');
+  assert.deepEqual(seen, []);
+});
+
+// ---------- naturales-entorno: Ciencias de la Naturaleza, Unidad 1 ----------
+
+// art.js draws SVG with the DOM; scene(name) only needs a node that takes attributes and markup, so a tiny stub is enough.
+const bootNaturales = () => {
+  const node = () => ({ attrs: {}, dataset: {}, setAttribute() {}, set innerHTML(_) {}, classList: { add() {} } });
+  const sb = { console, KF: { i18n: () => (key) => key, gameData: () => ({}) }, document: { createElementNS: node } };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of ['content', 'art', 'types']) {
+    vm.runInContext(read(`games/naturales-entorno/${f}.js`), sb, { filename: `games/naturales-entorno/${f}.js` });
+  }
+  return { content: clone(sb.CN_CONTENT), types: sb.CN_TYPES, art: sb.CNArt };
+};
+
+test('naturales-entorno content is valid; Cyrillic only in vocab translations; every station has a glossary', () => {
+  const { content: u } = bootNaturales();
+  assert.deepEqual(validate(u), []);
+  const seen = [];
+  const walk = (x, path) => {
+    if (typeof x === 'string') {
+      if (CYR.test(x) && !/\.vocab\.\d+\.1$/.test(path)) seen.push(path);
+    } else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) walk(v, `${path}.${k}`);
+  };
+  walk(u, 'cn');
+  assert.deepEqual(seen, []);
+  for (const s of u.stations) assert.ok(s.vocab?.length >= 5, s.id);
+  const sum = Object.values(u.exam.perStation).reduce((a, b) => a + b, 0);
+  assert.equal(sum, 12);
+  assert.deepEqual(
+    Object.keys(u.exam.perStation),
+    u.stations.map((s) => s.id),
+  );
+});
+
+test('naturales-entorno: valid with the renderers; every art key and label scene exists; filter tasks are playable', () => {
+  const { content: u, types, art } = bootNaturales();
+  assert.deepEqual(Object.keys(types), ['filter']);
+  assert.deepEqual(validate(u, { ...KFExam.types, ...types }), []);
+  const tasks = u.stations.flatMap((s) => s.tasks.map((t) => ({ ...t, station: s.id })));
+  // Every task type the unit uses has a renderer (generic or its own)
+  const known = new Set([...Object.keys(KFExam.types), ...Object.keys(types)]);
+  for (const t of tasks) assert.ok(known.has(t.type), `${t.station}: no renderer for ${t.type}`);
+  // art.js needs the DOM, but `has` is plain data and scene() runs on a stub node
+  const keys = [...new Set(tasks.filter((t) => t.art).map((t) => t.art))];
+  assert.ok(keys.length >= 15, `${keys.length} art keys`);
+  for (const k of keys) assert.ok(art.has(k), `art «${k}» does not exist`);
+  assert.ok(!art.has('nope') && !art.has(''));
+  const labels = tasks.filter((t) => t.type === 'label');
+  assert.ok(labels.length >= 3);
+  for (const t of labels) {
+    const sc = art.scene(t.scene);
+    assert.ok(sc, `scene «${t.scene}» does not exist`);
+    const spots = new Set(sc.spots.map((p) => p.id));
+    for (const l of t.labels) assert.ok(spots.has(l.id), `${t.scene}: no hotspot «${l.id}»`);
+    assert.equal(sc.spots.length, spots.size, `${t.scene}: duplicate hotspot ids`);
+    for (const p of sc.spots)
+      assert.ok(p.x >= 0 && p.x <= sc.box[0] && p.y >= 0 && p.y <= sc.box[1] && p.w > 0, `${t.scene}: ${p.id} out of the box`);
+  }
+  assert.equal(art.scene('nope'), null);
+  // The filter task: 2–9 distinct layers (the right order, mouth first)
+  const filters = tasks.filter((t) => t.type === 'filter');
+  assert.ok(filters.length >= 1);
+  for (const t of filters) {
+    assert.ok(t.layers.length >= 2 && t.layers.length <= 9, t.q);
+    assert.equal(new Set(t.layers).size, t.layers.length, `${t.q}: layers must be distinct`);
+  }
+  // No fill word twice in a station
+  for (const s of u.stations) {
+    const answers = s.tasks.filter((t) => t.type === 'fill').map((t) => t.answer);
+    assert.equal(new Set(answers).size, answers.length, `${s.id}: the same fill word twice`);
+  }
+});
 
 test('validate checks unit task types against the renderers only when they are given', () => {
   const u = unit();

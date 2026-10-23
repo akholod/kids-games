@@ -468,3 +468,193 @@ export const playDcSession = async (page, tap) => {
   }
   throw new Error('dictado session did not finish');
 };
+
+// ---------- exam units on the shared engine (shared/exam): generic scripted player ----------
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const LETTER_KEYS = 'ABCDEFGH';
+const PLAIN_OF = { á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u' };
+// The keys of a word as a kid types it: the plain vowel for an accented one. That only gives the accent when every plain tile
+// of that vowel is already used (the pool has the word's own letters), so in a word that has both «i» and «í» with a plain one
+// after the accented one, the accented letter is sent as its own key (what a Spanish keyboard does). ñ / ü are always their own keys.
+const typedKeys = (word, exact = false) =>
+  [...word].map((c, i) => {
+    const plain = PLAIN_OF[c];
+    if (!plain) return { key: c, own: 'ñü'.includes(c) };
+    return exact || [...word].slice(i + 1).includes(plain) ? { key: c, own: true } : { key: plain, own: false };
+  });
+
+// Texts of the buttons' own text nodes (the <kbd> hint is not part of it).
+const ownTexts = (page, selector) =>
+  page.evaluate(
+    (sel) =>
+      [...document.querySelectorAll(sel)].map((b) =>
+        [...b.childNodes]
+          .filter((n) => n.nodeType === 3)
+          .map((n) => n.textContent)
+          .join(''),
+      ),
+    selector,
+  );
+
+// A scripted player of a unit mounted with KFExam (test hook `window[hook]`, e.g. '__cn', '__sp', '__exam').
+// answerTask(page, tap, opts) answers the running task from the engine's own session:
+//   choice, tf, sort, order, pairs, label, fill (typed or tiles), filter (naturales-entorno); right, or with `wrong`:
+//   choice / tf = the first wrong one; label = one wrong slot first (soft); fill = a wrong word first, then the right one (soft);
+//   filter = `mistakes` wrong layers (1 = soft, 2 = the second miss on the first layer: the round says false).
+// keyboard: true = keys only (`tap` is never called), else taps / clicks.
+export const examPlayer = (hook) => {
+  const session = (page) => page.evaluate((h) => window[h].session, hook);
+  const sessionTask = (page) => page.evaluate((h) => window[h].session.task, hook);
+  const answered = (page) => page.evaluate((h) => window[h].session.answered, hook);
+
+  const choice = async (page, tap, t, { wrong, keyboard }) => {
+    const shown = await ownTexts(page, '#work .choice');
+    const right = shown.indexOf(t.options[t.answer]);
+    expect(right, `choice «${t.options[t.answer]}» on screen`).toBeGreaterThanOrEqual(0);
+    const i = wrong ? (right + 1) % shown.length : right;
+    return keyboard ? page.keyboard.press(String(i + 1)) : tap(page.locator('#work .choice').nth(i));
+  };
+
+  const tf = (page, tap, t, { wrong, keyboard }) => {
+    const yes = wrong ? !t.truth : t.truth;
+    return keyboard ? page.keyboard.press(yes ? 'v' : 'f') : tap(page.locator('#work .choice').nth(yes ? 0 : 1));
+  };
+
+  const sort = async (page, tap, t, { keyboard }) => {
+    for (let i = 0; i < 12 && !(await answered(page)); i++) {
+      const chip = (await page.locator('#work .chip[aria-pressed=true]').first().textContent()).trim();
+      const item = t.items.find((it) => chip === it.text || chip === `${it.icon ?? ''}${it.text}`);
+      expect(item, `sort chip «${chip}»`).toBeTruthy();
+      const bin = t.bins.findIndex((b) => b.id === item.bin);
+      if (keyboard) await page.keyboard.press(String(bin + 1));
+      else await tap(page.locator('#work .bin').nth(bin));
+    }
+  };
+
+  const order = async (page, tap, t, { keyboard }) => {
+    const shown = await ownTexts(page, '#work .ord-card span:not(.ord-num)');
+    for (const item of t.items) {
+      const k = shown.indexOf(item);
+      if (keyboard) await page.keyboard.press(LETTER_KEYS[k]);
+      else await tap(page.locator('#work .ord-card').nth(k));
+    }
+    if (keyboard) await page.keyboard.press('Enter');
+    else await tap(page.locator('#work .ord-actions .btn-dark'));
+  };
+
+  const pairs = async (page, tap, t, { keyboard }) => {
+    const left = await ownTexts(page, '#work .pairs .col:first-child .pr');
+    const right = await ownTexts(page, '#work .pairs .col:last-child .pr');
+    for (const [k, l] of left.entries()) {
+      const r = right.indexOf(t.pairs.find((p) => p[0] === l)[1]);
+      if (keyboard) {
+        await page.keyboard.press(String(k + 1));
+        await page.keyboard.press(LETTER_KEYS[r]);
+      } else {
+        await tap(page.locator('#work .pairs .col:first-child .pr').nth(k));
+        await tap(page.locator('#work .pairs .col:last-child .pr').nth(r));
+      }
+    }
+  };
+
+  // Chips are named by their text, slots by data-spot; chip keys 1–n are by the shuffled order, slot keys A–… by the scene's.
+  const label = async (page, tap, t, { wrong, keyboard }) => {
+    const chips = await ownTexts(page, '#work .chip');
+    const idOf = (text) => t.labels.find((l) => l.text === text).id;
+    const spots = await page.locator('#work .slot').evaluateAll((els) => els.map((e) => e.dataset.spot));
+    const put = async (k, spot) => {
+      if (keyboard) {
+        await page.keyboard.press(String(k + 1));
+        await page.keyboard.press(LETTER_KEYS[spots.indexOf(spot)]);
+      } else {
+        await tap(page.locator('#work .chip').filter({ hasText: new RegExp(`^\\d*${escapeRe(chips[k])}$`) }));
+        await tap(page.locator(`#work .slot[data-spot="${spot}"]`));
+      }
+    };
+    if (wrong) await put(0, spots[(spots.indexOf(idOf(chips[0])) + 1) % spots.length]);
+    for (const [k, text] of chips.entries()) await put(k, idOf(text));
+  };
+
+  // Typed (keyboard) or the tiles in order; Enter / the check button at the end.
+  const fill = async (page, tap, t, { wrong, keyboard }) => {
+    const write = async (word, exact = false) => {
+      if (keyboard) {
+        // Playwright cannot press «ñ», «í»…: those are sent as the key event a Spanish keyboard would
+        for (const { key, own } of typedKeys(word, exact)) {
+          if (own) await page.evaluate((k) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })), key);
+          else await page.keyboard.press(key);
+        }
+      } else {
+        for (const c of word) {
+          await tap(
+            page
+              .locator('#work .fill-tile:not([disabled])')
+              .filter({ hasText: new RegExp(`^${c}$`) })
+              .first(),
+          );
+        }
+      }
+      if (keyboard) await page.keyboard.press('Enter');
+      else await tap(page.locator('#work .fill-check'));
+    };
+    if (!wrong) return write(t.answer);
+    // a word of the same length whose letters are all in the pool: swap the first two different letters
+    const w = [...t.answer];
+    const i = w.findIndex((c, k) => k > 0 && c !== w[0]);
+    [w[0], w[i]] = [w[i], w[0]];
+    await write(w.join(''));
+    // the right letters stay green; fill the free slots in order with what is missing
+    const have = await page.locator('#work .fill-slot').allTextContents();
+    const free = have.map((c, k) => (c === '' ? k : -1)).filter((k) => k >= 0);
+    await write(free.map((k) => t.answer[k]).join(''), true);
+  };
+
+  const filter = async (page, tap, t, { mistakes = 0, keyboard }) => {
+    const shown = await page.locator('#work .cn-layer').evaluateAll((els) => els.map((e) => e.dataset.layer));
+    const press = async (k) => (keyboard ? page.keyboard.press(String(k + 1)) : tap(page.locator('#work .cn-layer').nth(k)));
+    const isOff = (k) => page.locator('#work .cn-layer').nth(k).isDisabled();
+    // wrong layers first: for the very first layer (the mouth), a chip that is not the right one
+    const wrongK = shown.findIndex((l) => l !== t.layers[0]);
+    for (let m = 0; m < mistakes; m++) await press(wrongK);
+    for (const layer of t.layers) {
+      const k = shown.indexOf(layer);
+      if (!(await isOff(k))) await press(k);
+    }
+  };
+
+  const BY_TYPE = { choice, tf, sort, order, pairs, label, fill, filter };
+
+  const answerTask = async (page, tap, opts = {}) => {
+    const t = await sessionTask(page);
+    const fn = BY_TYPE[t.type];
+    if (!fn) throw new Error(`unsupported task type ${t.type}`);
+    await fn(page, tap, t, opts);
+    return t;
+  };
+
+  // «Next» after feedback: Enter (keyboard) or the button.
+  const next = async (page, tap, { keyboard } = {}) => {
+    const btn = page.locator('#feedback .fb-actions .btn').first();
+    await expect(btn).toBeVisible();
+    if (keyboard) await page.keyboard.press('Enter');
+    else await tap(btn);
+  };
+
+  // Plays the running session to its finish screen. `wrongAt` = task indexes to miss on purpose (see answerTask).
+  // Returns the task types in play order.
+  const playSession = async (page, tap, { wrongAt = [], keyboard = false } = {}) => {
+    const n = (await session(page)).tasks.length;
+    const types = [];
+    for (let i = 0; i < n; i++) {
+      expect((await session(page)).index).toBe(i);
+      const wrong = wrongAt.includes(i);
+      types.push((await answerTask(page, tap, { wrong, keyboard, mistakes: wrong ? 2 : 0 })).type);
+      await next(page, tap, { keyboard });
+    }
+    await expect(page.locator('#finish')).toBeVisible();
+    return types;
+  };
+
+  return { session, sessionTask, answerTask, next, playSession };
+};

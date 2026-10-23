@@ -1,6 +1,6 @@
 // Laptop only: every game must be playable with the keyboard (AGENTS.md conventions).
 import { test, expect, open, record } from './helpers.mjs';
-import { playChTasks, playDcTasks, playMathSession, playSimonCommands, playSimonMemory, playWordTasks } from './drivers.mjs';
+import { examPlayer, playChTasks, playDcTasks, playMathSession, playSimonCommands, playSimonMemory, playWordTasks } from './drivers.mjs';
 
 const tapNever = () => {
   throw new Error('keyboard test must not tap');
@@ -120,6 +120,86 @@ test('sociales-planeta: choices with 1–4 / V F, Esc closes dialogs and goes ba
   await page.keyboard.press('Enter');
   for (let i = 0; i < 8; i++) await answerByKey();
   await expect(page.locator('#finish')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+});
+
+test('naturales-entorno: stations, dialogs, choice, label, filter and fill by keys only; Esc goes back', async ({ page }) => {
+  const cn = examPlayer('__cn');
+  await open(page, '/games/naturales-entorno/');
+  const tileOf = async (id) =>
+    page.locator('#stations .station').nth(await page.evaluate((s) => CN_CONTENT.stations.findIndex((x) => x.id === s), id));
+
+  // Esc closes the station intro (which shows the Ukrainian glossary); Enter opens it again and Enter starts
+  const eco = await tileOf('ecosistema');
+  await eco.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-dlg')).toHaveJSProperty('open', true);
+  await expect(page.locator('#intro-dlg .vocab .vocab-row').first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#intro-dlg')).toHaveJSProperty('open', false);
+  await eco.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+
+  // The glossary button: Enter opens, Esc closes and gives the focus back; Esc did not ask to quit
+  const book = page.locator('#play-vocab');
+  await book.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#vocab-dlg')).toHaveJSProperty('open', true);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#vocab-dlg')).toHaveCount(0);
+  await expect(book).toBeFocused();
+  await expect(page.locator('#quit-dlg')).toHaveJSProperty('open', false);
+  await book.blur();
+
+  // A whole round with keys only: this station always has its label scene (number + letter), choices by 1–4 / V F, sort, order…
+  const types = (await cn.session(page)).tasks.map((t) => t.type);
+  expect(types).toContain('label');
+  expect(await cn.playSession(page, tapNever, { keyboard: true })).toEqual(types);
+  await expect(page.locator('#finish .score-pill')).toContainText('8 / 8');
+  await page.keyboard.press('Escape'); // on the finish screen: back to the hub
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // The filter station: layers with 1–5, fill words typed, Esc mid-round asks, Esc again goes on, Esc + yes leaves
+  const filtro = await tileOf('filtro');
+  await filtro.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#quit-dlg')).toHaveJSProperty('open', false); // nothing answered yet: straight back
+  await expect(page.locator('#hub')).toBeVisible();
+  await filtro.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  const kinds = (await cn.session(page)).tasks.map((t) => t.type);
+  expect(kinds).toContain('filter');
+  expect(kinds).toContain('fill');
+  await cn.answerTask(page, tapNever, { keyboard: true });
+  await cn.next(page, tapNever, { keyboard: true });
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#quit-dlg')).toHaveJSProperty('open', true);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#quit-dlg')).toHaveJSProperty('open', false);
+  expect((await cn.session(page)).index).toBe(1);
+  // the rest of the round with keys
+  for (let i = 1; i < kinds.length; i++) {
+    await cn.answerTask(page, tapNever, { keyboard: true });
+    await cn.next(page, tapNever, { keyboard: true });
+  }
+  await expect(page.locator('#finish')).toBeVisible();
+  await expect(page.locator('#finish .score-pill')).toContainText('8 / 8');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // the final exam by keys too
+  await page.locator('#exam-btn').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  await cn.playSession(page, tapNever, { keyboard: true });
+  await expect(page.locator('#finish .grade b')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('#hub')).toBeVisible();
 });

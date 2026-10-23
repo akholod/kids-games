@@ -1,4 +1,4 @@
-// Keeper Fun Games — generic exam task renderers: KFExam.types.{choice, tf, sort, order, pairs}, and KFExam.builder (word from tiles).
+// Keeper Fun Games — generic exam task renderers: KFExam.types.{choice, tf, sort, order, pairs, label, fill}, and KFExam.builder (word from tiles).
 // Include after shared/exam/exam.js. Each is (task, work, ctx) → void, see ExamRendererCtx in types/exam.d.ts.
 // @ts-check
 'use strict';
@@ -400,6 +400,141 @@
     });
   };
 
+  // Label a drawn scene (ctx.art.scene(name), see ExamScene): tap a name chip then a slot (or slot then chip). ≤1 mistake = correct.
+  /** @type {ExamRenderer<ExamLabelTask>} */
+  const label = (task, work, ctx) => {
+    const { h, T, shuffle, shake, art, hint: mkHint, kbdHint, draggable, resolve, answered, setKeys, LETTERS } = ctx;
+    const sc = art?.scene?.(task.scene);
+    if (!sc) return ctx.fallback(task, work, [{ text: task.labels[0].text, ok: true }]);
+    const labels = shuffle(task.labels);
+    const spots = sc.spots.filter((s) => labels.some((l) => l.id === s.id));
+    const [bw, bh] = sc.box;
+    const hint = mkHint();
+    let selChip = null;
+    let selSlot = null;
+    let mistakes = 0;
+    let placedN = 0;
+    const tries = new Map();
+    const chipEls = labels.map((l, k) => {
+      const b = h(
+        'button',
+        { type: 'button', class: 'chip', 'aria-pressed': 'false', onclick: () => tapChip(k) },
+        h('kbd', { text: String(k + 1) }),
+        l.text,
+      );
+      draggable(b, {
+        onStart: () => {
+          selChip = k;
+          mark();
+        },
+        targets: '.slot',
+        onDrop: (t) => tapSlot(Number(t.dataset.i)),
+      });
+      return b;
+    });
+    const slotEls = spots.map((s, k) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'slot',
+          'data-i': String(k),
+          'data-spot': s.id,
+          'aria-label': T('siteLabel', { l: LETTERS[k] }),
+          'aria-pressed': 'false',
+          style: `left:${(s.x / bw) * 100}%;top:${(s.y / bh) * 100}%;width:${(s.w / bw) * 100}%`,
+          onclick: () => tapSlot(k),
+        },
+        h('span', { class: 'q', 'aria-hidden': 'true', text: '?' }),
+        h('kbd', { text: LETTERS[k] }),
+      ),
+    );
+    const mark = () => {
+      chipEls.forEach((c, k) => c.setAttribute('aria-pressed', String(k === selChip)));
+      slotEls.forEach((s, k) => s.setAttribute('aria-pressed', String(k === selSlot)));
+    };
+    const fill = (/** @type {number} */ chipK, /** @type {number} */ slotK, /** @type {boolean} */ fixed) => {
+      const el = slotEls[slotK];
+      el.replaceChildren(labels[chipK].text);
+      el.classList.add('filled');
+      if (fixed) el.classList.add('fixed');
+      el.disabled = true;
+      el.setAttribute('aria-label', labels[chipK].text);
+      chipEls[chipK].remove();
+      chipEls[chipK].disabled = true;
+      placedN++;
+      selChip = null;
+      selSlot = null;
+      const nextChip = chipEls.findIndex((c) => !c.disabled);
+      if (nextChip >= 0) selChip = nextChip;
+      mark();
+      if (placedN === spots.length) resolve(mistakes <= 1, { soft: mistakes === 1 });
+    };
+    const attempt = () => {
+      if (selChip === null || selSlot === null) return;
+      const chipK = selChip;
+      const slotK = selSlot;
+      if (labels[chipK].id === spots[slotK].id) {
+        hint.textContent = '';
+        fill(chipK, slotK, false);
+        return;
+      }
+      mistakes++;
+      shake(chipEls[chipK], slotEls[slotK]);
+      const t = (tries.get(chipK) || 0) + 1;
+      tries.set(chipK, t);
+      selSlot = null;
+      if (t >= 2) {
+        hint.textContent = T('labelShown', { text: labels[chipK].text });
+        fill(
+          chipK,
+          spots.findIndex((s) => s.id === labels[chipK].id),
+          true,
+        );
+      } else {
+        hint.textContent = T('labelTry');
+        mark();
+      }
+    };
+    const tapChip = (/** @type {number} */ k) => {
+      if (answered() || !chipEls[k] || chipEls[k].disabled) return;
+      selChip = k;
+      mark();
+      attempt();
+    };
+    const tapSlot = (/** @type {number} */ k) => {
+      if (answered() || !slotEls[k] || slotEls[k].disabled) return;
+      selSlot = k;
+      mark();
+      if (selChip === null) {
+        hint.textContent = T('pickLabel');
+        return;
+      }
+      attempt();
+    };
+    selChip = 0;
+    mark();
+    const scene = h('div', { class: `scene${sc.cls ? ` ${sc.cls}` : ''}`, style: `--ar:${bw / bh}` }, sc.el, slotEls);
+    // Wide screens: the names stand in a column beside the drawing (label-task in exam.css).
+    work.append(
+      h('div', { class: 'label-task' }, h('div', { class: 'label-side' }, h('div', { class: 'tray' }, chipEls), hint), scene),
+      kbdHint(T('kLabel', { n: labels.length, l: LETTERS[spots.length - 1] })),
+    );
+    setKeys((e) => {
+      const n = Number(e.key);
+      if (n >= 1 && n <= labels.length) {
+        tapChip(n - 1);
+        return true;
+      }
+      const k = LETTERS.indexOf(e.key.toUpperCase());
+      if (e.key.length === 1 && k >= 0 && k < spots.length) {
+        tapSlot(k);
+        return true;
+      }
+      return false;
+    });
+  };
+
   // ---------- builder ----------
   // A word built from units (letters, syllables) in slots: tap a tile (or type), tap a filled slot = it and the ones after it go back,
   // ⌫ = erase, check when full: a miss locks the right slots green and sends the rest back once, the second miss shows the answer.
@@ -580,6 +715,77 @@
     };
   };
 
-  window.KFExam.types = { choice, tf, sort, order, pairs: pairsTask };
+  // ---------- fill ----------
+  // One word written into a sentence (text has one ___): letter tiles of the word + 2 traps go into slots via the builder.
+  // Typing: a letter takes a free tile of it; a plain vowel takes the accented one (á é í ó ú) when no plain one is free.
+  const ACCENTED = { a: 'á', e: 'é', i: 'í', o: 'ó', u: 'ú' };
+  const PLAIN = { á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u', ü: 'u' };
+  const TRAP_VOWELS = 'aeiou';
+  const TRAP_CONSONANTS = 'bcdfglmnprstv';
+
+  // Two letters that are not in the word (one vowel and one consonant when possible), so the extra tiles look like real choices.
+  /** @param {string[]} letters @param {(a: string[]) => string[]} shuffle */
+  const trapLetters = (letters, shuffle) => {
+    const has = new Set(letters.map((c) => PLAIN[c] || c));
+    const free = (/** @type {string} */ set) => shuffle([...set].filter((c) => !has.has(c)));
+    const v = free(TRAP_VOWELS);
+    const c = free(TRAP_CONSONANTS);
+    return [v[0], c[0], ...v.slice(1), ...c.slice(1)].filter(Boolean).slice(0, 2);
+  };
+
+  // A typed letter: e.key, or the physical key on a non-Latin layout (a Ukrainian keyboard gives «ф» for A). A dead key (´) is not a letter.
+  const typedLetter = (/** @type {KeyboardEvent} */ e) => {
+    if (e.key === 'Dead' || e.key.length !== 1) return null;
+    if (/[a-záéíóúüñ]/i.test(e.key)) return e.key.toLowerCase();
+    const m = /^Key([A-Z])$/.exec(e.code || '');
+    return m ? m[1].toLowerCase() : null;
+  };
+
+  /** @type {ExamRenderer<ExamFillTask>} */
+  const fill = (task, work, ctx) => {
+    const { h, T, shuffle, kbdHint } = ctx;
+    const target = [...task.answer];
+    const extra = task.extra ? [...task.extra] : trapLetters(target, shuffle);
+    const pool = shuffle([...target, ...extra]);
+    const [before, after] = task.text.split('___');
+    const lang = ctx.content.lang || 'es';
+    const gap = h('span', { class: 'fill-gap', text: '___' });
+    const sentence = h('p', { class: 'fill-text', lang }, before, gap, after);
+    /** @type {ExamBuilder} */
+    const b = builder(ctx, {
+      target,
+      tiles: pool,
+      shakeFull: true,
+      // A free tile of the letter, else (a plain vowel) of its accented twin; else the letter itself, which shakes the tiles.
+      keyUnit: (e) => {
+        const c = typedLetter(e);
+        if (c === null) return null;
+        const tile = (/** @type {string} */ u) => pool.findIndex((p, i) => p === u && !b.tileEls[i].disabled);
+        const t = tile(c);
+        const acc = t < 0 && ACCENTED[c] ? tile(ACCENTED[c]) : -1;
+        return t >= 0 ? t : acc >= 0 ? acc : c;
+      },
+      classes: { slot: 'fill-slot', tile: 'fill-tile', slots: 'fill-slots', tiles: 'fill-tiles', erase: 'fill-erase', check: 'fill-check' },
+      tileAttr: 'data-ch',
+      slotsLang: lang,
+      tilesLang: lang,
+      strings: { fill: 'fillNeed', green: 'fillGreen', again: 'fillAgain', erase: 'fillErase' },
+      onDone: (ok) => {
+        gap.replaceWith(h('b', { class: `fill-word${ok ? '' : ' fix'}`, text: task.answer }));
+        box.classList.add('is-done');
+      },
+    });
+    if (target.length > 8) b.slotsEl.classList.add('is-long');
+    const box = h(
+      'div',
+      { class: 'fill-task' },
+      h('div', { class: 'fill-main' }, sentence, b.slotsEl, b.hint),
+      h('div', { class: 'fill-side' }, b.tilesEl, h('div', { class: 'fill-actions' }, b.eraseBtn, b.checkBtn)),
+    );
+    work.append(box, kbdHint(T('kFill')));
+    b.setKeys();
+  };
+
+  window.KFExam.types = { choice, tf, sort, order, pairs: pairsTask, label, fill };
   window.KFExam.builder = builder;
 })();

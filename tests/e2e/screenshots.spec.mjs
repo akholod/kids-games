@@ -57,6 +57,12 @@ test('sociales-planeta: stations and first task', async ({ page, tap }) => {
   await snap(page, 'sociales-planeta-task');
 });
 
+test('naturales-entorno-hub: stations and the hero', async ({ page }) => {
+  await open(page, '/games/naturales-entorno/');
+  await expect(page.locator('#hero-art svg.cn-hero')).toBeVisible();
+  await snap(page, 'naturales-entorno-hub');
+});
+
 test('coach-simon: start screen and the memory turn', async ({ page, tap }) => {
   await open(page, '/games/coach-simon/');
   await snap(page, 'coach-simon-start');
