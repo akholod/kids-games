@@ -333,7 +333,7 @@
     $('q-text').textContent = q.q;
     $('q-text').lang = q.lang;
     $('q-text').classList.toggle('long', q.q.length > 90);
-    $('q-ua').textContent = q.uk || '';
+    $('q-ua').textContent = ES ? '' : q.uk || ''; // the Spanish site never gets the Ukrainian translation, not even hidden
     $('ua-btn').hidden = ES || q.lang === 'uk' || !q.uk;
     setUa(false);
     $('kbd-hint').textContent = T($('ua-btn').hidden ? 'hint.plain' : 'hint.ua');

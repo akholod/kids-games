@@ -60,3 +60,37 @@ for (const lang of [undefined, 'es']) {
     });
   });
 }
+
+// The Spanish Worker answers /shared/site.js with lang 'es': until the page scripts have translated the static HTML (which
+// carries the Ukrainian defaults), the page stays hidden, so a slow connection never shows Ukrainian text.
+test('Spanish site: the page stays hidden until it is translated, then shows Spanish only', async ({ page }) => {
+  await page.route('**/shared/site.js', (r) =>
+    r.fulfill({
+      contentType: 'application/javascript',
+      body: "window.KF_SITE = { lang: 'es' };\ndocument.documentElement.dataset.site = 'es';\n",
+    }),
+  );
+  let release = () => {};
+  const gate = new Promise((r) => {
+    release = r;
+  });
+  await page.route('**/shared/kf.js', async (r) => {
+    await gate;
+    await r.continue();
+  });
+  const loaded = page.goto('/games/penalty-multiply/?parent');
+  await page.waitForFunction(() => document.body?.querySelector('#intro') && document.documentElement.dataset.site === 'es');
+  expect(await page.evaluate(() => getComputedStyle(document.body).visibility)).toBe('hidden');
+  release();
+  await loaded;
+  await expect(page.locator('html')).toHaveClass(/kf-ready/);
+  expect(await page.evaluate(() => getComputedStyle(document.body).visibility)).toBe('visible');
+  await expect(page.locator('#intro h1')).toHaveText('Penaltis de multiplicar');
+  await expectNoCyrillic(page, 'once translated');
+});
+
+test('Ukrainian site: the page is never hidden', async ({ page }) => {
+  await open(page, '/');
+  expect(await page.evaluate(() => document.documentElement.dataset.site)).toBe('uk');
+  expect(await page.evaluate(() => getComputedStyle(document.body).visibility)).toBe('visible');
+});

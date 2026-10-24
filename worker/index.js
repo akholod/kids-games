@@ -360,7 +360,7 @@ export default {
     if (url.pathname === '/shared/site.js') {
       // One codebase, two sites: the Worker's SITE_LANG var tells the pages which language they are in.
       const lang = env.SITE_LANG === 'es' ? 'es' : 'uk';
-      return new Response(`window.KF_SITE = { lang: '${lang}' };\n`, {
+      return new Response(`window.KF_SITE = { lang: '${lang}' };\ndocument.documentElement.dataset.site = '${lang}';\n`, {
         headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' },
       });
     }
