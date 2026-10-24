@@ -282,7 +282,7 @@
       emoji: '✈️',
       category: 'lengua',
       desc: 'Готуємось до іспиту з Lengua Castellana: Unidad 1 — легенди, синоніми й антоніми, крапка і велика літера, іменник, розмова, записка й оголошення.',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: {
         title: 'Lenguas por el mundo',
@@ -1374,6 +1374,14 @@
       });
     }
     if (user) syncNow();
+  }
+
+  // The page scripts (classic, at the end of <body>) have translated the static HTML by DOMContentLoaded: show the page
+  // (kf.css hides a Spanish page until then — html[data-site=es]:not(.kf-ready)).
+  if (typeof document !== 'undefined') {
+    const ready = () => document.documentElement?.classList.add('kf-ready');
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready, { once: true });
+    else ready();
   }
 
   window.KF = KF;
