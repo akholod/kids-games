@@ -295,7 +295,7 @@
       emoji: '🦜',
       category: 'english',
       desc: 'Готуємось до іспиту з англійської: Unit 1 «Animals» — тварини, прикметники, It’s / They’re, Is it…? / Are they…?, It’s got…, історія й аудіювання.',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: {
         title: 'Animals',
