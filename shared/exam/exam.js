@@ -104,6 +104,9 @@
     readStop: '⏹ Parar',
     readStart: 'Empezar las preguntas',
     readClose: 'Cerrar',
+    listen: 'Escuchar',
+    listenAgain: 'Escuchar otra vez (tecla R)',
+    listenNoSound: 'No hay sonido en este aparato: lee la frase.',
     stationDone: '¡Estación terminada!',
     stationPassed: '¡Estación superada!',
     stationMsg: ({ coins }) => `Has ganado ${coins} 🪙.`,
@@ -183,6 +186,10 @@
         if (!text(t?.type)) return err(w, 'type missing');
         if (types && !GENERIC.includes(t.type) && !types[t.type]) return err(w, `no renderer for type «${t.type}»`);
         if (t.passage !== undefined) checkPassage(w, t.passage, err, text);
+        if (t.listen !== undefined) {
+          if (!text(t.listen)) err(w, 'listen must be a non-empty text');
+          else if (CYRILLIC.test(t.listen)) err(w, 'listen must be in the unit language (no Cyrillic)');
+        }
         // A unit's own renderer of a generic type name (dictado has its own «pick») brings its own data: only the generic shape is checked here.
         // Without `types` the engine can't tell, so a «pick» without `text` is taken for the unit's own.
         const own = types ? !!types[t.type] && types[t.type] !== KFExam.types[t.type] : t.type === 'pick' && t.text === undefined;
@@ -238,7 +245,7 @@
     const bad = bracketError(passage);
     if (bad) err(w, `passage: ${bad}`);
     else if (/\[\s*\]/.test(passage)) err(w, 'passage: an empty [ ]');
-    if (CYRILLIC.test(passage)) err(w, 'passage must be Spanish (no Cyrillic)');
+    if (CYRILLIC.test(passage)) err(w, 'passage must be in the unit language (no Cyrillic)');
   };
 
   /**
@@ -259,7 +266,7 @@
       }
     }
     const all = [tx.title, ...(Array.isArray(tx.paragraphs) ? tx.paragraphs : []), ...(Array.isArray(tx.notes) ? tx.notes.flat() : [])];
-    if (all.some((x) => typeof x === 'string' && CYRILLIC.test(x))) err(w, 'text must be Spanish (no Cyrillic)');
+    if (all.some((x) => typeof x === 'string' && CYRILLIC.test(x))) err(w, 'text must be in the unit language (no Cyrillic)');
   };
 
   /**
@@ -292,6 +299,12 @@
         if (!Array.isArray(t.options) || t.options.length < 2 || t.options.length > 9 || !t.options.every(text)) {
           err(w, 'options must be 2–9 texts');
         } else if (!int(t.answer, 0) || t.answer >= t.options.length) err(w, `answer ${t.answer} is not an index of options`);
+        if (t.pics !== undefined && typeof t.pics !== 'boolean') err(w, 'pics must be true or false');
+        if (t.labels !== undefined) {
+          if (!Array.isArray(t.labels) || !t.labels.every(text)) err(w, 'labels must be a list of non-empty texts');
+          else if (Array.isArray(t.options) && t.labels.length !== t.options.length) err(w, 'labels must have one text per option');
+          else if (t.labels.some((l) => CYRILLIC.test(l))) err(w, 'labels must be in the unit language (no Cyrillic)');
+        }
         break;
       case 'tf':
         if (typeof t.truth !== 'boolean') err(w, 'truth must be true or false');
@@ -368,6 +381,8 @@
       return;
     }
     const art = opts.art;
+    // Language of the task texts and readings (the UI stays unit.lang): an English exam in a Spanish UI sets contentLang 'en'.
+    const contentLang = unit.contentLang || unit.lang || 'es';
     /** @type {ExamRenderers} */
     const types = { ...KFExam.types, ...opts.types };
     const problems = validate(unit, types);
@@ -438,8 +453,21 @@
             h('span', { class: 'cards', id: 'cards', 'aria-label': T('cardsLabel') }),
             h('span', { class: 'goals', id: 'goals', 'aria-label': T('goalsLabel') }, '⚽ ', h('b', { id: 'goals-n', text: '0' })),
           ),
-          h('div', { class: 'prompt' }, h('p', { class: 'prompt-text', id: 'prompt' })),
-          h('div', { class: 'passage', id: 'passage', hidden: true }),
+          h('div', { class: 'prompt' }, h('p', { class: 'prompt-text', id: 'prompt', lang: contentLang })),
+          h('div', { class: 'passage', id: 'passage', hidden: true, lang: contentLang }),
+          h(
+            'div',
+            { class: 'listen', id: 'listen', hidden: true },
+            h(
+              'button',
+              { type: 'button', class: 'listen-btn', id: 'listen-btn', 'aria-label': T('listenAgain'), onclick: () => playListen() },
+              h('span', { class: 'listen-ico', 'aria-hidden': 'true', text: '🔊' }),
+              h('span', { class: 'listen-txt', text: T('listen') }),
+              h('kbd', { text: 'R' }),
+            ),
+            h('p', { class: 'listen-said', id: 'listen-said', lang: contentLang, hidden: true }),
+            h('p', { class: 'listen-nosound', id: 'listen-nosound', hidden: true, text: T('listenNoSound') }),
+          ),
           h('div', { class: 'work', id: 'work' }),
           h('div', { class: 'feedback', id: 'feedback', role: 'status', 'aria-live': 'polite' }),
         ),
@@ -652,7 +680,6 @@
       reader?.stop();
       reader = null;
     };
-    const textLang = unit.lang || 'es';
     /**
      * The «🔊 Escuchar» / «⏹ Parar» button of a reading (hidden when nothing can say it). Reads the paragraphs one by one with
      * KFG.say, polling KFG.speaking() to chain them; the paragraph being read gets .is-reading.
@@ -664,7 +691,7 @@
       const btn = /** @type {HTMLButtonElement} */ (
         h('button', { class: 'btn btn-light read-listen', type: 'button', id, text: T('readListen') })
       );
-      btn.hidden = !KFG.canSay('es', texts[0]);
+      btn.hidden = !KFG.canSay(contentLang, texts[0]);
       const mark = (/** @type {number} */ k) => paras.forEach((el, j) => el.classList.toggle('is-reading', j === k));
       const play = () => {
         stopReader();
@@ -686,7 +713,7 @@
         btn.classList.add('is-on');
         const step = () => {
           if (!alive) return;
-          if (i >= texts.length || !KFG.say(texts[i], 'es')) return stopReader();
+          if (i >= texts.length || !KFG.say(texts[i], contentLang)) return stopReader();
           mark(i);
           let started = false;
           let idle = 0;
@@ -719,11 +746,13 @@
             h(
               'dl',
               {},
-              tx.notes.map(([word, meaning]) => h('div', { class: 'read-note' }, h('dt', { text: word }), h('dd', { text: meaning }))),
+              tx.notes.map(([word, meaning]) =>
+                h('div', { class: 'read-note' }, h('dt', { lang: contentLang, text: word }), h('dd', { text: meaning })),
+              ),
             ),
           )
         : null;
-      return { paras, el: h('div', { class: 'read-body' }, h('div', { class: 'read-text', lang: textLang }, paras), notes) };
+      return { paras, el: h('div', { class: 'read-body' }, h('div', { class: 'read-text', lang: contentLang }, paras), notes) };
     };
     // Where the reading's box starts: exam.css lets it scroll inside instead of making the page scroll (laptops).
     const fitRead = () => {
@@ -742,7 +771,12 @@
           'div',
           { class: 'read-head' },
           h('span', { class: 'st-icon', 'aria-hidden': 'true', style: `--hue:${hueOf(s.id)}`, text: s.icon }),
-          h('div', {}, h('p', { class: 'eyebrow', text: T('readEyebrow') }), h('h2', { id: 'read-title', text: tx.title })),
+          h(
+            'div',
+            {},
+            h('p', { class: 'eyebrow', text: T('readEyebrow') }),
+            h('h2', { id: 'read-title', lang: contentLang, text: tx.title }),
+          ),
         ),
         body.el,
         h(
@@ -773,7 +807,7 @@
           h(
             'div',
             { class: 'dlg' },
-            h('h2', { id: 'text-title', text: tx.title }),
+            h('h2', { id: 'text-title', lang: contentLang, text: tx.title }),
             body.el,
             h(
               'div',
@@ -839,6 +873,78 @@
           return h('p', {}, kids);
         }),
       );
+    };
+
+    // ---------- Listening ----------
+    // task.listen: the engine says it in contentLang (KFG.say: a clip from shared/audio.js, else a device voice) ~300 ms after the task
+    // appears, the button / key R say it again; after the answer the sentence is shown. Without any sound the sentence is shown at once.
+    let listenText = '';
+    let listenAuto = 0;
+    let listenPoll = 0;
+    let listenOn = false;
+    const stopListen = () => {
+      clearTimeout(listenAuto);
+      clearTimeout(listenPoll);
+      $('listen-btn').classList.remove('is-playing');
+      if (listenOn) {
+        listenOn = false;
+        KFG.hush();
+      }
+    };
+    const showSaid = () => {
+      if (!listenText) return;
+      $('listen-said').textContent = `«${listenText}»`;
+      $('listen-said').hidden = false;
+    };
+    const playListen = () => {
+      const btn = $('listen-btn');
+      if (!listenText || btn.hidden) return;
+      clearTimeout(listenAuto);
+      clearTimeout(listenPoll);
+      if (!KFG.say(listenText, contentLang)) {
+        listenOn = false;
+        btn.classList.remove('is-playing');
+        return;
+      }
+      listenOn = true;
+      btn.classList.add('is-playing');
+      let started = false;
+      let idle = 0;
+      const poll = () => {
+        if (KFG.speaking()) {
+          started = true;
+          idle = 0;
+        } else if (started || ++idle > 12) {
+          listenOn = false;
+          btn.classList.remove('is-playing');
+          return;
+        }
+        listenPoll = window.setTimeout(poll, 150);
+      };
+      listenPoll = window.setTimeout(poll, 150);
+    };
+    const setupListen = (/** @type {ExamTask} */ task) => {
+      stopListen();
+      listenText = typeof task.listen === 'string' ? task.listen : '';
+      $('listen').hidden = !listenText;
+      $('listen-btn').hidden = false;
+      $('listen-said').hidden = true;
+      $('listen-said').textContent = '';
+      $('listen-nosound').hidden = true;
+      if (!listenText) return;
+      if (!KFG.canSay(contentLang, listenText)) {
+        $('listen-btn').hidden = true;
+        $('listen-nosound').hidden = false;
+        showSaid();
+        return;
+      }
+      listenAuto = window.setTimeout(playListen, 300);
+    };
+    // R says it again unless the task's own keys take the letter (fill types letters).
+    const listenKey = (/** @type {KeyboardEvent} */ e) => {
+      if (!listenText || $('listen-btn').hidden || (e.key.toLowerCase() !== 'r' && e.code !== 'KeyR')) return false;
+      playListen();
+      return true;
     };
 
     /** @type {ExamStation | null} */
@@ -913,6 +1019,7 @@
     const showScreen = KFG.screens(['hub', 'read', 'play', 'finish'], { idOf: (name) => (name === 'read' ? 'read-screen' : name) });
     const show = (/** @type {string} */ name) => {
       if (name !== 'read') stopReader();
+      if (name !== 'play') stopListen();
       if (name !== 'play') {
         textBtn?.remove();
         textBtn = null;
@@ -962,6 +1069,7 @@
       $('prompt').textContent = task.q;
       $('prompt').classList.toggle('long', task.q.length > 90);
       renderPassage(task.passage);
+      setupListen(task);
       syncTextBtn();
       $('feedback').replaceChildren();
       drawDots();
@@ -980,6 +1088,7 @@
     const sizes = new ResizeObserver(fitWork);
     sizes.observe($('prompt'));
     sizes.observe($('passage'));
+    sizes.observe($('listen'));
 
     // Called once per task.
     const resolve = (/** @type {boolean} */ correct, /** @type {ExamResolveInfo} */ info = {}) => {
@@ -987,6 +1096,7 @@
       session.answered = true;
       const task = session.task;
       session.results[session.index] = correct;
+      showSaid();
       if (correct) session.score++;
       const bs = session.byStation[task.station] || { right: 0, total: 0 };
       bs.total++;
@@ -1281,6 +1391,7 @@
       LETTERS,
       art,
       content: unit,
+      lang: contentLang,
       resolve,
       answered: () => !session || !!session.answered,
       setKeys: (onKey) => {
@@ -1313,7 +1424,7 @@
       else KFG.confirm(/** @type {HTMLDialogElement} */ ($('quit-dlg')), { onYes: toHub });
     };
     KFG.keys({
-      ctrl: () => ctrl,
+      ctrl: () => (listenText && !$('listen').hidden ? { onKey: (e) => ctrl?.onKey(e) || listenKey(e) } : ctrl),
       active: () => !$('play').hidden,
       onEscape: () => {
         if (!$('read-screen').hidden) {

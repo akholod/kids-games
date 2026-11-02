@@ -4,15 +4,43 @@
 'use strict';
 
 (() => {
+  /** @typedef {ExamChoiceOption & { key?: string, label?: string, art?: Element }} ChoiceOption */
+
+  // Picture choice: the options are art keys. null = no art, or a key without a drawing (the task then plays as text buttons).
+  /** @param {ExamChoiceTask} task @param {ExamRendererCtx} ctx @returns {ChoiceOption[] | null} */
+  const picOptions = (task, ctx) => {
+    const arts = task.options.map((key) => ctx.art?.art(key) || null);
+    if (!arts.length || arts.some((a) => !a)) return null;
+    return task.options.map((key, i) => ({
+      text: task.labels?.[i] || key,
+      label: task.labels?.[i],
+      key,
+      art: /** @type {Element} */ (arts[i]),
+      ok: i === task.answer,
+    }));
+  };
+
   /** @type {ExamRenderer<ExamChoiceTask>} */
   const choice = (task, work, ctx, preset) => {
-    const { h, T, shuffle, resolve, setKeys, withArt, kbdHint } = ctx;
-    const opts = preset || (task.options || []).map((text, i) => ({ text, ok: i === task.answer }));
+    const { h, T, shuffle, resolve, setKeys, withArt, kbdHint, lang } = ctx;
+    const pics = !preset && task.pics ? picOptions(task, ctx) : null;
+    /** @type {ChoiceOption[]} */
+    const opts =
+      preset ||
+      pics ||
+      (task.options || []).map((text, i) => ({ text: task.pics ? task.labels?.[i] || text : text, ok: i === task.answer }));
     const list = preset || task.fixed ? opts : shuffle(opts);
-    const words = list.some((o) => String(o.text).length > 14);
+    const words = !pics && list.some((o) => String(o.text).length > 14);
     let done = false;
     const buttons = list.map((o, i) =>
-      h('button', { type: 'button', class: 'choice', onclick: () => choose(i) }, h('kbd', { text: String(i + 1) }), o.text),
+      pics
+        ? h(
+            'button',
+            { type: 'button', class: 'choice pic', 'data-key': o.key, 'aria-label': o.text, onclick: () => choose(i) },
+            h('kbd', { text: String(i + 1) }),
+            h('span', { class: 'pic-art' }, o.art),
+          )
+        : h('button', { type: 'button', class: 'choice', onclick: () => choose(i) }, h('kbd', { text: String(i + 1) }), o.text),
     );
     const choose = (/** @type {number} */ i) => {
       if (done) return;
@@ -23,10 +51,15 @@
         else if (j !== i) b.classList.add('dim');
       });
       if (!list[i].ok) buttons[i].classList.add('wrong');
-      resolve(list[i].ok, { answer: list.find((o) => o.ok)?.text });
+      const right = list.find((o) => o.ok);
+      resolve(list[i].ok, { answer: pics ? right?.label : right?.text });
     };
     work.append(
-      ...withArt(task, h('div', { class: `choices${words ? ' words' : ''}` }, buttons), kbdHint(T('kChoice', { n: buttons.length }))),
+      ...withArt(
+        task,
+        pics ? h('div', { class: 'choices pics' }, buttons) : h('div', { class: `choices${words ? ' words' : ''}`, lang }, buttons),
+        kbdHint(T('kChoice', { n: buttons.length })),
+      ),
     );
     setKeys((e) => {
       const n = Number(e.key);
@@ -43,6 +76,10 @@
   const tf = (task, work, ctx) => {
     const { h, T, resolve, setKeys, withArt, kbdHint } = ctx;
     let done = false;
+    // Key letters = first letters of the unit's «true» / «false» words (Spanish: V / F); equal first letters fall back to V / F.
+    const first = (/** @type {string} */ word) => String(word).trim().charAt(0).toLowerCase();
+    const same = !first(T('true')) || !first(T('false')) || first(T('true')) === first(T('false'));
+    const [kYes, kNo] = same ? ['v', 'f'] : [first(T('true')), first(T('false'))];
     const mk = (/** @type {boolean} */ val, /** @type {string} */ icon, /** @type {string} */ label, /** @type {string} */ key) =>
       h(
         'button',
@@ -51,8 +88,8 @@
         h('b', { 'aria-hidden': 'true', text: icon }),
         label,
       );
-    const yes = mk(true, '✓', T('true'), 'V');
-    const no = mk(false, '✗', T('false'), 'F');
+    const yes = mk(true, '✓', T('true'), kYes.toUpperCase());
+    const no = mk(false, '✗', T('false'), kNo.toUpperCase());
     const choose = (/** @type {boolean} */ val) => {
       if (done) return;
       done = true;
@@ -66,11 +103,11 @@
     work.append(...withArt(task, h('div', { class: 'choices tf' }, yes, no), kbdHint(T('kTf'))));
     setKeys((e) => {
       const k = e.key.toLowerCase();
-      if (k === 'v' || k === '1') {
+      if (k === kYes || k === '1') {
         choose(true);
         return true;
       }
-      if (k === 'f' || k === '2') {
+      if (k === kNo || k === '2') {
         choose(false);
         return true;
       }
@@ -88,7 +125,7 @@
   };
   /** @type {ExamRenderer<ExamSortTask>} */
   const sort = (task, work, ctx) => {
-    const { h, T, shuffle, shake, hint: mkHint, kbdHint, draggable, resolve, answered, setKeys } = ctx;
+    const { h, T, shuffle, shake, hint: mkHint, kbdHint, draggable, resolve, answered, setKeys, lang } = ctx;
     const items = sampleItems(task, 6, shuffle);
     const bins = task.bins;
     const placed = new Set();
@@ -173,9 +210,9 @@
     };
     select(0);
     work.append(
-      h('div', { class: 'tray' }, chips),
+      h('div', { class: 'tray', lang }, chips),
       hint,
-      h('div', { class: 'bins', style: `--n:${bins.length}` }, binEls),
+      h('div', { class: 'bins', style: `--n:${bins.length}`, lang }, binEls),
       kbdHint(T('kSort', { n: bins.length })),
     );
     setKeys((e) => {
@@ -200,7 +237,7 @@
   // Order: tap cards in order, each gets the next free number. Two checks allowed.
   /** @type {ExamRenderer<ExamOrderTask>} */
   const order = (task, work, ctx) => {
-    const { h, T, shuffle, shake, hint: mkHint, kbdHint, withArt, resolve, answered, setKeys, LETTERS } = ctx;
+    const { h, T, shuffle, shake, hint: mkHint, kbdHint, withArt, resolve, answered, setKeys, LETTERS, lang } = ctx;
     const n = task.items.length;
     const cards = shuffle(task.items.map((text, i) => ({ text, i })));
     const num = new Map(); // card index → number (1-based)
@@ -288,7 +325,11 @@
       hint.textContent = T('orderGreen');
       draw();
     };
-    const list = h('div', { class: 'order' }, els);
+    // A sentence to build word by word (every item one short word, the last one ends it with . ? !) is laid out as wrapping
+    // word tiles (exam.css .order.words); lists of steps or sentences keep the cards.
+    const words =
+      task.items.every((t) => String(t).length <= 14 && !/\s/.test(String(t))) && /[.?!]$/.test(String(task.items[task.items.length - 1]));
+    const list = h('div', { class: `order${words ? ' words' : ''}`, lang }, els);
     const actions = h('div', { class: 'ord-actions' }, undoBtn, checkBtn);
     draw();
     work.append(...withArt(task, list, hint, actions, kbdHint(T('kOrder'))));
@@ -314,7 +355,7 @@
   const PAIR_COLORS = ['#c9f269', '#bfe3ff', '#ffd9a8', '#f3c6ef', '#c8f0dc'];
   /** @type {ExamRenderer<ExamPairsTask>} */
   const pairsTask = (task, work, ctx) => {
-    const { h, T, shuffle, shake, hint: mkHint, kbdHint, resolve, answered, setKeys, LETTERS } = ctx;
+    const { h, T, shuffle, shake, hint: mkHint, kbdHint, resolve, answered, setKeys, LETTERS, lang } = ctx;
     const pairs = task.pairs;
     const left = shuffle(pairs.map((p, i) => ({ text: p[0], i })));
     const right = shuffle(pairs.map((p, i) => ({ text: p[1], i })));
@@ -381,7 +422,7 @@
       if (matched === pairs.length) resolve(mistakes <= 1, { soft: mistakes === 1 });
     };
     work.append(
-      h('div', { class: 'pairs' }, h('div', { class: 'col' }, lEls), h('div', { class: 'col' }, rEls)),
+      h('div', { class: 'pairs' }, h('div', { class: 'col', lang }, lEls), h('div', { class: 'col', lang }, rEls)),
       hint,
       kbdHint(T('kPairs', { n: pairs.length, l: LETTERS[pairs.length - 1] })),
     );
@@ -403,7 +444,7 @@
   // Label a drawn scene (ctx.art.scene(name), see ExamScene): tap a name chip then a slot (or slot then chip). ≤1 mistake = correct.
   /** @type {ExamRenderer<ExamLabelTask>} */
   const label = (task, work, ctx) => {
-    const { h, T, shuffle, shake, art, hint: mkHint, kbdHint, draggable, resolve, answered, setKeys, LETTERS } = ctx;
+    const { h, T, shuffle, shake, art, hint: mkHint, kbdHint, draggable, resolve, answered, setKeys, LETTERS, lang } = ctx;
     const sc = art?.scene?.(task.scene);
     if (!sc) return ctx.fallback(task, work, [{ text: task.labels[0].text, ok: true }]);
     const labels = shuffle(task.labels);
@@ -517,7 +558,7 @@
     const scene = h('div', { class: `scene${sc.cls ? ` ${sc.cls}` : ''}`, style: `--ar:${bw / bh}` }, sc.el, slotEls);
     // Wide screens: the names stand in a column beside the drawing (label-task in exam.css).
     work.append(
-      h('div', { class: 'label-task' }, h('div', { class: 'label-side' }, h('div', { class: 'tray' }, chipEls), hint), scene),
+      h('div', { class: 'label-task' }, h('div', { class: 'label-side' }, h('div', { class: 'tray', lang }, chipEls), hint), scene),
       kbdHint(T('kLabel', { n: labels.length, l: LETTERS[spots.length - 1] })),
     );
     setKeys((e) => {
@@ -748,7 +789,7 @@
     const extra = task.extra ? [...task.extra] : trapLetters(target, shuffle);
     const pool = shuffle([...target, ...extra]);
     const [before, after] = task.text.split('___');
-    const lang = ctx.content.lang || 'es';
+    const { lang } = ctx;
     const gap = h('span', { class: 'fill-gap', text: '___' });
     const sentence = h('p', { class: 'fill-text', lang }, before, gap, after);
     /** @type {ExamBuilder} */
@@ -931,7 +972,7 @@
         // spaces between the chunks are real text (copy, screen readers); the flex layout does not draw them
         h(
           'p',
-          { class: 'pick-text', lang: ctx.content.lang || 'es' },
+          { class: 'pick-text', lang: ctx.lang },
           line.flatMap((c, i) => (i ? [' ', c] : [c])),
         ),
         hint,

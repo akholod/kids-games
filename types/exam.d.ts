@@ -13,16 +13,30 @@ interface ExamTaskBase {
   key?: string;
   /** A short text the engine shows between the question and the work area, for every task type (built-in or the unit's own):
    *  `\n` starts a new paragraph, `[x]` highlights x (a word, or a single `.` to point at a full stop). Brackets balanced,
-   *  not nested; Spanish only (no Cyrillic). Keep it to a sentence or two: it takes room from the work area. */
+   *  not nested; no Cyrillic (written in ExamUnit.contentLang). Keep it to a sentence or two: it takes room from the work area. */
   passage?: string;
+  /** A sentence the engine says aloud (listening task), for every task type except those whose renderer has its own player
+   *  (it is a different field from the unit-specific `say` of dictado / lengua `tone`, which the engine ignores). Said with
+   *  KFG.say(text, contentLang) (a clip from shared/audio.js when it has one, else a device voice; include audio.js before
+   *  kf-game.js) ~300 ms after the task appears; the «🔊 Escuchar» button and the key R say it again. Shown as «…» once the task is
+   *  answered. Without any sound for it the sentence is shown at once with a note, so the task stays playable by reading.
+   *  A non-empty text without Cyrillic. Works together with `art` (look, listen, answer) and with picture choices. */
+  listen?: string;
 }
 
-/** One correct option; the UI shuffles unless `fixed`. */
+/** One correct option; the UI shuffles unless `fixed`. With `pics` the options are art keys (ExamArt.art(key)) and the buttons are
+ *  pictures (`.choice.pic[data-key]`, same keys 1–n); `labels[i]` is the spoken / aria name of option i (and the text of the right
+ *  answer after a mistake; without labels the green picture shows it). When the art is missing or any key has no drawing the task
+ *  falls back to text buttons with `labels[i] || key`. */
 interface ExamChoiceTask extends ExamTaskBase {
   type: 'choice';
   options: string[];
   answer: number;
   fixed?: boolean;
+  /** `options` are art keys: draw them as picture buttons. */
+  pics?: boolean;
+  /** One name per option (non-empty, no Cyrillic): aria-label of a picture, the text of the fallback button. */
+  labels?: string[];
 }
 
 interface ExamTfTask extends ExamTaskBase {
@@ -105,8 +119,8 @@ interface ExamStation {
   vocab?: [string, string][];
   /** The station's reading (e.g. a legend): a screen after the intro dialog's «Empezar» (before the first task of a station
    *  round; «Otra vez» skips it), and a «📜 Texto» button in the play head whenever the current task belongs to this station
-   *  (rounds and the exam). «🔊 Escuchar» reads the paragraphs one by one with KFG.say(p, 'es') when a clip or voice exists
-   *  (include shared/audio.js before kf-game.js). Spanish only (no Cyrillic). */
+   *  (rounds and the exam). «🔊 Escuchar» reads the paragraphs one by one with KFG.say(p, contentLang) when a clip or voice exists
+   *  (include shared/audio.js before kf-game.js). In the unit's contentLang (no Cyrillic). */
   text?: ExamText;
   tasks: ExamTask[];
 }
@@ -157,6 +171,10 @@ interface ExamUnit {
   slug: string;
   /** UI language of the whole unit, sets <html lang> (default 'es'). */
   lang?: string;
+  /** Language of the task texts and station readings when it differs from the UI (an English exam in the Spanish UI): the `lang`
+   *  attribute of the prompt, passage, readings and the renderers' content, and the voice of the readings and of `listen`.
+   *  Default: `lang || 'es'`. */
+  contentLang?: string;
   title: string;
   /** Top-right line next to the back link, e.g. the subject. */
   subject?: string;
@@ -231,6 +249,8 @@ interface ExamRendererCtx {
   art: ExamArt | undefined;
   /** The unit (extra unit-level data, like grids, lives on it). */
   content: ExamUnit;
+  /** Language of the task content (unit.contentLang, else unit.lang, else 'es'): put it in `lang` of the containers with task texts. */
+  lang: string;
   /** Report the answer; once per task (the engine ignores repeats). */
   resolve(correct: boolean, info?: ExamResolveInfo): void;
   /** True once the task is resolved (or no round runs). */

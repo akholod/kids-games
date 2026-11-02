@@ -10,6 +10,8 @@
 //          + every word and sentence the coach dictates in games/dictado/content.js (`say` of its tasks),
 //          + every paragraph of every station reading (`station.text`) and the `say` of every `tone` task of games/lengua-mundo/content.js
 //            (a paragraph is far too long for a file name: slugs over 60 characters are cut to 48 + '-' + a hash, see slug()),
+//          en also gets games/english-animals/content.js (EA_CONTENT): the `listen` sentence of every task and every paragraph of
+//          every station reading (`station.text`), read paragraph by paragraph (long ones: hashed slugs, see slug()),
 //          es-slow = the dictado sentences again, slower (KFG.say(text, 'es', { slow: true })),
 //          uk = the words and short texts of games/chytanka/content.js; the voice gets the words without the stress mark
 //          (after U+0301 Polina spells the next consonants: «діду́сь» → «дідус м'який знак», «пирі́г» → «пирі ге»),
@@ -114,6 +116,7 @@ const FILES = [
   'games/chytanka/content.js',
   'games/dictado/content.js',
   'games/lengua-mundo/content.js',
+  'games/english-animals/content.js',
 ];
 for (const f of FILES) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sb, { filename: f });
 
@@ -126,9 +129,16 @@ const lengua = [
   ...sb.LE_CONTENT.stations.flatMap((s) => s.text?.paragraphs ?? []),
   ...sb.LE_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.type === 'tone').map((t) => t.say)),
 ];
+// English exam (Open Up 3, unit 1): what the engine says for `listen` tasks and the station readings. EA_CONTENT may be missing.
+const english = sb.EA_CONTENT
+  ? [
+      ...sb.EA_CONTENT.stations.flatMap((s) => s.text?.paragraphs ?? []),
+      ...sb.EA_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.listen).map((t) => t.listen)),
+    ]
+  : [];
 // [the text the game says (→ the file name), what the voice reads]
 const SOURCES = {
-  en: [...Object.values(sb.WM_CONTENT.words).map((w) => w.en), ...sb.SimonEngine.phrases('en')].map(same),
+  en: [...Object.values(sb.WM_CONTENT.words).map((w) => w.en), ...sb.SimonEngine.phrases('en'), ...english].map(same),
   es: [...sb.SimonEngine.phrases('es'), ...dictado.map((t) => t.say), ...lengua].map(same),
   'es-slow': dictado.filter((t) => t.type === 'cloze').map((t) => same(t.say)),
   uk: [

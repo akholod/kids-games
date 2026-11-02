@@ -157,6 +157,30 @@ const BROKEN = [
     (u) => u.stations[1].tasks.push({ type: 'x', q: 'Q', passage: 'a [b' }),
     'passage: a [ without its ]',
   ],
+  // listen (any task type, also a unit's own)
+  ['listen that is not a text', (u) => (u.stations[0].tasks[0].listen = 4), 'listen must be a non-empty text'],
+  ['empty listen', (u) => (u.stations[0].tasks[0].listen = ' '), 'listen must be a non-empty text'],
+  ['listen with Cyrillic', (u) => (u.stations[0].tasks[0].listen = 'It’s a жаба.'), 'listen must be in the unit language (no Cyrillic)'],
+  [
+    'listen on a unit task type is checked too',
+    (u) => u.stations[1].tasks.push({ type: 'x', q: 'Q', listen: '' }),
+    'listen must be a non-empty text',
+  ],
+  // picture choice
+  ['pics that is not a boolean', (u) => (u.stations[0].tasks[0].pics = 'yes'), 'pics must be true or false'],
+  ['labels that are not a list', (u) => (u.stations[0].tasks[0].labels = 'x'), 'labels must be a list'],
+  ['labels with an empty text', (u) => (u.stations[0].tasks[0].labels = ['a', '', 'c']), 'labels must be a list'],
+  ['labels of another length than options', (u) => (u.stations[0].tasks[0].labels = ['a', 'b']), 'one text per option'],
+  [
+    'labels with Cyrillic',
+    (u) => (u.stations[0].tasks[0].labels = ['a', 'жаба', 'c']),
+    'labels must be in the unit language (no Cyrillic)',
+  ],
+  [
+    'pics with an empty option',
+    (u) => ((u.stations[0].tasks[0].pics = true), (u.stations[0].tasks[0].options[0] = '')),
+    'options must be 2–9 texts',
+  ],
   // station text
   ['station text that is not an object', (u) => (u.stations[0].text = 'La leyenda'), 'text must be'],
   ['station text without a title', (u) => (u.stations[0].text.title = ' '), 'title missing'],
@@ -205,6 +229,21 @@ test('pick, passage and station text: good content passes (a lone [.], several m
   u.stations[1].text = { title: 'T', paragraphs: ['Uno.'] };
   assert.deepEqual(validate(u), []);
   assert.ok(Object.keys(KFExam.types).includes('pick'));
+});
+
+test('listen and picture choice: good content passes (contentLang, listen with art / pics, labels optional)', () => {
+  const u = unit();
+  u.contentLang = 'en';
+  const t = u.stations[0].tasks;
+  t[0].listen = 'It’s a frog.';
+  t[0].art = 'frog';
+  t[1].listen = 'Are they dangerous?';
+  Object.assign(t[0], { pics: true, options: ['frog', 'toad', 'snake'], answer: 0 });
+  assert.deepEqual(validate(u, KFExam.types), []);
+  t[0].labels = ['a frog', 'a toad', 'a snake'];
+  assert.deepEqual(validate(u, KFExam.types), []);
+  u.stations[1].tasks.push({ type: 'x', q: 'Q', listen: 'A unit task that listens.' });
+  assert.deepEqual(validate(u), []);
 });
 
 test('a unit that brings its own renderer for a generic type name (dictado: pick) is not held to the generic shape', () => {
@@ -716,3 +755,85 @@ for (const lang of ['uk', 'es']) {
     assert.equal(dc.sampling.caps.write, 0);
   });
 }
+
+// ---------- english-animals: English (Open Up 3), Unit 1 «Animals» ----------
+
+const bootEnglish = () => {
+  const sb = {
+    console,
+    Math,
+    KF: { lang: 'uk', i18n: () => (key) => key, gameData: () => ({}) },
+    KFG: { shuffle: (a) => [...a], canSay: () => false },
+  };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of ['shared/exam/exam.js', 'shared/exam/types.js', 'games/english-animals/content.js']) {
+    vm.runInContext(read(f), sb, { filename: f });
+  }
+  return { E: sb.KFExam, content: clone(sb.EA_CONTENT) };
+};
+
+test('english-animals: valid with the generic renderers (no unit types); exam, hook and language are set', () => {
+  const { E, content: u } = bootEnglish();
+  assert.deepEqual([...E.validate(clone(u))], []);
+  assert.deepEqual([...E.validate(clone(u), E.types)], []);
+  assert.equal(u.slug, 'english-animals');
+  assert.equal(u.contentLang, 'en');
+  assert.equal(u.testHook, '__ea');
+  assert.equal(u.stations.length, 9);
+  assert.deepEqual(Object.keys(u.exam.perStation).sort(), u.stations.map((s) => s.id).sort());
+  const tasks = u.stations.flatMap((s) => s.tasks);
+  assert.ok(tasks.length >= 200, `${tasks.length} tasks`);
+  for (const t of tasks) assert.ok(E.types[t.type], `no generic renderer for ${t.type}`);
+  // every type named in the sampling rules exists in the unit
+  const used = new Set(tasks.map((t) => t.type));
+  for (const k of [...Object.keys(u.sampling.caps), ...Object.keys(u.sampling.examCaps), ...u.sampling.always])
+    assert.ok(used.has(k), `sampling names «${k}»`);
+  // readings: the story and the helpers
+  assert.deepEqual(
+    u.stations.filter((s) => s.text).map((s) => s.id),
+    ['story', 'helpers'],
+  );
+  assert.equal(u.stations.find((s) => s.id === 'story').text.paragraphs.length, 7);
+  // the unit has listen tasks, picture choices and the english true / false keys
+  assert.ok(tasks.some((t) => t.listen));
+  assert.ok(tasks.some((t) => t.pics));
+  assert.equal(u.strings.true, 'True');
+});
+
+test('english-animals: no Cyrillic anywhere in the content (it is the same on both sites)', () => {
+  const { content: u } = bootEnglish();
+  assert.ok(!CYR.test(JSON.stringify(u)), 'Cyrillic in the unit content');
+  assert.ok(
+    u.stations.every((s) => !s.vocab),
+    'no Ukrainian glossary',
+  );
+});
+
+test('english-animals: every picture choice names every picture, every listen is a real sentence, keys are unique per draw', () => {
+  const { content: u } = bootEnglish();
+  const tasks = u.stations.flatMap((s) => s.tasks);
+  const pics = tasks.filter((t) => t.pics);
+  assert.ok(pics.length >= 10, `${pics.length} picture choices`);
+  for (const t of pics) {
+    assert.equal(t.type, 'choice', t.q);
+    assert.ok(Array.isArray(t.labels) && t.labels.length === t.options.length, `pics without a label for each option: ${t.q} ${t.options}`);
+    assert.equal(new Set(t.options).size, t.options.length, `repeated picture: ${t.options}`);
+    assert.equal(new Set(t.labels).size, t.labels.length, `repeated label: ${t.labels}`);
+  }
+  for (const t of tasks.filter((x) => x.listen)) assert.ok(t.listen.trim().length > 1, t.q);
+});
+
+test('english-animals: the right option of a choice is not clearly the longest', () => {
+  const { content: u } = bootEnglish();
+  const bad = [];
+  for (const s of u.stations) {
+    for (const t of s.tasks) {
+      if (t.type !== 'choice' || t.fixed || t.pics) continue;
+      const right = t.options[t.answer].length;
+      const other = Math.max(...t.options.filter((_, i) => i !== t.answer).map((o) => o.length));
+      if (right > other * 1.3 && right - other > 6) bad.push(`${s.id}: «${t.q}» → ${t.options[t.answer]} (${right} vs ${other})`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});

@@ -76,6 +76,12 @@ test('lengua-mundo-read: the reading screen of the baobab legend', async ({ page
   await snap(page, 'lengua-mundo-read');
 });
 
+test('english-animals-hub: stations and the hero', async ({ page }) => {
+  await open(page, '/games/english-animals/');
+  await expect(page.locator('#hero-art svg.ea-hero')).toBeVisible();
+  await snap(page, 'english-animals-hub');
+});
+
 test('coach-simon: start screen and the memory turn', async ({ page, tap }) => {
   await open(page, '/games/coach-simon/');
   await snap(page, 'coach-simon-start');

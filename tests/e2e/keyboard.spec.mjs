@@ -277,6 +277,66 @@ test('lengua-mundo: reading by keys, then fix, chat, tone and pick with keys onl
   await expect(page.locator('#work .le-g').first()).toHaveAttribute('aria-pressed', 'false');
 });
 
+test('english-animals: choice 1–4, True / False on T / F, R replays a listening task, picture choice by number — keys only; Esc goes back', async ({
+  page,
+}) => {
+  const ea = examPlayer('__ea');
+  const { taskWhere, playOnly } = unitPage('EA_CONTENT', '__ea');
+  await open(page, '/games/english-animals/');
+  await page.evaluate(() => {
+    window.__said = [];
+    KFG.say = (t) => {
+      window.__said.push(t);
+      return true;
+    };
+    KFG.speaking = () => false;
+    KFG.hush = () => {};
+  });
+  // a station by keys: Enter on the tile, Enter in the intro dialog, then the whole round with keys only
+  await page.locator('#stations .station').nth(0).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-dlg')).toHaveJSProperty('open', true);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  await ea.playSession(page, tapNever, { keyboard: true });
+  await expect(page.locator('#finish .score-pill')).toContainText('8 / 8');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // True / False: the keys are the first letters of the words on the buttons (T / F), 1 / 2 too, V does nothing
+  const tfTask = await taskWhere(page, 'tf', (t) => !t.listen);
+  await playOnly(page, tfTask);
+  await expect(page.locator('#work .choices.tf kbd')).toHaveText(['T', 'F']);
+  await page.keyboard.press('v');
+  await expect(page.locator('#feedback .fb')).toHaveCount(0);
+  await ea.answerTask(page, tapNever, { keyboard: true });
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  await page.keyboard.press('Enter'); // next → finish
+  await expect(page.locator('#finish')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // a listening choice: R replays, 1–4 answer; a listening picture choice answers by number as well
+  await playOnly(page, await taskWhere(page, 'choice', (t) => t.listen && !t.pics && t.options.length >= 3));
+  await expect.poll(() => page.evaluate(() => __said.length)).toBe(1);
+  await page.keyboard.press('r');
+  await expect.poll(() => page.evaluate(() => __said.length)).toBe(2);
+  await ea.answerTask(page, tapNever, { keyboard: true });
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  await expect(page.locator('#listen-said')).toBeVisible();
+  await page.keyboard.press('Enter'); // next → finish
+  await expect(page.locator('#finish')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await playOnly(page, await taskWhere(page, 'choice', (t) => t.pics && t.listen));
+  await expect(page.locator('#work .choice.pic kbd')).toHaveText(
+    ['1', '2', '3', '4'].slice(0, await page.locator('#work .choice.pic').count()),
+  );
+  await ea.answerTask(page, tapNever, { keyboard: true });
+  await expect(page.locator('#work .choice.pic.right')).toHaveCount(1);
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+});
+
 test('penalty-multiply: Enter starts, 1–3 pick a goal target, Enter = next kick, Esc goes back', async ({ page }) => {
   await open(page, '/games/penalty-multiply/');
   await page.keyboard.press('Enter');

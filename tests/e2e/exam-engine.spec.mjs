@@ -256,8 +256,8 @@ test('the unit praise list is used for right answers', async ({ page }) => {
 // ---- optional engine features: task keys, weights, answer hook, hero redrawn on every hub visit ----
 
 // The fake unit with the given stations; `mountOpts` is the source of the options object passed to KFExam.mount next to art/types.
-const openUnit = async (page, stations, { mountOpts = '', exam = { [stations[0].id]: 1 }, round = 4, lang } = {}) => {
-  const unit = { ...UNIT, round, stations, exam: { perStation: exam } };
+const openUnit = async (page, stations, { mountOpts = '', exam = { [stations[0].id]: 1 }, round = 4, lang, unitExtra = {} } = {}) => {
+  const unit = { ...UNIT, round, stations, exam: { perStation: exam }, ...unitExtra };
   await page.route('**/games/sociales-planeta/content.js', (route) =>
     route.fulfill({ contentType: 'text/javascript', body: `window.SP_CONTENT = ${JSON.stringify(unit)};` }),
   );
@@ -1161,4 +1161,296 @@ test('pick: wraps at 360px without sideways overflow, every word 48px+ and insid
   for (const w of ['jugadores', 'balón', 'gol']) await pickWord(page, w).click();
   await page.locator('#work .pick-check').click();
   await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+});
+
+// ---- listening (task.listen) and picture choice (choice + pics), with contentLang 'en' ----
+
+// A drawing per key: a 10×10 svg tagged with its key; the key «nada» has none (the unit's art cannot draw it).
+const routePicArt = (page) =>
+  page.route('**/games/sociales-planeta/art.js', (route) =>
+    route.fulfill({
+      contentType: 'text/javascript',
+      body: `window.SPArt = { art: (k) => { if (k === 'nada') return null; const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 10 10'); s.dataset.art = k; return s; }, hero: () => null };`,
+    }),
+  );
+const ENGLISH = { contentLang: 'en' };
+const enStation = (tasks) => station('e', tasks);
+const playE = (page, tasks) => page.evaluate((t) => __exam.play(t.map((x) => ({ ...x, station: 'e' }))), tasks);
+// Counts what the engine says (through the real KFG.say, which plays the clip).
+const spySay = (page) =>
+  page.evaluate(() => {
+    window.__say = [];
+    window.__hush = 0;
+    const say = KFG.say;
+    const hush = KFG.hush;
+    KFG.say = (...a) => {
+      window.__say.push(a.slice(0, 2));
+      return say(...a);
+    };
+    KFG.hush = () => {
+      window.__hush++;
+      return hush();
+    };
+  });
+const LISTEN_TEXT = 'frog'; // has a clip in shared/audio.js (en)
+
+test('listen: autoplay once, button and key R say it again, the sentence appears after the answer, contentLang is on the content', async ({
+  page,
+}) => {
+  await openUnit(page, [enStation([choice('Q1', ['frog', 'toad'], 0), choice('Q2', ['x', 'y'], 0)])], { unitExtra: ENGLISH });
+  await page.addScriptTag({ url: '/shared/audio.js' });
+  await spySay(page);
+  await playE(page, [
+    { ...choice('Which animal?', ['frog', 'toad'], 0), listen: LISTEN_TEXT, passage: 'A [frog].' },
+    choice('Q2', ['x', 'y'], 0),
+  ]);
+
+  const box = page.locator('#listen');
+  const btn = page.locator('#listen-btn');
+  await expect(box).toBeVisible();
+  await expect(btn).toBeVisible();
+  await expect(btn).toHaveAttribute('aria-label', 'Escuchar otra vez (tecla R)');
+  await expect(btn.locator('kbd')).toHaveText('R');
+  await expect(btn.locator('.listen-txt')).toHaveText('Escuchar');
+  await expect(page.locator('#listen-said')).toBeHidden();
+  await expect(page.locator('#listen-nosound')).toBeHidden();
+  // order: prompt, passage, listen, work
+  const tops = await page.evaluate(() =>
+    ['prompt', 'passage', 'listen', 'work'].map((id) => document.getElementById(id).getBoundingClientRect().top),
+  );
+  expect([...tops].sort((a, b) => a - b)).toEqual(tops);
+  // the content language is on the prompt, the passage and the choices
+  await expect(page.locator('#prompt')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#passage')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#listen-said')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#work .choices')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+
+  // the clip starts by itself, once
+  await expect.poll(() => page.evaluate(() => __say.length)).toBe(1);
+  expect(await page.evaluate(() => __say[0])).toEqual([LISTEN_TEXT, 'en']);
+  await expect(btn).toHaveClass(/is-playing/);
+  await page.waitForTimeout(700);
+  expect(await page.evaluate(() => __say.length)).toBe(1);
+
+  // key R and the button
+  await page.keyboard.press('r');
+  expect(await page.evaluate(() => __say.length)).toBe(2);
+  await btn.click();
+  expect(await page.evaluate(() => __say.length)).toBe(3);
+  expect(await page.evaluate(() => __say.every((s) => s[0] === 'frog' && s[1] === 'en'))).toBe(true);
+
+  // the number keys still answer the task; the sentence shows once it is answered
+  await answerByKeys(page);
+  await expect(page.locator('#listen-said')).toBeVisible();
+  await expect(page.locator('#listen-said')).toHaveText('«frog»');
+  await page.keyboard.press('R'); // also after the answer
+  expect(await page.evaluate(() => __say.length)).toBe(4);
+
+  // the next task has no listen: the block is gone and the sound was stopped; R does nothing
+  const hushed = await page.evaluate(() => __hush);
+  await page.keyboard.press('Enter');
+  await expect(box).toBeHidden();
+  await expect(btn).not.toHaveClass(/is-playing/);
+  expect(await page.evaluate(() => __hush)).toBeGreaterThan(hushed);
+  await page.keyboard.press('r');
+  expect(await page.evaluate(() => __say.length)).toBe(4);
+});
+
+test('listen: each task plays only its own sentence; leaving the round stops the sound', async ({ page }) => {
+  await openUnit(page, [enStation([choice('Q1', ['frog', 'toad'], 0)])], { unitExtra: ENGLISH });
+  await page.addScriptTag({ url: '/shared/audio.js' });
+  await spySay(page);
+  const t1 = { ...choice('First', ['frog', 'toad'], 0), listen: 'frog' };
+  const t2 = { ...choice('Second', ['cat', 'dog'], 0), listen: 'cat' };
+  await playE(page, [t1, t2]);
+  await expect.poll(() => page.evaluate(() => __say.length)).toBe(1);
+  await answerByKeys(page);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#prompt')).toHaveText('Second');
+  await expect.poll(() => page.evaluate(() => __say.length)).toBe(2);
+  expect(await page.evaluate(() => __say.map((s) => s[0]))).toEqual(['frog', 'cat']);
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => __say.length)).toBe(2);
+  // quitting mid-round hushes
+  const hushed = await page.evaluate(() => __hush);
+  await page.keyboard.press('Escape');
+  await page.locator('#quit-yes').click();
+  await expect(page.locator('#hub')).toBeVisible();
+  expect(await page.evaluate(() => __hush)).toBeGreaterThan(hushed);
+});
+
+test('listen: without any sound the sentence is shown at once with a note and the button is gone; the task stays playable', async ({
+  page,
+}) => {
+  await openUnit(page, [enStation([choice('Q1', ['frog', 'toad'], 0)])], { unitExtra: ENGLISH });
+  await spySay(page);
+  await page.evaluate(() => {
+    KFG.canSay = () => false;
+  });
+  await playE(page, [{ ...choice('Which animal?', ['frog', 'toad'], 0), listen: 'It’s a frog.' }]);
+  await expect(page.locator('#listen')).toBeVisible();
+  await expect(page.locator('#listen-btn')).toBeHidden();
+  await expect(page.locator('#listen-said')).toBeVisible();
+  await expect(page.locator('#listen-said')).toHaveText('«It’s a frog.»');
+  await expect(page.locator('#listen-nosound')).toBeVisible();
+  await expect(page.locator('#listen-nosound')).toHaveText('No hay sonido en este aparato: lee la frase.');
+  await page.waitForTimeout(500);
+  await page.keyboard.press('r');
+  expect(await page.evaluate(() => __say.length)).toBe(0);
+  await answerByKeys(page);
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  await expect(page.locator('#listen-said')).toHaveText('«It’s a frog.»');
+});
+
+test('listen: R is left to the task when its own keys take the letter (fill); art + listen works', async ({ page }) => {
+  await routePicArt(page);
+  await openUnit(page, [enStation([choice('Q1', ['frog', 'toad'], 0)])], { unitExtra: ENGLISH });
+  await page.addScriptTag({ url: '/shared/audio.js' });
+  await spySay(page);
+  await playE(page, [{ type: 'fill', q: 'Look, listen and write.', art: 'frog', listen: 'frog', text: 'It’s a ___.', answer: 'frog' }]);
+  await expect(page.locator('#listen-btn')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => __say.length)).toBe(1);
+  await page.keyboard.press('f');
+  await page.keyboard.press('r'); // a letter of «frog»: it goes into the word, nothing is said again
+  expect(await page.evaluate(() => __say.length)).toBe(1);
+  await expect(page.locator('#work .fill-slot')).toHaveText(['f', 'r', '', '']);
+  await typeWord(page, 'og');
+  await expect(page.locator('#work .fill-slot')).toHaveText(['f', 'r', 'o', 'g']);
+  await page.locator('#listen-btn').click(); // the button still works
+  expect(await page.evaluate(() => __say.length)).toBe(2);
+});
+
+test('pics: picture buttons by art key with names, keys 1–n, right / wrong / dim, the answer line uses the label', async ({ page }) => {
+  await routePicArt(page);
+  await openUnit(page, [enStation([choice('Q1', ['frog', 'toad'], 0)])], { unitExtra: ENGLISH });
+  const pics = (answer, extra = {}) => ({
+    type: 'choice',
+    q: 'Choose the picture.',
+    pics: true,
+    options: ['frog', 'toad', 'snake'],
+    labels: ['a frog', 'a toad', 'a snake'],
+    answer,
+    ...extra,
+  });
+  await playE(page, [pics(1), pics(1, { labels: undefined }), pics(2)]);
+  const btns = page.locator('#work .choices.pics .choice.pic');
+  await expect(btns).toHaveCount(3);
+  await expect(page.locator('#work .choices')).not.toHaveClass(/words/);
+  const info = await btns.evaluateAll((els) =>
+    els.map((e) => ({
+      key: e.dataset.key,
+      label: e.getAttribute('aria-label'),
+      kbd: e.querySelector('kbd').textContent,
+      art: e.querySelector('.pic-art svg')?.dataset.art,
+    })),
+  );
+  expect(info.map((i) => i.kbd)).toEqual(['1', '2', '3']);
+  expect(info.map((i) => i.art)).toEqual(info.map((i) => i.key));
+  expect([...info.map((i) => i.key)].sort()).toEqual(['frog', 'snake', 'toad']);
+  for (const i of info) expect(i.label).toBe({ frog: 'a frog', toad: 'a toad', snake: 'a snake' }[i.key]);
+  await expect(page.locator('#work .kbd-hint')).toHaveText('Teclas 1–3');
+
+  // a wrong picture by key: the right one turns green, the other dims, the answer is the label of the right one
+  const toadAt = info.findIndex((i) => i.key === 'toad');
+  await page.keyboard.press(String(((toadAt + 1) % 3) + 1));
+  await expect(page.locator('#work .choice.pic.right')).toHaveAttribute('data-key', 'toad');
+  await expect(page.locator('#work .choice.pic.wrong')).toHaveCount(1);
+  await expect(page.locator('#work .choice.pic.dim')).toHaveCount(1);
+  await expect(page.locator('#work .choice.pic[disabled]')).toHaveCount(3);
+  await expect(page.locator('#feedback .fb.miss')).toContainText('La respuesta es: a toad.');
+  await page.keyboard.press('Enter');
+
+  // no labels: aria-label falls back to the key, the miss shows no answer text (the green picture is the answer)
+  await expect(btns).toHaveCount(3);
+  expect(await btns.evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') === e.dataset.key))).toEqual([true, true, true]);
+  await page.locator('#work .choice.pic[data-key="snake"]').click();
+  await expect(page.locator('#work .choice.pic.right')).toHaveAttribute('data-key', 'toad');
+  await expect(page.locator('#feedback .fb.miss')).toContainText('Mira cómo queda bien.');
+  await page.keyboard.press('Enter');
+
+  // a right one by click
+  await page.locator('#work .choice.pic[data-key="snake"]').click();
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  await expect(page.locator('#listen')).toBeHidden();
+});
+
+test('pics: listen and choose the picture; a missing drawing (or no art) falls back to text buttons with the labels', async ({ page }) => {
+  await routePicArt(page);
+  await openUnit(page, [enStation([choice('Q1', ['frog', 'toad'], 0)])], { unitExtra: ENGLISH });
+  await page.addScriptTag({ url: '/shared/audio.js' });
+  await spySay(page);
+  const both = {
+    type: 'choice',
+    q: 'Listen and choose.',
+    listen: 'frog',
+    pics: true,
+    options: ['toad', 'frog'],
+    labels: ['toad', 'frog'],
+    answer: 1,
+  };
+  const noArt = { type: 'choice', q: 'No drawing.', pics: true, options: ['frog', 'nada'], labels: ['a frog', 'a nada'], answer: 1 };
+  const noArtNoLabels = { type: 'choice', q: 'No drawing, no labels.', pics: true, options: ['frog', 'nada'], answer: 0 };
+  await playE(page, [both, noArt, noArtNoLabels]);
+  await expect(page.locator('#listen-btn')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => __say.length)).toBe(1);
+  await expect(page.locator('#work .choice.pic')).toHaveCount(2);
+  await page.locator('#work .choice.pic[data-key="frog"]').click();
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  await expect(page.locator('#listen-said')).toHaveText('«frog»');
+  await page.keyboard.press('Enter');
+
+  // text fallback: plain choice buttons named by the labels, no picture classes, the right one still found
+  await expect(page.locator('#work .choice')).toHaveCount(2);
+  await expect(page.locator('#work .choice.pic')).toHaveCount(0);
+  await expect(page.locator('#work .choices.pics')).toHaveCount(0);
+  expect((await ownTexts(page, '#work .choice')).sort()).toEqual(['a frog', 'a nada']);
+  await page.locator('#work .choice', { hasText: 'a nada' }).click();
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  await page.keyboard.press('Enter');
+  expect((await ownTexts(page, '#work .choice')).sort()).toEqual(['frog', 'nada']);
+  await page.locator('#work .choice', { hasText: 'nada' }).click();
+  await expect(page.locator('#feedback .fb.miss')).toContainText('La respuesta es: frog.');
+});
+
+test('contentLang defaults to the unit language: a Spanish unit has lang es on its content and no listen block', async ({ page }) => {
+  await openUnit(page, [station('s', [choice('Q1', ['x', 'y'], 0), fill('Completa', 'Las ___ son sólidas.', 'rocas')])]);
+  await page.evaluate(() => __exam.startStation('s'));
+  await expect(page.locator('#prompt')).toHaveAttribute('lang', 'es');
+  await expect(page.locator('#listen')).toBeHidden();
+  await expect(page.locator('#listen-btn')).toBeHidden(); // hidden with its block
+});
+
+test('tf: key letters are the first letters of «true» / «false» (T / F in English, V / F in Spanish); equal letters fall back to V / F; 1 / 2 always work', async ({
+  page,
+}) => {
+  const kbds = () => page.locator('#work .choices.tf kbd').allTextContents();
+  const pressAndCheck = async (key, rightButton) => {
+    await page.keyboard.press(key);
+    await expect(page.locator(`#work .choices.tf .choice:nth-child(${rightButton})`)).toHaveClass(/right/);
+  };
+  const tasks = [tf('T1', true), tf('T2', false), tf('T3', true), tf('T4', false)];
+  // English strings
+  await openUnit(page, [enStation(tasks)], {
+    unitExtra: { contentLang: 'en', strings: { true: 'True', false: 'False', kTf: 'Teclas T = True, F = False' } },
+  });
+  await playE(page, tasks);
+  expect(await kbds()).toEqual(['T', 'F']);
+  await expect(page.locator('#work .kbd-hint')).toHaveText('Teclas T = True, F = False');
+  await page.keyboard.press('v'); // the Spanish key does nothing now
+  await expect(page.locator('#feedback .fb')).toHaveCount(0);
+  await pressAndCheck('t', 1);
+  await page.keyboard.press('Enter');
+  await pressAndCheck('f', 2);
+  await page.keyboard.press('Enter');
+  await pressAndCheck('1', 1);
+  await page.keyboard.press('Enter');
+  await pressAndCheck('2', 2);
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+
+  // equal first letters: back to V / F
+  await openUnit(page, [enStation(tasks)], { unitExtra: { strings: { true: 'Sí', false: 'Si' } } });
+  await playE(page, tasks);
+  expect(await kbds()).toEqual(['V', 'F']);
+  await pressAndCheck('v', 1);
 });

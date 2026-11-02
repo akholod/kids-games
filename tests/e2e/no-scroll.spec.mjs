@@ -262,3 +262,93 @@ test('lengua-mundo: hub, readings, the longest fix, a chat after all turns, a to
   await le.answerTask(page, tap, { stopAt: picks[1][1].turns.length - 1 });
   await expectFits(page, 'the chat before its last answer');
 });
+
+test('english-animals: hub, readings, listening + pictures, art + listen, labels, the longest fill / order / pick / pairs fit; next button visible', async ({
+  page,
+  tap,
+}) => {
+  test.setTimeout(120_000);
+  const ea = examPlayer('__ea');
+  const { startFromIntro, allTasks, playOnly } = unitPage('EA_CONTENT', '__ea');
+  const fresh = async () => {
+    await open(page, '/games/english-animals/');
+    await page.evaluate(() => {
+      KFG.say = () => true; // no sound needed here
+      KFG.speaking = () => false;
+      KFG.hush = () => {};
+    });
+  };
+  await fresh();
+  // The hub is a list of stations (it scrolls like every exam hub), but never sideways
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+
+  // The readings: the page does not scroll (a long text scrolls inside its box), «Empezar las preguntas» is on screen
+  for (const id of ['story', 'helpers']) {
+    await fresh();
+    await startFromIntro(page, tap, id);
+    await expect(page.locator('#read-screen')).toBeVisible();
+    await expectFits(page, `${id} reading`);
+    await expectOnScreen(page, page.locator('#read-start'), `${id} start button`);
+    await tap(page.locator('#read-start'));
+    await expect(page.locator('#play')).toBeVisible();
+    await expectFits(page, `${id} first task`);
+  }
+
+  const tasks = await allTasks(page);
+  const by = (type) => tasks.filter((t) => t.type === type);
+  const longest = (list, size) => [...list].sort((a, b) => size(b) - size(a))[0];
+  const text = (t) => JSON.stringify(t);
+  const picks = [
+    ['pictures + listen', tasks.find((t) => t.type === 'choice' && t.pics && t.listen)],
+    ['pictures (no listen)', tasks.find((t) => t.type === 'choice' && t.pics && !t.listen)],
+    [
+      'the picture choice with most options',
+      longest(
+        tasks.filter((t) => t.pics),
+        (t) => t.options.length,
+      ),
+    ],
+    ['art + listen choice', tasks.find((t) => t.type === 'choice' && t.art && t.listen)],
+    ['art choice', tasks.find((t) => t.type === 'choice' && t.art && !t.listen)],
+    [
+      'listen choice with the longest options',
+      longest(
+        tasks.filter((t) => t.type === 'choice' && t.listen && !t.pics),
+        (t) => t.options.join('').length,
+      ),
+    ],
+    ['listen tf', tasks.find((t) => t.type === 'tf' && t.listen)],
+    [
+      'listen fill',
+      longest(
+        tasks.filter((t) => t.type === 'fill' && t.listen),
+        (t) => t.answer.length,
+      ),
+    ],
+    ['the longest fill', longest(by('fill'), (t) => t.answer.length * 100 + t.text.length)],
+    ['a passage choice', tasks.find((t) => t.passage)],
+    ['the longest question', longest(tasks, (t) => t.q.length + (t.passage?.length ?? 0))],
+    [
+      'the longest choice options',
+      longest(
+        tasks.filter((t) => t.type === 'choice' && !t.pics),
+        (t) => t.options.join('').length,
+      ),
+    ],
+    ['the longest order', longest(by('order'), (t) => t.items.join('').length)],
+    ['the longest pick', longest(by('pick'), (t) => t.text.length)],
+    ['pairs with most pairs', longest(by('pairs'), (t) => t.pairs.length * 1000 + text(t.pairs).length)],
+    ['sort', longest(by('sort'), (t) => text(t.items).length)],
+    ...by('label').map((t) => [`label scene ${t.scene}`, t]),
+  ];
+  for (const [what, t] of picks) {
+    expect(t, what).toBeTruthy();
+    await fresh();
+    await playOnly(page, t);
+    await expectFits(page, what);
+    await ea.answerTask(page, tap);
+    await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what}: next`);
+    // after the answer the sentence of a listening task is on screen too, and the page still does not scroll much
+    if (t.listen) await expect(page.locator('#listen-said')).toBeVisible();
+  }
+});

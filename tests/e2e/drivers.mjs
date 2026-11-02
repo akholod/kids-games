@@ -509,16 +509,28 @@ export const examPlayer = (hook) => {
   const answered = (page) => page.evaluate((h) => window[h].session.answered, hook);
 
   const choice = async (page, tap, t, { wrong, keyboard }) => {
+    // Picture choice (`pics`): the buttons are `.choice.pic[data-key]` with the art key of an option; no art = text buttons of labels[i] || key.
+    const picKeys = t.pics ? await page.locator('#work .choice.pic').evaluateAll((els) => els.map((e) => e.dataset.key)) : [];
+    if (picKeys.length) {
+      const right = picKeys.indexOf(t.options[t.answer]);
+      expect(right, `picture «${t.options[t.answer]}» on screen`).toBeGreaterThanOrEqual(0);
+      const i = wrong ? (right + 1) % picKeys.length : right;
+      return keyboard ? page.keyboard.press(String(i + 1)) : tap(page.locator(`#work .choice.pic[data-key="${picKeys[i]}"]`));
+    }
+    const want = t.pics ? t.labels?.[t.answer] || t.options[t.answer] : t.options[t.answer];
     const shown = await ownTexts(page, '#work .choice');
-    const right = shown.indexOf(t.options[t.answer]);
-    expect(right, `choice «${t.options[t.answer]}» on screen`).toBeGreaterThanOrEqual(0);
+    const right = shown.indexOf(want);
+    expect(right, `choice «${want}» on screen`).toBeGreaterThanOrEqual(0);
     const i = wrong ? (right + 1) % shown.length : right;
     return keyboard ? page.keyboard.press(String(i + 1)) : tap(page.locator('#work .choice').nth(i));
   };
 
-  const tf = (page, tap, t, { wrong, keyboard }) => {
+  // The key letters are the ones on the two kbd hints (V / F in Spanish, T / F in an English unit).
+  const tf = async (page, tap, t, { wrong, keyboard }) => {
     const yes = wrong ? !t.truth : t.truth;
-    return keyboard ? page.keyboard.press(yes ? 'v' : 'f') : tap(page.locator('#work .choice').nth(yes ? 0 : 1));
+    if (!keyboard) return tap(page.locator('#work .choice').nth(yes ? 0 : 1));
+    const letters = await page.locator('#work .choices.tf kbd').allTextContents();
+    return page.keyboard.press(letters[yes ? 0 : 1].toLowerCase());
   };
 
   const sort = async (page, tap, t, { keyboard }) => {

@@ -290,6 +290,19 @@
       },
     },
     {
+      slug: 'english-animals',
+      title: 'Animals',
+      emoji: '🦜',
+      category: 'english',
+      desc: 'Готуємось до іспиту з англійської: Unit 1 «Animals» — тварини, прикметники, It’s / They’re, Is it…? / Are they…?, It’s got…, історія й аудіювання.',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: {
+        title: 'Animals',
+        desc: 'Prepárate para el examen de inglés, Unit 1 «Animals»: animales, adjetivos, It’s / They’re, Is it…? / Are they…?, It’s got…, la historia y listening.',
+      },
+    },
+    {
       slug: 'coach-simon',
       title: 'Тренер-Саймон',
       emoji: '🚦',

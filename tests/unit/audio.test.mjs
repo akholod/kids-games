@@ -93,6 +93,21 @@ test('audio: every lengua-mundo reading paragraph and tone sentence has a Spanis
   }
 });
 
+test('audio: every english-animals listening sentence and reading paragraph has an English clip', () => {
+  if (!fs.existsSync(path('games/english-animals/content.js'))) return;
+  const { EA_CONTENT: ea } = boot(['shared/exam/exam.js', 'shared/exam/types.js', 'games/english-animals/content.js']);
+  const texts = [
+    ...ea.stations.flatMap((s) => s.text?.paragraphs ?? []),
+    ...ea.stations.flatMap((s) => s.tasks.filter((t) => t.listen).map((t) => t.listen)),
+  ];
+  for (const t of texts) {
+    const s = slug(t);
+    assert.ok(s.length <= 60, `«${t.slice(0, 30)}…»: slug of ${s.length} characters`);
+    assert.ok([...AUDIO.en].includes(s), `en «${t.slice(0, 40)}…»: «${s}» is not in KF_AUDIO.en (run scripts/build-audio.mjs)`);
+    assert.ok(fs.statSync(path(`audio/en/${s}.mp3`)).size > 1000, `en/${s}.mp3 is empty`);
+  }
+});
+
 test('audio: manifest and audio/<lang>/ agree, slugs are sorted and unique', () => {
   assert.deepEqual(Object.keys(AUDIO).sort(), fs.readdirSync(path('audio')).sort());
   for (const [lang, list] of Object.entries(AUDIO)) {

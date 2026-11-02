@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#174d37">
+<title>Animals — Keeper Fun Games</title>
+<link rel="stylesheet" href="../../shared/kf.css">
+<link rel="stylesheet" href="../../shared/exam/exam.css">
+<style>
+/* Hub hero: a football pitch in the jungle (art.js hero) — the frog keeps goal, every passed station brings its animal fan in colour */
+.hero{grid-template-columns:minmax(0,1fr) min(330px,42%)}
+.hero-art{width:100%;transform:rotate(-1.5deg)}
+.ea-hero .ea-sk [fill]:not([fill=none]){fill:#ddd5bb!important;fill-opacity:1!important}
+.ea-hero .ea-sk [stroke]:not([stroke=none]){stroke:#cdc4a6!important;stroke-opacity:1!important}
+.ea-hero .ea-sk [opacity]{opacity:1}
+@media(prefers-reduced-motion:no-preference){
+  .ea-hero .ea-on{animation:ea-bob 2.6s ease-in-out infinite;animation-delay:calc(var(--d) * -1)}
+  .ea-hero .ea-flap{transform-box:fill-box;transform-origin:center;animation:ea-flap .5s ease-in-out infinite alternate}
+  .ea-hero .ea-glow{animation:ea-glow 1.8s ease-in-out infinite alternate}
+}
+@keyframes ea-bob{50%{transform:translateY(-3px)}}
+@keyframes ea-flap{to{transform:scaleX(.55)}}
+@keyframes ea-glow{to{opacity:.35}}
+
+/* Task art: picture cards (art.js), 4:3 */
+.art .ea-card{max-width:360px;border-radius:18px;box-shadow:0 0 0 1px oklch(0 0 0 / .1),0 8px 18px #1230201f}
+@media(max-width:600px){
+  .art .ea-card{max-height:clamp(140px,calc(100vh - 560px),210px);width:auto;max-width:100%}
+  @supports(height:100svh){.art .ea-card{max-height:clamp(140px,calc(100svh - 560px),210px)}}
+  .with-art:has(.ea-card){gap:10px}
+  /* A listening task also has the «Escuchar» row: the picture gives way */
+  #play:has(#listen:not([hidden])) .art .ea-card{max-height:clamp(120px,calc(100vh - 620px),190px)}
+  @supports(height:100svh){#play:has(#listen:not([hidden])) .art .ea-card{max-height:clamp(120px,calc(100svh - 620px),190px)}}
+}
+
+/* Label scenes (art.js scene): 600 × 400 jungle drawings */
+.scene.ea-scene .scene-svg{border-radius:18px;box-shadow:0 0 0 1px oklch(0 0 0 / .1)}
+.scene.ea-scene .slot{min-height:44px}
+
+/* Station tiles: a leaf in the corner */
+.stations .station{padding-right:36px}
+.stations .station:after{content:"";position:absolute;right:10px;top:10px;width:22px;height:22px;border-radius:2px 100% 2px 100%;background:color-mix(in srgb,var(--hue) 55%,#7fbf4a);opacity:.55;rotate:-20deg}
+
+@media(max-width:600px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .hero-art{width:min(100%,280px);justify-self:center;align-self:auto;transform:none}
+}
+</style>
+<script src="../../shared/site.js"></script>
+</head>
+<body>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Monedas" data-i18n-aria-label="coins">🪙 <span data-kf-coins>0</span></div></div></header>
+<main class="wrap game-shell" id="exam-root"></main>
+
+<script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
+<script src="../../shared/kf-ui.js"></script>
+<script src="../../shared/audio.js"></script>
+<script src="../../shared/kf-game.js"></script>
+<script src="../../shared/exam/exam.js"></script>
+<script src="../../shared/exam/types.js"></script>
+<script src="content.js"></script>
+<script src="art.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
