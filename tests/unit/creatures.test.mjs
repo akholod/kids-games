@@ -56,7 +56,7 @@ const load = ({ lang = 'uk', creatures = CREATURES, cards = FOOTBALL } = {}) => 
 
 const plain = (x) => JSON.parse(JSON.stringify(x));
 
-test('beta: without ?parent the kids get no creature collection and no creature achievements', () => {
+test('ready: without ?parent the kids get the creature collection and its achievements', () => {
   const sandbox = {
     localStorage: makeStorage(),
     sessionStorage: makeStorage(),
@@ -82,13 +82,13 @@ test('beta: without ?parent the kids get no creature collection and no creature 
   vm.runInContext(code, sandbox);
   const KF = sandbox.KF;
   assert.equal(KF.TEST_MODE, false);
-  assert.equal(KF.CREATURES.length, 0);
+  assert.equal(KF.CREATURES.length, CREATURES.length);
   KF.addCoins(50);
-  assert.equal(KF.openPack('creatures'), null);
-  assert.equal(KF.get().coins, 50, 'nothing charged');
+  assert.equal(KF.openPack('creatures').length, 3);
+  assert.equal(KF.get().coins, 50 - KF.PACK_PRICE);
   const ids = KF.ACHIEVEMENTS.map((a) => a.id);
-  for (const id of ['creatures-10', 'creatures-50', 'creatures-full', 'creature-legend']) assert.ok(!ids.includes(id), id);
-  assert.equal(load().CREATURES.length, CREATURES.length, 'on with ?parent');
+  for (const id of ['creatures-10', 'creatures-50', 'creatures-full', 'creature-legend']) assert.ok(ids.includes(id), id);
+  assert.equal(load().CREATURES.length, CREATURES.length, 'on with ?parent too');
 });
 const own = (KF, counts) => {
   Object.assign(KF.get().creatures, counts);

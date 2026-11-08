@@ -381,7 +381,7 @@
   // Creatures: the second collection (shared/creatures.js, window.KF_CREATURES, loaded on the catalog only; empty without it).
   // cat: common | rare | legend. Same pack rules as the cards.
   // 'beta' = only in test mode (?parent): no collection, no creature achievements for the kids; 'ready' = for everyone.
-  const CREATURES_STATUS = /** @type {'beta' | 'ready'} */ ('beta');
+  const CREATURES_STATUS = /** @type {'beta' | 'ready'} */ ('ready');
   const CREATURES_ON = CREATURES_STATUS === 'ready' || TEST_MODE;
   const CREATURES = CREATURES_ON && Array.isArray(window.KF_CREATURES) ? window.KF_CREATURES : [];
   const CREATURE_BY_ID = new Map(CREATURES.map((c) => [c.id, c]));

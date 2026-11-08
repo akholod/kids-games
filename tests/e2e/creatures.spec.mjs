@@ -162,14 +162,14 @@ test('deep link #creatures opens the creature album; the choice is remembered', 
   await expect(page.locator('#col-creatures')).toBeVisible();
 });
 
-test('beta: without ?parent the album has only football cards and no creature awards', async ({ page, tap }) => {
+test('ready: without ?parent the kids get the creature album and its awards', async ({ page, tap }) => {
   await page.goto('/#creatures');
   await expect(page.locator('#panel-album')).toBeVisible();
-  await expect(page.locator('#col-switch')).toBeHidden();
-  await expect(page.locator('#col-creatures')).toBeHidden();
-  await expect(page.locator('#col-football')).toBeVisible();
-  expect(await page.evaluate(() => [KF.TEST_MODE, KF.CREATURES.length])).toEqual([false, 0]);
-  expect(await page.evaluate(() => KF.ACHIEVEMENTS.some((a) => a.id.startsWith('creature')))).toBe(false);
+  await expect(page.locator('#col-switch')).toBeVisible();
+  await expect(page.locator('#col-creatures')).toBeVisible();
+  await expect(page.locator('#col-football')).toBeHidden();
+  expect(await page.evaluate(() => [KF.TEST_MODE, KF.CREATURES.length])).toEqual([false, 300]);
+  expect(await page.evaluate(() => KF.ACHIEVEMENTS.filter((a) => a.id.startsWith('creature')).length)).toBe(4);
   await tap(page.locator('#tab-games'));
 });
 
