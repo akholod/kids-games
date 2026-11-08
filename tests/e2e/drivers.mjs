@@ -14,15 +14,19 @@ export const chooseTables = async (page, tables) => {
   for (let n = 2; n <= 10; n++) if (!tables.includes(n) && (await pressed(n))) await page.click(`.chip[data-table="${n}"]`);
 };
 
-// Five kicks, every answer right. Returns when the finish screen shows.
+// Twelve kicks, every answer right. Returns the examples [a, b] it saw, when the finish screen shows.
+export const PENALTY_KICKS = 12;
 export const playPenaltyRound = async (page, tap) => {
   await tap(page.locator('#start'));
-  for (let i = 0; i < 5; i++) {
+  const seen = [];
+  for (let i = 0; i < PENALTY_KICKS; i++) {
     const [a, b] = (await page.textContent('#question')).match(/\d+/g).map(Number);
+    seen.push([a, b]);
     await tap(page.locator(`#goal button[data-value="${a * b}"]`));
     await tap(page.locator('#feedback button'));
   }
   await expect(page.locator('#finish')).toBeVisible();
+  return seen;
 };
 
 // ---------- sociales-planeta ----------

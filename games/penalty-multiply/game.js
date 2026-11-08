@@ -1,7 +1,7 @@
 'use strict';
 (() => {
   const slug = 'penalty-multiply',
-    total = 5;
+    total = 12;
   const { $, h } = KFG;
   const T = KF.i18n({
     uk: {
@@ -10,7 +10,7 @@
       back: '← До каталогу',
       eyebrow: 'Математика · ⚽',
       h1: 'Пенальті-множення',
-      sub: 'Розв’яжи приклад і натисни правильну відповідь у воротах. Попереду 5 ударів!',
+      sub: 'Розв’яжи приклад і натисни правильну відповідь у воротах. Попереду 12 ударів!',
       tables: 'Які таблиці тренуємо?',
       'tables.aria': 'Таблиці множення',
       all: 'Усі',
@@ -34,8 +34,8 @@
       'fin.good': 'Класний матч! Спробуєш ще раз?',
       'fin.zero': 'Гарне тренування! Спробуй ще раз.',
       earned: 'Зароблено {n} 🪙.',
-      'earned.bonus': 'Зароблено {n} 🪙 (є бонус за 5 голів!)',
-      'earned.hint': 'Зароблено {n} 🪙. Додай таблицю 6, 7, 8 чи 9 — і за 5 голів буде бонус!',
+      'earned.bonus': 'Зароблено {n} 🪙 (є бонус за {total} голів!)',
+      'earned.hint': 'Зароблено {n} 🪙. Додай таблицю 6, 7, 8 чи 9 — і за {total} голів буде бонус!',
       again: 'Ще раз ↗',
       catalog: 'До каталогу',
     },
@@ -45,7 +45,7 @@
       back: '← Al catálogo',
       eyebrow: 'Mates · ⚽',
       h1: 'Penaltis de multiplicar',
-      sub: 'Resuelve la multiplicación y chuta a la respuesta correcta. ¡Tienes 5 penaltis!',
+      sub: 'Resuelve la multiplicación y chuta a la respuesta correcta. ¡Tienes 12 penaltis!',
       tables: '¿Qué tablas practicamos?',
       'tables.aria': 'Tablas de multiplicar',
       all: 'Todas',
@@ -69,16 +69,16 @@
       'fin.good': '¡Buen partido! ¿Lo intentas otra vez?',
       'fin.zero': '¡Buen entrenamiento! Inténtalo otra vez.',
       earned: 'Has ganado {n} 🪙.',
-      'earned.bonus': 'Has ganado {n} 🪙 (¡con premio extra por 5 goles!)',
-      'earned.hint': 'Has ganado {n} 🪙. Añade la tabla del 6, 7, 8 o 9 y con 5 goles ganarás un premio extra.',
+      'earned.bonus': 'Has ganado {n} 🪙 (¡con premio extra por {total} goles!)',
+      'earned.hint': 'Has ganado {n} 🪙. Añade la tabla del 6, 7, 8 o 9 y con {total} goles ganarás un premio extra.',
       again: 'Otra vez ↗',
       catalog: 'Al catálogo',
     },
   });
   document.title = T('title');
   T.apply();
-  const selected = new Set([2, 3, 4, 5]);
-  const rand = (n) => Math.floor(Math.random() * n);
+  // All tables by default: the round itself keeps ×2, ×3, ×10 rare (engine.js).
+  const selected = new Set([2, 3, 4, 5, 6, 7, 8, 9, 10]);
   /** @param {Event} e @param {string} selector */
   const hit = (e, selector) => /** @type {HTMLElement | null} */ (e.target instanceof Element ? e.target.closest(selector) : null);
   let screen = 'intro';
@@ -88,13 +88,15 @@
     results = [],
     answer = 0,
     table = 0,
+    factor = 0,
+    /** @type {[number, number][]} */
+    pairs = [],
     hardRound = false,
     locked = false,
     startingCoins = 0,
     timer;
-  // Tables 2, 5 and 10 are easy: a coin for every 2 goals. The +5 bonus needs a hard table (6–9) in the round.
-  const EASY = [2, 5, 10],
-    isHard = (n) => n >= 6 && n <= 9;
+  // ×2, ×3, ×10 are easy: a coin for every 2 goals (engine.js). The +5 bonus needs a hard table (6–9) in the round.
+  const isHard = (n) => n >= 6 && n <= 9;
   function renderChips() {
     const chip = (/** @type {string} */ table, /** @type {boolean} */ on, /** @type {string} */ text) =>
       h('button', { type: 'button', class: table === 'all' ? 'chip all' : 'chip', 'aria-pressed': String(on), 'data-table': table, text });
@@ -148,11 +150,10 @@
     $('ball').style.removeProperty('--ball-y');
     $('keeper').classList.remove('dive');
     $('feedback').replaceChildren();
-    const tables = [...selected];
-    const a = KFG.pick(tables),
-      b = 2 + rand(9);
+    const [a, b] = pairs[round];
     answer = a * b;
     table = a;
+    factor = b;
     if (isHard(a)) hardRound = true;
     $('round-label').textContent = T('round', { n: round + 1, total });
     $('question').textContent = `${a} × ${b} = ?`;
@@ -170,7 +171,7 @@
     $('final-score').textContent = `${score} / ${total}`;
     const fin = score === total ? 'fin.perfect' : score > 0 ? 'fin.good' : 'fin.zero';
     const tail = result.bonus ? 'earned.bonus' : result.perfect ? 'earned.hint' : 'earned';
-    $('final-message').textContent = `${T(fin)} ${T(tail, { n: earned })}`;
+    $('final-message').textContent = `${T(fin)} ${T(tail, { n: earned, total })}`;
     if (score > 0) KFUI.confetti();
   }
   function shoot(button) {
@@ -179,7 +180,7 @@
     const good = Number(button.dataset.value) === answer;
     results.push(good);
     if (good) score++;
-    KF.answer(slug, good, { coin: EASY.includes(table) ? 0.5 : 1 });
+    KF.answer(slug, good, { coin: PenaltyEngine.coinFor(table, factor) });
     $('goal')
       .querySelectorAll('button')
       .forEach((b) => {
@@ -227,6 +228,7 @@
     score = 0;
     results = [];
     hardRound = false;
+    pairs = PenaltyEngine.round([...selected], total);
     startingCoins = KF.get().coins;
     show('play');
     next();

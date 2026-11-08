@@ -348,8 +348,8 @@ test('penalty-multiply: Enter starts, 1–3 pick a goal target, Enter = next kic
   await page.keyboard.press('Enter');
   await expect(page.locator('#play')).toBeVisible();
 
-  for (let i = 0; i < 5; i++) {
-    await expect(page.locator('#round-label')).toContainText(`${i + 1} ІЗ 5`);
+  for (let i = 0; i < 12; i++) {
+    await expect(page.locator('#round-label')).toContainText(`${i + 1} ІЗ 12`);
     const [a, b] = (await page.textContent('#question')).match(/\d+/g).map(Number);
     const at = await page.$$eval('#goal button', (bs, want) => bs.findIndex((x) => Number(x.dataset.value) === want), a * b);
     await page.keyboard.press(String(at + 1));
@@ -359,12 +359,12 @@ test('penalty-multiply: Enter starts, 1–3 pick a goal target, Enter = next kic
     await page.keyboard.press('Enter');
   }
   await expect(page.locator('#finish')).toBeVisible();
-  await expect(page.locator('#final-score')).toHaveText('5 / 5');
+  await expect(page.locator('#final-score')).toHaveText('12 / 12');
 
   // Enter on the finish screen plays again; Esc leaves the round, then the intro, for the catalog
   await page.keyboard.press('Enter');
   await expect(page.locator('#play')).toBeVisible();
-  await expect(page.locator('#round-label')).toContainText('1 ІЗ 5');
+  await expect(page.locator('#round-label')).toContainText('1 ІЗ 12');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   await expect(page).toHaveURL('/');
