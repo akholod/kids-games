@@ -64,6 +64,9 @@ kbd{font:800 .72rem/1 system-ui;color:var(--muted);background:#ffffffc0;border:1
 .play-quit{flex:none;width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:50%;background:#ffffff1a;color:#fff;font-size:1.3rem;font-weight:900;line-height:1;transition:background-color .16s,transform .16s}
 .play-quit:hover{background:#ffffff33}
 .play-quit:active{transform:scale(.96)}
+/* The round buttons of the head are 44px to the eye; their hit area reaches 48px (the 8px gaps keep hit areas apart). */
+.play-quit{position:relative}
+.play-quit:before,.play-vocab:before,.play-text:before{content:"";position:absolute;inset:-2px;border-radius:inherit}
 .play-head .label{flex:0 1 auto;min-width:0;font-weight:900;font-size:.92rem;letter-spacing:.06em;text-transform:uppercase;color:#bfe6ff}
 .play-head .label b{color:#fff}
 .goals{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:2px 12px;border-radius:100px;background:#ffffff1a;font-weight:900;font-variant-numeric:tabular-nums}
@@ -501,4 +504,16 @@ dialog::backdrop{background:#0b2a3a99}
   .chip{font-size:.95rem;min-height:50px;padding:7px 11px}
   .rrow{grid-template-columns:minmax(0,1fr) 48px 2.4em 84px;gap:8px;font-size:.92rem}
   .fb-actions .btn{width:100%}
+}
+
+/* Phones, a head that also carries 📖 / 📜: the title would wrap to many lines beside four round buttons. The buttons, cards and goals
+   take the first row; the title (one line, cut with … but «i/n» always shown; the whole title stays in the DOM) and the progress bars
+   the second. Heads without those buttons keep their layout. */
+@media(max-width:600px){
+  .play-head:has(.play-vocab,.play-text){row-gap:6px}
+  .play-head:has(.play-vocab,.play-text) .goals{margin-right:auto}
+  .play-head:has(.play-vocab,.play-text) .label{order:8;flex:1 1 55%;display:flex;align-items:baseline;gap:.35em;min-width:0;white-space:nowrap}
+  .play-head:has(.play-vocab,.play-text) .label-title{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .play-head:has(.play-vocab,.play-text) .label b{flex:none}
+  .play-head:has(.play-vocab,.play-text) .dots{order:9;flex:0 1 30%;align-self:center;justify-content:flex-end}
 }
