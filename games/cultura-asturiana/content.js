@@ -72,7 +72,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         id: 'lectura',
         title: 'La vaqueira y la princesa',
         icon: '📖',
-        intro: 'Lee el cuento de Etelvina, la vaqueira, y de Cristina, la princesa. Las dos se cansan de su vida y se marchan.',
+        intro: 'Etelvina, la vaqueira, y Cristina, la princesa, se cansan de su vida y se marchan.',
         vocab: [
           ['la vaqueira', 'пастушка корів у горах Астурії'],
           ['la braña', 'високогірне пасовище'],
@@ -94,13 +94,11 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         text: {
           title: 'La vaqueira y la princesa',
           paragraphs: [
-            'Hace mucho tiempo, en una aldea muy pobre, en lo alto de la braña, vivía una vaqueira llamada Etelvina.',
-            'Cada día madrugaba mucho. Amasaba el pan, hervía la leche, daba de comer a los cerdos, recogía los huevos del gallinero y cuidaba la huerta. Si le sobraba un rato, remendaba calcetines y zurcía sábanas.',
-            'Un día dijo: «¡Estoy cansada de trabajar desde que sale el sol hasta que se pone! Quiero conocer otros sitios, ganar dinero y vivir mejor».',
-            'Sus padres se asustaron y le hablaron de los peligros del camino, pero ella no cambió de idea. Envolvió ropa limpia y una hogaza en un fardo y se marchó.',
-            'Muy lejos de allí, en un castillo junto al mar, vivía la princesa Cristina. Cada mañana, después del desayuno, sus preceptores le daban clases de piano, francés, bordado y buenas maneras.',
-            'Cristina también estaba harta: en el castillo nunca pasaba nada. Soñaba con viajar a los países lejanos de los libros y conocer príncipes encantados.',
-            'Metió en una bolsa grande sus peines de plata y sus babuchas de seda y, cuando los guardianes se despistaron, salió corriendo al campo.',
+            'Etelvina era una vaqueira. Vivía en una aldea pobre, en lo alto de la braña.',
+            'Madrugaba y trabajaba todo el día: amasaba el pan, hervía la leche, recogía los huevos y remendaba calcetines.',
+            'Un día se cansó: quería ganar dinero y vivir mejor. Sus padres le hablaron de los peligros, pero ella metió ropa limpia y una hogaza en un fardo y se fue.',
+            'La princesa Cristina vivía en un castillo junto al mar. Sus preceptores le daban clases de piano, francés, bordado y buenas maneras.',
+            'Se aburría y soñaba con países lejanos. Metió peines de plata y babuchas de seda en una bolsa y se escapó de los guardianes.',
           ],
           notes: [
             ['vaqueira', 'pastora de vacas de la montaña asturiana'],
@@ -135,12 +133,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'choice',
             q: '¿Qué clases tenía Cristina?',
-            options: [
-              'Piano, francés, bordado y buenas maneras',
-              'Fútbol, natación, judo y baloncesto',
-              'Matemáticas, inglés, música y dibujo',
-              'Cocina, costura, huerta y granja',
-            ],
+            options: ['Piano, francés y bordado', 'Fútbol, judo y natación', 'Inglés, música y dibujo', 'Cocina, costura y huerta'],
             answer: 0,
             key: 'clases',
           },
@@ -226,26 +219,26 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'Cristina se escapó en un descuido de los guardianes.',
+            passage: 'Cristina se escapó de los guardianes.',
             truth: true,
           },
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'Los padres de Etelvina se pusieron muy contentos cuando se fue.',
+            passage: 'A los padres de Etelvina les gustó que se fuera.',
             truth: false,
             fix: 'Sus padres se asustaron y le hablaron de los peligros del camino.',
           },
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'Etelvina quería conocer otros sitios, ganar dinero y vivir mejor.',
+            passage: 'Etelvina quería ganar dinero y vivir mejor.',
             truth: true,
           },
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'Cristina quería ir a países lejanos y conocer príncipes encantados.',
+            passage: 'Cristina soñaba con países lejanos.',
             truth: true,
           },
           {
@@ -287,12 +280,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'choice',
             q: '¿Qué es una vaqueira?',
-            options: [
-              'Una pastora de vacas de la montaña',
-              'Una princesa de un castillo',
-              'Una maestra de piano',
-              'Una vendedora del mercado',
-            ],
+            options: ['Una pastora de vacas', 'Una princesa', 'Una maestra de piano', 'Una vendedora'],
             answer: 0,
           },
           {
@@ -353,7 +341,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         id: 'caseria',
         title: 'La casería y los refranes',
         icon: '🌽',
-        intro: 'Aprende las partes de la casería asturiana y los refranes que dicen qué se siembra y qué se recoge cada mes.',
+        intro: 'Las partes de la casería y los refranes de cada mes.',
         vocab: [
           ['la casería', 'астурійський хутір, садиба'],
           ['la panera', 'комора на стовпах'],
@@ -375,14 +363,11 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         text: {
           title: 'La casería y los refranes',
           paragraphs: [
-            'Alrededor de una casa de campo asturiana hay muchas partes. La panera es como una casita de madera subida en pilares. El piteru es el gallinero. En la cuadra viven las vacas.',
-            'En la güerta crecen las verduras y en el maizal, el maíz. En el llagar están las barricas de la sidra.',
-            'Los refranes son frases antiguas que dan consejos. Algunos dicen cuándo hay que sembrar y cuándo hay que recoger.',
-            '«Los nabos en xunetu tienen que ser semaos»: en julio se siembran los nabos.',
-            '«Hasta la lluna d’abril nunca semes el maíz»: el maíz no se siembra antes de la luna de abril.',
-            '«Si quies tener bon pataqueru, sema a menguante la lluna febreru»: las patatas se siembran en febrero, con la luna menguante.',
-            '«N’agostu cueye’l miel y guarda’l mostiu»: en agosto se recoge la miel y se guarda el mosto.',
-            '«Les mazanes pa setiembre y les castañes pa noviembre»: las manzanas se recogen en septiembre y las castañas, en noviembre.',
+            'La casería tiene muchas partes: la panera, en alto sobre pilares; el piteru, que es el gallinero; la cuadra de las vacas; la güerta, que es la huerta; el maizal y el llagar de la sidra.',
+            'Los refranes dicen cuándo sembrar y cuándo recoger.',
+            'En febrero se siembran las patatas; en abril, el maíz; y en julio, que es xunetu, los nabos.',
+            'En agosto se recoge la miel y se guarda el mosto; en septiembre, las manzanas; y en noviembre, las castañas.',
+            'En asturiano, semar es sembrar y coyer es recoger.',
           ],
           notes: [
             ['semar', 'sembrar'],
@@ -525,7 +510,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'calendar',
-            q: 'Según los refranes, ¿en qué mes se siembra o se recoge cada cosa?',
+            q: 'Refranes: ¿en qué mes va cada cosa?',
             months: ['febrero', 'abril', 'julio', 'agosto', 'septiembre', 'noviembre'],
             astur: ASTUR_MONTHS,
             items: [
@@ -540,7 +525,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'calendar',
-            q: 'Según los refranes, ¿en qué mes se siembra cada cosa?',
+            q: '¿En qué mes se siembra cada cosa?',
             months: ['febrero', 'abril', 'julio'],
             astur: ASTUR_MONTHS,
             items: [
@@ -552,7 +537,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'calendar',
-            q: 'Según los refranes, ¿en qué mes se recoge cada cosa?',
+            q: '¿En qué mes se recoge cada cosa?',
             months: ['agosto', 'septiembre', 'noviembre'],
             astur: ASTUR_MONTHS,
             items: [
@@ -564,7 +549,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: 'Lee el refrán. ¿Cuándo se siembran los nabos?',
+            q: '¿Cuándo se siembran los nabos?',
             passage: '«Los nabos en xunetu tienen que ser semaos.»',
             options: ['En julio', 'En febrero', 'En agosto', 'En noviembre'],
             answer: 0,
@@ -572,7 +557,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: 'Lee el refrán. ¿Qué no hay que sembrar antes de la luna de abril?',
+            q: '¿Qué no se siembra antes de abril?',
             passage: '«Hasta la lluna d’abril nunca semes el maíz.»',
             options: ['El maíz', 'Los nabos', 'Las patatas', 'Las castañas'],
             answer: 0,
@@ -580,7 +565,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: 'Lee el refrán. ¿Cuándo se siembran las patatas?',
+            q: '¿Cuándo se siembran las patatas?',
             passage: '«Si quies tener bon pataqueru, sema a menguante la lluna febreru.»',
             options: [
               'En febrero, con luna menguante',
@@ -593,7 +578,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: 'Lee el refrán. ¿Qué se recoge en agosto?',
+            q: '¿Qué se recoge en agosto?',
             passage: '«N’agostu cueye’l miel y guarda’l mostiu.»',
             options: ['La miel', 'Las castañas', 'Las manzanas', 'Los nabos'],
             answer: 0,
@@ -601,7 +586,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: 'Lee el refrán. ¿Qué se guarda en agosto?',
+            q: '¿Qué se guarda en agosto?',
             passage: '«N’agostu cueye’l miel y guarda’l mostiu.»',
             art: 'mosto',
             options: ['El mosto', 'La leche', 'El queso', 'El pan'],
@@ -610,7 +595,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: 'Lee el refrán. ¿Qué se recoge en noviembre?',
+            q: '¿Qué se recoge en noviembre?',
             passage: '«Les mazanes pa setiembre y les castañes pa noviembre.»',
             options: ['Las castañas', 'Las manzanas', 'La miel', 'El maíz'],
             answer: 0,
@@ -672,7 +657,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         id: 'vacas',
         title: 'La vaca asturiana',
         icon: '🐄',
-        intro: 'Conoce las vacas de Asturias: dos razas autóctonas y dos que vinieron de fuera. Y cocina un cachopo.',
+        intro: 'Las vacas de Asturias y la receta del cachopo.',
         vocab: [
           ['la vaca', 'корова'],
           ['la raza', 'порода'],
@@ -697,12 +682,11 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         text: {
           title: 'La vaca en Asturias',
           paragraphs: [
-            'La vaca es un animal muy importante en la cultura asturiana. Antes ayudaba en el campo: tiraba del arado y del carro. Hoy se cría en ganaderías para dar leche y carne.',
-            'Hay dos razas autóctonas, es decir, de Asturias: la asturiana de los valles, o carreñana, y la asturiana de la montaña, o casina.',
-            'La carreñana tiene el pelo castaño o caoba, pesa unos 600 kilos y da una carne excelente. La casina también es castaña, pesa unos 500 kilos y da buena carne y leche. Con su leche se hacen los quesos de Casín, Beyos y Gamonedo.',
-            'Otras razas vinieron de fuera. La frisona, blanca y negra, llegó del centro de Europa y da mucha leche. La ratina, o parda alpina, viene de los Alpes y se adapta bien a nuestras montañas.',
-            'En Asturias hay más de 22 000 explotaciones de vacas y más de 400 000 cabezas de ganado. Las vacas comen hierba de los prados, maíz y pienso. Con la leche también se hacen mantequilla, queso y yogures.',
-            'Con la carne de ternera se cocina el cachopo: dos filetes con jamón y queso dentro, pasados por harina, huevo y pan rallado y fritos en aceite caliente. Los mejores filetes son los de «ternera roxa asturiana».',
+            'La vaca es muy importante en Asturias. Antes tiraba del arado y del carro; hoy da leche y carne.',
+            'Dos razas son de Asturias: la carreñana, de los valles, castaña y de unos 600 kilos; y la casina, de la montaña, de unos 500 kilos. Con su leche se hacen los quesos de Casín, Beyos y Gamonedo.',
+            'Dos vinieron de fuera: la frisona, blanca y negra, del centro de Europa; y la parda alpina o ratina, de los Alpes.',
+            'Hay más de 22 000 granjas y más de 400 000 vacas. Comen hierba, maíz y pienso. Con la leche se hacen mantequilla, queso y yogures.',
+            'El cachopo: dos filetes de ternera roxa asturiana con jamón y queso, pasados por harina, huevo y pan rallado, y fritos.',
           ],
           notes: [
             ['autóctona', 'que es de aquí desde siempre'],
@@ -712,11 +696,8 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           ],
         },
         tasks: [
-          cowClues(['Soy autóctona de Asturias.', 'Tengo el pelo castaño o caoba.', 'Peso unos 600 kilos y vivo en los valles.'], 0),
-          cowClues(
-            ['Soy autóctona de Asturias.', 'Vivo en la montaña.', 'Con mi leche se hacen los quesos de Casín, Beyos y Gamonedo.'],
-            1,
-          ),
+          cowClues(['Soy de Asturias.', 'Tengo el pelo castaño o caoba.', 'Peso unos 600 kilos.'], 0),
+          cowClues(['Soy de Asturias.', 'Vivo en la montaña.', 'Con mi leche se hace queso de Gamonedo.'], 1),
           cowClues(['No soy de Asturias.', 'Vengo del centro de Europa.', 'Soy blanca y negra.'], 2),
           cowClues(['No soy de Asturias.', 'Vengo de las montañas de los Alpes.', 'También me llaman ratina.'], 3),
           cowPick('¿Cuál es la vaca frisona?', 2, 'La frisona es blanca y negra y viene del centro de Europa.'),
@@ -791,13 +772,8 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: '¿En qué se diferencia la carreñana de la frisona?',
-            options: [
-              'La carreñana es castaña; la frisona, blanca y negra',
-              'La carreñana es blanca; la frisona, roja',
-              'La carreñana es de Europa; la frisona, de Asturias',
-              'La carreñana vuela; la frisona nada',
-            ],
+            q: '¿De qué color son? Carreñana / frisona',
+            options: ['Castaña / blanca y negra', 'Blanca y negra / castaña', 'Gris / blanca y negra', 'Roja / gris y blanca'],
             answer: 0,
           },
           {
@@ -833,7 +809,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'feed',
-            q: '¿Qué productos se hacen con la leche? Mételos en la cesta.',
+            q: '¿Qué se hace con la leche? Mételo en la cesta.',
             who: 'cesta',
             items: [
               { text: 'Mantequilla', art: 'mantequilla', ok: true },
@@ -871,13 +847,13 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'La ratina o parda alpina se adapta bien a las montañas asturianas.',
+            passage: 'La parda alpina vive bien en las montañas de Asturias.',
             truth: true,
           },
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'Las vacas asturianas comen hierba de los prados, maíz y pienso.',
+            passage: 'Las vacas comen hierba, maíz y pienso.',
             truth: true,
             key: 'comida-vaca',
           },
@@ -970,8 +946,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         id: 'gochu',
         title: 'El gochu y los embutidos',
         icon: '🐖',
-        intro:
-          'El cerdo, el gochu, es muy importante en la cocina asturiana. Aprende qué come, cómo se conserva su carne y qué embutidos se hacen.',
+        intro: 'Qué come el gochu, cómo se guarda su carne y los embutidos.',
         vocab: [
           ['el cerdo (el gochu)', 'свиня'],
           ['la bellota (abeyota)', 'жолудь'],
@@ -995,12 +970,10 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         text: {
           title: 'El cerdo en Asturias',
           paragraphs: [
-            'El cerdo es otro animal muy importante en la cocina asturiana. Desde hace muchísimo tiempo forma parte de lo que comemos.',
-            'Antes, cada familia criaba su cerdo en casa. Comía cosas del bosque, como bellotas y castañas, y de la huerta, como nabos, berzas, remolachas y maíz.',
-            'La matanza se hacía por san Martín, el 11 de noviembre. Para que la carne durara, se ahumaba, como los chorizos, las morcillas y las longanizas, o se guardaba en sal, como el jamón, la panceta y el lacón.',
-            'Asturias tiene su propio cerdo: el gochu astur-celta. Es de color rosado y negro y su carne es muy buena.',
-            'Con el cerdo se hacen muchos embutidos. El chorizo lleva carne y tocino, pimentón, orégano y ajo. La morcilla lleva sangre, cebolla y tocino. Los dos se ahúman con madera de roble.',
-            'La moscancia es una morcilla ahumada para el pote o la fabada. El pantruque, con harina de maíz y huevo, es un rollo grueso que se toma en la fabada. El sabadiego es una longaniza. Y el chosco de Tineo es un rollo de casi un kilo que se come hervido.',
+            'El cerdo, o gochu, es muy importante en la cocina asturiana. Antes comía bellotas, castañas, nabos, berzas, remolachas y maíz.',
+            'La matanza era en san Martín, el 11 de noviembre. La carne se ahumaba con roble, como el chorizo y la morcilla, o se guardaba en sal, como el jamón, la panceta y el lacón.',
+            'El cerdo de Asturias es el gochu astur-celta: rosado y negro.',
+            'Embutidos: el chorizo, con pimentón y ajo; la morcilla, con sangre y cebolla; la moscancia y el pantruque, para la fabada; el sabadiego, una longaniza; y el chosco de Tineo, un rollo de un kilo que se come hervido.',
           ],
           notes: [
             ['gochu', 'cerdo'],
@@ -1056,10 +1029,10 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
             type: 'choice',
             q: '¿Cuándo se hacía la matanza del cerdo?',
             options: [
-              'En san Martín, el 11 de noviembre',
-              'En san Juan, el 24 de junio',
-              'En Navidad, el 25 de diciembre',
-              'En verano, el 1 de agosto',
+              'El 11 de noviembre, san Martín',
+              'El 24 de junio, san Juan',
+              'El 25 de diciembre, Navidad',
+              'El 1 de agosto, en verano',
             ],
             answer: 0,
             key: 'matanza',
@@ -1094,11 +1067,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'clues',
             q: WHO_SAUSAGE,
-            clues: [
-              'Me hacen con carne de cerdo y tocino.',
-              'Llevo pimentón dulce y picante, orégano y ajo.',
-              'Me ahúman con madera de roble.',
-            ],
+            clues: ['Soy de carne de cerdo y tocino.', 'Llevo pimentón, orégano y ajo.', 'Me ahúman con roble.'],
             options: ['chorizo', 'morcilla', 'pantruque', 'chosco'],
             labels: ['Chorizo', 'Morcilla', 'Pantruque', 'Chosco de Tineo'],
             pics: true,
@@ -1138,7 +1107,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'clues',
             q: WHO_SAUSAGE,
-            clues: ['Soy un tipo de morcilla.', 'Estoy ahumada.', 'Me comen cocida en el pote o en la fabada.'],
+            clues: ['Soy un tipo de morcilla.', 'Estoy ahumada.', 'Me comen en el pote o la fabada.'],
             options: ['moscancia', 'sabadiego', 'chosco', 'chorizo'],
             labels: ['Moscancia', 'Sabadiego', 'Chosco de Tineo', 'Chorizo'],
             pics: true,
@@ -1148,7 +1117,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'clues',
             q: WHO_SAUSAGE,
-            clues: ['Soy una longaniza.', 'Llevo magro, tocino, sangre y especias.', 'Me toman frito, asado o en cocidos y potes.'],
+            clues: ['Soy una longaniza.', 'Llevo magro, tocino y sangre.', 'Me comen frito o asado.'],
             options: ['sabadiego', 'chorizo', 'moscancia', 'pantruque'],
             labels: ['Sabadiego', 'Chorizo', 'Moscancia', 'Pantruque'],
             pics: true,
@@ -1159,19 +1128,19 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
             type: 'pairs',
             q: 'Une cada embutido con lo que lleva o cómo es.',
             pairs: [
-              ['Chorizo', 'Pimentón, orégano y ajo'],
-              ['Morcilla', 'Sangre de cerdo y cebolla'],
+              ['Chorizo', 'Pimentón y ajo'],
+              ['Morcilla', 'Sangre y cebolla'],
               ['Pantruque', 'Harina de maíz y huevo'],
-              ['Chosco de Tineo', 'Un rollo de casi un kilo'],
+              ['Chosco de Tineo', 'Un rollo de un kilo'],
             ],
           },
           {
             type: 'pairs',
             q: 'Une cada embutido con cómo se come.',
             pairs: [
-              ['Moscancia', 'Cocida en el pote o la fabada'],
+              ['Moscancia', 'En el pote'],
               ['Pantruque', 'En la fabada'],
-              ['Sabadiego', 'Frito, asado o en cocidos'],
+              ['Sabadiego', 'Frito o asado'],
               ['Chosco de Tineo', 'Hervido'],
             ],
           },
@@ -1271,8 +1240,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         id: 'samartin',
         title: 'El Samartín',
         icon: '🍂',
-        intro:
-          'El Samartín es la fiesta de san Martín, el 11 de noviembre, el tiempo de la matanza. Conoce la fiesta de Moreda de Aller y el Día del Gochu de Noreña.',
+        intro: 'El 11 de noviembre: la matanza, Moreda de Aller y Noreña.',
         vocab: [
           ['la fiesta', 'свято'],
           ['la matanza', 'забій свині'],
@@ -1294,14 +1262,10 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         text: {
           title: 'El Samartín',
           paragraphs: [
-            'El Samartín es la fiesta de san Martín, el 11 de noviembre. Por esas fechas se hacía la matanza del cerdo.',
-            'Unas semanas antes, el cerdo comía muchas castañas para engordar. El día de la matanza, hombres y mujeres se repartían el trabajo. Del cerdo se aprovechaba todo: la carne se salaba o se convertía en embutidos.',
-            'Un bocado muy rico es el bollu preñáu: un panecillo con un chorizo dentro. Se come en las fiestas al aire libre.',
-            'En Moreda de Aller, el 11 de noviembre, se celebra una fiesta muy famosa: la Fiesta de los Humanitarios. La organiza la Sociedad Humanitarios de San Martín, que nació para ayudar a los vecinos con problemas.',
-            'Ese día se subastan panes de escanda y embutidos, la puya l’ramu, y desfilan carrozas con música y baile. Se come fabada, casadielles y panchón, un postre típico de Aller.',
-            'También hay una Muestra de Música Tradicional con dos premios: la Colmena de oro a la Solidaridad y la Espiga de oro a la Tradición.',
-            'En Noreña, famosa por sus productos del cerdo, a mediados de septiembre se celebra el Día del Gochu. Lo organiza la Orden del Sabadiego y se prueban platos de cerdo, como los chorizos sabadiegos o el adobo.',
-            'Moreda y Noreña están en el centro de Asturias, en el interior, lejos de la costa.',
+            'El Samartín es el 11 de noviembre, el tiempo de la matanza. Antes, el cerdo comía castañas para engordar. Hombres y mujeres se repartían el trabajo y del cerdo se aprovechaba todo.',
+            'El bollu preñáu es un pan pequeño con un chorizo dentro. Se come en las fiestas al aire libre.',
+            'En Moreda de Aller es la Fiesta de los Humanitarios, de una sociedad que ayuda a los vecinos. Hay subasta de panes y embutidos, la puya l’ramu, carrozas, fabada, casadielles y panchón. Los premios son la Colmena de oro, a la Solidaridad, y la Espiga de oro, a la Tradición.',
+            'Noreña es famosa por sus productos del cerdo. En septiembre, la Orden del Sabadiego organiza allí el Día del Gochu. Moreda y Noreña están en el centro de Asturias, en el interior.',
           ],
           notes: [
             ['cebar', 'dar mucha comida a un animal para que engorde'],
@@ -1319,19 +1283,14 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: '¿Con qué se cebaba al cerdo las semanas antes de la matanza?',
+            q: '¿Qué comía el cerdo antes de la matanza?',
             options: ['Con castañas', 'Con pescado', 'Con caramelos', 'Con chorizo'],
             answer: 0,
           },
           {
             type: 'choice',
             q: '¿Qué es el bollu preñáu?',
-            options: [
-              'Un pan pequeño con chorizo dentro',
-              'Un pastel de manzana con nata',
-              'Un queso de vaca casina',
-              'Una sopa de nabos y berzas',
-            ],
+            options: ['Un pan con chorizo dentro', 'Un pastel de manzana', 'Un queso de vaca', 'Una sopa de nabos'],
             answer: 0,
             key: 'bollu',
           },
@@ -1354,19 +1313,19 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: '¿Cómo se llama también el Samartín de Moreda de Aller?',
+            q: '¿Cómo se llama la fiesta de Moreda de Aller?',
             options: ['Fiesta de los Humanitarios', 'Fiesta de los Gaiteros', 'Fiesta de las Castañas', 'Fiesta de los Pescadores'],
             answer: 0,
             key: 'humanitarios',
           },
           {
             type: 'choice',
-            q: '¿Para qué se creó la Sociedad Humanitarios de San Martín?',
+            q: '¿Para qué es la Sociedad Humanitarios?',
             options: [
-              'Para ayudar a los vecinos con problemas',
-              'Para criar vacas en la montaña',
-              'Para tocar la gaita en las bodas',
-              'Para construir paneras nuevas',
+              'Para ayudar a los vecinos',
+              'Para criar vacas en el monte',
+              'Para tocar la gaita en bodas',
+              'Para hacer paneras nuevas',
             ],
             answer: 0,
             key: 'humanitarios',
@@ -1375,12 +1334,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
             type: 'choice',
             q: '¿Qué es la puya l’ramu?',
             art: 'escanda',
-            options: [
-              'Una subasta de panes y embutidos',
-              'Un baile alrededor del fuego',
-              'Un desfile de vacas por el pueblo',
-              'Un juego de saltar a la pata coja',
-            ],
+            options: ['Una subasta de panes', 'Un baile junto al fuego', 'Un desfile de vacas', 'Un juego de saltar'],
             answer: 0,
             key: 'puya',
           },
@@ -1396,7 +1350,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: 'En la Muestra de Música Tradicional de Moreda, ¿qué premio va a la Solidaridad?',
+            q: '¿Qué premio de Moreda es a la Solidaridad?',
             options: ['colmena', 'espiga', 'gaita'],
             labels: ['La Colmena de oro', 'La Espiga de oro', 'La Gaita de oro'],
             pics: true,
@@ -1490,7 +1444,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'En el Samartín de Moreda desfilan carrozas con música y baile.',
+            passage: 'En el Samartín de Moreda desfilan carrozas.',
             truth: true,
           },
           {
@@ -1503,7 +1457,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'Los hombres y las mujeres se repartían el trabajo de la matanza.',
+            passage: 'Hombres y mujeres se repartían el trabajo de la matanza.',
             truth: true,
           },
           {
@@ -1544,7 +1498,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         id: 'sanxuan',
         title: 'El San Xuan',
         icon: '🔥',
-        intro: 'La noche del 23 al 24 de junio, Asturias celebra la Nueche de San Xuan con hogueras, agua, plantas y seres mágicos.',
+        intro: 'La noche del 23 al 24 de junio: hogueras, agua, plantas y seres mágicos.',
         vocab: [
           ['la noche', 'ніч'],
           ['el verano', 'літо'],
@@ -1569,14 +1523,12 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         text: {
           title: 'La Nueche de San Xuan',
           paragraphs: [
-            'La noche del 23 al 24 de junio es la Nueche de San Xuan. Es una fiesta muy antigua que celebra la llegada del verano, el 21 de junio. También se celebra en Portugal, Noruega, Suecia y el Reino Unido.',
-            'Al atardecer se encienden hogueras, «les fogueres». En el fuego se queman los malos deseos y los malos recuerdos para empezar de nuevo. Alrededor de la hoguera se baila la Danza Prima.',
-            'El agua también es importante: la gente se baña en ríos, fuentes o playas para que el agua le traiga salud y proteja los campos y las cosechas.',
-            'Cuentan las leyendas que esa noche las xanas salen de las fuentes para peinar su larga melena y ofrecer tesoros. ¡Y también se puede ver bailar al cuélebre!',
-            'Las fuentes y las casas se enraman con plantas del bosque. El saúco protege la casa y aleja la mala suerte. El trébol trae suerte, fortuna y éxito. La verbena evita los males y ayuda a las cosechas.',
-            'En Mieres hay una gran fiesta toda la semana, con competiciones, desfiles y concursos. El día 23 se enraman todas las fuentes y por la tarde se hace la cargueña: se lleva leña y trapos viejos para la hoguera, como se hacía antes.',
-            'Por la noche hay fuegos artificiales y, a las doce, se enciende la hoguera. La gente baila la Danza Prima alrededor del fuego y lanza papeles con deseos para que se cumplan.',
-            'El ciclo festivo de Asturias: en febrero, el Antroxu; en junio, el San Xuan; en noviembre, el Amagüestu, la fiesta de las castañas, y el Samartín.',
+            'La Nueche de San Xuan es la noche del 23 al 24 de junio. Celebra la llegada del verano, también en otros países de Europa.',
+            'Se encienden hogueras, «les fogueres», para quemar los malos deseos, y se baila la Danza Prima. La gente se baña en ríos, fuentes o playas para tener salud.',
+            'Esa noche salen las xanas de las fuentes y baila el cuélebre.',
+            'Fuentes y casas se enraman con plantas: el saúco protege la casa, el trébol trae suerte y la verbena ayuda a las cosechas.',
+            'En Mieres, la cargueña lleva leña y trapos a la hoguera. A las doce se enciende y se lanzan papeles con deseos.',
+            'Fiestas del año: el Antroxu en febrero, San Xuan en junio, y el Amagüestu, con castañas, y el Samartín en noviembre.',
           ],
           notes: [
             ['fogueres', 'hogueras, en asturiano'],
@@ -1623,12 +1575,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'choice',
             q: '¿Qué hacen las xanas la noche de San Xuan?',
-            options: [
-              'Peinan su pelo y ofrecen tesoros',
-              'Tocan la gaita en la plaza',
-              'Encienden la hoguera del pueblo',
-              'Recogen castañas en el bosque',
-            ],
+            options: ['Se peinan y dan tesoros', 'Tocan la gaita', 'Encienden la hoguera', 'Recogen castañas'],
             answer: 0,
             key: 'xana',
           },
@@ -1649,20 +1596,15 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: '¿Para qué se baña la gente en ríos, fuentes o playas?',
-            options: [
-              'Para tener salud y proteger las cosechas',
-              'Para quitarse el calor del verano',
-              'Para pescar truchas y salmones',
-              'Para jugar al cascayu en el agua',
-            ],
+            q: '¿Para qué se baña la gente esa noche?',
+            options: ['Para tener salud', 'Para pescar truchas', 'Para lavar la ropa', 'Para jugar al cascayu'],
             answer: 0,
             key: 'agua',
           },
           {
             type: 'clues',
             q: WHO_PLANT,
-            clues: ['Me ponen en casas y fuentes.', 'Tengo muchas florecitas blancas.', 'Protejo la casa y alejo la mala suerte.'],
+            clues: ['Me ponen en las casas.', 'Tengo florecitas blancas.', 'Alejo la mala suerte.'],
             options: PLANTS,
             labels: PLANT_NAMES,
             pics: true,
@@ -1672,7 +1614,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'clues',
             q: WHO_PLANT,
-            clues: ['Me recogen la noche de San Xuan.', 'Mis hojas son verdes y redonditas.', 'Traigo suerte, fortuna y éxito.'],
+            clues: ['Me recogen en San Xuan.', 'Mis hojas son verdes y redonditas.', 'Traigo suerte.'],
             options: PLANTS,
             labels: PLANT_NAMES,
             pics: true,
@@ -1682,7 +1624,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'clues',
             q: WHO_PLANT,
-            clues: ['Me ponen en las fuentes.', 'Tengo flores moradas.', 'Evito los males y ayudo a las cosechas.'],
+            clues: ['Me ponen en las fuentes.', 'Tengo flores moradas.', 'Ayudo a las cosechas.'],
             options: PLANTS,
             labels: PLANT_NAMES,
             pics: true,
@@ -1700,20 +1642,15 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: '¿Qué se hace con las ramas de saúco, trébol y verbena?',
+            q: '¿Para qué son el saúco, el trébol y la verbena?',
             art: 'fuente',
-            options: [
-              'Se enraman las fuentes y las casas',
-              'Se hace una ensalada para cenar',
-              'Se queman para hacer humo',
-              'Se dan de comer a las vacas',
-            ],
+            options: ['Adornar fuentes y casas', 'Hacer una ensalada', 'Hacer humo en la hoguera', 'Dárselas a las vacas'],
             answer: 0,
             key: 'enramar',
           },
           {
             type: 'choice',
-            q: '¿Cómo se llama en Mieres la tradición de llevar leña y trapos viejos para la hoguera?',
+            q: 'En Mieres, ¿cómo se llama llevar leña a la hoguera?',
             options: ['La cargueña', 'La puya l’ramu', 'La Danza Prima', 'El Antroxu'],
             answer: 0,
             key: 'carguena',
@@ -1771,7 +1708,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'La fiesta de San Xuan solo se celebra en Asturias.',
+            passage: 'San Xuan solo se celebra en Asturias.',
             truth: false,
             fix: 'También se celebra en Portugal, Noruega, Suecia o el Reino Unido.',
           },
@@ -1811,7 +1748,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
               { text: 'San Xuan es la noche del 23 al 24 de junio.', truth: true },
               { text: 'Alrededor de la hoguera se baila la Danza Prima.', truth: true },
               { text: 'El saúco trae mala suerte a la casa.', truth: false },
-              { text: 'Esa noche la gente se baña en ríos, fuentes o playas.', truth: true },
+              { text: 'Esa noche la gente se baña en ríos y fuentes.', truth: true },
             ],
           },
         ],
@@ -1822,7 +1759,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         id: 'gaita',
         title: 'La gaita y la Danza Prima',
         icon: '🎶',
-        intro: 'Aprende las partes de la gaita asturiana, cómo se baila la Danza Prima y la canción «Al coger el trébole».',
+        intro: 'Las partes de la gaita, la Danza Prima y «Al coger el trébole».',
         vocab: [
           ['la gaita', 'волинка'],
           ['el gaitero', 'волинщик'],
@@ -1843,12 +1780,10 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         text: {
           title: 'La gaita y la Danza Prima',
           paragraphs: [
-            'En las fiestas de Asturias tocan muchas veces los grupos folclóricos. Uno de sus instrumentos es la gaita.',
-            'La gaita es un instrumento de viento: tiene varios tubos unidos a una bolsa llena de aire.',
-            'Sus partes son cuatro. El soplete es el tubo por el que sopla el gaitero para hinchar la bolsa. El puntero es un tubo con agujeros para tocar la música. El roncón es un tubo largo que suena sin parar. Y el fuelle es la bolsa de aire que el gaitero aprieta con el brazo.',
-            '¿Sabías que la gaita asturiana es más grande que la gallega? Por eso suena distinto.',
-            'La Danza Prima es un baile en corro: los bailarines se cogen de las manos y suben y bajan los brazos a cada paso. Su canción empieza así: «¡Ai, un galán d’esta villa!».',
-            '«Al coger el trébole» es una canción de origen asturiano. Recuerda la costumbre de coger tréboles la noche de San Xuan.',
+            'La gaita es un instrumento de viento: tubos unidos a una bolsa de aire. La tocan los grupos folclóricos en las fiestas.',
+            'Sus partes: el soplete, para soplar; el puntero, con agujeros para tocar; el roncón, un tubo largo que suena sin parar; y el fuelle, la bolsa que se aprieta con el brazo.',
+            'La gaita asturiana es más grande que la gallega.',
+            'La Danza Prima se baila en corro, de la mano, subiendo y bajando los brazos. Empieza así: «¡Ai, un galán d’esta villa!». «Al coger el trébole» es una canción de San Xuan.',
           ],
           notes: [
             ['gaitero', 'el que toca la gaita'],
@@ -2010,7 +1945,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'choice',
-            q: 'La canción dice: «Al uso de mi tierra toco el…». ¿Qué instrumento?',
+            q: 'En «Al coger el trébole», ¿qué toca el que canta?',
             options: ['Pandero', 'Piano', 'Violín', 'Tambor'],
             answer: 0,
             key: 'trebole',
@@ -2040,7 +1975,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'Los grupos folclóricos amenizan muchas fiestas asturianas.',
+            passage: 'Los grupos folclóricos tocan en las fiestas.',
             truth: true,
           },
           {
@@ -2075,7 +2010,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         id: 'juegos',
         title: 'Encadenados y cascayu',
         icon: '🪨',
-        intro: 'Los encadenados son cuentos sin fin. Y el cascayu es la rayuela asturiana: ¡tiza, piedra y a la pata coja!',
+        intro: 'Cuentos sin fin y la rayuela asturiana.',
         vocab: [
           ['el juego', 'гра'],
           ['el encadenado', 'казка-ланцюжок без кінця'],
@@ -2096,13 +2031,10 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
         text: {
           title: 'Encadenados y cascayu',
           paragraphs: [
-            'Los encadenados son cuentos que no terminan nunca: cuando parece que acaban, vuelven a empezar.',
-            'Uno muy conocido es «El cuentu de Perico Formientu»: «¿Contaréte’l cuentu de Perico Formientu, que foi cazar y llevólu’l vientu?». Si dices «sí», te contestan: «Yo nun digo “sí”, yo digo…», ¡y vuelta a empezar!',
-            'Otro encadenado: «Una vez yera un gatu que tenía pies de trapu y la cabeza al revés. ¿Contarételo otra vez?».',
-            'La rayuela es un juego muy conocido. En asturiano se llama cascayu. Para jugar necesitas una tiza para pintar las casillas y una piedra para lanzar.',
-            'Lanzas la piedra a cada número y saltas a la pata coja empujándola por las demás casillas. Ganas cuando completas todo el cascayu. Pierdes si la piedra o tú pisáis una raya, si os salís fuera o si pierdes el equilibrio.',
-            'Juegan varias personas: lo normal es de dos a seis, para no aburrirse mientras se espera el turno.',
-            'El cascayu se juega en todo el mundo y en cada lugar tiene otro nombre: mariola en Galicia, castro en Cantabria, txingo en el País Vasco, sharita en Marruecos y pallet en Francia.',
+            'Los encadenados son cuentos sin fin: cuando acaban, vuelven a empezar. Por ejemplo: «¿Contaréte’l cuentu de Perico Formientu, que foi cazar y llevólu’l vientu?».',
+            'Otro: «Una vez yera un gatu que tenía pies de trapu y la cabeza al revés. ¿Contarételo otra vez?».',
+            'El cascayu es la rayuela asturiana. Necesitas una tiza y una piedra, y saltas a la pata coja. Ganas si completas el cascayu; pierdes si pisas una raya, te sales o pierdes el equilibrio. Juegan de dos a seis.',
+            'Otros nombres: mariola en Galicia, castro en Cantabria, txingo en el País Vasco, sharita en Marruecos y pallet en Francia.',
           ],
           notes: [
             ['yera', 'era, en asturiano'],
@@ -2172,12 +2104,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'choice',
             q: '¿Cuándo se pierde en el cascayu?',
-            options: [
-              'Al pisar una raya o perder el equilibrio',
-              'Al llegar al último número',
-              'Al lanzar la piedra a la casilla 1',
-              'Al saltar a la pata coja',
-            ],
+            options: ['Al pisar una raya', 'Al llegar al final', 'Al lanzar la piedra', 'Al saltar a la pata coja'],
             answer: 0,
             key: 'pierde',
           },
@@ -2201,7 +2128,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'pairs',
-            q: 'El cascayu tiene muchos nombres. Une cada nombre con su lugar.',
+            q: 'Une cada nombre del cascayu con su lugar.',
             pairs: [
               ['mariola', 'Galicia'],
               ['castro', 'Cantabria'],
@@ -2247,12 +2174,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'choice',
             q: '¿Tiene fin un encadenado?',
-            options: [
-              'No: siempre vuelve a empezar',
-              'Sí: acaba con «colorín colorado»',
-              'Sí: acaba cuando sale el sol',
-              'Sí: acaba en el número diez',
-            ],
+            options: ['No, vuelve a empezar', 'Sí, con «colorín colorado»', 'Sí, al salir el sol', 'Sí, en el número diez'],
             answer: 0,
             fact: 'Por eso se llama encadenado: el final se engancha otra vez con el principio.',
             key: 'sin-fin',
@@ -2260,12 +2182,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'choice',
             q: '¿Qué le pasó a Perico Formientu?',
-            options: [
-              'Fue a cazar y se lo llevó el viento',
-              'Fue a pescar y se cayó al río',
-              'Fue a la fiesta y perdió el bollu',
-              'Fue al colegio y se durmió',
-            ],
+            options: ['Se lo llevó el viento', 'Se cayó al río', 'Perdió el bollu', 'Se quedó dormido'],
             answer: 0,
             key: 'perico',
           },
@@ -2281,10 +2198,10 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
             type: 'choice',
             q: 'En el encadenado, ¿cómo era el gatu?',
             options: [
-              'Con pies de trapu y la cabeza al revés',
-              'Con botas de piel y un sombrero',
-              'Con alas de pájaro y cola de pez',
-              'Con gafas de sol y una bufanda',
+              'Pies de trapu y cabeza al revés',
+              'Botas de piel y un sombrero',
+              'Alas de pájaro y cola de pez',
+              'Gafas de sol y una bufanda',
             ],
             answer: 0,
             key: 'gatu',
@@ -2318,7 +2235,7 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'tf',
             q: '¿Verdadero o falso?',
-            passage: 'En un encadenado, cuando parece que acaba, el cuento vuelve a empezar.',
+            passage: 'Un encadenado vuelve a empezar una y otra vez.',
             truth: true,
             key: 'sin-fin',
           },
@@ -2366,6 +2283,8 @@ window.CA_CONTENT = /** @type {ExamUnit} */ (
       hues,
       sampling,
       testHook: '__ca',
+      // The readings are short notes: behind «📜» (intro dialog and play head), not a screen before every round.
+      readFirst: false,
     };
   })()
 );

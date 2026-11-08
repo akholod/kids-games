@@ -337,21 +337,37 @@ test('english-animals: choice 1–4, True / False on T / F, R replays a listenin
   await expect(page.locator('#feedback .fb.ok')).toBeVisible();
 });
 
-test('cultura-asturiana: a station by keys (reading too), then feed, cook, wordsearch, clues, calendar and cascayu with keys only', async ({
+test('cultura-asturiana: the reading from the dialog and a station by keys, then feed, cook, wordsearch, clues, calendar and cascayu with keys only', async ({
   page,
 }) => {
   test.setTimeout(90_000);
   const ca = examPlayer('__ca');
   const { taskWhere, playOnly } = unitPage('CA_CONTENT', '__ca');
   await open(page, '/games/cultura-asturiana/');
-  // Enter on the tile, Enter in the dialog: the reading; Enter on «Empezar las preguntas»: the round, played by keys
+  // Enter on the tile opens the dialog («Empezar» has the focus); Shift+Tab reaches «📜 Leer el texto», Enter opens the reading;
+  // Esc closes the reading (the dialog stays, its button has the focus again), a second Esc closes the dialog
   const tile = page.locator('#stations .station').nth(await page.evaluate(() => CA_CONTENT.stations.findIndex((s) => s.id === 'juegos')));
   await tile.focus();
   await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-go')).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.locator('#intro-read')).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#read-start')).toBeFocused();
+  await expect(page.locator('#text-dlg')).toHaveJSProperty('open', true);
+  await expect(page.locator('#text-close')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#text-dlg')).toHaveCount(0);
+  await expect(page.locator('#intro-dlg')).toHaveJSProperty('open', true);
+  await expect(page.locator('#intro-read')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#intro-dlg')).toHaveJSProperty('open', false);
+  // Enter on the tile, Enter on «Empezar»: straight to the questions, the round played by keys
+  await tile.focus();
+  await page.keyboard.press('Enter');
   await page.keyboard.press('Enter');
   await expect(page.locator('#play')).toBeVisible();
+  await expect(page.locator('#read-screen')).toBeHidden();
   const n = (await ca.session(page)).tasks.length;
   await ca.playSession(page, tapNever, { keyboard: true });
   await expect(page.locator('#finish .score-pill')).toContainText(`${n} / ${n}`);

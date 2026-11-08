@@ -359,19 +359,39 @@ test('cultura-asturiana: hub, a reading, every own type (the biggest ones) and b
 }) => {
   test.setTimeout(120_000);
   const ca = examPlayer('__ca');
-  const { startFromIntro, allTasks, playOnly } = unitPage('CA_CONTENT', '__ca');
+  const { openIntro, allTasks, playOnly } = unitPage('CA_CONTENT', '__ca');
   await open(page, '/games/cultura-asturiana/');
   // The hub is a list of stations (it scrolls like every exam hub), but never sideways
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
 
-  // The longest reading: the page does not scroll (the text scrolls inside its box), «Empezar las preguntas» is on screen
+  // Every station dialog (Ukrainian glossary + «📜 Leer el texto») stays inside the window with «Empezar» in it; the longest reading
+  // opens over it in the text dialog, which also stays inside the window (a long text scrolls in its box) with «Cerrar» on screen
+  const ids = await page.evaluate(() => CA_CONTENT.stations.map((s) => s.id));
+  for (const id of ids) {
+    await openIntro(page, tap, id);
+    await expect(page.locator('#intro-read')).toBeVisible();
+    const m = await page.evaluate(() => {
+      const d = document.getElementById('intro-dlg').getBoundingClientRect();
+      const g = document.getElementById('intro-go').getBoundingClientRect();
+      return { top: d.top, bottom: d.bottom, goBottom: g.bottom, h: innerHeight };
+    });
+    expect(m.top, `${id}: dialog top`).toBeGreaterThanOrEqual(0);
+    expect(m.bottom, `${id}: dialog bottom`).toBeLessThanOrEqual(m.h);
+    expect(m.goBottom, `${id}: start button bottom`).toBeLessThanOrEqual(m.bottom);
+    await tap(page.locator('#intro-back'));
+  }
   const longRead = await page.evaluate(
     () => [...CA_CONTENT.stations].sort((a, b) => b.text.paragraphs.join('').length - a.text.paragraphs.join('').length)[0].id,
   );
-  await startFromIntro(page, tap, longRead);
-  await expect(page.locator('#read-screen')).toBeVisible();
-  await expectFits(page, `${longRead} reading`);
-  await expectOnScreen(page, page.locator('#read-start'), `${longRead} start button`);
+  await openIntro(page, tap, longRead);
+  await tap(page.locator('#intro-read'));
+  await expect(page.locator('#text-dlg')).toHaveJSProperty('open', true);
+  const t = await page.evaluate(() => document.getElementById('text-dlg').getBoundingClientRect());
+  expect(t.top, 'text dialog top').toBeGreaterThanOrEqual(0);
+  expect(t.bottom, 'text dialog bottom').toBeLessThanOrEqual(await page.evaluate(() => innerHeight));
+  await expectOnScreen(page, page.locator('#text-close'), `${longRead} reading: close button`);
+  await tap(page.locator('#text-close'));
+  await tap(page.locator('#intro-back'));
 
   const tasks = await allTasks(page);
   const size = (t) => JSON.stringify(t).length;

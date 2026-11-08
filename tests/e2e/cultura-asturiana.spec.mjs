@@ -23,16 +23,15 @@ test('hub: the stations of the content, the hórreo hero, the exam card', async 
   expect(await record(page, SLUG)).toBeNull();
 });
 
-test('a station from its tile: reading, a full round to the finish, record, coins; the hero paints its first part', async ({
+test('a station from its tile: «Empezar» goes straight to the questions; a full round, record, coins; the hero paints its first part', async ({
   page,
   tap,
 }) => {
   await open(page, URL);
   const c0 = await coins(page);
   await startFromIntro(page, tap, 'gochu');
-  await expect(page.locator('#read-screen')).toBeVisible();
-  await tap(page.locator('#read-start'));
   await expect(page.locator('#play')).toBeVisible();
+  await expect(page.locator('#read-screen')).toBeHidden();
   const s = await ca.session(page);
   const n = s.tasks.length;
   expect(n).toBe(Math.min(8, await page.evaluate(() => CA_CONTENT.stations.find((x) => x.id === 'gochu').tasks.length)));
@@ -289,6 +288,42 @@ test('Ukrainian site: the glossary in every station dialog and behind 📖 durin
   await expect(page.locator('#feedback .fb')).toBeVisible();
 });
 
+test('the reading is behind buttons (readFirst: false): «📜 Leer el texto» in the dialog, «📜 Texto» in the play head', async ({
+  page,
+  tap,
+}) => {
+  await open(page, URL);
+  const st = await page.evaluate(() => CA_CONTENT.stations.find((s) => s.text));
+  await openIntro(page, tap, st.id);
+  const read = page.locator('#intro-read');
+  await expect(read).toBeVisible();
+  await expect(read).toHaveText('📜 Leer el texto');
+  // the reading opens over the dialog, with its paragraphs and «Escuchar»; closing it goes back to the dialog and its button
+  await tap(read);
+  await expect(page.locator('#text-dlg')).toHaveJSProperty('open', true);
+  await expect(page.locator('#text-title')).toHaveText(st.text.title);
+  await expect(page.locator('#text-dlg .read-p')).toHaveCount(st.text.paragraphs.length);
+  await expect(page.locator('#text-listen')).toHaveCount(1);
+  await expect(page.locator('#intro-dlg')).toHaveJSProperty('open', true);
+  await tap(page.locator('#text-close'));
+  await expect(page.locator('#text-dlg')).toHaveCount(0);
+  await expect(page.locator('#intro-dlg')).toHaveJSProperty('open', true);
+  await expect(read).toBeFocused();
+  // «Empezar»: the questions at once, no reading screen
+  await tap(page.locator('#intro-go'));
+  await expect(page.locator('#play')).toBeVisible();
+  await expect(page.locator('#read-screen')).toBeHidden();
+  expect((await ca.session(page)).index).toBe(0);
+  // the play head «📜» still opens the reading
+  await tap(page.locator('#play-text'));
+  await expect(page.locator('#text-dlg')).toHaveJSProperty('open', true);
+  await expect(page.locator('#text-title')).toHaveText(st.text.title);
+  await tap(page.locator('#text-close'));
+  await expect(page.locator('#text-dlg')).toHaveCount(0);
+  await ca.answerTask(page, tap);
+  await expect(page.locator('#feedback .fb')).toBeVisible();
+});
+
 test('Spanish site (?lang=es): hub, dialog, reading, one task of every own type and the finish — no Cyrillic, no glossary', async ({
   page,
   tap,
@@ -296,10 +331,14 @@ test('Spanish site (?lang=es): hub, dialog, reading, one task of every own type 
   test.setTimeout(90_000);
   await open(page, URL, { lang: 'es' });
   await expectNoCyrillic(page, 'on the hub');
-  await startFromIntro(page, tap, 'vacas');
-  await expect(page.locator('#read-screen')).toBeVisible();
+  await openIntro(page, tap, 'vacas');
+  await expectNoCyrillic(page, 'in the station dialog');
+  await tap(page.locator('#intro-read'));
+  await expect(page.locator('#text-dlg')).toHaveJSProperty('open', true);
   await expectNoCyrillic(page, 'on the reading');
-  await tap(page.locator('#read-start'));
+  await tap(page.locator('#text-close'));
+  await tap(page.locator('#intro-go'));
+  await expect(page.locator('#play')).toBeVisible();
   await expect(page.locator('.vocab, .vocab-list, #vocab-dlg, #play-vocab')).toHaveCount(0);
   await tap(page.locator('#play-quit'));
   const tasks = [];

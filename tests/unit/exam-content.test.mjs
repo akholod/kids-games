@@ -982,7 +982,7 @@ test('cultura-asturiana: every reading paragraph has a clip in shared/audio.js',
   vm.runInContext(read('shared/audio.js'), audio);
   const es = new Set(audio.window.KF_AUDIO?.es ?? audio.KF_AUDIO.es);
   const texts = u.stations.flatMap((s) => s.text?.paragraphs ?? []);
-  assert.ok(texts.length >= 40);
+  assert.ok(texts.length >= 30);
   for (const t of texts) {
     const slug = buildSlug(t);
     assert.ok(es.has(slug), `no clip for «${t.slice(0, 50)}…» (${slug}): run scripts/build-audio.mjs`);
