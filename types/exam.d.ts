@@ -118,8 +118,9 @@ interface ExamStation {
    *  behind a «📖 Словничок» button during a station round (not in the exam). Not in the DOM at all on the Spanish site. */
   vocab?: [string, string][];
   /** The station's reading (e.g. a legend): a screen after the intro dialog's «Empezar» (before the first task of a station
-   *  round; «Otra vez» skips it), and a «📜 Texto» button in the play head whenever the current task belongs to this station
-   *  (rounds and the exam). «🔊 Escuchar» reads the paragraphs one by one with KFG.say(p, contentLang) when a clip or voice exists
+   *  round; «Otra vez» skips it) — or, with ExamUnit.readFirst false, no screen but a «📜 Leer el texto» button in the intro
+   *  dialog that opens it in the text dialog — and a «📜 Texto» button in the play head whenever the current task belongs to
+   *  this station (rounds and the exam). «🔊 Escuchar» reads the paragraphs one by one with KFG.say(p, contentLang) when a clip or voice exists
    *  (include shared/audio.js before kf-game.js). In the unit's contentLang (no Cyrillic). */
   text?: ExamText;
   tasks: ExamTask[];
@@ -186,6 +187,10 @@ interface ExamUnit {
   exam: ExamConfig;
   /** Tasks per station round (default 8). */
   round?: number;
+  /** A station with a `text` shows it as a screen before its round (default true). false = no screen: «Empezar» goes straight to
+   *  the questions and the intro dialog gets a «📜 Leer el texto» button (#intro-read) that opens the reading in the text dialog
+   *  (🔊 Escuchar; closing it gives the focus back to the button, the intro stays open). The play head «📜 Texto» stays either way. */
+  readFirst?: boolean;
   /** Station id → tile colour. */
   hues?: Record<string, string>;
   sampling?: ExamSampling;

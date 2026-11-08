@@ -104,6 +104,7 @@
     readStop: '⏹ Parar',
     readStart: 'Empezar las preguntas',
     readClose: 'Cerrar',
+    readOpen: '📜 Leer el texto',
     listen: 'Escuchar',
     listenAgain: 'Escuchar otra vez (tecla R)',
     listenNoSound: 'No hay sonido en este aparato: lee la frase.',
@@ -162,6 +163,7 @@
     if (!unit || typeof unit !== 'object') return ['unit: missing'];
     if (!text(unit.slug)) err('unit', 'slug missing');
     if (!text(unit.title)) err('unit', 'title missing');
+    if (unit.readFirst !== undefined && typeof unit.readFirst !== 'boolean') err('unit', 'readFirst must be true or false');
     if (unit.round !== undefined && !int(unit.round)) err('unit', 'round must be a positive integer');
     if (!Array.isArray(unit.stations) || !unit.stations.length) {
       err('unit', 'stations missing');
@@ -391,6 +393,8 @@
     const SLUG = unit.slug;
     const lists = { ...DEFAULT_LISTS, ...unit.lists };
     const round = unit.round || ROUND;
+    // A station's reading: a screen before its round (default), or only behind buttons (intro dialog «Leer el texto», play head «📜»).
+    const readFirst = unit.readFirst !== false;
     const STATIONS = unit.stations;
     const stationOf = (/** @type {string} */ id) => STATIONS.find((s) => s.id === id);
     const hueOf = (/** @type {string} */ id) => unit.hues?.[id] || DEFAULT_HUE;
@@ -487,7 +491,13 @@
             h('div', {}, h('p', { class: 'eyebrow', text: T('review') }), h('h2', { id: 'intro-title' })),
           ),
           h('p', { class: 'intro', id: 'intro-text' }),
-          h('p', { class: 'meta', id: 'intro-meta' }),
+          h(
+            'div',
+            { class: 'intro-foot' },
+            h('p', { class: 'meta', id: 'intro-meta' }),
+            // readFirst: false — the station's reading is not a screen before the round but this button (text dialog).
+            h('button', { class: 'btn btn-light intro-read', type: 'button', id: 'intro-read', hidden: true, text: T('readOpen') }),
+          ),
           h(
             'div',
             { class: 'dlg-actions' },
@@ -795,7 +805,8 @@
     let textBtn = null;
     /** @type {HTMLDialogElement | null} */
     let textDlg = null;
-    const openText = (/** @type {ExamStation | undefined} */ s) => {
+    // `returnTo` gets the focus back when the dialog closes (the intro's «Leer el texto»); else only the play head's «📜» does, when it had it.
+    const openText = (/** @type {ExamStation | undefined} */ s, /** @type {HTMLElement | null} */ returnTo = null) => {
       const tx = s?.text;
       if (!tx || textDlg) return;
       const opener = document.activeElement;
@@ -822,7 +833,8 @@
         stopReader();
         dlg.remove();
         textDlg = null;
-        if (opener === textBtn && textBtn?.isConnected) textBtn.focus({ preventScroll: true });
+        if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
+        else if (opener === textBtn && textBtn?.isConnected) textBtn.focus({ preventScroll: true });
       });
       textDlg = dlg;
       root.append(dlg);
@@ -964,14 +976,17 @@
         );
       intro.classList.toggle('has-vocab', !!vocab);
       $('intro-meta').textContent = T('introMeta', { n: Math.min(round, s.tasks.length) });
+      $('intro-read').hidden = readFirst || !s.text;
       intro.showModal();
       $('intro-go').focus();
     };
     $('intro-go').addEventListener('click', () => {
       intro.close();
-      startStation(introStation.id, true);
+      startStation(introStation.id, readFirst);
     });
     $('intro-back').addEventListener('click', () => intro.close());
+    // Over the intro dialog (both modal): Esc closes the text first, then the intro; the focus comes back to this button.
+    $('intro-read').addEventListener('click', () => openText(introStation, $('intro-read')));
 
     // ---------- Task sampling ----------
     // Weighted random order (Efraimidis–Spirakis): the bigger the weight, the earlier a task tends to come; weight 0 = last.

@@ -377,6 +377,11 @@ dialog::backdrop{background:#0b2a3a99}
 .dlg h2{margin:0;font-size:1.55rem;line-height:1.1}
 .dlg .intro{margin:0 0 10px;padding:14px 16px;border-radius:16px;background:#fff;box-shadow:0 0 0 1px var(--line);font-size:1.1rem;line-height:1.5;font-weight:650}
 .dlg .meta{margin:0 0 18px;color:var(--muted);font-weight:700}
+/* readFirst: false — the station's reading behind a button of the intro dialog (it opens the text dialog over it), on the line of the
+   «n preguntas» meta (below it when there is no room) */
+.intro-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 18px}
+.intro-foot .meta{flex:1 1 auto;margin:0}
+.dlg .intro-read{flex:0 1 auto;min-height:48px;padding:8px 18px}
 .dlg-actions{display:flex;flex-wrap:wrap-reverse;gap:10px}
 .dlg-actions .btn{flex:1 1 160px}
 
