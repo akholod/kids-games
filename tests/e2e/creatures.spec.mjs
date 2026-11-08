@@ -9,7 +9,7 @@ const toCreatures = async (page, tap) => {
   await expect(page.locator('#col-btn-creatures')).toHaveAttribute('aria-pressed', 'true');
 };
 
-// Opens the pack on the stage card by card (taps), up to the summary.
+// Opens the pack on the stage card by card (taps, «next» on a revealed card), up to the summary.
 const playPack = async (page, tap) => {
   const pd = page.locator('#pack-dialog');
   await expect(pd).toHaveJSProperty('open', true);
@@ -17,7 +17,9 @@ const playPack = async (page, tap) => {
   for (let i = 0; i < 12 && !(await page.locator('#pack-summary').isVisible()); i++) {
     await page.waitForFunction(() => !window.__album.pack?.busy);
     if (await page.locator('#pack-summary').isVisible()) break;
-    await tap(page.locator('#pack-hit'));
+    // a revealed creature turns on a tap: «next» goes on
+    const shown = (await page.evaluate(() => window.__album.pack.phase)) === 'front';
+    await tap(page.locator(shown ? '#pack-next' : '#pack-hit'));
   }
   await expect(page.locator('#pack-summary')).toBeVisible();
 };
@@ -170,3 +172,94 @@ test('beta: without ?parent the album has only football cards and no creature aw
   expect(await page.evaluate(() => KF.ACHIEVEMENTS.some((a) => a.id.startsWith('creature')))).toBe(false);
   await tap(page.locator('#tab-games'));
 });
+
+// Pack stage: up to the next revealed card (special cards wait face down for a tap).
+const reveal = async (page, tap) => {
+  for (let i = 0; i < 6; i++) {
+    await page.waitForFunction(() => !window.__album.pack?.busy);
+    if ((await page.evaluate(() => window.__album.pack.phase)) === 'front') return;
+    await tap(page.locator('#pack-hit'));
+  }
+  throw new Error('no card revealed');
+};
+const packSide = async (page, id, side, lang = 'uk') => {
+  await expect(page.locator('#pack-hit')).toHaveAttribute('data-side', side);
+  await expect(page.locator('#pack-hit .cr-side.is-shown img')).toHaveAttribute(
+    'src',
+    new RegExp(`/creatures/${lang}/${id}${side === 'back' ? '-b' : ''}\\.webp$`),
+  );
+};
+
+for (const lang of [undefined, 'es']) {
+  const L = lang || 'uk';
+  test(`pack (${L}): a revealed creature turns front/back by tap, button and F/Space; next by button, Enter and →`, async ({
+    page,
+    tap,
+  }) => {
+    await open(page, '/', { lang });
+    await toCreatures(page, tap);
+    await tap(page.locator('#cr-open-pack'));
+    const ids = await page.evaluate(() => window.__album.pack.ids);
+    await reveal(page, tap);
+    await expect(page.locator('#pack-actions')).toBeVisible();
+    await expect(page.locator('#pack-flip')).toContainText(lang ? 'Dale la vuelta' : 'Переверни');
+    await expect(page.locator('#pack-next')).toHaveText(lang ? 'Siguiente →' : 'Далі →');
+    // the back is already loading while the front is shown
+    await expect(page.locator('#pack-hit .cr-back-side img')).toHaveAttribute('src', new RegExp(`/${L}/${ids[0]}-b\\.webp$`));
+    await packSide(page, ids[0], 'front', L);
+    if (lang) await expectNoCyrillic(page, 'on a revealed pack card');
+
+    await tap(page.locator('#pack-hit')); // tap on the card = turn it
+    await packSide(page, ids[0], 'back', L);
+    await expect(page.locator('#pack-zoom-btn')).toBeVisible();
+    if (lang) await expectNoCyrillic(page, 'on the back of a pack card');
+    await tap(page.locator('#pack-flip'));
+    await packSide(page, ids[0], 'front', L);
+    await expect(page.locator('#pack-zoom-btn')).toBeHidden();
+    await page.locator('#pack-hit').focus();
+    await page.keyboard.press('f');
+    await packSide(page, ids[0], 'back', L);
+    await page.keyboard.press('Space');
+    await packSide(page, ids[0], 'front', L);
+    await page.keyboard.press('Space');
+    await packSide(page, ids[0], 'back', L);
+
+    // magnifier on the back; Esc closes only it
+    await tap(page.locator('#pack-zoom-btn'));
+    await expect(page.locator('#pack-zoom')).toBeVisible();
+    await expect(page.locator('#pack-zoom-pic')).toHaveAttribute('src', new RegExp(`/${L}/${ids[0]}-b\\.webp$`));
+    if (lang) await expectNoCyrillic(page, 'in the pack magnifier');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#pack-zoom')).toBeHidden();
+    expect(await page.evaluate(() => window.__album.pack.phase)).toBe('front');
+
+    // next by the button: the next card starts on its front
+    await tap(page.locator('#pack-next'));
+    await reveal(page, tap);
+    expect(await page.evaluate(() => window.__album.pack.i)).toBe(1);
+    await packSide(page, ids[1], 'front', L);
+    await page.keyboard.press('F');
+    await packSide(page, ids[1], 'back', L);
+    // next by Enter (focus stays on the stage)
+    await page.keyboard.press('Enter');
+    await reveal(page, tap);
+    expect(await page.evaluate(() => window.__album.pack.i)).toBe(2);
+    await packSide(page, ids[2], 'front', L);
+    await expect(page.locator('#pack-next')).toHaveText(lang ? 'Ver las tres →' : 'Усі три →');
+    // → on the last card: the summary
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator('#pack-summary')).toBeVisible();
+    await expect(page.locator('#pack-actions')).toBeHidden();
+
+    // summary: a creature opens in the big two-sided view; Esc comes back to the summary
+    await tap(page.locator('#sum-cards .sum-card').first());
+    await expect(page.locator('#card-dialog')).toHaveJSProperty('open', true);
+    await expectSide(page, ids[0], 'front', L);
+    await tap(page.locator('#detail-flip'));
+    await expectSide(page, ids[0], 'back', L);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#card-dialog')).toHaveJSProperty('open', false);
+    await expect(page.locator('#pack-dialog')).toHaveJSProperty('open', true);
+    await expect(page.locator('#sum-cards .sum-card').first()).toBeFocused();
+  });
+}

@@ -61,6 +61,23 @@ for (const lang of [undefined, 'es']) {
   });
 }
 
+test('football pack: a tap on the shown card goes to the next one, up to the summary', async ({ page, tap }) => {
+  await open(page, '/');
+  await page.click('#tab-album');
+  await page.click('#open-pack');
+  await expect(page.locator('#pack-actions')).toBeHidden();
+  let taps = 0;
+  while (!(await page.locator('#pack-summary').isVisible())) {
+    expect(++taps, 'taps to the summary').toBeLessThan(10);
+    await page.waitForFunction(() => !window.__album.pack?.busy || window.__album.pack.phase === 'summary');
+    if (await page.locator('#pack-summary').isVisible()) break;
+    await tap(page.locator('#pack-hit'));
+  }
+  await expect(page.locator('#pack-hit')).not.toHaveAttribute('data-side', /./);
+  await expect(page.locator('#sum-cards .sum-card')).toHaveCount(3);
+  expect(await page.locator('#sum-cards button.sum-card').count()).toBe(0);
+});
+
 // The Spanish Worker answers /shared/site.js with lang 'es': until the page scripts have translated the static HTML (which
 // carries the Ukrainian defaults), the page stays hidden, so a slow connection never shows Ukrainian text.
 test('Spanish site: the page stays hidden until it is translated, then shows Spanish only', async ({ page }) => {

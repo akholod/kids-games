@@ -111,6 +111,11 @@ const T = KF.i18n({
     'cr.zoomOut': '✕ Закрити лупу',
     'cr.keys': '<kbd>F</kbd> — перевернути · <kbd>←</kbd> <kbd>→</kbd> — інші',
     'tease.crRare': '💎 Ого, рідкісна істота!',
+    'pk.next': 'Далі →',
+    'pk.all': 'Усі три →',
+    'pk.tip': 'Торкнись картки, щоб перевернути',
+    'pk.keys': '<span class="tip-keys"><kbd>F</kbd> перевернути · <kbd>Enter</kbd> далі</span>',
+    'pk.look': 'Натисни, щоб роздивитися',
     'pack.word': 'КАРТКИ',
     'pack.new': 'Новий пакунок',
     'pack.skip': 'Показати всі',
@@ -363,6 +368,11 @@ const T = KF.i18n({
     'cr.zoomOut': '✕ Cerrar la lupa',
     'cr.keys': '<kbd>F</kbd> dar la vuelta · <kbd>←</kbd> <kbd>→</kbd> otras',
     'tease.crRare': '💎 ¡Hala, una criatura rara!',
+    'pk.next': 'Siguiente →',
+    'pk.all': 'Ver las tres →',
+    'pk.tip': 'Toca la carta para darle la vuelta',
+    'pk.keys': '<span class="tip-keys"><kbd>F</kbd> dar la vuelta · <kbd>Enter</kbd> seguir</span>',
+    'pk.look': 'Tócala para verla en grande',
     'pack.word': 'CARTAS',
     'pack.new': 'Sobre nuevo',
     'pack.skip': 'Ver todas',
@@ -1251,7 +1261,10 @@ function askDialog({ icon, title, text, primary, secondary }) {
   const dd = $('card-dialog');
   let viewId = null,
     viewCol = COLS.football,
+    viewList = null, // ids to step through instead of the album grid (cards of the pack summary)
+    viewReturn = null, // where focus goes back when the view was opened from the pack summary
     side = 'front';
+  const viewIds = () => viewList || shownOwned(viewCol.root).map((b) => b.dataset.id);
   const zoomOpen = () => !$('zoom-view').hidden;
 
   function crFlipCard(c) {
@@ -1279,7 +1292,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (!card) return;
     const cr = c.key === 'creatures',
       n = c.have(card.id),
-      list = shownOwned(c.root).map((b) => b.dataset.id),
+      list = viewIds(),
       at = list.indexOf(card.id);
     if (dir !== undefined) {
       dd.className = `stage detail-stage ${c.cls(card.cat)}`;
@@ -1311,15 +1324,17 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (dd.open && !dd.contains(document.activeElement)) detailFocus();
   }
   const detailFocus = () => ($('detail-card').querySelector('.cr-flip') || $('detail-card')).focus();
-  function openDetail(id, c = COLS.football) {
+  function openDetail(id, c = COLS.football, list = null, from = null) {
     viewId = id;
     viewCol = c;
+    viewList = list;
+    viewReturn = from;
     drawDetail(0);
     if (!dd.open) dd.showModal();
     detailFocus();
   }
   function step(d) {
-    const list = shownOwned(viewCol.root).map((b) => b.dataset.id);
+    const list = viewIds();
     if (list.length < 2) return;
     viewId = list[(list.indexOf(viewId) + d + list.length) % list.length];
     const keep = dd.contains(document.activeElement) && document.activeElement.closest('.cr-flip');
@@ -1378,6 +1393,11 @@ function askDialog({ icon, title, text, primary, secondary }) {
   dd.addEventListener('close', () => {
     if (dd.open) return;
     $('zoom-view').hidden = true;
+    if (viewReturn) {
+      viewReturn.focus();
+      viewList = viewReturn = null;
+      return;
+    }
     const root = viewCol.root,
       b = [...root.querySelectorAll('button.tile')].find((x) => x.dataset.id === viewId);
     if (b && !b.hidden) {
@@ -1395,6 +1415,55 @@ function askDialog({ icon, title, text, primary, secondary }) {
   let P = null,
     lastCol = COLS.football;
   const live = (p) => P === p && p.phase !== 'summary' && pd.open;
+
+  // Creature pack: once revealed, the card turns front <-> back (tap / F / Space), «Далі» (Enter / →) goes on.
+  function crPackFlip(card) {
+    const front = h('span', { className: 'cr-side cr-front is-shown' }, crFace(card));
+    const back = h('span', { className: 'cr-side cr-back-side' }, crFace(card, { back: true })); // loads now: the flip is instant
+    return h('span', { className: 'cr-flip pk-flip' }, h('span', { className: 'cr-flip-inner' }, front, back));
+  }
+  const turnable = (p = P) => !!p && p.col.key === 'creatures' && p.phase === 'front';
+  function setPackSide(s) {
+    const p = P,
+      f = $('pack-hit').querySelector('.pk-flip');
+    if (!p || !f) return;
+    p.side = s;
+    f.classList.toggle('is-flipped', s === 'back');
+    f.querySelector('.cr-front').classList.toggle('is-shown', s === 'front');
+    f.querySelector('.cr-back-side').classList.toggle('is-shown', s === 'back');
+    $('pack-hit').dataset.side = s;
+    $('pack-flip').setAttribute('aria-pressed', String(s === 'back'));
+    $('pack-zoom-btn').hidden = s !== 'back';
+    hit(T(s === 'back' ? 'cr.cardBack' : 'cr.cardFront', { name: p.col.name(p.got[p.i]) }));
+  }
+  function packTurn() {
+    if (!turnable() || P.busy) return;
+    if (document.activeElement === $('pack-zoom-btn')) $('pack-hit').focus(); // the button hides on the front
+    setPackSide(P.side === 'back' ? 'front' : 'back');
+  }
+  // Leaves the shown card: the controls hide, so keep the focus (and the keys) on the stage.
+  function packLeave() {
+    if ($('pack-actions').contains(document.activeElement) || document.activeElement === $('pack-zoom-btn')) $('pack-hit').focus();
+    $('pack-actions').classList.remove('on');
+    $('pack-zoom-btn').hidden = true;
+    $('pack-zoom').hidden = true;
+    delete $('pack-hit').dataset.side;
+  }
+  const packZoomOpen = () => !$('pack-zoom').hidden;
+  function openPackZoom() {
+    if (!turnable()) return;
+    const card = P.got[P.i];
+    setPackSide('back');
+    $('pack-zoom-pic').src = KF.creatureImg(card.id, { back: true });
+    $('pack-zoom-pic').alt = T('cr.backAlt', { name: crName(card) });
+    $('pack-zoom').hidden = false;
+    $('pack-zoom').scrollTo(0, 0);
+    $('pack-zoom').focus();
+  }
+  function closePackZoom() {
+    $('pack-zoom').hidden = true;
+    (P?.side === 'back' ? $('pack-zoom-btn') : $('pack-hit')).focus();
+  }
 
   function setGlow(cat) {
     pd.dataset.glow = cat || '';
@@ -1417,6 +1486,8 @@ function askDialog({ icon, title, text, primary, secondary }) {
     got.forEach(c.preload);
     P = { col: c, got, counts, i: -1, phase: 'pack', busy: false };
     pd.dataset.col = c.key;
+    $('pack-actions').hidden = c.key !== 'creatures';
+    packLeave();
     setGlow(null);
     $('pack-summary').hidden = true;
     $('pack-play').hidden = false;
@@ -1445,7 +1516,12 @@ function askDialog({ icon, title, text, primary, secondary }) {
       return show(0);
     }
     if (p.phase === 'back') return flip();
-    if (p.phase === 'front') return p.i < p.got.length - 1 ? show(p.i + 1) : summary();
+    if (p.phase === 'front') return turnable(p) ? packTurn() : next();
+  }
+  function next() {
+    const p = P;
+    if (!p || p.busy || p.phase !== 'front') return;
+    return p.i < p.got.length - 1 ? show(p.i + 1) : summary();
   }
 
   async function show(i) {
@@ -1461,9 +1537,10 @@ function askDialog({ icon, title, text, primary, secondary }) {
         'div',
         { className: 'flip-inner' },
         h('div', { className: 'face face-back' }, c.back()),
-        h('div', { className: 'face face-front' }, c.face(card, { full: true })),
+        h('div', { className: 'face face-front' }, c.key === 'creatures' ? crPackFlip(card) : c.face(card, { full: true })),
       ),
     );
+    packLeave();
     pd.classList.remove('revealed');
     setGlow(special(card) ? card.cat : null);
     $('pack-hit').replaceChildren(el);
@@ -1515,6 +1592,13 @@ function askDialog({ icon, title, text, primary, secondary }) {
     p.phase = 'front';
     p.busy = false;
     const last = p.i === p.got.length - 1;
+    if (turnable(p)) {
+      $('pack-next').textContent = T(last ? 'pk.all' : 'pk.next');
+      $('pack-actions').classList.add('on');
+      setPackSide('front');
+      tip(T('pk.tip') + T('pk.keys'));
+      return;
+    }
     hit(T(last ? 'hit.all' : 'card.next'));
     tip(T(last ? 'tip.all' : 'tip.next'));
   }
@@ -1544,6 +1628,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     const c = p.col;
     p.phase = 'summary';
     p.busy = false;
+    packLeave();
     pd.classList.remove('charging', 'flash', 'revealed');
     const order = Object.keys(c.cats);
     const best = p.got.reduce((a, x) => (order.indexOf(x.cat) > order.indexOf(a) ? x.cat : a), 'common');
@@ -1552,17 +1637,27 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('pack-skip').hidden = true;
     $('pack-summary').hidden = false;
     $('pack-step').textContent = T('pack.mine');
+    // creatures: each card opens the big two-sided view (prev / next stay inside this pack)
+    const look = c.key === 'creatures',
+      ids = [...new Set(p.got.map((x) => x.id))];
     $('sum-cards').replaceChildren(
       ...p.got.map((x, i) => {
         const el = h(
-          'div',
+          look ? 'button' : 'div',
           { className: `sum-card ${c.cls(x.cat)}${special(x) ? ' special' : ''}` },
           c.face(x),
           statusTag(c, x, p.counts[i]),
         );
         el.style.setProperty('--i', i);
-        el.setAttribute('role', 'img');
-        el.setAttribute('aria-label', `${c.name(x)}, ${c.label(x.cat).toLowerCase()}, ${T(x.isNew ? 'sum.new' : 'sum.dup')}`);
+        const label = `${c.name(x)}, ${c.label(x.cat).toLowerCase()}, ${T(x.isNew ? 'sum.new' : 'sum.dup')}`;
+        if (look) {
+          Object.assign(el, { type: 'button' });
+          el.setAttribute('aria-label', `${label}. ${T('pk.look')}`);
+          el.addEventListener('click', () => openDetail(x.id, c, ids, el));
+        } else {
+          el.setAttribute('role', 'img');
+          el.setAttribute('aria-label', label);
+        }
         return el;
       }),
     );
@@ -1589,8 +1684,30 @@ function askDialog({ icon, title, text, primary, secondary }) {
   $('pack-hit').addEventListener('click', advance);
   $('pack-skip').addEventListener('click', summary);
   $('pack-done').addEventListener('click', () => pd.close());
-  // Esc: first show all three cards, then close.
+  $('pack-flip').addEventListener('click', packTurn);
+  $('pack-next').addEventListener('click', next);
+  $('pack-zoom-btn').addEventListener('click', openPackZoom);
+  $('pack-zoom-close').addEventListener('click', closePackZoom);
+  $('pack-zoom-img').addEventListener('click', closePackZoom);
+  // Creature card shown: F / Space turn it, Enter / → go on. A focused control button keeps its own Enter / Space.
+  pd.addEventListener('keydown', (e) => {
+    if (!turnable() || packZoomOpen() || e.ctrlKey || e.metaKey || e.altKey) return;
+    const other = !!e.target.closest?.('button') && e.target !== $('pack-hit');
+    if (e.key === 'f' || e.key === 'F' || (e.key === ' ' && !other)) {
+      e.preventDefault();
+      packTurn();
+    } else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !other)) {
+      e.preventDefault();
+      next();
+    }
+  });
+  // Esc: first close the magnifier, then show all three cards, then close.
   pd.addEventListener('cancel', (e) => {
+    if (packZoomOpen()) {
+      e.preventDefault();
+      closePackZoom();
+      return;
+    }
     if (P && P.phase !== 'summary') {
       e.preventDefault();
       summary();
@@ -1621,7 +1738,17 @@ function askDialog({ icon, title, text, primary, secondary }) {
         return side;
       },
       get pack() {
-        return P && { col: P.col.key, phase: P.phase, i: P.i, busy: P.busy, cats: P.got.map((c) => c.cat) };
+        return (
+          P && {
+            col: P.col.key,
+            phase: P.phase,
+            i: P.i,
+            busy: P.busy,
+            side: P.side,
+            ids: P.got.map((c) => c.id),
+            cats: P.got.map((c) => c.cat),
+          }
+        );
       },
     };
 })();
