@@ -145,3 +145,9 @@ test('profile: the player card and the shirt editor', async ({ page }) => {
   await expect(page.locator('#pc-kit svg')).toBeVisible();
   await snap(page, 'profile');
 });
+
+test('cultura-asturiana-hub: stations and the hero', async ({ page }) => {
+  await open(page, '/games/cultura-asturiana/');
+  await expect(page.locator('#hero-art svg.ca-hero')).toBeVisible();
+  await snap(page, 'cultura-asturiana-hub');
+});

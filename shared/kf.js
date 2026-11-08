@@ -325,6 +325,19 @@
       },
     },
     {
+      slug: 'cultura-asturiana',
+      title: 'Cultura asturiana',
+      emoji: '🐄',
+      category: 'sociales',
+      desc: 'Готуємось до іспиту з Cultura Asturiana за 1-й триместр: казка про вакейру й принцесу, касерія і прислів’я, корови, гочу й ковбаси, Самартін, Сан-Хуан, волинка і Данса Прима, класики-каскаю.',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: {
+        title: 'Cultura asturiana',
+        desc: 'Prepárate para el examen del 1.er trimestre: la vaqueira y la princesa, la casería y los refranes, vacas, gochu y embutidos, el Samartín, el San Xuan, la gaita y el cascayu.',
+      },
+    },
+    {
       slug: 'coach-simon',
       title: 'Тренер-Саймон',
       emoji: '🚦',

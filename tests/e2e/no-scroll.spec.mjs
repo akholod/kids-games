@@ -352,3 +352,49 @@ test('english-animals: hub, readings, listening + pictures, art + listen, labels
     if (t.listen) await expect(page.locator('#listen-said')).toBeVisible();
   }
 });
+
+test('cultura-asturiana: hub, a reading, every own type (the biggest ones) and both label scenes fit; next button visible', async ({
+  page,
+  tap,
+}) => {
+  test.setTimeout(120_000);
+  const ca = examPlayer('__ca');
+  const { startFromIntro, allTasks, playOnly } = unitPage('CA_CONTENT', '__ca');
+  await open(page, '/games/cultura-asturiana/');
+  // The hub is a list of stations (it scrolls like every exam hub), but never sideways
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+
+  // The longest reading: the page does not scroll (the text scrolls inside its box), «Empezar las preguntas» is on screen
+  const longRead = await page.evaluate(
+    () => [...CA_CONTENT.stations].sort((a, b) => b.text.paragraphs.join('').length - a.text.paragraphs.join('').length)[0].id,
+  );
+  await startFromIntro(page, tap, longRead);
+  await expect(page.locator('#read-screen')).toBeVisible();
+  await expectFits(page, `${longRead} reading`);
+  await expectOnScreen(page, page.locator('#read-start'), `${longRead} start button`);
+
+  const tasks = await allTasks(page);
+  const size = (t) => JSON.stringify(t).length;
+  const most = (list) => [...list].sort((a, b) => size(b) - size(a))[0];
+  const by = (type, ok = () => true) => tasks.filter((t) => t.type === type && ok(t));
+  const picks = [
+    ...[...new Set(by('feed').map((t) => t.who))].map((who) => [`feed ${who}`, most(by('feed', (t) => t.who === who))]),
+    ...by('cook').map((t) => [`cook ${t.steps.length} steps`, t]),
+    ['the biggest wordsearch', most(by('wordsearch'))],
+    ['clues with pictures', most(by('clues', (t) => t.pics))],
+    ['clues with texts', most(by('clues', (t) => !t.pics))],
+    ['the calendar with most months', [...by('calendar')].sort((a, b) => b.months.length - a.months.length || size(b) - size(a))[0]],
+    ['the calendar with most cards', [...by('calendar')].sort((a, b) => b.items.length - a.items.length || size(b) - size(a))[0]],
+    ['the longest cascayu', most(by('cascayu'))],
+    ['the casería scene', most(by('label', (t) => t.scene === 'caseria'))],
+    ['the gaita scene', most(by('label', (t) => t.scene === 'gaita'))],
+  ];
+  for (const [what, t] of picks) {
+    expect(t, what).toBeTruthy();
+    await open(page, '/games/cultura-asturiana/');
+    await playOnly(page, t);
+    await expectFits(page, what);
+    await ca.answerTask(page, tap);
+    await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what}: next`);
+  }
+});

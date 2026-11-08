@@ -337,6 +337,72 @@ test('english-animals: choice 1–4, True / False on T / F, R replays a listenin
   await expect(page.locator('#feedback .fb.ok')).toBeVisible();
 });
 
+test('cultura-asturiana: a station by keys (reading too), then feed, cook, wordsearch, clues, calendar and cascayu with keys only', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const ca = examPlayer('__ca');
+  const { taskWhere, playOnly } = unitPage('CA_CONTENT', '__ca');
+  await open(page, '/games/cultura-asturiana/');
+  // Enter on the tile, Enter in the dialog: the reading; Enter on «Empezar las preguntas»: the round, played by keys
+  const tile = page.locator('#stations .station').nth(await page.evaluate(() => CA_CONTENT.stations.findIndex((s) => s.id === 'juegos')));
+  await tile.focus();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#read-start')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  const n = (await ca.session(page)).tasks.length;
+  await ca.playSession(page, tapNever, { keyboard: true });
+  await expect(page.locator('#finish .score-pill')).toContainText(`${n} / ${n}`);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // the six own types, keys only: right first time
+  const types = ['feed', 'cook', 'wordsearch', 'clues', 'calendar', 'cascayu'];
+  const tasks = [];
+  for (const type of types) tasks.push(await taskWhere(page, type));
+  await playOnly(page, ...tasks);
+  expect(await ca.playSession(page, tapNever, { keyboard: true })).toEqual(types);
+  await expect(page.locator('#finish .score-pill')).toContainText('6 / 6');
+  await page.keyboard.press('Escape');
+
+  // and once more with slips: soft (feed, cook, wordsearch, calendar) and wrong (clues, cascayu), still by keys
+  await playOnly(page, ...tasks);
+  for (const t of tasks) {
+    const wrong = t.type === 'clues' || t.type === 'cascayu';
+    await ca.answerTask(page, tapNever, { keyboard: true, wrong, mistakes: wrong ? 0 : 1 });
+    await expect(page.locator(`#feedback .fb.${wrong ? 'miss' : 'ok'}`), t.type).toBeVisible();
+    await ca.next(page, tapNever, { keyboard: true });
+  }
+  await expect(page.locator('#finish .score-pill')).toContainText('4 / 6');
+  await page.keyboard.press('Escape');
+
+  // wordsearch by hand: the first arrow puts the focus on the top-left letter, arrows walk, Enter marks and unmarks
+  await playOnly(page, tasks[2]);
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#work .ca-ws-cell[data-r="0"][data-c="0"]')).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowDown');
+  const cell = page.locator('#work .ca-ws-cell[data-r="1"][data-c="1"]');
+  await expect(cell).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(cell).toHaveClass(/is-anchor/);
+  await page.keyboard.press(' ');
+  await expect(cell).not.toHaveClass(/is-anchor/);
+  await page.keyboard.press('Escape'); // nothing answered yet: straight back
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // clues: P shows one more clue each time, up to all of them
+  const clue = await taskWhere(page, 'clues', (t) => t.clues.length >= 3);
+  await playOnly(page, clue);
+  for (let i = 1; i <= clue.clues.length; i++) {
+    await expect(page.locator('#work .ca-clue:visible')).toHaveCount(i);
+    await page.keyboard.press('p');
+  }
+  await expect(page.locator('#work .ca-more')).toBeDisabled();
+});
+
 test('penalty-multiply: Enter starts, 1–3 pick a goal target, Enter = next kick, Esc goes back', async ({ page }) => {
   await open(page, '/games/penalty-multiply/');
   await page.keyboard.press('Enter');

@@ -837,3 +837,184 @@ test('english-animals: the right option of a choice is not clearly the longest',
   }
   assert.deepEqual(bad, []);
 });
+
+// ---------- cultura-asturiana: Cultura Asturiana 3.º, primer trimestre ----------
+
+const bootCultura = () => {
+  const node = () => ({ attrs: {}, dataset: {}, style: {}, setAttribute() {}, append() {}, set innerHTML(_) {}, classList: { add() {} } });
+  const sb = {
+    console,
+    Math,
+    KF: { lang: 'uk', i18n: () => (key) => key, gameData: () => ({}) },
+    KFG: { shuffle: (a) => [...a], canSay: () => false },
+    document: { createElementNS: node, createElement: node },
+  };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of [
+    'shared/exam/exam.js',
+    'shared/exam/types.js',
+    'games/cultura-asturiana/content.js',
+    'games/cultura-asturiana/art.js',
+    'games/cultura-asturiana/types.js',
+  ]) {
+    vm.runInContext(read(f), sb, { filename: f });
+  }
+  return { E: sb.KFExam, content: clone(sb.CA_CONTENT), types: sb.CA_TYPES, art: sb.CAArt, check: sb.CA_CHECK };
+};
+const CA_OWN = ['calendar', 'cascayu', 'clues', 'cook', 'feed', 'wordsearch'];
+const MONTHS = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+test('cultura-asturiana: valid; 8 stations with a glossary and a reading; exam of 20; Cyrillic only in vocab', () => {
+  const { E, content: u } = bootCultura();
+  assert.deepEqual([...E.validate(clone(u))], []);
+  assert.equal(u.slug, 'cultura-asturiana');
+  assert.equal(u.testHook, '__ca');
+  assert.deepEqual(
+    u.stations.map((s) => s.id),
+    ['lectura', 'caseria', 'vacas', 'gochu', 'samartin', 'sanxuan', 'gaita', 'juegos'],
+  );
+  assert.deepEqual(
+    Object.keys(u.exam.perStation),
+    u.stations.map((s) => s.id),
+  );
+  assert.equal(
+    Object.values(u.exam.perStation).reduce((a, b) => a + b, 0),
+    20,
+  );
+  for (const s of u.stations) {
+    assert.ok(s.vocab?.length >= 10, `${s.id}: glossary`);
+    assert.ok(s.text?.paragraphs.length >= 4, `${s.id}: reading`);
+    assert.ok(s.tasks.length >= 20, `${s.id}: ${s.tasks.length} tasks`);
+  }
+  const noVocab = { ...u, stations: u.stations.map(({ vocab, ...s }) => s) };
+  assert.ok(!CYR.test(JSON.stringify(noVocab)), 'Cyrillic outside the glossaries');
+  const used = new Set(u.stations.flatMap((s) => s.tasks.map((t) => t.type)));
+  for (const k of CA_OWN) assert.ok(used.has(k), `no ${k} task`);
+  for (const k of [...Object.keys(u.sampling.caps), ...Object.keys(u.sampling.examCaps), ...u.sampling.always])
+    assert.ok(used.has(k), `sampling names «${k}»`);
+});
+
+test('cultura-asturiana: the right option of a text choice is not clearly the longest', () => {
+  const { content: u } = bootCultura();
+  for (const t of u.stations.flatMap((s) => s.tasks)) {
+    if (t.type !== 'choice' || t.pics) continue;
+    const ok = t.options[t.answer].length;
+    const mx = Math.max(...t.options.filter((_, i) => i !== t.answer).map((o) => o.length));
+    assert.ok(!(ok > mx * 1.3 && ok - mx > 6), `«${t.options[t.answer]}» stands out in «${t.q}»`);
+  }
+});
+
+test('cultura-asturiana: own task types are well formed (feed, cook, wordsearch, clues, calendar, cascayu)', () => {
+  const { content: u } = bootCultura();
+  for (const s of u.stations) {
+    for (const [i, t] of s.tasks.entries()) {
+      const w = `${s.id} #${i + 1} (${t.type})`;
+      if (t.type === 'feed') {
+        assert.ok(['gochu', 'vaca', 'cesta', 'fardo', 'bolsa', 'tripa'].includes(t.who), `${w}: who «${t.who}»`);
+        assert.ok(t.items.length >= 4 && t.items.length <= 9, `${w}: ${t.items.length} items`);
+        assert.ok(t.items.some((x) => x.ok === true) && t.items.some((x) => x.ok === false), `${w}: right and wrong items`);
+        assert.equal(new Set(t.items.map((x) => x.text)).size, t.items.length, `${w}: repeated item`);
+      }
+      if (t.type === 'cook') {
+        assert.ok(t.steps.length >= 3 && t.steps.length <= 8, `${w}: ${t.steps.length} steps`);
+        const all = [...t.steps, ...(t.extra ?? [])].map((x) => x.text);
+        assert.equal(new Set(all).size, all.length, `${w}: repeated tile text`);
+      }
+      if (t.type === 'clues') {
+        assert.ok(t.clues.length >= 2 && t.clues.length <= 4, `${w}: ${t.clues.length} clues`);
+        assert.ok(Number.isInteger(t.answer) && t.answer >= 0 && t.answer < t.options.length, `${w}: answer`);
+        assert.equal(new Set(t.options).size, t.options.length, `${w}: repeated option`);
+        if (t.pics) assert.equal(t.labels?.length, t.options.length, `${w}: one label per picture`);
+      }
+      if (t.type === 'calendar') {
+        for (const m of t.months) assert.ok(MONTHS.includes(m), `${w}: month «${m}»`);
+        for (const it of t.items) assert.ok(t.months.includes(it.month), `${w}: «${it.text}» → «${it.month}»`);
+        for (const m of t.months)
+          assert.ok(
+            t.items.some((it) => it.month === m),
+            `${w}: «${m}» gets nothing`,
+          );
+      }
+      if (t.type === 'cascayu') {
+        assert.ok(t.steps.length >= 3 && t.steps.length <= 5, `${w}: ${t.steps.length} steps`);
+        assert.ok(
+          t.steps.every((x) => typeof x.truth === 'boolean' && x.text.trim()),
+          `${w}: step shape`,
+        );
+        assert.ok(t.steps.some((x) => !x.truth) && t.steps.some((x) => x.truth), `${w}: both answers`);
+      }
+      if (t.type === 'wordsearch') {
+        const rows = t.rows.map((r) => [...r]);
+        const width = rows[0].length;
+        assert.ok(
+          rows.every((r) => r.length === width && r.every((c) => /^[A-ZÑ]$/.test(c))),
+          `${w}: grid`,
+        );
+        assert.ok(width <= 10 && rows.length <= 8, `${w}: ${width}×${rows.length} is too big for a phone`);
+        const lines = [...rows.map((r) => r.join('')), ...[...Array(width).keys()].map((c) => rows.map((r) => r[c]).join(''))];
+        for (const word of t.words) {
+          const hits = lines.reduce((n, l) => n + l.split(word).length - 1, 0);
+          assert.equal(hits, 1, `${w}: «${word}» is in the grid ${hits} times (left→right or top→bottom)`);
+        }
+      }
+    }
+  }
+});
+
+test('cultura-asturiana: every reading paragraph has a clip in shared/audio.js', () => {
+  const { content: u } = bootCultura();
+  const audio = { window: {} };
+  vm.createContext(audio);
+  vm.runInContext(read('shared/audio.js'), audio);
+  const es = new Set(audio.window.KF_AUDIO?.es ?? audio.KF_AUDIO.es);
+  const texts = u.stations.flatMap((s) => s.text?.paragraphs ?? []);
+  assert.ok(texts.length >= 40);
+  for (const t of texts) {
+    const slug = buildSlug(t);
+    assert.ok(es.has(slug), `no clip for «${t.slice(0, 50)}…» (${slug}): run scripts/build-audio.mjs`);
+  }
+});
+
+test('cultura-asturiana: valid with the renderers; CA_CHECK passes; every art key and label scene exists', () => {
+  const { E, content: u, types, art, check } = bootCultura();
+  assert.deepEqual(Object.keys(types).sort(), CA_OWN);
+  assert.deepEqual([...E.validate(clone(u), { ...E.types, ...types })], []);
+  assert.deepEqual([...check(clone(u), art)], []);
+  const tasks = u.stations.flatMap((s) => s.tasks);
+  const keys = new Set();
+  for (const t of tasks) {
+    if (t.art) keys.add(t.art);
+    if (t.pics) for (const o of t.options) keys.add(o);
+    for (const it of [...(t.items ?? []), ...(t.steps ?? []), ...(t.extra ?? [])]) if (it?.art) keys.add(it.art);
+    if (t.type === 'feed') keys.add(`t-${t.who}`);
+  }
+  for (const k of keys) assert.ok(art.has(k), `art «${k}» does not exist`);
+  assert.ok(!art.has('nope'));
+  for (const t of tasks.filter((x) => x.type === 'label')) {
+    const sc = art.scene(t.scene);
+    assert.ok(sc, `scene «${t.scene}» does not exist`);
+    const spots = new Set(sc.spots.map((p) => p.id));
+    assert.equal(spots.size, sc.spots.length, `${t.scene}: duplicate hotspots`);
+    for (const l of t.labels) assert.ok(spots.has(l.id), `${t.scene}: no hotspot «${l.id}»`);
+  }
+  assert.deepEqual([...art.scene('caseria').spots.map((p) => p.id)].sort(), ['cuadra', 'guerta', 'llagar', 'maizal', 'panera', 'piteru']);
+  assert.deepEqual([...art.scene('gaita').spots.map((p) => p.id)].sort(), ['fuelle', 'puntero', 'roncon', 'soplete']);
+  // CA_CHECK catches a broken task of an own type
+  const bad = clone(u);
+  bad.stations[0].tasks.find((t) => t.type === 'feed').who = 'saco';
+  assert.ok(check(bad, art).length > 0);
+});

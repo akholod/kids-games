@@ -505,7 +505,8 @@ const ownTexts = (page, selector) =>
 // answerTask(page, tap, opts) answers the running task from the engine's own session:
 //   choice, tf, sort, order, pairs, label, fill (typed or tiles), filter (naturales-entorno); right, or with `wrong`:
 //   choice / tf = the first wrong one; label = one wrong slot first (soft); fill = a wrong word first, then the right one (soft);
-//   filter = `mistakes` wrong layers (1 = soft, 2 = the second miss on the first layer: the round says false).
+//   filter = `mistakes` wrong layers (1 = soft, 2 = the second miss on the first layer: the round says false);
+//   cultura-asturiana's feed, cook, wordsearch, clues, calendar, cascayu: `wrong` = not right, `mistakes: 1` = right but soft.
 // keyboard: true = keys only (`tap` is never called), else taps / clicks.
 export const examPlayer = (hook) => {
   const session = (page) => page.evaluate((h) => window[h].session, hook);
@@ -741,7 +742,130 @@ export const examPlayer = (hook) => {
     return keyboard ? page.keyboard.press(up ? '1' : '2') : tap(page.locator(`#work .le-tone-ans[data-rising="${up}"]`));
   };
 
-  const BY_TYPE = { choice, tf, sort, order, pairs, label, fill, filter, pick, fix, chat, tone };
+  // ---- cultura-asturiana's own types. `wrong` = the task ends not right; `mistakes: 1` = one slip, still right (soft). ----
+  const pressOrTap = async (page, tap, keyboard, key, locator) => (keyboard ? page.keyboard.press(key) : tap(locator));
+
+  // feed: items are `.ca-item[data-i]` (index into t.items), keys 1–n by position. Wrong items first (2 = not right), then every ok one.
+  const feed = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const ids = await page.locator('#work .ca-item').evaluateAll((els) => els.map((e) => Number(e.dataset.i)));
+    const give = (k) => pressOrTap(page, tap, keyboard, String(k + 1), page.locator('#work .ca-item').nth(k));
+    const bad = ids.map((i, k) => (t.items[i].ok ? -1 : k)).filter((k) => k >= 0);
+    for (const k of bad.slice(0, wrong ? 2 : mistakes)) await give(k);
+    for (const [k, i] of ids.entries()) if (t.items[i].ok) await give(k);
+  };
+
+  // cook: cards are `.ca-step[data-i]` (step index, or `x…` for an extra), keys 1–n by position. Wrong taps first: the extra cards,
+  // then a later step (2 = the second miss puts step 1 in by itself), then the steps in order (the ones not in yet).
+  const cook = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const ids = await page.locator('#work .ca-step').evaluateAll((els) => els.map((e) => e.dataset.i));
+    const press = (k) => pressOrTap(page, tap, keyboard, String(k + 1), page.locator('#work .ca-step').nth(k));
+    const n = t.steps.length;
+    const misses = [...ids.flatMap((id, k) => (id.startsWith('x') ? [k] : [])), ids.indexOf(String(n - 1)), ids.indexOf(String(n - 2))];
+    for (const k of misses.slice(0, wrong ? 2 : mistakes)) await press(k);
+    for (let i = 0; i < n; i++) {
+      const k = ids.indexOf(String(i));
+      if (!(await page.locator('#work .ca-step').nth(k).isDisabled())) await press(k);
+    }
+  };
+
+  // wordsearch: the words are found in t.rows (→ or ↓); a selection = its first and its last cell. Wrong ones first: two neighbour
+  // letters of a row (3 = not right). Keyboard: arrows walk the cursor (it starts at the top left), Enter marks a cell.
+  const wordCells = (t, w) => {
+    const g = t.rows.map((r) => [...r]);
+    const L = [...w.toUpperCase()];
+    for (let r = 0; r < g.length; r++)
+      for (let c = 0; c < g[r].length; c++) {
+        if (L.every((ch, i) => g[r][c + i] === ch))
+          return [
+            { r, c },
+            { r, c: c + L.length - 1 },
+          ];
+        if (L.every((ch, i) => g[r + i]?.[c] === ch))
+          return [
+            { r, c },
+            { r: r + L.length - 1, c },
+          ];
+      }
+    throw new Error(`«${w}» not in the grid`);
+  };
+  const wordsearch = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    let at = { r: 0, c: 0 };
+    let inGrid = false;
+    const mark = async (p) => {
+      if (!keyboard) return tap(page.locator(`#work .ca-ws-cell[data-r="${p.r}"][data-c="${p.c}"]`));
+      if (!inGrid) {
+        await page.keyboard.press('ArrowDown'); // the first arrow only puts the focus on the cursor
+        inGrid = true;
+      }
+      for (; at.r < p.r; at.r++) await page.keyboard.press('ArrowDown');
+      for (; at.r > p.r; at.r--) await page.keyboard.press('ArrowUp');
+      for (; at.c < p.c; at.c++) await page.keyboard.press('ArrowRight');
+      for (; at.c > p.c; at.c--) await page.keyboard.press('ArrowLeft');
+      at = { ...p };
+      await page.keyboard.press('Enter');
+    };
+    for (let m = 0; m < (wrong ? 3 : mistakes); m++) {
+      await mark({ r: m, c: 0 });
+      await mark({ r: m, c: 1 });
+    }
+    for (const w of t.words) {
+      const [a, b] = wordCells(t, w);
+      await mark(a);
+      await mark(b);
+    }
+  };
+
+  // clues: options are `.ca-opt[data-i]` (index into t.options), keys 1–n by position; one more clue first (P / the button).
+  const clues = async (page, tap, t, { wrong, keyboard }) => {
+    await pressOrTap(page, tap, keyboard, 'p', page.locator('#work .ca-more'));
+    const ids = await page.locator('#work .ca-opt').evaluateAll((els) => els.map((e) => Number(e.dataset.i)));
+    const right = ids.indexOf(t.answer);
+    const k = wrong ? (right + 1) % ids.length : right;
+    await pressOrTap(page, tap, keyboard, String(k + 1), page.locator('#work .ca-opt').nth(k));
+  };
+
+  // calendar: the selected chip (`.ca-cal-item[aria-pressed=true][data-i]`) goes to its month `.ca-month[data-month]` (keys 1–n);
+  // misses first (2 = not right: the second miss on one card puts it in by itself).
+  const calendar = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    let misses = wrong ? 2 : mistakes;
+    for (let n = 0; n < 24 && !(await answered(page)); n++) {
+      const i = Number(await page.locator('#work .ca-cal-item[aria-pressed=true]').getAttribute('data-i'));
+      const right = t.months.indexOf(t.items[i].month);
+      const k = misses-- > 0 ? (right + 1) % t.months.length : right;
+      await pressOrTap(page, tap, keyboard, String(k + 1), page.locator(`#work .ca-month[data-month="${t.months[k]}"]`));
+    }
+  };
+
+  // cascayu: `.ca-hop[data-step]` = the statement on screen; `.ca-hop-ans[data-truth]`, keys V / F; wrong = the first one wrong, then «Seguir».
+  const cascayu = async (page, tap, t, { wrong, keyboard }) => {
+    for (const [k, st] of t.steps.entries()) {
+      await expect(page.locator('#work .ca-hop')).toHaveAttribute('data-step', String(k));
+      const say = wrong && k === 0 ? !st.truth : st.truth;
+      await pressOrTap(page, tap, keyboard, say ? 'v' : 'f', page.locator(`#work .ca-hop-ans[data-truth="${say}"]`));
+      if (say !== st.truth && k < t.steps.length - 1) await pressOrTap(page, tap, keyboard, 'Enter', page.locator('#work .ca-hop-next'));
+    }
+  };
+
+  const BY_TYPE = {
+    choice,
+    tf,
+    sort,
+    order,
+    pairs,
+    label,
+    fill,
+    filter,
+    pick,
+    fix,
+    chat,
+    tone,
+    feed,
+    cook,
+    wordsearch,
+    clues,
+    calendar,
+    cascayu,
+  };
 
   const answerTask = async (page, tap, opts = {}) => {
     const t = await sessionTask(page);
