@@ -14,6 +14,8 @@ deploy.sh
 *.test.js
 .wrangler/
 images/cards/*.zip
+images/creatures/*.zip
+images/*.zip
 package.json
 pnpm-lock.yaml
 playwright.config.mjs

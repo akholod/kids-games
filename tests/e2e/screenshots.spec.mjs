@@ -16,6 +16,28 @@ test('catalog top', async ({ page }) => {
   await snap(page, 'catalog');
 });
 
+test('catalog: creature album (my creatures)', async ({ page, tap }) => {
+  // two packs, then the page again: no toasts, no «new» badges
+  await open(page, '/');
+  await page.evaluate(() => {
+    KF.openPack('creatures');
+    KF.openPack('creatures');
+  });
+  await open(page, '/');
+  await tap(page.locator('#tab-album'));
+  await tap(page.locator('#col-btn-creatures'));
+  await tap(page.locator('#cr-own [data-own="mine"]'));
+  await page.evaluate(() =>
+    scrollTo({ top: document.getElementById('cr-filter').getBoundingClientRect().top + scrollY - 12, behavior: 'instant' }),
+  );
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('#cr-album button.tile:not([hidden]) img')].every((i) => i.complete && i.naturalWidth),
+  );
+  await page.waitForLoadState('networkidle');
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page).toHaveScreenshot('creature-album.png');
+});
+
 test('football-quiz: start screen and first question', async ({ page, tap }) => {
   await open(page, '/games/football-quiz/');
   await snap(page, 'football-quiz-start');

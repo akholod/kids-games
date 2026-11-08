@@ -105,7 +105,7 @@ test('uk: siteGames = previous catalog (listed games), uk texts', () => {
 test('es: achievements, categories, card categories are Spanish, no Cyrillic', () => {
   const KF = load(code, { site: { lang: 'es' } });
   assert.equal(KF.lang, 'es');
-  assert.equal(KF.ACHIEVEMENTS.length, 23);
+  assert.equal(KF.ACHIEVEMENTS.length, 27);
   const uk = load(code, { site: { lang: 'uk' } });
   KF.ACHIEVEMENTS.forEach((a, i) => {
     assert.equal(a.id, uk.ACHIEVEMENTS[i].id);
@@ -115,6 +115,7 @@ test('es: achievements, categories, card categories are Spanish, no Cyrillic', (
     assert.notEqual(a.desc, uk.ACHIEVEMENTS[i].desc, a.id);
   });
   for (const v of Object.values(KF.CARD_CATS)) assert.ok(!CYR.test(v.label) && v.label);
+  for (const v of Object.values(KF.CREATURE_CATS)) assert.ok(!CYR.test(v.label) && v.label);
   for (const v of Object.values(KF.CATEGORIES)) assert.ok(!CYR.test(v.title) && v.title);
   assert.equal(KF.CARD_CATS.legend.weight, 2);
 });

@@ -91,6 +91,9 @@
       'card.futsal': 'Футзал',
       'card.rare': 'Рідкісна',
       'card.legend': 'Легенда',
+      'creature.common': 'Звичайна',
+      'creature.rare': 'Рідкісна',
+      'creature.legend': 'Легендарна',
       'first-game.title': 'Перший матч',
       'first-game.desc': 'Зіграй першу гру',
       'goals-10.title': '10 голів',
@@ -137,6 +140,14 @@
       'math-exam.desc': 'Склади «Examen de mates»: пройди матч-іспит',
       'planet-notable.title': 'Знавець планети',
       'planet-notable.desc': 'Іспит «El planeta donde vivimos» на Notable або краще',
+      'creatures-10.title': 'Друзі з казки',
+      'creatures-10.desc': 'Збери 10 різних істот',
+      'creatures-50.title': 'Знавець істот',
+      'creatures-50.desc': 'Збери 50 різних істот',
+      'creatures-full.title': 'Усі істоти',
+      'creatures-full.desc': 'Збери всіх істот',
+      'creature-legend.title': 'Легендарна істота',
+      'creature-legend.desc': 'Знайди легендарну істоту',
     },
     es: {
       'cat.math': 'Matemáticas',
@@ -149,6 +160,9 @@
       'card.futsal': 'Fútbol sala',
       'card.rare': 'Rara',
       'card.legend': 'Leyenda',
+      'creature.common': 'Común',
+      'creature.rare': 'Rara',
+      'creature.legend': 'Legendaria',
       'first-game.title': 'Primer partido',
       'first-game.desc': 'Juega tu primera partida',
       'goals-10.title': '10 goles',
@@ -195,6 +209,14 @@
       'math-exam.desc': 'Aprueba el «Examen de mates»: termina el partido-examen',
       'planet-notable.title': 'Experto del planeta',
       'planet-notable.desc': 'Saca Notable o más en el examen «El planeta donde vivimos»',
+      'creatures-10.title': 'Amigos mágicos',
+      'creatures-10.desc': 'Consigue 10 criaturas distintas',
+      'creatures-50.title': 'Experto en criaturas',
+      'creatures-50.desc': 'Consigue 50 criaturas distintas',
+      'creatures-full.title': 'Todas las criaturas',
+      'creatures-full.desc': 'Consigue todas las criaturas',
+      'creature-legend.title': 'Criatura legendaria',
+      'creature-legend.desc': 'Encuentra una criatura legendaria',
     },
   });
 
@@ -355,18 +377,37 @@
     rare: { label: T('card.rare'), weight: 10, sell: 5 },
     legend: { label: T('card.legend'), weight: 2, sell: 15 },
   };
-  const catOf = (c) => (c && CARD_CATS[c.cat]) || CARD_CATS.common;
+
+  // Creatures: the second collection (shared/creatures.js, window.KF_CREATURES, loaded on the catalog only; empty without it).
+  // cat: common | rare | legend. Same pack rules as the cards.
+  const CREATURES = Array.isArray(window.KF_CREATURES) ? window.KF_CREATURES : [];
+  const CREATURE_BY_ID = new Map(CREATURES.map((c) => [c.id, c]));
+  const CREATURE_CATS = {
+    common: { label: T('creature.common'), weight: 80, sell: 2 },
+    rare: { label: T('creature.rare'), weight: 16, sell: 5 },
+    legend: { label: T('creature.legend'), weight: 4, sell: 15 },
+  };
+
+  // Collections by name = the key in the state where the owned counts live.
+  const COLLECTIONS = {
+    cards: { key: 'cards', items: CARDS, byId: CARD_BY_ID, cats: CARD_CATS },
+    creatures: { key: 'creatures', items: CREATURES, byId: CREATURE_BY_ID, cats: CREATURE_CATS },
+  };
+  const collectionOf = (col) => (typeof col === 'string' && Object.hasOwn(COLLECTIONS, col) ? COLLECTIONS[col] : null);
+  const catOf = (coll, c) => (c && coll.cats[c.cat]) || coll.cats.common;
 
   const SCRIPT_SRC =
     (typeof document !== 'undefined' && document.currentScript && /** @type {HTMLScriptElement} */ (document.currentScript).src) || '';
-  const cardImg = (id, thumb) => {
-    const rel = `../images/cards/${thumb ? 'thumb/' : ''}${id}.webp`;
+  const assetUrl = (rel) => {
     try {
       return SCRIPT_SRC ? new URL(rel, SCRIPT_SRC).href : rel.slice(1);
     } catch {
       return rel.slice(1);
     }
   };
+  const cardImg = (id, thumb) => assetUrl(`../images/cards/${thumb ? 'thumb/' : ''}${id}.webp`);
+  const creatureImg = (id, { back = false, thumb = false } = {}) =>
+    assetUrl(`../images/creatures/${LANG}/${thumb ? 'thumb/' : ''}${id}${back ? '-b' : ''}.webp`);
 
   // Old emoji stickers -> cards (by player, first existing id wins). Others are refunded in coins.
   const STICKER_CARDS = {
@@ -423,6 +464,7 @@
 
   const uniqueCards = (s) => Object.keys(s.cards).filter((id) => s.cards[id] > 0).length;
   const ownedOfCat = (s, cat) => CARDS.filter((c) => c.cat === cat && s.cards[c.id] > 0).length;
+  const uniqueCreatures = (s) => Object.keys(s.creatures).filter((id) => s.creatures[id] > 0).length;
   const totalCorrect = (s) => s.stats.correct;
   const playedGames = (s) => s.stats.games;
 
@@ -505,12 +547,41 @@
       desc: T('planet-notable.desc'),
       check: (s) => (s.gameData?.['sociales-planeta']?.exam?.n || 0) >= NOTABLE_NOTA,
     },
+    {
+      id: 'creatures-10',
+      icon: '🐾',
+      title: T('creatures-10.title'),
+      desc: T('creatures-10.desc'),
+      check: (s) => uniqueCreatures(s) >= 10,
+    },
+    {
+      id: 'creatures-50',
+      icon: '🔮',
+      title: T('creatures-50.title'),
+      desc: T('creatures-50.desc'),
+      check: (s) => uniqueCreatures(s) >= 50,
+    },
+    {
+      id: 'creatures-full',
+      icon: '🐉',
+      title: T('creatures-full.title'),
+      desc: T('creatures-full.desc'),
+      check: (s) => CREATURES.length > 0 && CREATURES.every((c) => s.creatures[c.id] > 0),
+    },
+    {
+      id: 'creature-legend',
+      icon: '✨',
+      title: T('creature-legend.title'),
+      desc: T('creature-legend.desc'),
+      check: (s) => CREATURES.some((c) => c.cat === 'legend' && s.creatures[c.id] > 0),
+    },
   ];
 
   const fresh = () => ({
     v: 1,
     coins: 0,
     cards: {}, // card id -> count
+    creatures: {}, // creature id -> count
     achievements: {}, // id -> timestamp
     games: {}, // slug -> { plays, best, max, lastPlayed }
     gameData: {}, // slug -> game-specific saved data (KF.gameData)
@@ -641,15 +712,16 @@
     return gain;
   };
 
-  const pickCard = () => {
+  // Pack draw from a collection: category by weight, then uniform inside it.
+  const pickItem = (coll) => {
     const byCat = {};
-    for (const c of CARDS) (byCat[c.cat] ||= []).push(c);
-    const cats = Object.keys(CARD_CATS).filter((k) => byCat[k]?.length);
+    for (const c of coll.items) (byCat[c.cat] ||= []).push(c);
+    const cats = Object.keys(coll.cats).filter((k) => byCat[k]?.length);
     if (!cats.length) return null;
-    let r = Math.random() * cats.reduce((sum, k) => sum + CARD_CATS[k].weight, 0);
+    let r = Math.random() * cats.reduce((sum, k) => sum + coll.cats[k].weight, 0);
     let cat = cats[cats.length - 1];
     for (const k of cats) {
-      r -= CARD_CATS[k].weight;
+      r -= coll.cats[k].weight;
       if (r < 0) {
         cat = k;
         break;
@@ -659,16 +731,18 @@
     return list[Math.floor(Math.random() * list.length)];
   };
 
-  const addCard = (c) => {
-    const isNew = !state.cards[c.id];
-    state.cards[c.id] = (state.cards[c.id] || 0) + 1;
+  const addItem = (coll, c) => {
+    const owned = state[coll.key];
+    const isNew = !owned[c.id];
+    owned[c.id] = (owned[c.id] || 0) + 1;
     return { ...c, isNew };
   };
 
-  const sellOne = (c) => {
-    if ((state.cards[c.id] || 0) < 2) return 0;
-    state.cards[c.id]--;
-    const gain = catOf(c).sell;
+  const sellOne = (coll, c) => {
+    const owned = state[coll.key];
+    if ((owned[c.id] || 0) < 2) return 0;
+    owned[c.id]--;
+    const gain = catOf(coll, c).sell;
     addCoins(gain);
     return gain;
   };
@@ -734,9 +808,11 @@
     const pick = ld > sd || (ld === sd && l.stats.streak >= s.stats.streak) ? l.stats : s.stats;
     for (const k of ['streak', 'dayStreak', 'lastDay']) out.stats[k] = pick[k];
     out.coins = Math.max(0, out.coins);
-    // a card owned on any side is never lost (two devices may sell the same duplicate)
-    for (const id of new Set([...Object.keys(b.cards), ...Object.keys(l.cards), ...Object.keys(s.cards)])) {
-      if ((b.cards[id] >= 1 || l.cards[id] >= 1 || s.cards[id] >= 1) && !(out.cards[id] >= 1)) out.cards[id] = 1;
+    // a card or creature owned on any side is never lost (two devices may sell the same duplicate)
+    for (const key of ['cards', 'creatures']) {
+      for (const id of new Set([...Object.keys(b[key]), ...Object.keys(l[key]), ...Object.keys(s[key])])) {
+        if ((b[key][id] >= 1 || l[key][id] >= 1 || s[key][id] >= 1) && !(out[key][id] >= 1)) out[key][id] = 1;
+      }
     }
     return out;
   };
@@ -1187,6 +1263,8 @@
     CATEGORIES,
     CARDS,
     CARD_CATS,
+    CREATURES,
+    CREATURE_CATS,
     ACHIEVEMENTS,
     PACK_PRICE,
     PACK_SIZE,
@@ -1281,13 +1359,17 @@
     giveCard(id) {
       const c = CARD_BY_ID.get(id);
       if (!c) return null;
-      const got = addCard(c);
+      const got = addItem(COLLECTIONS.cards, c);
       emit('card', got);
       commit();
       return got;
     },
 
     cardImg,
+    creatureImg,
+
+    // Creature name in the site language.
+    creatureName: (c) => c[LANG] || c.uk || '',
 
     // Game-specific persistent data (plain JSON). Respects test mode.
     //   const d = KF.gameData('math-exam');  KF.gameData('math-exam', { ...d, x: 1 });
@@ -1300,34 +1382,42 @@
 
     canBuyPack: () => state.coins >= PACK_PRICE,
 
-    // Returns [{ ...card, isNew }] (PACK_SIZE cards) or null if not enough coins / no cards.
-    // Emits one 'pack' event with that array (no per-card 'card' events).
-    openPack() {
-      if (state.coins < PACK_PRICE || !CARDS.length) return null;
+    // col: 'cards' (football, default) or 'creatures'.
+    // Returns [{ ...item, isNew }] (PACK_SIZE items) or null if not enough coins / empty or unknown collection.
+    // Emits one 'pack' event with that array (no per-item 'card' events).
+    openPack(col = 'cards') {
+      const coll = collectionOf(col);
+      if (!coll || state.coins < PACK_PRICE || !coll.items.length) return null;
       addCoins(-PACK_PRICE);
       const got = [];
-      for (let i = 0; i < PACK_SIZE; i++) got.push(addCard(pickCard()));
+      for (let i = 0; i < PACK_SIZE; i++) got.push(addItem(coll, /** @type {any} */ (pickItem(coll))));
       state.stats.packs++;
       emit('pack', got);
       commit();
       return got;
     },
 
-    // Total extra copies (count - 1 for every owned card).
-    duplicates: () => Object.values(state.cards).reduce((sum, n) => sum + Math.max(0, n - 1), 0),
+    // Total extra copies (count - 1 for every owned item) of a collection.
+    duplicates(col = 'cards') {
+      const coll = collectionOf(col);
+      return coll ? Object.values(state[coll.key]).reduce((sum, n) => sum + Math.max(0, n - 1), 0) : 0;
+    },
 
     // Sell ONE extra copy (never the last one). Returns coins gained (0 if no duplicate).
-    sellDuplicate(id) {
-      const c = CARD_BY_ID.get(id);
-      const gain = c ? sellOne(c) : 0;
+    sellDuplicate(id, col = 'cards') {
+      const coll = collectionOf(col);
+      const c = coll?.byId.get(id);
+      const gain = coll && c ? sellOne(coll, c) : 0;
       if (gain) commit();
       return gain;
     },
 
-    // Sell all extra copies. Returns total coins gained.
-    sellAllDuplicates() {
+    // Sell all extra copies of a collection. Returns total coins gained.
+    sellAllDuplicates(col = 'cards') {
+      const coll = collectionOf(col);
+      if (!coll) return 0;
       let total = 0;
-      for (const c of CARDS) while ((state.cards[c.id] || 0) > 1) total += sellOne(c);
+      for (const c of coll.items) while ((state[coll.key][c.id] || 0) > 1) total += sellOne(coll, c);
       if (total) commit();
       return total;
     },

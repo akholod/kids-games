@@ -70,6 +70,47 @@ const T = KF.i18n({
     'card.pos': 'Картка {i} / {n}',
     'card.prev': 'Попередня картка',
     'card.next': 'Наступна картка',
+    'col.label': 'Колекції',
+    'col.football': 'Футболісти',
+    'col.creatures': 'Істоти',
+    'col.aria': '{name}: {got} з {all}',
+    'cr.eyebrow': '✦ Чарівний альбом ✦',
+    'cr.title': 'Чарівні істоти',
+    'cr.text': 'Збирай істот із казкового лісу. Переверни картку — там її сили та історія!',
+    'cr.total': 'Зібрано {got} з {all} істот',
+    'cr.packTitle': 'Чарівний пакунок',
+    'cr.packText': 'У ньому 3 істоти. Може трапитися легенда!',
+    'cr.packWord': 'ІСТОТИ',
+    'cr.filter': 'Яких істот показати',
+    'cr.all': 'Усі істоти',
+    'el.all': 'Усі',
+    'el.magic': 'Магія',
+    'el.nature': 'Природа',
+    'el.water': 'Вода',
+    'el.wind': 'Вітер',
+    'el.cosmos': 'Космос',
+    'el.earth': 'Земля',
+    'el.tech': 'Винаходи',
+    'el.fire': 'Вогонь',
+    'el.sound': 'Музика',
+    'el.ice': 'Лід',
+    'el.shadow': 'Тінь',
+    'cr.no': '№ {n}',
+    'cr.missing': '№ {n}: ще не знайдена',
+    'cr.sellText': 'Повторок: {n}. За них ти отримаєш +{coins} 🪙. По одній картці кожної істоти залишиться в альбомі.',
+    'cr.emptyMine': 'Тут поки порожньо. Відкрий чарівний пакунок — і тут зʼявляться твої істоти!',
+    'cr.emptyDone': 'Ти зібрав тут усіх істот! 🏆',
+    'cr.pos': 'Істота {i} / {n}',
+    'cr.flip': 'Переверни',
+    'cr.cardFront': '{name}. Натисни, щоб перевернути картку',
+    'cr.cardBack': '{name}, зворот: сили та історія. Натисни, щоб перевернути назад',
+    'cr.backAlt': 'Зворот картки «{name}»: сили, історія і характеристики',
+    'cr.zoom': 'Читати',
+    'cr.zoomLabel': 'Читати: збільшити зворот картки',
+    'cr.zoomTitle': '🔍 Лупа',
+    'cr.zoomOut': '✕ Закрити лупу',
+    'cr.keys': '<kbd>F</kbd> — перевернути · <kbd>←</kbd> <kbd>→</kbd> — інші',
+    'tease.crRare': '💎 Ого, рідкісна істота!',
     'pack.word': 'КАРТКИ',
     'pack.new': 'Новий пакунок',
     'pack.skip': 'Показати всі',
@@ -115,6 +156,7 @@ const T = KF.i18n({
     'stat.correct': 'Правильні відповіді',
     'stat.packs': 'Пакунки',
     'stat.cards': 'Картки',
+    'stat.creatures': 'Істоти',
     'code.box': '🔑 Код прогресу',
     'code.show': 'Показати',
     'code.hide': 'Сховати',
@@ -280,6 +322,47 @@ const T = KF.i18n({
     'card.pos': 'Carta {i} / {n}',
     'card.prev': 'Carta anterior',
     'card.next': 'Carta siguiente',
+    'col.label': 'Colecciones',
+    'col.football': 'Futbolistas',
+    'col.creatures': 'Criaturas',
+    'col.aria': '{name}: {got} de {all}',
+    'cr.eyebrow': '✦ Álbum mágico ✦',
+    'cr.title': 'Criaturas mágicas',
+    'cr.text': 'Colecciona criaturas del bosque encantado. Dale la vuelta a la carta: ¡detrás están sus poderes y su historia!',
+    'cr.total': 'Tienes {got} de {all} criaturas',
+    'cr.packTitle': 'Sobre mágico',
+    'cr.packText': 'Trae 3 criaturas. ¡Te puede salir una legendaria!',
+    'cr.packWord': 'CRIATURAS',
+    'cr.filter': 'Qué criaturas ver',
+    'cr.all': 'Todas',
+    'el.all': 'Todas',
+    'el.magic': 'Magia',
+    'el.nature': 'Naturaleza',
+    'el.water': 'Agua',
+    'el.wind': 'Viento',
+    'el.cosmos': 'Cosmos',
+    'el.earth': 'Tierra',
+    'el.tech': 'Inventos',
+    'el.fire': 'Fuego',
+    'el.sound': 'Música',
+    'el.ice': 'Hielo',
+    'el.shadow': 'Sombra',
+    'cr.no': 'Nº {n}',
+    'cr.missing': 'Nº {n}: aún no la tienes',
+    'cr.sellText': 'Repetidas: {n}. Te dan +{coins} 🪙. Una carta de cada criatura se queda en el álbum.',
+    'cr.emptyMine': 'Aquí aún no hay nada. ¡Abre un sobre mágico y aquí saldrán tus criaturas!',
+    'cr.emptyDone': '¡Ya tienes todas las criaturas de aquí! 🏆',
+    'cr.pos': 'Criatura {i} / {n}',
+    'cr.flip': 'Dale la vuelta',
+    'cr.cardFront': '{name}. Toca para darle la vuelta a la carta',
+    'cr.cardBack': '{name}, parte de atrás: poderes e historia. Toca para volver',
+    'cr.backAlt': 'Parte de atrás de «{name}»: poderes, historia y puntos',
+    'cr.zoom': 'Leer',
+    'cr.zoomLabel': 'Leer: ampliar la parte de atrás',
+    'cr.zoomTitle': '🔍 Lupa',
+    'cr.zoomOut': '✕ Cerrar la lupa',
+    'cr.keys': '<kbd>F</kbd> dar la vuelta · <kbd>←</kbd> <kbd>→</kbd> otras',
+    'tease.crRare': '💎 ¡Hala, una criatura rara!',
     'pack.word': 'CARTAS',
     'pack.new': 'Sobre nuevo',
     'pack.skip': 'Ver todas',
@@ -326,6 +409,7 @@ const T = KF.i18n({
     'stat.correct': 'Respuestas correctas',
     'stat.packs': 'Sobres',
     'stat.cards': 'Cartas',
+    'stat.creatures': 'Criaturas',
     'code.box': '🔑 Código de progreso',
     'code.show': 'Mostrar',
     'code.hide': 'Ocultar',
@@ -429,7 +513,7 @@ const T = KF.i18n({
 });
 // Static markup and the pack template, before anything is drawn; CSS labels come in as custom properties.
 T.apply();
-T.apply(/** @type {HTMLTemplateElement} */ (document.getElementById('pack-tpl')).content);
+for (const id of ['pack-tpl', 'pack-tpl-creatures']) T.apply(/** @type {HTMLTemplateElement} */ (document.getElementById(id)).content);
 document.title = T('title');
 for (const [prop, key] of [
   ['--t-new', 'tile.new'],
@@ -516,7 +600,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     const s = KF.get().stats;
     setMarkup(
       $('stats'),
-      `<div class="stat">${T('stat.games')}: <b>${safeCount(s.games)}</b></div><div class="stat">${T('stat.correct')}: <b>${safeCount(s.correct)}</b></div><div class="stat">${T('stat.packs')}: <b>${safeCount(s.packs)}</b></div><div class="stat">${T('stat.cards')}: <b>${KF.CARDS.filter((c) => KF.get().cards?.[c.id] > 0).length} / ${KF.CARDS.length}</b></div>`,
+      `<div class="stat">${T('stat.games')}: <b>${safeCount(s.games)}</b></div><div class="stat">${T('stat.correct')}: <b>${safeCount(s.correct)}</b></div><div class="stat">${T('stat.packs')}: <b>${safeCount(s.packs)}</b></div><div class="stat">${T('stat.cards')}: <b>${KF.CARDS.filter((c) => KF.get().cards?.[c.id] > 0).length} / ${KF.CARDS.length}</b></div>${KF.CREATURES?.length ? `<div class="stat">${T('stat.creatures')}: <b>${KF.CREATURES.filter((c) => KF.get().creatures?.[c.id] > 0).length} / ${KF.CREATURES.length}</b></div>` : ''}`,
     );
     $('export-code').value = KF.exportCode();
   }
@@ -556,8 +640,9 @@ function askDialog({ icon, title, text, primary, secondary }) {
   render();
 })();
 
-// Card album, pack opening and the big card view. The album grid is built once; KF changes only
-// update tiles in place, so hundreds of images are not re-created on every coin change.
+// Card album, pack opening and the big card view. Two collections: football cards and creatures (two-sided cards).
+// Each album grid is built once; KF changes only update tiles in place, so hundreds of images are not re-created on every coin change.
+// The pack stage, the big card view and the grid keys are shared: a collection object (COLS) says how to draw its cards.
 (() => {
   /** Elements are looked up by id and used as HTMLInputElement / HTMLDialogElement / ... as needed. @returns {any} */
   const $ = (id) => document.getElementById(id);
@@ -576,8 +661,36 @@ function askDialog({ icon, title, text, primary, secondary }) {
   const catLabel = (cat) => (CATS[cat] || CATS.common).label;
   const sellOf = (cat) => (CATS[cat] || CATS.common).sell;
   const pct = (a, b) => `${b ? Math.round((a / b) * 100) : 0}%`;
-  const packArt = () => $('pack-tpl').content.firstElementChild.cloneNode(true);
-  document.querySelectorAll('[data-pack-art]').forEach((el) => el.replaceWith(packArt()));
+  const packArt = (key = 'football') =>
+    $(key === 'creatures' ? 'pack-tpl-creatures' : 'pack-tpl').content.firstElementChild.cloneNode(true);
+  /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('[data-pack-art]')).forEach((el) =>
+    el.replaceWith(packArt(el.dataset.packArt)),
+  );
+
+  // Creatures: manifest, owned counts and look. Element = emoji + chip colour; the label comes from T.
+  const CR = KF.CREATURES || [];
+  const CR_CATS = KF.CREATURE_CATS || /** @type {typeof KF.CREATURE_CATS} */ ({});
+  const CR_BY_ID = new Map(CR.map((c) => [c.id, c]));
+  const ELEMENTS = {
+    magic: ['✨', '#c99bff'],
+    nature: ['🌿', '#7be07b'],
+    water: ['💧', '#4fc3ff'],
+    wind: ['🌬️', '#9fecdf'],
+    cosmos: ['🌌', '#8f8cff'],
+    earth: ['🪨', '#d8ae76'],
+    tech: ['⚙️', '#ffb44d'],
+    fire: ['🔥', '#ff7650'],
+    sound: ['🎵', '#ff8fd6'],
+    ice: ['❄️', '#bfefff'],
+    shadow: ['🌙', '#ab9ee6'],
+  };
+  const crHave = (id) => Math.max(0, Math.floor(Number(KF.get().creatures?.[id]) || 0));
+  const crInfo = (cat) => CR_CATS[cat] || CR_CATS.common || { label: '', weight: 0, sell: 0 };
+  const crClass = (cat) => `kf-cr-${CR_CATS[cat] ? cat : 'common'}`;
+  const crName = (c) => KF.creatureName(c);
+  const crNo = (c) => T('cr.no', { n: String(c.n).padStart(3, '0') });
+  const elOf = (c) => ELEMENTS[c.el] || ['✦', '#9fecdf'];
+  const elText = (c) => `${elOf(c)[0]} ${T.has(`el.${c.el}`) ? T(`el.${c.el}`) : c.el}`;
 
   // Card picture with a styled fallback (offline / missing image). full = big image, thumb shown underneath while it loads.
   function face(card, { full = false, lazy = false, missing = false } = {}) {
@@ -615,17 +728,88 @@ function askDialog({ icon, title, text, primary, secondary }) {
     return el;
   }
 
-  // ---- Album ----
+  // Creature picture (2:3): thumb (album), front (640px, thumb underneath while it loads) or back (description).
+  function crFace(c, { thumb = false, lazy = false, back = false } = {}) {
+    const el = h('span', { className: `cr-card ${crClass(c.cat)}` });
+    const front = !thumb && !back;
+    const img = h('img', {
+      alt: '',
+      decoding: 'async',
+      width: thumb ? 320 : back ? 1024 : 640,
+      height: thumb ? 480 : back ? 1536 : 960,
+      draggable: false,
+    });
+    if (lazy) img.loading = 'lazy';
+    if (front) el.style.setProperty('--thumb', `url("${KF.creatureImg(c.id, { thumb: true })}")`);
+    img.addEventListener('error', () => {
+      if (front && !img.dataset.thumb) {
+        img.dataset.thumb = '1';
+        img.src = KF.creatureImg(c.id, { thumb: true });
+        return;
+      }
+      el.classList.add('is-broken');
+      el.style.removeProperty('--thumb');
+    });
+    img.src = KF.creatureImg(c.id, { thumb, back });
+    const alt = h(
+      'span',
+      { className: 'cr-alt' },
+      h('span', { className: 'cr-alt-el', textContent: elOf(c)[0] }),
+      h('span', { className: 'cr-alt-name', textContent: crName(c) }),
+      h('span', { className: 'cr-alt-no', textContent: crNo(c) }),
+    );
+    alt.setAttribute('aria-hidden', 'true');
+    el.append(img, alt);
+    return el;
+  }
+
+  // Face-down card in the pack stage.
+  const footballBack = () =>
+    h(
+      'span',
+      { className: 'card-back' },
+      h('span', { className: 'card-back-ball', textContent: '⚽' }),
+      h('span', { className: 'card-back-word', textContent: 'KEEPER FUN' }),
+    );
+  const creatureBack = () =>
+    h(
+      'span',
+      { className: 'card-back cr-back' },
+      h('span', { className: 'cr-back-rune' }),
+      h('span', { className: 'cr-back-orb', textContent: '🐉' }),
+      h('span', { className: 'card-back-word', textContent: 'KEEPER FUN' }),
+    );
+
+  // Owned cards of an album grid, in shown order; roving tabindex inside it.
+  const shownOwned = (root) => [...root.querySelectorAll('button.tile:not([hidden])')];
+  function rove(root, target) {
+    for (const b of root.querySelectorAll('button.tile')) b.tabIndex = b === target ? 0 : -1;
+  }
+  const meter = () => {
+    const i = h('i');
+    return [h('span', { className: 'meter' }, i), i];
+  };
+  // Arrow keys move along a row of filter chips and press them.
+  function chipKeys(group, list) {
+    group.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      const all = list(),
+        i = all.indexOf(e.target);
+      if (!step || i < 0) return;
+      e.preventDefault();
+      const next = all[(i + step + all.length) % all.length];
+      next.focus();
+      next.click();
+    });
+  }
+
+  // ---- Football album ----
   const tiles = new Map(); // id -> { card, el, owned, n }
   const secs = {};
   const chips = {};
   let catFilter = 'all',
     ownFilter = 'all',
     built = false;
-  const meter = () => {
-    const i = h('i');
-    return [h('span', { className: 'meter' }, i), i];
-  };
 
   for (const cat of Object.keys(CATS)) {
     const list = KF.CARDS.filter((c) => c.cat === cat);
@@ -669,16 +853,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     chips[key] = { b, n, fill };
     $('cat-filter').append(b);
   }
-  $('cat-filter').addEventListener('keydown', (e) => {
-    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    const list = Object.values(chips).map((c) => c.b),
-      i = list.indexOf(e.target);
-    if (!step || i < 0) return;
-    e.preventDefault();
-    const next = list[(i + step + list.length) % list.length];
-    next.focus();
-    next.click();
-  });
+  chipKeys($('cat-filter'), () => Object.values(chips).map((c) => c.b));
   $('own-filter').addEventListener('click', (e) => {
     const b = e.target.closest('[data-own]');
     if (b) {
@@ -716,6 +891,12 @@ function askDialog({ icon, title, text, primary, secondary }) {
   // Sum of coins for every extra copy.
   const dupValue = () => KF.CARDS.reduce((sum, c) => sum + Math.max(0, have(c.id) - 1) * sellOf(c.cat), 0);
 
+  function packButton(btn, hint) {
+    btn.disabled = !KF.canBuyPack();
+    hint.hidden = KF.canBuyPack();
+    hint.textContent = T('pack.need', { n: KF.PACK_PRICE - KF.get().coins });
+  }
+
   function renderAlbum() {
     let changed = !built;
     for (const t of tiles.values()) {
@@ -743,14 +924,11 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('album-count').textContent = total;
     $('album-of').textContent = T('album.of', { n: all });
     $('album-total').setAttribute('aria-label', T('album.total', { got: total, all }));
-    const coins = KF.get().coins,
-      need = KF.PACK_PRICE - coins;
-    $('open-pack').disabled = !KF.canBuyPack();
-    $('pack-hint').hidden = KF.canBuyPack();
-    $('pack-hint').textContent = T('pack.need', { n: need });
+    packButton($('open-pack'), $('pack-hint'));
     const d = KF.duplicates();
     $('sell-all').hidden = !d;
     $('sell-all').textContent = T('sell.all', { n: d, coins: dupValue() });
+    switchCount('football', total, all);
     if (changed) applyFilter();
   }
 
@@ -762,11 +940,6 @@ function askDialog({ icon, title, text, primary, secondary }) {
       s.count.textContent = `${got} / ${list.length}`;
       s.fill.style.width = pct(got, list.length);
     }
-  }
-
-  const shownOwned = () => [...$('album').querySelectorAll('button.tile:not([hidden])')];
-  function rove(target) {
-    for (const b of $('album').querySelectorAll('button.tile')) b.tabIndex = b === target ? 0 : -1;
   }
 
   function applyFilter() {
@@ -789,144 +962,443 @@ function askDialog({ icon, title, text, primary, secondary }) {
     for (const b of $('own-filter').querySelectorAll('[data-own]')) b.setAttribute('aria-pressed', b.dataset.own === ownFilter);
     $('album-empty').hidden = !!shown;
     $('album-empty').textContent = T(ownFilter === 'mine' ? 'empty.mine' : 'empty.done');
-    const list = shownOwned();
-    rove(list.find((b) => b.tabIndex === 0) || list[0]);
+    const list = shownOwned($('album'));
+    rove($('album'), list.find((b) => b.tabIndex === 0) || list[0]);
   }
 
-  // Keyboard: Tab enters the grid once, arrows move between your cards, Enter opens one.
-  $('album').addEventListener('keydown', (e) => {
-    const cur = e.target.closest?.('button.tile');
-    if (!cur) return;
-    const list = shownOwned();
-    let next;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') next = list[list.indexOf(cur) + (e.key === 'ArrowRight' ? 1 : -1)];
-    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      const r = cur.getBoundingClientRect(),
-        down = e.key === 'ArrowDown';
-      let best = Infinity;
-      for (const b of list) {
-        const q = b.getBoundingClientRect(),
-          dy = down ? q.top - r.top : r.top - q.top;
-        if (dy < 8) continue;
-        const score = dy * 10 + Math.abs(q.left - r.left); // nearest row first, then nearest column
-        if (score < best) {
-          best = score;
-          next = b;
-        }
-      }
-    } else if (e.key === 'Home') next = list[0];
-    else if (e.key === 'End') next = list.at(-1);
-    else return;
-    e.preventDefault();
-    if (next) {
-      rove(next);
-      next.focus();
+  // ---- Creature album: one grid in number order, filters by element ----
+  const crTiles = new Map(); // id -> { c, el, owned, n }
+  const elChips = {};
+  let elFilter = 'all',
+    crOwn = 'all',
+    crBuilt = false;
+  for (const c of CR) {
+    const el = h('div');
+    $('cr-album').append(el);
+    crTiles.set(c.id, { c, el, owned: null, n: 0 });
+  }
+  for (const key of ['all', ...Object.keys(ELEMENTS).filter((k) => CR.some((c) => c.el === k))]) {
+    const n = h('small'),
+      [bar, fill] = meter();
+    bar.setAttribute('aria-hidden', 'true');
+    const b = h(
+      'button',
+      { type: 'button', className: 'cat-chip el-chip' },
+      h(
+        'b',
+        {},
+        h('span', { className: 'el-icon', textContent: key === 'all' ? '✦' : ELEMENTS[key][0] }),
+        h('span', { className: 'el-name', textContent: T(`el.${key}`) }),
+      ),
+      n,
+      bar,
+    );
+    b.querySelector('.el-icon').setAttribute('aria-hidden', 'true');
+    if (key !== 'all') b.style.setProperty('--el', ELEMENTS[key][1]);
+    b.dataset.el = key;
+    b.addEventListener('click', () => {
+      elFilter = key;
+      crApply();
+    });
+    elChips[key] = { b, n, fill, list: key === 'all' ? CR : CR.filter((c) => c.el === key) };
+    $('cr-filter').append(b);
+  }
+  chipKeys($('cr-filter'), () => Object.values(elChips).map((c) => c.b));
+  $('cr-own').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-own]');
+    if (b) {
+      crOwn = b.dataset.own;
+      crApply();
     }
   });
-  $('album').addEventListener('focusin', (e) => {
-    const b = e.target.closest('button.tile');
-    if (b && b.tabIndex !== 0) rove(b);
-  });
-  $('album').addEventListener('click', (e) => {
-    const b = e.target.closest('button.tile');
-    if (!b) return;
-    b.classList.remove('fresh');
-    rove(b);
-    openDetail(b.dataset.id);
-  });
 
-  $('sell-all').addEventListener('click', async () => {
-    const d = KF.duplicates(),
-      value = dupValue();
+  function updateCrTile(t) {
+    const n = crHave(t.c.id),
+      owned = n > 0;
+    if (owned !== t.owned) {
+      let el;
+      if (owned) {
+        el = h(
+          'button',
+          { type: 'button', className: `tile ct ${crClass(t.c.cat)}`, tabIndex: -1 },
+          crFace(t.c, { thumb: true, lazy: true }),
+        );
+        el.dataset.id = t.c.id;
+        if (crBuilt) el.classList.add('fresh');
+      } else {
+        el = h(
+          'div',
+          { className: 'tile ct ct-missing' },
+          h('span', { className: 'ct-el', textContent: elOf(t.c)[0] }),
+          h('span', { className: 'ct-q', textContent: '?' }),
+          h('span', { className: 'ct-no', textContent: crNo(t.c) }),
+        );
+        el.setAttribute('role', 'img');
+        el.setAttribute('aria-label', T('cr.missing', { n: String(t.c.n).padStart(3, '0') }));
+      }
+      el.hidden = t.el.hidden;
+      t.el.replaceWith(el);
+      Object.assign(t, { el, owned, n: 0 });
+    }
+    if (owned && n !== t.n) {
+      t.n = n;
+      t.el.querySelector('.dup')?.remove();
+      if (n > 1) t.el.append(h('span', { className: 'dup', textContent: `×${n}` }));
+      t.el.setAttribute('aria-label', T('tile.have', { name: crName(t.c), cat: crInfo(t.c.cat).label.toLowerCase(), n }));
+    }
+  }
+  const crDupValue = () => CR.reduce((sum, c) => sum + Math.max(0, crHave(c.id) - 1) * crInfo(c.cat).sell, 0);
+
+  function renderCreatures() {
+    if (!CR.length) return;
+    let changed = !crBuilt;
+    for (const t of crTiles.values()) {
+      const was = t.owned;
+      updateCrTile(t);
+      if (was !== t.owned) changed = true;
+    }
+    crBuilt = true;
+    for (const chip of Object.values(elChips)) {
+      const got = chip.list.filter((c) => crTiles.get(c.id).owned).length;
+      chip.n.textContent = `${got}/${chip.list.length}`;
+      chip.fill.style.width = pct(got, chip.list.length);
+    }
+    const total = elChips.all.list.filter((c) => crTiles.get(c.id).owned).length,
+      all = CR.length;
+    $('cr-count').textContent = total;
+    $('cr-of').textContent = T('album.of', { n: all });
+    $('cr-bar').style.width = pct(total, all);
+    $('cr-total').setAttribute('aria-label', T('cr.total', { got: total, all }));
+    packButton($('cr-open-pack'), $('cr-pack-hint'));
+    const d = KF.duplicates('creatures');
+    $('cr-sell-all').hidden = !d;
+    $('cr-sell-all').textContent = T('sell.all', { n: d, coins: crDupValue() });
+    switchCount('creatures', total, all);
+    if (changed) crApply();
+  }
+
+  function crApply() {
+    let shown = 0;
+    for (const t of crTiles.values()) {
+      const ok = (elFilter === 'all' || t.c.el === elFilter) && (crOwn === 'all' || (crOwn === 'mine') === t.owned);
+      t.el.hidden = !ok;
+      if (ok) shown++;
+    }
+    for (const [key, c] of Object.entries(elChips)) c.b.setAttribute('aria-pressed', key === elFilter);
+    for (const b of $('cr-own').querySelectorAll('[data-own]')) b.setAttribute('aria-pressed', b.dataset.own === crOwn);
+    $('cr-empty').hidden = !!shown;
+    $('cr-empty').textContent = T(crOwn === 'mine' ? 'cr.emptyMine' : 'cr.emptyDone');
+    const list = shownOwned($('cr-album'));
+    rove($('cr-album'), list.find((b) => b.tabIndex === 0) || list[0]);
+  }
+
+  // ---- Collection switcher (remembered per browser; #creatures / #football deep links) ----
+  const COL_KEY = 'kf-album-col';
+  const store = () => (KF.TEST_MODE ? sessionStorage : localStorage);
+  let colNow = 'football';
+  function switchCount(key, got, all) {
+    $(`col-n-${key}`).textContent = `${got} / ${all}`;
+    $(`col-bar-${key}`).style.width = pct(got, all);
+    $(`col-btn-${key}`).setAttribute('aria-label', T('col.aria', { name: T(`col.${key}`), got, all }));
+  }
+  function setCol(key) {
+    colNow = key === 'creatures' && CR.length ? 'creatures' : 'football';
+    $('col-football').hidden = colNow !== 'football';
+    $('col-creatures').hidden = colNow !== 'creatures';
+    for (const b of $('col-switch').querySelectorAll('[data-col]')) b.setAttribute('aria-pressed', b.dataset.col === colNow);
+    try {
+      store().setItem(COL_KEY, colNow);
+    } catch {}
+  }
+  $('col-switch').hidden = !CR.length;
+  $('col-switch').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-col]');
+    if (b) setCol(b.dataset.col);
+  });
+  chipKeys($('col-switch'), () => [...$('col-switch').querySelectorAll('[data-col]')]);
+  function fromHash() {
+    const key = location.hash.slice(1);
+    if (key !== 'creatures' && key !== 'football' && key !== 'album') return;
+    if (key !== 'album') setCol(key);
+    $('tab-album').click();
+  }
+  try {
+    setCol(store().getItem(COL_KEY) || 'football');
+  } catch {
+    setCol('football');
+  }
+  addEventListener('hashchange', fromHash);
+
+  // ---- Collections: how the shared views draw their cards ----
+  /** @typedef {{ key: string, api: 'creatures' | undefined, cats: Record<string, { label: string, sell: number }>, root: any, openBtn: HTMLElement,
+   *   byId: Map<string, any>, have: (id: string) => number, cls: (cat: string) => string, label: (cat: string) => string, sell: (cat: string) => number,
+   *   name: (c: any) => string, face: (c: any, o?: { full?: boolean }) => HTMLElement, back: () => HTMLElement, preload: (c: any) => void,
+   *   tease: Record<string, string>, pos: string, dupValue: () => number, sellText: string }} Col */
+  /** @type {Record<string, Col>} */
+  const COLS = {
+    football: {
+      key: 'football',
+      api: undefined,
+      cats: CATS,
+      root: $('album'),
+      openBtn: $('open-pack'),
+      byId: BY_ID,
+      have,
+      cls: catClass,
+      label: catLabel,
+      sell: sellOf,
+      name: (c) => c.name,
+      face: (c, o) => face(c, o),
+      back: footballBack,
+      preload: (c) => {
+        new Image().src = KF.cardImg(c.id);
+      },
+      tease: { futsal: T('tease.futsal'), rare: T('tease.rare'), legend: T('tease.legend') },
+      pos: 'card.pos',
+      dupValue,
+      sellText: 'sell.text',
+    },
+    creatures: {
+      key: 'creatures',
+      api: 'creatures',
+      cats: CR_CATS,
+      root: $('cr-album'),
+      openBtn: $('cr-open-pack'),
+      byId: CR_BY_ID,
+      have: crHave,
+      cls: crClass,
+      label: (cat) => crInfo(cat).label,
+      sell: (cat) => crInfo(cat).sell,
+      name: crName,
+      face: (c, o) => crFace(c, { thumb: !o?.full }),
+      back: creatureBack,
+      preload: (c) => {
+        new Image().src = KF.creatureImg(c.id);
+      },
+      tease: { rare: T('tease.crRare'), legend: T('tease.legend') },
+      pos: 'cr.pos',
+      dupValue: crDupValue,
+      sellText: 'cr.sellText',
+    },
+  };
+
+  // Keyboard: Tab enters a grid once, arrows move between your cards, Enter opens one.
+  for (const c of Object.values(COLS)) {
+    const root = c.root;
+    root.addEventListener('keydown', (e) => {
+      const cur = e.target.closest?.('button.tile');
+      if (!cur) return;
+      const list = shownOwned(root);
+      let next;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') next = list[list.indexOf(cur) + (e.key === 'ArrowRight' ? 1 : -1)];
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const r = cur.getBoundingClientRect(),
+          down = e.key === 'ArrowDown';
+        let best = Infinity;
+        for (const b of list) {
+          const q = b.getBoundingClientRect(),
+            dy = down ? q.top - r.top : r.top - q.top;
+          if (dy < 8) continue;
+          const score = dy * 10 + Math.abs(q.left - r.left); // nearest row first, then nearest column
+          if (score < best) {
+            best = score;
+            next = b;
+          }
+        }
+      } else if (e.key === 'Home') next = list[0];
+      else if (e.key === 'End') next = list.at(-1);
+      else return;
+      e.preventDefault();
+      if (next) {
+        rove(root, next);
+        next.focus();
+      }
+    });
+    root.addEventListener('focusin', (e) => {
+      const b = e.target.closest('button.tile');
+      if (b && b.tabIndex !== 0) rove(root, b);
+    });
+    root.addEventListener('click', (e) => {
+      const b = e.target.closest('button.tile');
+      if (!b) return;
+      b.classList.remove('fresh');
+      rove(root, b);
+      openDetail(b.dataset.id, c);
+    });
+  }
+
+  async function sellAll(c, btn) {
+    const d = KF.duplicates(c.api),
+      value = c.dupValue();
     if (!d) return;
     const choice = await askDialog({
       icon: '🔁',
       title: T('sell.title'),
-      text: T('sell.text', { n: d, coins: value }),
+      text: T(c.sellText, { n: d, coins: value }),
       primary: T('sell.yes', { coins: value }),
       secondary: T('no'),
     });
-    if (choice === 'primary' && KF.sellAllDuplicates()) {
-      (shownOwned()[0] || $('open-pack')).focus();
+    if (choice === 'primary' && KF.sellAllDuplicates(c.api)) {
+      (shownOwned(c.root)[0] || c.openBtn).focus();
       return;
     }
-    $('sell-all').focus();
-  });
+    btn.focus();
+  }
+  $('sell-all').addEventListener('click', () => sellAll(COLS.football, $('sell-all')));
+  $('cr-sell-all').addEventListener('click', () => sellAll(COLS.creatures, $('cr-sell-all')));
 
-  // ---- Big card view ----
+  // ---- Big card view (creatures: two-sided, flip + magnifier for the back) ----
   const dd = $('card-dialog');
-  let viewId = null;
+  let viewId = null,
+    viewCol = COLS.football,
+    side = 'front';
+  const zoomOpen = () => !$('zoom-view').hidden;
+
+  function crFlipCard(c) {
+    const front = h('span', { className: 'cr-side cr-front' }, crFace(c));
+    const back = h('span', { className: 'cr-side cr-back-side' }, crFace(c, { back: true })); // loads now: the flip is instant
+    return h('button', { type: 'button', className: 'cr-flip' }, h('span', { className: 'cr-flip-inner' }, front, back));
+  }
+  function setSide(s) {
+    const b = $('detail-card').querySelector('.cr-flip'),
+      c = viewCol.byId.get(viewId);
+    if (!b || !c) return;
+    side = s;
+    b.classList.toggle('is-flipped', s === 'back');
+    b.querySelector('.cr-front').classList.toggle('is-shown', s === 'front');
+    b.querySelector('.cr-back-side').classList.toggle('is-shown', s === 'back');
+    $('detail-card').dataset.side = s;
+    b.setAttribute('aria-label', T(s === 'back' ? 'cr.cardBack' : 'cr.cardFront', { name: crName(c) }));
+    $('detail-flip').setAttribute('aria-pressed', String(s === 'back'));
+  }
+  const flipDetail = () => setSide(side === 'back' ? 'front' : 'back');
+
   function drawDetail(dir) {
-    const card = BY_ID.get(viewId);
+    const c = viewCol,
+      card = c.byId.get(viewId);
     if (!card) return;
-    const n = have(card.id),
-      list = shownOwned().map((b) => b.dataset.id),
+    const cr = c.key === 'creatures',
+      n = c.have(card.id),
+      list = shownOwned(c.root).map((b) => b.dataset.id),
       at = list.indexOf(card.id);
     if (dir !== undefined) {
-      dd.className = `stage detail-stage ${catClass(card.cat)}`;
+      dd.className = `stage detail-stage ${c.cls(card.cat)}`;
       dd.dataset.glow = card.cat;
-      const f = face(card, { full: true });
+      dd.dataset.col = c.key;
+      const f = cr ? crFlipCard(card) : face(card, { full: true });
       if (dir) f.classList.add(dir > 0 ? 'from-right' : 'from-left');
       $('detail-card').replaceChildren(f);
-      $('detail-card').setAttribute('aria-label', card.name);
-      $('detail-name').textContent = card.name;
-      $('detail-cat').className = `cat-tag ${catClass(card.cat)}`;
-      $('detail-cat').textContent = catLabel(card.cat);
+      if (cr) {
+        $('detail-card').removeAttribute('aria-label');
+        setSide('front');
+        $('detail-el').textContent = `${elText(card)} · ${crNo(card)}`;
+      } else {
+        $('detail-card').setAttribute('aria-label', card.name);
+        delete $('detail-card').dataset.side;
+      }
+      $('detail-el').hidden = $('detail-actions').hidden = $('detail-keys').hidden = !cr;
+      $('detail-name').textContent = c.name(card);
+      $('detail-cat').className = `cat-tag ${c.cls(card.cat)}`;
+      $('detail-cat').textContent = c.label(card.cat);
     }
     $('detail-count').textContent = n > 1 ? T('detail.dups', { n }) : T('detail.one');
     $('detail-sell').hidden = $('detail-note').hidden = n < 2;
-    $('detail-sell').textContent = T('detail.sell', { coins: sellOf(card.cat) });
-    $('detail-pos').textContent = at >= 0 ? T('card.pos', { i: at + 1, n: list.length }) : '';
+    dd.classList.toggle('has-dups', cr && n > 1); // narrow screens: a smaller card leaves room for the sell button
+    $('detail-sell').textContent = T('detail.sell', { coins: c.sell(card.cat) });
+    $('detail-pos').textContent = at >= 0 ? T(c.pos, { i: at + 1, n: list.length }) : '';
     $('detail-prev').disabled = $('detail-next').disabled = list.length < 2;
     // the focused sell button may have just been hidden: keep focus (and the arrow keys) inside the dialog
-    if (dd.open && !dd.contains(document.activeElement)) $('detail-card').focus();
+    if (dd.open && !dd.contains(document.activeElement)) detailFocus();
   }
-  function openDetail(id) {
+  const detailFocus = () => ($('detail-card').querySelector('.cr-flip') || $('detail-card')).focus();
+  function openDetail(id, c = COLS.football) {
     viewId = id;
+    viewCol = c;
     drawDetail(0);
     if (!dd.open) dd.showModal();
-    $('detail-card').focus();
+    detailFocus();
   }
   function step(d) {
-    const list = shownOwned().map((b) => b.dataset.id);
+    const list = shownOwned(viewCol.root).map((b) => b.dataset.id);
     if (list.length < 2) return;
     viewId = list[(list.indexOf(viewId) + d + list.length) % list.length];
+    const keep = dd.contains(document.activeElement) && document.activeElement.closest('.cr-flip');
     drawDetail(d);
+    if (keep) detailFocus();
   }
+  function openZoom() {
+    const c = viewCol.byId.get(viewId);
+    if (viewCol.key !== 'creatures' || !c) return;
+    setSide('back');
+    $('zoom-pic').src = KF.creatureImg(c.id, { back: true });
+    $('zoom-pic').alt = T('cr.backAlt', { name: crName(c) });
+    $('zoom-view').hidden = false;
+    $('zoom-view').scrollTo(0, 0);
+    $('zoom-view').focus();
+  }
+  function closeZoom() {
+    $('zoom-view').hidden = true;
+    $('detail-zoom').focus();
+  }
+  $('detail-keys').replaceChildren(document.createRange().createContextualFragment(T('cr.keys')));
   $('detail-prev').addEventListener('click', () => step(-1));
   $('detail-next').addEventListener('click', () => step(1));
   $('detail-close').addEventListener('click', () => dd.close());
+  $('detail-flip').addEventListener('click', flipDetail);
+  $('detail-zoom').addEventListener('click', openZoom);
+  $('zoom-close').addEventListener('click', closeZoom);
+  $('zoom-img').addEventListener('click', closeZoom);
+  $('detail-card').addEventListener('click', (e) => {
+    if (e.target.closest('.cr-flip')) flipDetail();
+  });
   $('detail-sell').addEventListener('click', () => {
-    if (KF.sellDuplicate(viewId)) drawDetail();
+    if (KF.sellDuplicate(viewId, viewCol.api)) drawDetail();
   });
   dd.addEventListener('keydown', (e) => {
+    if (zoomOpen()) return; // arrows scroll the magnified back
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       step(e.key === 'ArrowRight' ? 1 : -1);
+      return;
+    }
+    if (viewCol.key !== 'creatures' || e.ctrlKey || e.metaKey || e.altKey) return;
+    // F flips anywhere; Space flips unless a button has focus (the card itself is a button: Space clicks it)
+    if (e.key === 'f' || e.key === 'F' || (e.key === ' ' && !e.target.closest?.('button'))) {
+      e.preventDefault();
+      flipDetail();
+    }
+  });
+  // Esc: first close the magnifier, then the card view.
+  dd.addEventListener('cancel', (e) => {
+    if (zoomOpen()) {
+      e.preventDefault();
+      closeZoom();
     }
   });
   dd.addEventListener('close', () => {
     if (dd.open) return;
-    const t = tiles.get(viewId);
-    if (t?.owned && !t.el.hidden) {
-      rove(t.el);
-      t.el.focus();
-      t.el.scrollIntoView({ block: 'nearest' });
+    $('zoom-view').hidden = true;
+    const root = viewCol.root,
+      b = [...root.querySelectorAll('button.tile')].find((x) => x.dataset.id === viewId);
+    if (b && !b.hidden) {
+      rove(root, b);
+      b.focus();
+      b.scrollIntoView({ block: 'nearest' });
     }
   });
 
   // ---- Pack opening ----
   // pack -> (special cards wait face down and glow) -> flip -> next ... -> summary
   const pd = $('pack-dialog');
-  const TEASE = { futsal: T('tease.futsal'), rare: T('tease.rare'), legend: T('tease.legend') };
   const CHARGE = { futsal: 350, rare: 700, legend: 1400 }; // build-up before the flip, ms
   const special = (card) => card.cat !== 'common';
-  let P = null;
+  let P = null,
+    lastCol = COLS.football;
   const live = (p) => P === p && p.phase !== 'summary' && pd.open;
 
   function setGlow(cat) {
     pd.dataset.glow = cat || '';
-    pd.className = `stage${cat ? ` ${catClass(cat)}` : ''}`;
+    pd.className = `stage${cat ? ` ${lastCol.cls(cat)}` : ''}`;
   }
   function tip(html) {
     $('pack-tip').replaceChildren(document.createRange().createContextualFragment(html));
@@ -935,16 +1407,16 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('pack-hit').setAttribute('aria-label', label);
   }
 
-  function buyPack() {
+  function buyPack(c = lastCol) {
     if (P?.busy) return;
-    const got = KF.openPack();
+    const got = c.api ? KF.openPack(c.api) : KF.openPack();
     if (!got) return;
+    lastCol = c;
     // count shown on each card = final count minus copies that come later in this same pack
-    const counts = got.map((c, i) => have(c.id) - got.slice(i + 1).filter((x) => x.id === c.id).length);
-    got.forEach((c) => {
-      new Image().src = KF.cardImg(c.id);
-    });
-    P = { got, counts, i: -1, phase: 'pack', busy: false };
+    const counts = got.map((x, i) => c.have(x.id) - got.slice(i + 1).filter((y) => y.id === x.id).length);
+    got.forEach(c.preload);
+    P = { col: c, got, counts, i: -1, phase: 'pack', busy: false };
+    pd.dataset.col = c.key;
     setGlow(null);
     $('pack-summary').hidden = true;
     $('pack-play').hidden = false;
@@ -954,7 +1426,7 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('pack-info').classList.remove('show');
     $('pack-info').replaceChildren();
     $('pack-tray').replaceChildren(...got.map(() => h('i')));
-    $('pack-hit').replaceChildren(packArt());
+    $('pack-hit').replaceChildren(packArt(c.key));
     hit(T('hit.open'));
     tip(T('tip.open'));
     if (!pd.open) pd.showModal();
@@ -978,33 +1450,25 @@ function askDialog({ icon, title, text, primary, secondary }) {
 
   async function show(i) {
     const p = P,
+      c = p.col,
       card = p.got[i];
     p.i = i;
     p.busy = true;
     const el = h(
       'div',
-      { className: `flip ${catClass(card.cat)}${special(card) ? ' special' : ''}` },
+      { className: `flip ${c.cls(card.cat)}${special(card) ? ' special' : ''}${c.key === 'creatures' ? ' cr' : ''}` },
       h(
         'div',
         { className: 'flip-inner' },
-        h(
-          'div',
-          { className: 'face face-back' },
-          h(
-            'span',
-            { className: 'card-back' },
-            h('span', { className: 'card-back-ball', textContent: '⚽' }),
-            h('span', { className: 'card-back-word', textContent: 'KEEPER FUN' }),
-          ),
-        ),
-        h('div', { className: 'face face-front' }, face(card, { full: true })),
+        h('div', { className: 'face face-back' }, c.back()),
+        h('div', { className: 'face face-front' }, c.face(card, { full: true })),
       ),
     );
     pd.classList.remove('revealed');
     setGlow(special(card) ? card.cat : null);
     $('pack-hit').replaceChildren(el);
     $('pack-step').textContent = T('card.pos', { i: i + 1, n: p.got.length });
-    $('pack-tease').textContent = TEASE[card.cat] || '';
+    $('pack-tease').textContent = c.tease[card.cat] || '';
     $('pack-info').classList.remove('show');
     [...$('pack-tray').children].forEach((slot, k) => slot.classList.toggle('now', k === i));
     p.phase = 'back';
@@ -1055,57 +1519,54 @@ function askDialog({ icon, title, text, primary, secondary }) {
     tip(T(last ? 'tip.all' : 'tip.next'));
   }
 
-  function statusTag(card, n) {
+  function statusTag(c, card, n) {
     return card.isNew
       ? h('span', { className: 'new-tag', textContent: T('tag.new') })
-      : h('span', { className: 'dup-tag', textContent: T('tag.dup', { n, coins: sellOf(card.cat) }) });
+      : h('span', { className: 'dup-tag', textContent: T('tag.dup', { n, coins: c.sell(card.cat) }) });
   }
   function showInfo(p) {
-    const card = p.got[p.i];
+    const c = p.col,
+      card = p.got[p.i];
     $('pack-tease').textContent = '';
-    $('pack-info').replaceChildren(
-      h('h2', { textContent: card.name }),
-      h(
-        'div',
-        { className: 'tags' },
-        h('span', { className: `cat-tag ${catClass(card.cat)}`, textContent: catLabel(card.cat) }),
-        statusTag(card, p.counts[p.i]),
-      ),
-    );
+    const tags = h('div', { className: 'tags' }, h('span', { className: `cat-tag ${c.cls(card.cat)}`, textContent: c.label(card.cat) }));
+    if (c.key === 'creatures') tags.append(h('span', { className: 'el-tag', textContent: elText(card) }));
+    tags.append(statusTag(c, card, p.counts[p.i]));
+    $('pack-info').replaceChildren(h('h2', { textContent: c.name(card) }), tags);
     $('pack-info').classList.add('show');
     const slot = $('pack-tray').children[p.i];
     slot.className = 'done';
-    slot.replaceChildren(face(card));
+    slot.replaceChildren(c.face(card));
   }
 
   function summary() {
     const p = P;
     if (!p) return;
+    const c = p.col;
     p.phase = 'summary';
     p.busy = false;
     pd.classList.remove('charging', 'flash', 'revealed');
-    const order = Object.keys(CATS);
-    const best = p.got.reduce((a, c) => (order.indexOf(c.cat) > order.indexOf(a) ? c.cat : a), 'common');
+    const order = Object.keys(c.cats);
+    const best = p.got.reduce((a, x) => (order.indexOf(x.cat) > order.indexOf(a) ? x.cat : a), 'common');
     setGlow(best === 'common' ? null : best);
     $('pack-play').hidden = true;
     $('pack-skip').hidden = true;
     $('pack-summary').hidden = false;
     $('pack-step').textContent = T('pack.mine');
     $('sum-cards').replaceChildren(
-      ...p.got.map((c, i) => {
+      ...p.got.map((x, i) => {
         const el = h(
           'div',
-          { className: `sum-card ${catClass(c.cat)}${special(c) ? ' special' : ''}` },
-          face(c),
-          statusTag(c, p.counts[i]),
+          { className: `sum-card ${c.cls(x.cat)}${special(x) ? ' special' : ''}` },
+          c.face(x),
+          statusTag(c, x, p.counts[i]),
         );
         el.style.setProperty('--i', i);
         el.setAttribute('role', 'img');
-        el.setAttribute('aria-label', `${c.name}, ${catLabel(c.cat).toLowerCase()}, ${T(c.isNew ? 'sum.new' : 'sum.dup')}`);
+        el.setAttribute('aria-label', `${c.name(x)}, ${c.label(x.cat).toLowerCase()}, ${T(x.isNew ? 'sum.new' : 'sum.dup')}`);
         return el;
       }),
     );
-    const fresh = p.got.filter((c) => c.isNew).length,
+    const fresh = p.got.filter((x) => x.isNew).length,
       dups = p.got.length - fresh;
     $('sum-title').textContent = fresh === p.got.length ? T('sum.allNew') : fresh ? T('sum.someNew', { n: fresh }) : T('sum.noNew');
     $('sum-text').textContent = T(dups ? 'sum.dupText' : 'sum.newText');
@@ -1121,9 +1582,10 @@ function askDialog({ icon, title, text, primary, secondary }) {
     $('again-hint').textContent = T('pack.againNeed', { n: need });
   }
 
-  $('pack-price').textContent = KF.PACK_PRICE;
-  $('open-pack').addEventListener('click', buyPack);
-  $('pack-again').addEventListener('click', buyPack);
+  $('pack-price').textContent = $('cr-pack-price').textContent = KF.PACK_PRICE;
+  $('open-pack').addEventListener('click', () => buyPack(COLS.football));
+  $('cr-open-pack').addEventListener('click', () => buyPack(COLS.creatures));
+  $('pack-again').addEventListener('click', () => buyPack(lastCol));
   $('pack-hit').addEventListener('click', advance);
   $('pack-skip').addEventListener('click', summary);
   $('pack-done').addEventListener('click', () => pd.close());
@@ -1138,21 +1600,28 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (pd.open) return; // reopened (Esc, then Enter quickly) before this queued event arrived
     P = null;
     pd.className = 'stage';
-    (KF.canBuyPack() ? $('open-pack') : shownOwned()[0] || $('tab-album')).focus();
+    (KF.canBuyPack() ? lastCol.openBtn : shownOwned(lastCol.root)[0] || $('tab-album')).focus();
   });
 
   KF.on('change', () => {
     renderAlbum();
+    renderCreatures();
     if (P?.phase === 'summary') drawAgain();
     if (dd.open) drawDetail();
   });
   renderAlbum();
+  renderCreatures();
+  fromHash();
   if (KF.TEST_MODE)
     window.__album = {
-      buyPack,
-      openDetail,
+      buyPack: (key) => buyPack(COLS[key] || COLS.football),
+      openDetail: (id, key) => openDetail(id, COLS[key] || COLS.football),
+      setCol,
+      get side() {
+        return side;
+      },
       get pack() {
-        return P && { phase: P.phase, i: P.i, busy: P.busy, cats: P.got.map((c) => c.cat) };
+        return P && { col: P.col.key, phase: P.phase, i: P.i, busy: P.busy, cats: P.got.map((c) => c.cat) };
       },
     };
 })();

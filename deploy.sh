@@ -24,6 +24,18 @@ if ! node -e "global.window={};require('./shared/cards.js');const fs=require('fs
   rm -rf "$build"
 fi
 
+# Creature WebPs are not in git either: rebuild them from the source zips in images/creatures/ when any is missing.
+if ! node -e "global.window={};require('./shared/creatures.js');const fs=require('fs');
+  process.exit(window.KF_CREATURES.every(c=>['uk','es'].every(l=>['','-b'].every(s=>fs.existsSync('images/creatures/'+l+'/'+c.id+s+'.webp'))&&fs.existsSync('images/creatures/'+l+'/thumb/'+c.id+'.webp')))?0:1)"; then
+  set -- images/creatures/*.zip
+  [ -e "$1" ] || { echo "Creature images missing and no source zip in images/creatures/" >&2; exit 1; }
+  build="$HOME/.cache/kf-creatures-build"
+  rm -rf "$build" && mkdir -p "$build"
+  for zip in "$@"; do unzip -q -o "$zip" -d "$build"; done
+  python3 -I scripts/build-creatures.py "$(dirname "$(find "$build" -name 'manifest*.csv' | head -n 1)")"
+  rm -rf "$build"
+fi
+
 # Safety net: unit + Playwright e2e tests must pass before anything is published (set -e aborts on failure).
 [ -d node_modules ] || pnpm install --frozen-lockfile
 pnpm test

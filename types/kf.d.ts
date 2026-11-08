@@ -43,6 +43,8 @@ interface KFState {
   coins: number;
   /** card id -> count */
   cards: Record<string, number>;
+  /** creature id -> count */
+  creatures: Record<string, number>;
   /** achievement id -> timestamp */
   achievements: Record<string, number>;
   /** slug -> result summary */
@@ -91,6 +93,27 @@ interface KFCard {
 interface KFCardGot extends KFCard {
   isNew: boolean;
 }
+
+type KFCreatureCat = 'common' | 'rare' | 'legend';
+
+/** Entry of window.KF_CREATURES (shared/creatures.js). */
+interface KFCreature {
+  id: string;
+  n: number;
+  cat: KFCreatureCat;
+  /** element, e.g. 'earth' */
+  el: string;
+  uk: string;
+  es: string;
+}
+
+/** A creature as returned by openPack('creatures'). */
+interface KFCreatureGot extends KFCreature {
+  isNew: boolean;
+}
+
+/** Collection name = the key of the owned counts in the state. */
+type KFCollection = 'cards' | 'creatures';
 
 interface KFCardCatInfo {
   label: string;
@@ -155,7 +178,7 @@ interface KFEvents {
   coins: number;
   achievement: KFAchievement;
   card: KFCardGot;
-  pack: KFCardGot[];
+  pack: KFCardGot[] | KFCreatureGot[];
   /** slug of the game that reached its daily cap */
   'earn-cap': string;
   auth: { user: KFUser | null; status: KFAuthStatus };
@@ -170,6 +193,8 @@ interface KFAPI {
   CATEGORIES: Record<KFCategoryId, KFCategory>;
   CARDS: KFCard[];
   CARD_CATS: Record<KFCardCat, KFCardCatInfo>;
+  CREATURES: KFCreature[];
+  CREATURE_CATS: Record<KFCreatureCat, KFCardCatInfo>;
   ACHIEVEMENTS: KFAchievement[];
   PACK_PRICE: number;
   PACK_SIZE: number;
@@ -199,18 +224,25 @@ interface KFAPI {
   /** Returns null for an unknown id. Emits 'card'. */
   giveCard(id: string): KFCardGot | null;
   cardImg(id: string, thumb?: boolean): string;
+  /** images/creatures/<KF.lang>/[thumb/]<id>[-b].webp */
+  creatureImg(id: string, opts?: { back?: boolean; thumb?: boolean }): string;
+  /** Name in the site language. */
+  creatureName(c: Pick<KFCreature, 'uk' | 'es'>): string;
 
   /** Game-specific persistent data (plain JSON). Read returns {} when nothing is saved. */
   gameData<T = any>(slug: string): T;
   gameData<T = any>(slug: string, value: T): T;
 
   canBuyPack(): boolean;
-  /** PACK_SIZE cards, or null if not enough coins / no cards. Emits one 'pack' event. */
-  openPack(): KFCardGot[] | null;
-  duplicates(): number;
+  /** PACK_SIZE cards (default) or creatures, or null if not enough coins / empty or unknown collection. Emits one 'pack' event. */
+  openPack(col?: 'cards'): KFCardGot[] | null;
+  openPack(col: 'creatures'): KFCreatureGot[] | null;
+  openPack(col?: KFCollection): KFCardGot[] | KFCreatureGot[] | null;
+  /** Extra copies in a collection (default football cards). */
+  duplicates(col?: KFCollection): number;
   /** Sells ONE extra copy; returns coins gained (0 if no duplicate). */
-  sellDuplicate(id: string): number;
-  sellAllDuplicates(): number;
+  sellDuplicate(id: string, col?: KFCollection): number;
+  sellAllDuplicates(col?: KFCollection): number;
   exportCode(): string;
   importCode(code: string): boolean;
   reset(): void;
@@ -290,6 +322,7 @@ declare var KF: KFAPI;
 declare var KFUI: KFUIAPI;
 declare var KF_SITE: { lang: KFLang };
 declare var KF_CARDS: KFCard[];
+declare var KF_CREATURES: KFCreature[];
 declare var MathExam: MathExamAPI;
 // Loosely typed for now (typed by the lanes that migrate those games).
 declare var SP_CONTENT: SPContent;
@@ -303,6 +336,7 @@ interface Window {
   KFUI: KFUIAPI;
   KF_SITE: { lang: KFLang };
   KF_CARDS: KFCard[];
+  KF_CREATURES: KFCreature[];
   MathExam: MathExamAPI;
   SP_CONTENT: SPContent;
   SP_TYPES: ExamRenderers;
