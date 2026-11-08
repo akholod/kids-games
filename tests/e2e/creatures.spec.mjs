@@ -159,3 +159,14 @@ test('deep link #creatures opens the creature album; the choice is remembered', 
   await tap(page.locator('#tab-album'));
   await expect(page.locator('#col-creatures')).toBeVisible();
 });
+
+test('beta: without ?parent the album has only football cards and no creature awards', async ({ page, tap }) => {
+  await page.goto('/#creatures');
+  await expect(page.locator('#panel-album')).toBeVisible();
+  await expect(page.locator('#col-switch')).toBeHidden();
+  await expect(page.locator('#col-creatures')).toBeHidden();
+  await expect(page.locator('#col-football')).toBeVisible();
+  expect(await page.evaluate(() => [KF.TEST_MODE, KF.CREATURES.length])).toEqual([false, 0]);
+  expect(await page.evaluate(() => KF.ACHIEVEMENTS.some((a) => a.id.startsWith('creature')))).toBe(false);
+  await tap(page.locator('#tab-games'));
+});

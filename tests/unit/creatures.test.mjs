@@ -55,6 +55,41 @@ const load = ({ lang = 'uk', creatures = CREATURES, cards = FOOTBALL } = {}) => 
 };
 
 const plain = (x) => JSON.parse(JSON.stringify(x));
+
+test('beta: without ?parent the kids get no creature collection and no creature achievements', () => {
+  const sandbox = {
+    localStorage: makeStorage(),
+    sessionStorage: makeStorage(),
+    location: { search: '' },
+    document: { visibilityState: 'visible', addEventListener() {} },
+    KF_SITE: { lang: 'uk' },
+    KF_CARDS: FOOTBALL,
+    KF_CREATURES: CREATURES,
+    URLSearchParams,
+    btoa,
+    atob,
+    console,
+    crypto: { randomUUID: () => 'x' },
+    fetch: async () => {
+      throw new TypeError('offline');
+    },
+    setTimeout: () => 0,
+    clearTimeout() {},
+    addEventListener() {},
+  };
+  sandbox.window = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(code, sandbox);
+  const KF = sandbox.KF;
+  assert.equal(KF.TEST_MODE, false);
+  assert.equal(KF.CREATURES.length, 0);
+  KF.addCoins(50);
+  assert.equal(KF.openPack('creatures'), null);
+  assert.equal(KF.get().coins, 50, 'nothing charged');
+  const ids = KF.ACHIEVEMENTS.map((a) => a.id);
+  for (const id of ['creatures-10', 'creatures-50', 'creatures-full', 'creature-legend']) assert.ok(!ids.includes(id), id);
+  assert.equal(load().CREATURES.length, CREATURES.length, 'on with ?parent');
+});
 const own = (KF, counts) => {
   Object.assign(KF.get().creatures, counts);
   KF.addCoins(0); // commit: runs the achievement checks

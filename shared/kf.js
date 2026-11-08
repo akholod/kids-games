@@ -380,7 +380,10 @@
 
   // Creatures: the second collection (shared/creatures.js, window.KF_CREATURES, loaded on the catalog only; empty without it).
   // cat: common | rare | legend. Same pack rules as the cards.
-  const CREATURES = Array.isArray(window.KF_CREATURES) ? window.KF_CREATURES : [];
+  // 'beta' = only in test mode (?parent): no collection, no creature achievements for the kids; 'ready' = for everyone.
+  const CREATURES_STATUS = /** @type {'beta' | 'ready'} */ ('beta');
+  const CREATURES_ON = CREATURES_STATUS === 'ready' || TEST_MODE;
+  const CREATURES = CREATURES_ON && Array.isArray(window.KF_CREATURES) ? window.KF_CREATURES : [];
   const CREATURE_BY_ID = new Map(CREATURES.map((c) => [c.id, c]));
   const CREATURE_CATS = {
     common: { label: T('creature.common'), weight: 80, sell: 2 },
@@ -547,35 +550,41 @@
       desc: T('planet-notable.desc'),
       check: (s) => (s.gameData?.['sociales-planeta']?.exam?.n || 0) >= NOTABLE_NOTA,
     },
-    {
-      id: 'creatures-10',
-      icon: '🐾',
-      title: T('creatures-10.title'),
-      desc: T('creatures-10.desc'),
-      check: (s) => uniqueCreatures(s) >= 10,
-    },
-    {
-      id: 'creatures-50',
-      icon: '🔮',
-      title: T('creatures-50.title'),
-      desc: T('creatures-50.desc'),
-      check: (s) => uniqueCreatures(s) >= 50,
-    },
-    {
-      id: 'creatures-full',
-      icon: '🐉',
-      title: T('creatures-full.title'),
-      desc: T('creatures-full.desc'),
-      check: (s) => CREATURES.length > 0 && CREATURES.every((c) => s.creatures[c.id] > 0),
-    },
-    {
-      id: 'creature-legend',
-      icon: '✨',
-      title: T('creature-legend.title'),
-      desc: T('creature-legend.desc'),
-      check: (s) => CREATURES.some((c) => c.cat === 'legend' && s.creatures[c.id] > 0),
-    },
+    ...(CREATURES_ON ? creatureAchievements() : []),
   ];
+
+  function creatureAchievements() {
+    return [
+      {
+        id: 'creatures-10',
+        icon: '🐾',
+        title: T('creatures-10.title'),
+        desc: T('creatures-10.desc'),
+        check: (s) => uniqueCreatures(s) >= 10,
+      },
+      {
+        id: 'creatures-50',
+        icon: '🔮',
+        title: T('creatures-50.title'),
+        desc: T('creatures-50.desc'),
+        check: (s) => uniqueCreatures(s) >= 50,
+      },
+      {
+        id: 'creatures-full',
+        icon: '🐉',
+        title: T('creatures-full.title'),
+        desc: T('creatures-full.desc'),
+        check: (s) => CREATURES.length > 0 && CREATURES.every((c) => s.creatures[c.id] > 0),
+      },
+      {
+        id: 'creature-legend',
+        icon: '✨',
+        title: T('creature-legend.title'),
+        desc: T('creature-legend.desc'),
+        check: (s) => CREATURES.some((c) => c.cat === 'legend' && s.creatures[c.id] > 0),
+      },
+    ];
+  }
 
   const fresh = () => ({
     v: 1,
