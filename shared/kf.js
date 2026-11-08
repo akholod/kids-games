@@ -330,7 +330,7 @@
       emoji: '🐄',
       category: 'sociales',
       desc: 'Готуємось до іспиту з Cultura Asturiana за 1-й триместр: казка про вакейру й принцесу, касерія і прислів’я, корови, гочу й ковбаси, Самартін, Сан-Хуан, волинка і Данса Прима, класики-каскаю.',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: {
         title: 'Cultura asturiana',
