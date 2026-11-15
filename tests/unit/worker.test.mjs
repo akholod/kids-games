@@ -217,3 +217,32 @@ test('mutations need a JSON content-type (415) before anything else', async () =
   assert.equal((await call('POST', '/api/login', { userId: 1, pin: '1234' }, { type: 'text/plain' })).status, 415);
   assert.equal((await call('GET', '/api/me', undefined, { cookie })).data.user.name, 'Anna');
 });
+
+test('a disabled user is hidden, cannot log in, loses open sessions, keeps progress; enabling brings it all back', async () => {
+  const { call, register, db } = makeApp();
+  const anna = await register('Anna');
+  const id = anna.data.user.id;
+  await register('Bob');
+  const put = await call('PUT', '/api/progress', { baseRev: 0, state: { coins: 7 } }, { cookie: anna.cookie });
+  assert.equal(put.status, 200, JSON.stringify(put.data));
+  const names = async () => (await call('GET', '/api/users')).data.users.map((u) => u.name);
+  assert.deepEqual(await names(), ['Anna', 'Bob']);
+
+  // only the flag: the session row is still there, and the Worker refuses it anyway
+  db.prepare('UPDATE users SET disabled = 1 WHERE id = ?').run(id);
+  assert.deepEqual(await names(), ['Bob']);
+  assert.equal((await call('GET', '/api/me', undefined, { cookie: anna.cookie })).status, 401);
+  assert.equal((await call('GET', '/api/progress', undefined, { cookie: anna.cookie })).status, 401);
+  const login = await call('POST', '/api/login', { userId: id, pin: '1234' });
+  assert.deepEqual([login.status, login.data.error], [404, 'no_user']);
+  assert.equal(db.prepare('SELECT failed FROM users WHERE id = ?').get(id).failed, 0, 'no PIN check, no lockout count');
+  // the name stays taken
+  const again = await call('POST', '/api/register', { name: 'anna', pin: '1111' }, { ip: 77 });
+  assert.deepEqual([again.status, again.data.error], [409, 'name_taken']);
+
+  db.prepare('UPDATE users SET disabled = 0 WHERE id = ?').run(id);
+  assert.deepEqual(await names(), ['Anna', 'Bob']);
+  const back = await call('POST', '/api/login', { userId: id, pin: '1234' });
+  assert.equal(back.status, 200);
+  assert.equal((await call('GET', '/api/progress', undefined, { cookie: back.cookie })).data.state.coins, 7);
+});

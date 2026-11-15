@@ -96,7 +96,7 @@ async function auth(request, env, now) {
   if (!token || token.length > 100) return null;
   const hash = await sha256(token);
   const row = await env.DB.prepare(
-    'SELECT u.id, u.name, u.avatar, s.last_seen FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?',
+    'SELECT u.id, u.name, u.avatar, s.last_seen FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND u.disabled = 0',
   )
     .bind(hash)
     .first();
@@ -132,10 +132,11 @@ async function checkPin(env, u, pin, now) {
 async function login(request, env, now) {
   const body = await readJson(request);
   if (!isObj(body) || !isInt(body.userId) || typeof body.pin !== 'string') return err('bad_request', 400);
-  const u = await env.DB.prepare('SELECT id, name, avatar, pin_hash, failed, locked_until FROM users WHERE id = ?')
+  const u = await env.DB.prepare('SELECT id, name, avatar, pin_hash, failed, locked_until, disabled FROM users WHERE id = ?')
     .bind(body.userId)
     .first();
-  if (!u) return err('no_user', 404);
+  // A deactivated account answers like a missing one: the PIN screen goes back to the player list.
+  if (!u || u.disabled) return err('no_user', 404);
   const denied = await checkPin(env, u, body.pin, now);
   if (denied) return denied;
   return startSession(env, u, now);
@@ -300,7 +301,9 @@ async function handle(request, env, url, now) {
   const method = request.method;
 
   if (pathname === '/api/users' && method === 'GET') {
-    const { results } = await env.DB.prepare('SELECT id, name, avatar FROM users ORDER BY name COLLATE NOCASE, id').all();
+    const { results } = await env.DB.prepare(
+      'SELECT id, name, avatar FROM users WHERE disabled = 0 ORDER BY name COLLATE NOCASE, id',
+    ).all();
     return json({ users: results });
   }
   if (pathname === '/api/login' && method === 'POST') return login(request, env, now);

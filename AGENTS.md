@@ -61,6 +61,7 @@ Sites (personal account, `*.workers.dev`; old https://keeper-fun-games.surge.sh 
 - Progress: guest = localStorage only; logged-in user = local copy synced to D1 in the background (offline-first).
   Games keep using the synchronous `KF` API and never call the network themselves.
 - Users are added by hand: `node scripts/add-user.mjs <name> <pin> [avatar]` (`--update` changes the PIN).
+  Deactivate / bring back (progress kept): `node scripts/user-status.mjs list | disable <name> | enable <name>`.
 
 ## Tests
 - Code style: Biome (`biome.json`); `pnpm format` fixes formatting + safe lint fixes, `pnpm lint` checks.

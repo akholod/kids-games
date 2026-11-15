@@ -16,6 +16,9 @@ the Worker code handles `/api/*` and `/shared/site.js` (answers `window.KF_SITE 
 - `worker/index.js` — ES module Worker, plain JS (imports `shared/kit.js` for avatar validation; wrangler bundles it).
 - `migrations/0001_init.sql` — D1 schema (applied with `wrangler d1 migrations apply`).
 - `migrations/0002_signup.sql` — `users.signup_key` (self-registration abuse guard) + index.
+- `migrations/0003_disabled.sql` — `users.disabled` (deactivated account).
+- `scripts/user-status.mjs` — `list`, `disable <name>`, `enable <name>` [`--local`]: a disabled user is hidden from
+  `GET /api/users`, gets `404 no_user` on login, and its sessions get `401` (the script also deletes them); progress stays, the name stays taken.
 - `scripts/add-user.mjs` — add a user by hand: `node scripts/add-user.mjs <name> <pin> [avatar] [--local]`.
 - `deploy.sh` — apply remote migrations once (retried up to 3×; same DB), then `wrangler deploy` and `wrangler deploy --env es`.
 
@@ -24,7 +27,8 @@ the Worker code handles `/api/*` and `/shared/site.js` (answers `window.KF_SITE 
 ```sql
 users(id INTEGER PK, name TEXT UNIQUE, avatar TEXT, pin_hash TEXT, failed INTEGER DEFAULT 0,
       locked_until INTEGER DEFAULT 0, created_at INTEGER,
-      signup_key TEXT /* SHA-256 of CF-Connecting-IP; NULL for users added by add-user.mjs */)
+      signup_key TEXT /* SHA-256 of CF-Connecting-IP; NULL for users added by add-user.mjs */,
+      disabled INTEGER DEFAULT 0 /* 1 = deactivated by scripts/user-status.mjs */)
 sessions(token_hash TEXT PK, user_id INTEGER, created_at INTEGER, last_seen INTEGER)
 progress(user_id INTEGER PK, state TEXT /* JSON */, rev INTEGER, updated_at INTEGER)
 results(id TEXT PK /* client uuid */, user_id INTEGER, slug TEXT, score INTEGER, max INTEGER, at INTEGER)
@@ -41,7 +45,7 @@ Errors: `{ "error": "<code>" }`.
 
 | Method & path | Body | Response |
 |---|---|---|
-| `GET /api/users` | — | `200 { users: [{ id, name, avatar }] }` |
+| `GET /api/users` | — | `200 { users: [{ id, name, avatar }] }` (active users only) |
 | `POST /api/login` | `{ userId, pin }` | `200 { user }` + cookie · `401 { error: 'bad_pin', attemptsLeft }` · `429 { error: 'locked', retryAfter /* s */ }` · `404 { error: 'no_user' }` |
 | `POST /api/register` | `{ name, pin, avatar }` | `201 { user }` + cookie (logged in) · `400 { error: 'bad_name' \| 'bad_pin_format' \| 'bad_avatar' }` · `409 { error: 'name_taken' }` · `429 { error: 'too_many', retryAfter /* s */ }` · `403 { error: 'full' }` |
 | `POST /api/logout` | `{}` | `204`, session deleted, cookie cleared |
