@@ -506,7 +506,8 @@ const ownTexts = (page, selector) =>
 //   choice, tf, sort, order, pairs, label, fill (typed or tiles), filter (naturales-entorno); right, or with `wrong`:
 //   choice / tf = the first wrong one; label = one wrong slot first (soft); fill = a wrong word first, then the right one (soft);
 //   filter = `mistakes` wrong layers (1 = soft, 2 = the second miss on the first layer: the round says false);
-//   cultura-asturiana's feed, cook, wordsearch, clues, calendar, cascayu: `wrong` = not right, `mistakes: 1` = right but soft.
+//   cultura-asturiana's feed, cook, wordsearch, clues, calendar, cascayu and lengua-poemas' forge, save, substitute:
+//   `wrong` = not right, `mistakes: 1` = right but soft.
 // keyboard: true = keys only (`tap` is never called), else taps / clicks.
 export const examPlayer = (hook) => {
   const session = (page) => page.evaluate((h) => window[h].session, hook);
@@ -846,6 +847,89 @@ export const examPlayer = (hook) => {
     }
   };
 
+  // ---- lengua-poemas' own types. `wrong` = the task ends not right (two wrong checks: the answer is shown);
+  //      `mistakes: 1` = one wrong check first, then the right one (soft). Answers from the task data only. ----
+
+  // forge: stems `.lp-tile.lp-stem[data-stem]` (keys A–C by position), suffixes `.lp-tile.lp-suf[data-suf]` (keys 1–4), `.lp-check` / Enter.
+  // A wrong check changes one piece: a wrong stem with the right suffix (the suffix then stays locked), or the other way round when
+  // the task has fewer than 3 stems (two wrong checks need two wrong tiles of one kind: a crossed-out tile cannot be pressed again).
+  const forge = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const stems = await page.locator('#work .lp-stem').evaluateAll((els) => els.map((e) => e.dataset.stem));
+    const sufs = await page.locator('#work .lp-suf').evaluateAll((els) => els.map((e) => e.dataset.suf));
+    const [rs, rx] = t.answer;
+    expect(stems, 'forge stems on screen').toContain(rs);
+    expect(sufs, 'forge suffixes on screen').toContain(rx);
+    const stem = (v) => pressOrTap(page, tap, keyboard, 'ABC'[stems.indexOf(v)], page.locator(`#work .lp-stem[data-stem="${v}"]`));
+    const suf = (v) => pressOrTap(page, tap, keyboard, String(sufs.indexOf(v) + 1), page.locator(`#work .lp-suf[data-suf="${v}"]`));
+    const check = () => pressOrTap(page, tap, keyboard, 'Enter', page.locator('#work .lp-check'));
+    const byStem = stems.length >= 3 || sufs.length < 3;
+    const [vary, keep] = byStem ? [stem, suf] : [suf, stem];
+    const bad = byStem ? stems.filter((s) => s !== rs) : sufs.filter((x) => x !== rx);
+    const misses = wrong ? 2 : mistakes;
+    expect(bad.length, 'room for the wrong checks').toBeGreaterThanOrEqual(misses);
+    for (let m = 0; m < misses; m++) {
+      await vary(bad[m]);
+      if (m === 0) await keep(byStem ? rx : rs);
+      await check();
+    }
+    if (wrong) return;
+    await vary(byStem ? rs : rx);
+    if (!misses) await keep(byStem ? rx : rs);
+    await check();
+  };
+
+  // save: gaps `.lp-gap[data-i]` (the cursor starts on the first one and moves on after each letter), letters `.lp-letter[data-letter]`
+  // (keys B / V), reasons `.lp-reason[data-rule]` (keys 1–3 by position), `.lp-check` / Enter.
+  // A wrong check = every gap with the other letter and the right reason (the reason then stays locked).
+  const save = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const rules = await page.locator('#work .lp-reason').evaluateAll((els) => els.map((e) => e.dataset.rule));
+    expect(rules, 'save reasons on screen').toContain(t.rule);
+    const fillGaps = async (flip) => {
+      for (const g of t.gaps) {
+        const right = t.word[g];
+        const l = flip ? (right === 'b' ? 'v' : 'b') : right;
+        if (!keyboard) await tap(page.locator(`#work .lp-gap[data-i="${g}"]`));
+        await pressOrTap(page, tap, keyboard, l, page.locator(`#work .lp-letter[data-letter="${l}"]`));
+      }
+    };
+    const reason = () =>
+      pressOrTap(page, tap, keyboard, String(rules.indexOf(t.rule) + 1), page.locator(`#work .lp-reason[data-rule="${t.rule}"]`));
+    const check = () => pressOrTap(page, tap, keyboard, 'Enter', page.locator('#work .lp-check'));
+    const misses = wrong ? 2 : mistakes;
+    for (let m = 0; m < misses; m++) {
+      await fillGaps(true);
+      if (m === 0) await reason();
+      await check();
+    }
+    if (wrong) return;
+    await fillGaps(false);
+    if (!misses) await reason();
+    await check();
+  };
+
+  // substitute: chunks `.lp-chunk[data-i]` (keyboard: → / Space step to the next one), pronouns `.lp-pron[data-p]` (keys 1–4),
+  // `.lp-check` / Enter. A wrong check = the right chunk with a wrong pronoun (the chunk stays locked; the wrong pronoun is crossed out).
+  const substitute = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const prons = await page.locator('#work .lp-pron').evaluateAll((els) => els.map((e) => e.dataset.p));
+    expect(prons, 'substitute pronouns on screen').toContain(t.answer);
+    const pron = (p) => pressOrTap(page, tap, keyboard, String(prons.indexOf(p) + 1), page.locator(`#work .lp-pron[data-p="${p}"]`));
+    const chunk = async () => {
+      if (!keyboard) return tap(page.locator(`#work .lp-chunk[data-i="${t.target}"]`));
+      for (let i = 0; i <= t.target; i++) await page.keyboard.press(i % 2 ? ' ' : 'ArrowRight');
+    };
+    const check = () => pressOrTap(page, tap, keyboard, 'Enter', page.locator('#work .lp-check'));
+    const bad = prons.filter((p) => p !== t.answer);
+    const misses = wrong ? 2 : mistakes;
+    await chunk();
+    for (let m = 0; m < misses; m++) {
+      await pron(bad[m]);
+      await check();
+    }
+    if (wrong) return;
+    await pron(t.answer);
+    await check();
+  };
+
   const BY_TYPE = {
     choice,
     tf,
@@ -865,6 +949,9 @@ export const examPlayer = (hook) => {
     clues,
     calendar,
     cascayu,
+    forge,
+    save,
+    substitute,
   };
 
   const answerTask = async (page, tap, opts = {}) => {

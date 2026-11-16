@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1d6b3a">
+<title>La liga de las palabras — Keeper Fun Games</title>
+<link rel="stylesheet" href="../../shared/kf.css">
+<link rel="stylesheet" href="../../shared/exam/exam.css">
+<style>
+/* «La liga de las palabras»: pitch green, floodlight gold, a red home shirt, night-navy ink. Drawings: art.js. */
+#exam-root{--lp-pitch:#2e8b4f;--lp-pitch-d:#1d6b3a;--lp-night:#14233d;--lp-gold:#ffd23f;--lp-shirt:#e0483e;--lp-ink:#1d2b36;--lp-tile:#c8d6d9}
+
+/* ---------- Hub hero: the stadium at night (unpassed parts = dim silhouettes) ---------- */
+.hero{grid-template-columns:minmax(0,1fr) min(330px,42%)}
+.hero-art{width:100%;transform:rotate(-1.5deg)}
+.hero .eyebrow{color:var(--lp-pitch-d)}
+.lp-hero .lp-sk{opacity:.16;filter:grayscale(1)}
+.lp-hero .lp-sk .lp-beam{display:none}
+@media(prefers-reduced-motion:no-preference){
+  .lp-hero .is-on .lp-beam{animation:lp-beam 3.2s ease-in-out infinite alternate}
+  .lp-hero .is-on[data-part="1"] .lp-beam{animation-delay:-1.6s}
+  .lp-hero .is-on .lp-fw path{transform-box:fill-box;transform-origin:center;animation:lp-twinkle 1.6s ease-in-out infinite alternate}
+  .lp-hero .is-on .lp-fw path:nth-child(2n){animation-delay:-.8s}
+}
+@keyframes lp-beam{to{opacity:.24}}
+@keyframes lp-twinkle{to{transform:scale(.6);opacity:.6}}
+/* Station tiles: a small ball in the corner */
+.stations .station:after{content:"⚽";position:absolute;right:12px;top:10px;font-size:.9rem;line-height:1;opacity:.5}
+@media(max-width:600px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .hero-art{width:min(100%,280px);justify-self:center;align-self:auto;transform:none}
+}
+
+/* Task stickers (art.js, 160 × 120) */
+.art .lp-art{max-width:320px;border-radius:16px;box-shadow:0 0 0 1px oklch(0 0 0 / .08)}
+@media(max-width:600px){.art .lp-art{max-height:clamp(120px,calc(100svh - 560px),200px)}}
+
+/* ---------- Shared: the tiles of the three own types (like the engine's chips, with the pitch green for «picked») ---------- */
+.lp-tile,.lp-letter,.lp-reason,.lp-chunk,.lp-pron{position:relative;min-height:52px;border:2px solid var(--lp-tile);border-radius:16px;background:#fff;color:var(--ink);box-shadow:0 4px 0 #d3dfe2;touch-action:manipulation;transition:transform .16s,background-color .16s,border-color .16s,box-shadow .16s,opacity .16s}
+:is(.lp-tile,.lp-letter,.lp-reason,.lp-chunk,.lp-pron):hover:not(:disabled){border-color:#7fc196;background:#f1faf3}
+:is(.lp-tile,.lp-letter,.lp-reason,.lp-chunk,.lp-pron):active:not(:disabled){transform:scale(.96)}
+:is(.lp-tile,.lp-reason,.lp-pron)[aria-pressed=true]{border-color:var(--lp-pitch-d);background:#e3f5e8;box-shadow:0 0 0 4px #2e8b4f40,0 4px 0 #9fcdb0}
+:is(.lp-tile,.lp-letter,.lp-reason,.lp-chunk,.lp-pron) kbd{position:absolute;top:-8px;left:-6px;padding:2px 5px;font-size:.66rem;background:#fff}
+:is(.lp-tile,.lp-letter,.lp-reason,.lp-chunk,.lp-pron):disabled{cursor:default;box-shadow:none}
+:is(.lp-tile,.lp-letter,.lp-reason,.lp-pron):disabled kbd{display:none}
+:is(.lp-tile,.lp-reason,.lp-chunk,.lp-pron).is-right{border-color:var(--okd);background:#eef8dc;box-shadow:0 0 0 3px #7fae2e40;opacity:1}
+:is(.lp-tile,.lp-reason,.lp-chunk,.lp-pron).is-fixed{border-color:var(--missd);background:var(--miss);opacity:1}
+:is(.lp-tile,.lp-reason,.lp-chunk,.lp-pron).is-wrong{border-style:dashed;background:#faf7f0;opacity:.55}
+:is(.lp-tile,.lp-chunk,.lp-pron).is-wrong>span:last-child,.lp-chunk.is-wrong{text-decoration:line-through;text-decoration-thickness:2px}
+.lp-nb{white-space:nowrap}
+/* Once answered, the tiles that were not part of the answer step back */
+.is-done :is(.lp-tile,.lp-letter,.lp-reason,.lp-pron):not(.is-right,.is-fixed,.is-wrong){opacity:.5}
+.lp-row-label{margin:0;font:900 .76rem/1 system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lp-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.lp-actions .btn{min-width:150px;min-height:52px}
+/* Once answered the check button is gone: its row too, so the task + the feedback sheet fit a laptop screen */
+.lp-actions:empty{display:none}
+@media(max-width:600px){.lp-actions{width:100%;flex-wrap:nowrap}.lp-actions .btn{flex:1 1 0;min-width:0;padding-inline:12px}}
+
+/* ---------- forge: the shirt press ---------- */
+.lp-forge{display:grid;gap:12px;justify-items:center;width:min(100%,880px)}
+.lp-press{width:min(100%,320px)}
+.lp-press-svg{display:block;width:100%;height:auto;border-radius:22px;box-shadow:0 0 0 1px oklch(0 0 0 / .08),0 8px 18px #14233d14}
+.lp-name{font-family:var(--display);font-weight:900;letter-spacing:.01em;fill:#fff;paint-order:stroke;stroke:#a8231b;stroke-width:3px;stroke-linejoin:round}
+.lp-name-suf{fill:var(--lp-gold)}
+.lp-press:not(.has-stem) .lp-name-stem,.lp-press:not(.has-suf) .lp-name-suf{fill:#ffffff8c;stroke:none}
+.lp-press.is-fixed .lp-name-stem,.lp-press.is-fixed .lp-name-suf{fill:var(--miss)}
+.lp-press.has-stem.has-suf .lp-heat{fill:#ff5a4a}
+.lp-press.is-printed .lp-heat{fill:var(--ok)}
+.lp-plate{margin:0;padding:14px 18px;border-radius:18px;background:var(--lp-shirt);color:#fff;font:900 clamp(1.6rem,6vw,2.2rem)/1 var(--display);text-align:center}
+.lp-plate .lp-name-suf{color:var(--lp-gold)}
+@media(prefers-reduced-motion:no-preference){
+  .lp-press.is-press .lp-lid{animation:lp-press .8s cubic-bezier(.5,0,.3,1)}
+  .lp-press.is-press .lp-steam{animation:lp-steam 1s .4s ease-out}
+  .lp-press.is-press .lp-name{animation:lp-print .8s steps(1,end)}
+}
+@keyframes lp-press{40%,58%{transform:translateY(84px)}}
+@keyframes lp-steam{0%{opacity:0;transform:none}30%{opacity:.9}100%{opacity:0;transform:translateY(-10px)}}
+@keyframes lp-print{0%{opacity:1}40%{opacity:0}}
+.lp-forge-side{display:grid;gap:10px;justify-items:center;width:100%;min-width:0}
+.lp-row{display:grid;gap:8px;justify-items:center;width:100%}
+.lp-tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 10px;width:100%}
+.lp-tile{min-width:96px;padding:6px 16px;font:900 clamp(1.15rem,3.8vw,1.4rem)/1 var(--display)}
+/* the stem is white on the shirt, the suffix gold: a coloured edge links each tile to its part of the name */
+.lp-stem{border-bottom-color:var(--lp-shirt)}
+.lp-suf{border-bottom-color:#e5a12a}
+@media(min-width:760px){
+  .lp-forge{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:28px}
+  /* also leave the room the feedback sheet of a miss takes (answer + note + fact, ~135px): task + sheet fit without scroll */
+  .lp-press{width:min(340px,calc((var(--avail) - 8px) * 1.39),max(240px,calc((var(--room) - 142px) * 1.39)))}
+}
+@media(max-width:600px){
+  .lp-forge{gap:10px}
+  .lp-press{width:min(100%,214px)}
+  .lp-forge-side,.lp-row{gap:6px}
+  .lp-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:12px 8px}
+  .lp-tile{min-width:0;padding-inline:6px}
+}
+
+/* ---------- save: B or V — the keeper ---------- */
+.lp-save{display:grid;gap:12px;justify-items:center;width:min(100%,880px)}
+.lp-sentence{margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;font:800 clamp(1.15rem,3.8vw,1.45rem)/1.2 var(--display);text-align:center}
+.lp-word{display:inline-flex;align-items:center;gap:2px;padding:4px 10px;border-radius:16px;background:#fff;box-shadow:0 0 0 2px var(--lp-tile),0 4px 0 #d3dfe2;font-size:clamp(1.6rem,5.4vw,2.1rem);font-weight:900;letter-spacing:.02em}
+.lp-gap{position:relative;display:inline-grid;place-items:center;width:44px;min-height:54px;padding:0;border:0;border-radius:10px;background:#eef3f6;color:var(--sea-d);font:inherit;line-height:1;box-shadow:inset 0 -3px 0 #9aaeb8;transition:background-color .15s,box-shadow .15s}
+.lp-gap:empty:before{content:"?";color:#9aaeb8}
+.lp-gap:hover:not(:disabled){background:#e3f1fc}
+.lp-gap[aria-pressed=true]{background:#fff8d6;box-shadow:inset 0 0 0 3px var(--lp-gold),inset 0 -3px 0 #e5a12a}
+.lp-gap.is-wrong{box-shadow:inset 0 0 0 3px var(--missd)}
+.lp-gap.is-wrong[aria-pressed=true]{box-shadow:inset 0 0 0 3px var(--lp-gold),inset 0 0 0 6px #ffe3a6}
+.lp-gap.is-right{background:var(--ok);color:var(--ink);box-shadow:none}
+.lp-gap.is-fixed{background:var(--miss);color:var(--ink);box-shadow:inset 0 0 0 2px var(--missd)}
+.lp-gap:disabled{cursor:default}
+.lp-pitch{display:grid;gap:10px;justify-items:center;width:100%}
+.lp-goal{width:min(100%,320px)}
+.lp-goal-svg{display:block;width:100%;height:auto}
+.lp-goal .lp-keeper,.lp-goal .lp-ball,.lp-goal .lp-net{transform-box:view-box;transform-origin:0 0}
+.lp-goal .lp-net{transform-origin:160px 46px}
+.lp-goal[data-pose=save] .lp-keeper{transform:translate(34px,-8px) rotate(52deg)}
+.lp-goal[data-pose=save] .lp-ball{transform:translate(78px,-86px) scale(.8) rotate(320deg)}
+.lp-goal[data-pose=goal] .lp-keeper{transform:translate(-34px,-8px) rotate(-52deg)}
+.lp-goal[data-pose=goal] .lp-ball{transform:translate(76px,-116px) scale(.62) rotate(320deg)}
+.lp-goal:not([data-pose=ready]) .lp-ball-shadow{opacity:0}
+.lp-bv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,300px)}
+.lp-letter{min-height:60px;font:900 2.1rem/1 var(--display);color:var(--sea-d);border-bottom-color:#ff8a2a}
+.lp-why{display:grid;gap:8px;justify-items:center;width:100%}
+.lp-reasons{display:grid;gap:10px;width:min(100%,500px)}
+.lp-reason{min-height:50px;padding:8px 14px;text-align:left;font-weight:800;font-size:1rem;line-height:1.25;text-wrap:pretty}
+.lp-save-side{display:grid;gap:10px;justify-items:center;width:100%;min-width:0}
+/* Answered: B / V have done their job and only the rule that was asked stays (the feedback names it too) */
+.lp-save.is-done .lp-bv,.lp-save.is-done .lp-reason:not(.is-right,.is-fixed){display:none}
+@media(min-width:760px){
+  /* the sentence on top; the goal and B / V on the left, the reasons on the right; the key hint under B / V */
+  .lp-save{grid-template-columns:minmax(0,auto) minmax(0,1fr);align-items:center;column-gap:28px}
+  .lp-save>.lp-sentence{grid-column:1/-1}
+  .lp-save>.lp-pitch{grid-area:2/1}
+  .lp-save>.lp-save-side{grid-area:2/2/4/3}
+  .lp-save>.kbd-hint{grid-area:3/1;align-self:start;max-width:320px}
+  .lp-goal{width:min(320px,calc((var(--avail) - 190px) * 1.6))}
+}
+@media(min-width:760px) and (max-height:760px){
+  .lp-save{row-gap:8px}
+  .lp-reason{min-height:48px;padding-block:6px;font-size:.96rem}
+  .lp-letter{min-height:54px}
+  .lp-why,.lp-save-side{gap:8px}
+}
+@media(max-width:600px){
+  .lp-save{gap:10px}
+  .lp-sentence{gap:4px 8px;font-size:1.08rem}
+  .lp-word{padding:2px 8px;font-size:1.6rem}
+  .lp-gap{width:36px;min-height:48px}
+  .lp-pitch{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);align-items:center}
+  .lp-bv{grid-template-columns:minmax(0,1fr);gap:8px}
+  .lp-letter{min-height:48px;font-size:1.8rem}
+  .lp-why,.lp-save-side{gap:6px}
+  .lp-reasons{gap:8px}
+  .lp-reason{min-height:48px;padding:5px 12px;font-size:.92rem}
+}
+
+/* ---------- substitute: the substitution board ---------- */
+.lp-sub{display:grid;gap:12px;justify-items:center;width:min(100%,880px)}
+/* The sentence is the team on the pitch: a striped strip of grass, the phrases are the players */
+.lp-chunks,.lp-result{width:100%;margin:0;padding:12px 14px;border-radius:20px;background:repeating-linear-gradient(90deg,var(--lp-pitch) 0 48px,#33955a 48px 96px);box-shadow:inset 0 0 0 2px #ffffff40}
+.lp-chunks{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 10px}
+.lp-chunk{padding:6px 16px;border-color:#fff;font:800 clamp(1.1rem,3.8vw,1.35rem)/1.15 var(--display);box-shadow:0 4px 0 var(--lp-pitch-d)}
+.lp-chunk[aria-pressed=true]{border-color:#ff5a4a;background:#ffe7e3;box-shadow:0 0 0 4px #ff5a4a66,0 4px 0 #a8231b;transform:translateY(-3px)}
+.lp-chunk[aria-pressed=true]:before{content:"▼";position:absolute;top:-11px;left:50%;translate:-50% 0;font-size:.8rem;color:#ff5a4a;line-height:1}
+.lp-chunk.is-right[aria-pressed=true]{background:#ffe7e3}
+.lp-result{color:#fff;font:800 clamp(1.15rem,4vw,1.45rem)/1.4 var(--display);text-align:center;text-wrap:balance}
+.lp-result .lp-in{padding:1px 8px;border-radius:10px;background:#6cff7a;color:var(--lp-ink);box-shadow:0 3px 0 #2e8b4f}
+.lp-sub-main{display:grid;gap:12px;justify-items:center;width:100%}
+.lp-board{width:min(100%,300px)}
+.lp-board-svg{display:block;width:100%;height:auto;filter:drop-shadow(0 8px 12px #14233d26)}
+.lp-led{font-family:var(--display);font-weight:900;letter-spacing:.02em}
+.lp-led-out{fill:#ff5a4a}.lp-led-in{fill:#6cff7a}
+.lp-board:not(.has-out) .lp-led-out,.lp-board:not(.has-in) .lp-led-in{opacity:.4}
+.lp-board.is-fixed .lp-led{fill:var(--miss)}
+.lp-led-row{margin:0;padding:8px 12px;border-radius:10px;background:#0d1014;font:900 1.2rem/1.2 var(--display)}
+.lp-led-row.is-out{color:#ff5a4a}.lp-led-row.is-in{color:#6cff7a;margin-top:6px}
+@media(prefers-reduced-motion:no-preference){.lp-board.is-flip{animation:lp-flip .5s cubic-bezier(.3,1.5,.5,1)}}
+@keyframes lp-flip{35%{transform:translateY(-8px) rotate(-2deg)}}
+.lp-sub-side{display:grid;gap:10px;justify-items:center;width:100%;min-width:0}
+.lp-prons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;width:min(100%,440px)}
+.lp-pron{min-height:56px;padding:8px 12px;font:900 clamp(1.1rem,3.8vw,1.3rem)/1 var(--display);border-bottom-color:#2e8b4f}
+@media(min-width:760px) and (max-height:760px){
+  .lp-sub,.lp-sub-side{gap:8px}
+  .lp-prons{gap:10px 8px}
+  .lp-pron{min-height:50px}
+}
+@media(min-width:760px){
+  .lp-sub-main{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:28px}
+  .lp-board{width:min(300px,calc((var(--avail) - 92px) * 1.76),max(220px,calc((var(--room) - 200px) * 1.76)))}
+}
+@media(max-width:600px){
+  .lp-sub,.lp-sub-main,.lp-sub-side{gap:10px}
+  .lp-chunks{padding:6px 8px;gap:8px 6px}
+  .lp-chunk{min-height:48px;padding:4px 10px;font-size:1.05rem}
+  .lp-result{padding:10px 12px;font-size:1.12rem}
+  .lp-board{width:min(100%,190px)}
+  .lp-prons{gap:10px 8px}
+  .lp-pron{min-height:52px}
+}
+
+/* ---------- fix: «Corrige el texto» (the renderer is lengua-mundo's; its CSS copied from games/lengua-mundo/index.html) ---------- */
+.le-fix{display:grid;gap:12px;justify-items:center;width:min(100%,900px)}
+/* A notebook page: a red margin and a ruled line under every row of words (rows are 52px: 48px targets + 4px gap) */
+.le-fix-page{display:flex;flex-wrap:wrap;align-items:flex-end;row-gap:4px;width:100%;padding:8px 14px 10px 38px;border-radius:18px;
+  background:linear-gradient(90deg,transparent 24px,#f2b7b2 24px 26px,transparent 26px),repeating-linear-gradient(transparent 0 50px,#d4e3ee 50px 52px) 0 6px,#fffef9;
+  box-shadow:0 0 0 1px var(--line),0 8px 18px #12302012}
+.le-nl{flex-basis:100%;height:0}
+.le-tok{display:inline-flex;align-items:center;white-space:nowrap}
+.le-w,.le-p,.le-plain{font:700 clamp(1.12rem,3.6vw,1.4rem)/1 var(--display);color:var(--ink)}
+.le-w{min-height:48px;padding:0 4px;border:0;border-radius:10px;background:transparent;transition:background-color .15s,box-shadow .15s}
+.le-w:hover:not(:disabled){background:#e3f1fc}
+.le-w[aria-pressed=true] .le-cap{color:var(--red);font-weight:900}
+.le-g{position:relative;width:34px;min-height:48px;padding:0;border:0;border-radius:10px;background:transparent;transition:background-color .15s,box-shadow .15s}
+.le-g:hover:not(:disabled){background:#e3f1fc}
+/* The empty gap: a faint dotted ring on the line; a full stop: a bold red dot */
+.le-dot{position:absolute;left:50%;bottom:13px;width:9px;height:9px;translate:-50% 0;border-radius:50%;border:1.6px dashed #b9c9d3;transition:background-color .15s,border-color .15s,transform .15s}
+.le-g:hover:not(:disabled) .le-dot{border-color:var(--sea)}
+.le-g[aria-pressed=true] .le-dot{left:7px;translate:0 0;width:10px;height:10px;border:0;background:var(--red)}
+.le-w.is-wrong,.le-g.is-wrong{background:#fff3d6;box-shadow:inset 0 0 0 2.5px var(--missd)}
+.le-w.is-fixed,.le-g.is-fixed{background:var(--miss)}
+.le-fix.is-done .le-w,.le-fix.is-done .le-g{cursor:default}
+.le-fix.is-done .le-g:not([aria-pressed=true]):not(.is-fixed) .le-dot{display:none}
+.le-fix-side{display:grid;gap:8px;justify-items:center;width:100%}
+.le-fix-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.le-fix-actions .btn{min-width:160px}
+@media(max-width:600px){
+  .le-fix-page{padding:6px 8px 8px 28px;background:linear-gradient(90deg,transparent 16px,#f2b7b2 16px 18px,transparent 18px),repeating-linear-gradient(transparent 0 50px,#d4e3ee 50px 52px) 0 6px,#fffef9}
+  .le-g{width:28px}
+  .le-fix-actions{width:100%;flex-wrap:nowrap}
+  .le-fix-actions .btn{flex:1 1 0;min-width:0;padding-inline:12px}
+}
+</style>
+<script src="../../shared/site.js"></script>
+</head>
+<body>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Monedas" data-i18n-aria-label="coins">🪙 <span data-kf-coins>0</span></div></div></header>
+<main class="wrap game-shell" id="exam-root"></main>
+
+<script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
+<script src="../../shared/kf-ui.js"></script>
+<script src="../../shared/audio.js"></script>
+<script src="../../shared/kf-game.js"></script>
+<script src="../../shared/exam/exam.js"></script>
+<script src="../../shared/exam/types.js"></script>
+<script src="content.js"></script>
+<script src="art.js"></script>
+<script src="../lengua-mundo/types.js"></script>
+<script src="types.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

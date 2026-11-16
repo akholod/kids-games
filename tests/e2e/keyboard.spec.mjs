@@ -653,3 +653,67 @@ test('profile: arrows pick colours, digits set the number, Enter saves; digits +
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('#games-list')).toBeVisible();
 });
+
+test('lengua-poemas: a station by keys from its tile, then forge, save, substitute and fix with keys only (right, one slip, wrong)', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const lp = examPlayer('__lp');
+  const { taskWhere, playOnly } = unitPage('LP_CONTENT', '__lp');
+  await open(page, '/games/lengua-poemas/');
+  const tile = page
+    .locator('#stations .station')
+    .nth(await page.evaluate(() => LP_CONTENT.stations.findIndex((s) => s.id === 'pronombres')));
+  await tile.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-go')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  const n = (await lp.session(page)).tasks.length;
+  await lp.playSession(page, tapNever, { keyboard: true });
+  await expect(page.locator('#finish .score-pill')).toContainText(`${n} / ${n}`);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  const types = ['forge', 'save', 'substitute', 'fix'];
+  const tasks = [];
+  for (const type of types) tasks.push(await taskWhere(page, type));
+  await playOnly(page, ...tasks);
+  expect(await lp.playSession(page, tapNever, { keyboard: true })).toEqual(types);
+  await expect(page.locator('#finish .score-pill')).toContainText('4 / 4');
+  await page.keyboard.press('Escape');
+
+  // one slip (soft) and wrong twice, by keys
+  const own = tasks.slice(0, 3);
+  await playOnly(page, ...own, ...own);
+  for (const [i, t] of [...own, ...own].entries()) {
+    const wrong = i >= 3;
+    await lp.answerTask(page, tapNever, { keyboard: true, wrong, mistakes: wrong ? 0 : 1 });
+    await expect(page.locator(`#feedback .fb.${wrong ? 'miss' : 'ok'}`), t.type).toBeVisible();
+    await lp.next(page, tapNever, { keyboard: true });
+  }
+  await expect(page.locator('#finish .score-pill')).toContainText('3 / 6');
+  await page.keyboard.press('Escape');
+
+  // forge: Backspace takes the last piece back
+  const f = tasks[0];
+  await playOnly(page, f);
+  await page.keyboard.press('1');
+  await expect(page.locator('#work .lp-suf[aria-pressed=true]')).toHaveCount(1);
+  await page.keyboard.press('Backspace');
+  await expect(page.locator('#work .lp-suf[aria-pressed=true]')).toHaveCount(0);
+  await page.keyboard.press('Escape'); // nothing answered yet: straight back
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // save: B / V fill the current gap and move on, ← goes back, Backspace erases
+  const sv = await taskWhere(page, 'save', (t) => t.gaps.length >= 2);
+  await playOnly(page, sv);
+  const gap = (k) => page.locator(`#work .lp-gap[data-i="${sv.gaps[k]}"]`);
+  await page.keyboard.press('b');
+  await expect(gap(0)).toHaveText('b');
+  await expect(gap(1)).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('ArrowLeft');
+  await expect(gap(0)).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Backspace');
+  await expect(gap(0)).toHaveText('');
+});

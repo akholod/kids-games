@@ -312,6 +312,19 @@
       },
     },
     {
+      slug: 'lengua-poemas',
+      title: 'La liga de las palabras',
+      emoji: '📝',
+      category: 'lengua',
+      desc: 'Готуємось до іспиту з Lengua Castellana: Tema 3 — похідні слова й суфікси, b чи v, займенники, проза і вірш, скоромовки, c/z/s, крапка і велика літера.',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: {
+        title: 'La liga de las palabras',
+        desc: 'Prepárate para el examen de Lengua, Tema 3: palabras derivadas, b o v, los pronombres, prosa y verso, trabalenguas, c, z y s, el punto y la mayúscula.',
+      },
+    },
+    {
       slug: 'english-animals',
       title: 'Animals',
       emoji: '🦜',

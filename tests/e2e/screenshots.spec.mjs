@@ -151,3 +151,9 @@ test('cultura-asturiana-hub: stations and the hero', async ({ page }) => {
   await expect(page.locator('#hero-art svg.ca-hero')).toBeVisible();
   await snap(page, 'cultura-asturiana-hub');
 });
+
+test('lengua-poemas-hub: stations and the stadium hero', async ({ page }) => {
+  await open(page, '/games/lengua-poemas/');
+  await expect(page.locator('#hero-art svg.lp-hero')).toBeVisible();
+  await snap(page, 'lengua-poemas-hub');
+});

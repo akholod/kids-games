@@ -199,11 +199,37 @@ const BROKEN = [
   ['vocab entry without translation', (u) => (u.stations[0].vocab[1] = ['el relieve', ' ']), 'vocab 2'],
   ['vocab entry that is a string', (u) => (u.stations[0].vocab[0] = 'la roca'), 'vocab 1'],
   ['vocab term in Cyrillic', (u) => (u.stations[0].vocab[0] = ['скеля', 'скеля']), 'Cyrillic only in the translation'],
+  // practiceCoin: a number, 0 < x <= 1
+  ['practiceCoin 0', (u) => (u.practiceCoin = 0), 'practiceCoin'],
+  ['practiceCoin below 0', (u) => (u.practiceCoin = -0.5), 'practiceCoin'],
+  ['practiceCoin above 1', (u) => (u.practiceCoin = 1.01), 'practiceCoin'],
+  ['practiceCoin as a text', (u) => (u.practiceCoin = '0.5'), 'practiceCoin'],
+  ['practiceCoin NaN', (u) => (u.practiceCoin = Number.NaN), 'practiceCoin'],
+  ['practiceCoin true', (u) => (u.practiceCoin = true), 'practiceCoin'],
+  // exam.sendOff: a boolean
+  ['sendOff as a text', (u) => (u.exam.sendOff = 'yes'), 'sendOff'],
+  ['sendOff as a number', (u) => (u.exam.sendOff = 1), 'sendOff'],
+  // exam.var: the VAR cost in coins (0 / absent = no VAR)
+  ['var below 0', (u) => (u.exam.var = -1), 'var'],
+  ['var as a text', (u) => (u.exam.var = '2'), 'var'],
+  ['var true', (u) => (u.exam.var = true), 'var'],
 ];
 
 test('a valid fixture passes', () => {
   assert.deepEqual(validate(unit()), []);
   assert.deepEqual(validate(unit(), KFExam.types), []);
+});
+
+test('practiceCoin (0 < x <= 1), exam.sendOff (boolean) and exam.var (0, 2) pass at their good values, boundaries included', () => {
+  for (const practiceCoin of [1, 0.5, 0.01]) {
+    for (const sendOff of [true, false]) {
+      const u = unit();
+      u.practiceCoin = practiceCoin;
+      u.exam.sendOff = sendOff;
+      u.exam.var = practiceCoin === 1 ? 0 : 2;
+      assert.deepEqual(validate(u), [], `practiceCoin ${practiceCoin}, sendOff ${sendOff}`);
+    }
+  }
 });
 
 for (const [name, mutate, expected] of BROKEN) {
@@ -1018,3 +1044,321 @@ test('cultura-asturiana: valid with the renderers; CA_CHECK passes; every art ke
   bad.stations[0].tasks.find((t) => t.type === 'feed').who = 'saco';
   assert.ok(check(bad, art).length > 0);
 });
+
+// ---------- lengua-poemas: «La liga de las palabras», Lengua Castellana 3.º, Tema 3 ----------
+// Expected values from the unit contract (stations, counts, exam settings) and the book (.pi/book-le/unit3.md: rules and the pronoun table).
+
+const bootPoemas = () => {
+  const node = () => ({ attrs: {}, dataset: {}, style: {}, setAttribute() {}, append() {}, set innerHTML(_) {}, classList: { add() {} } });
+  const sb = {
+    console,
+    Math,
+    KF: { lang: 'uk', i18n: () => (key) => key, gameData: () => ({}) },
+    KFG: { shuffle: (a) => [...a], canSay: () => false },
+    document: { createElementNS: node, createElement: node },
+  };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of [
+    'shared/exam/exam.js',
+    'shared/exam/types.js',
+    'games/lengua-mundo/types.js',
+    'games/lengua-poemas/content.js',
+    'games/lengua-poemas/art.js',
+    'games/lengua-poemas/types.js',
+  ]) {
+    vm.runInContext(read(f), sb, { filename: f });
+  }
+  return {
+    E: sb.KFExam,
+    content: clone(sb.LP_CONTENT),
+    types: { fix: sb.LE_TYPES.fix, ...sb.LP_TYPES },
+    art: sb.LPArt,
+    check: (u, a) => [...sb.LP_CHECK(u, a)],
+  };
+};
+const LP_STATIONS = [
+  ['derivadas', 12],
+  ['verbos-b', 12],
+  ['bv', 10],
+  ['pronombres', 14],
+  ['literatura', 8],
+  ['trabalenguas', 8],
+  ['czs', 8],
+  ['puntos', 8],
+];
+const LP_OWN = ['forge', 'save', 'substitute'];
+const words = (s) => s.split(/\s+/).filter((w) => /\p{L}/u.test(w)).length;
+
+test('lengua-poemas: valid; stations, task counts and unit settings as agreed (exam of 14, red after 4, sendOff, VAR at 2, practice at 0.5)', () => {
+  const { E, content: u } = bootPoemas();
+  assert.deepEqual([...E.validate(clone(u))], []);
+  assert.equal(u.slug, 'lengua-poemas');
+  assert.equal(u.testHook, '__lp');
+  assert.deepEqual(
+    u.stations.map((s) => [s.id, s.tasks.length]),
+    LP_STATIONS,
+  );
+  assert.equal(u.readFirst, false);
+  assert.equal(u.round, 6);
+  assert.equal(u.practiceCoin, 0.5);
+  assert.deepEqual(
+    { ...u.exam.perStation },
+    { derivadas: 2, 'verbos-b': 2, bv: 2, pronombres: 2, literatura: 2, trabalenguas: 1, czs: 2, puntos: 1 },
+  );
+  assert.equal(
+    Object.values(u.exam.perStation).reduce((a, b) => a + b, 0),
+    14,
+  );
+  assert.equal(u.exam.redAfter, 4);
+  assert.equal(u.exam.sendOff, true);
+  assert.equal(u.exam.var, 2);
+  const used = new Set(u.stations.flatMap((s) => s.tasks.map((t) => t.type)));
+  for (const k of [...LP_OWN, 'fix']) assert.ok(used.has(k), `no ${k} task`);
+  // the new multi-step types: at most 2 of each in a practice round
+  for (const k of LP_OWN) assert.ok(u.sampling?.caps?.[k] >= 1 && u.sampling.caps[k] <= 2, `sampling.caps.${k} = ${u.sampling?.caps?.[k]}`);
+  for (const k of [...Object.keys(u.sampling.caps ?? {}), ...Object.keys(u.sampling.examCaps ?? {}), ...(u.sampling.always ?? [])])
+    assert.ok(used.has(k), `sampling names «${k}»`);
+});
+
+test('lengua-poemas: every station has a uk glossary and a short rule note (20–35 words) as its text', () => {
+  const { content: u } = bootPoemas();
+  for (const s of u.stations) {
+    assert.ok(s.vocab?.length >= 1, `${s.id}: glossary`);
+    for (const [es, uk] of s.vocab) {
+      assert.ok(!CYR.test(es), `${s.id}: Spanish term «${es}» has Cyrillic`);
+      assert.ok(CYR.test(uk), `${s.id}: «${es}» has no Ukrainian translation («${uk}»)`);
+    }
+    assert.ok(s.text?.paragraphs?.length >= 1, `${s.id}: rule note`);
+    const n = words(s.text.paragraphs.join(' '));
+    assert.ok(n >= 20 && n <= 35, `${s.id}: the rule note has ${n} words`);
+  }
+});
+
+test('lengua-poemas: Cyrillic nowhere outside the glossaries (Spanish UI on both sites)', () => {
+  const { content: u } = bootPoemas();
+  const noVocab = { ...u, stations: u.stations.map(({ vocab, ...s }) => s) };
+  assert.ok(!CYR.test(JSON.stringify(noVocab)), 'Cyrillic outside the glossaries');
+});
+
+test('lengua-poemas: the right option of a text choice is not clearly the longest', () => {
+  const { content: u } = bootPoemas();
+  for (const t of u.stations.flatMap((s) => s.tasks)) {
+    if (t.type !== 'choice' || t.pics) continue;
+    const ok = t.options[t.answer].length;
+    const mx = Math.max(...t.options.filter((_, i) => i !== t.answer).map((o) => o.length));
+    assert.ok(!(ok > mx * 1.3 && ok - mx > 6), `«${t.options[t.answer]}» stands out in «${t.q}»`);
+  }
+});
+
+test('lengua-poemas: valid with the renderers; LP_CHECK passes with and without the art; art keys exist', () => {
+  const { E, content: u, types, art, check } = bootPoemas();
+  assert.deepEqual([...E.validate(clone(u), { ...E.types, ...types })], []);
+  assert.deepEqual(check(clone(u)), []);
+  assert.deepEqual(check(clone(u), art), []);
+  for (const t of u.stations.flatMap((s) => s.tasks)) if (t.art) assert.ok(art.has(t.art), `art «${t.art}» does not exist`);
+  assert.equal(typeof art.hero, 'function');
+});
+
+test('lengua-poemas: every station text paragraph and every listen sentence has a clip in shared/audio.js', () => {
+  const { content: u } = bootPoemas();
+  const audio = { window: {} };
+  vm.createContext(audio);
+  vm.runInContext(read('shared/audio.js'), audio);
+  const es = new Set(audio.window.KF_AUDIO?.es ?? audio.KF_AUDIO.es);
+  const texts = [
+    ...u.stations.flatMap((s) => s.text?.paragraphs ?? []),
+    ...u.stations.flatMap((s) => s.tasks.map((t) => t.listen).filter(Boolean)),
+  ];
+  assert.ok(texts.length >= 8);
+  for (const t of texts) {
+    const slug = buildSlug(t);
+    assert.ok(es.has(slug), `no clip for «${t.slice(0, 50)}…» (${slug}): run scripts/build-audio.mjs`);
+  }
+});
+
+// What the unit must teach (the book's rules, PDF 48 / 55 / 49): the answers of the content, not its wording.
+const lpTasks = (u) => u.stations.flatMap((s) => s.tasks.map((t) => ({ ...t, station: s.id })));
+const saveWords = (u, rule) => lpTasks(u).filter((t) => t.type === 'save' && (!rule || t.rule === rule));
+
+// Words a task asks for (its right answers): save words and the answers of the generic types (answersOf below).
+const taught = (u) => [...saveWords(u).map((t) => t.word), ...lpTasks(u).flatMap((t) => answersOf(t))].map((w) => String(w).toLowerCase());
+
+test('lengua-poemas: b/v coverage — the five -aba endings, -bir, hervir / servir / vivir are asked; br and bl as save gaps', () => {
+  const { content: u } = bootPoemas();
+  // a sort card may show the b/v as a gap: «her_ir»
+  const all = taught(u)
+    .flatMap((w) => w.split(/[^\p{L}_]+/u))
+    .filter(Boolean);
+  for (const end of ['aba', 'abas', 'ábamos', 'abais', 'aban'])
+    assert.ok(
+      all.some((w) => w.endsWith(end) && w.length > end.length + 1),
+      `no -${end} verb among the answers`,
+    );
+  // a save task with the rule «aba» has its gap on that b
+  for (const t of saveWords(u, 'aba')) {
+    const b = t.word.search(/(aba|ába)(s|mos|is|n)?$/) + 1;
+    assert.ok(t.gaps.includes(b), `${t.word}: the -aba b is not a gap`);
+  }
+  assert.ok(saveWords(u, 'aba').length >= 2, 'fewer than 2 save tasks with the rule «aba»');
+  assert.ok(saveWords(u, 'bir').length >= 1, 'no save task with the rule «bir»');
+  assert.ok(saveWords(u, 'exc').length >= 1, 'no save task with the rule «exc»');
+  for (const [verb, re] of [
+    ['hervir', /^h(i)?er[v_]/],
+    ['servir', /^s(i|e)r[v_]/],
+    ['vivir', /^vi[v_]/],
+  ])
+    assert.ok(
+      all.some((w) => re.test(w)),
+      `no «${verb}» form among the answers`,
+    );
+  for (const t of saveWords(u, 'exc'))
+    assert.ok(
+      t.gaps.some((g) => t.word[g] === 'v'),
+      `${t.word}: no v gap`,
+    );
+  const brbl = saveWords(u, 'brbl');
+  for (const pair of ['br', 'bl'])
+    assert.ok(
+      brbl.some((t) => t.gaps.some((g) => t.word.slice(g, g + 2) === pair)),
+      `no save task with a gap on «${pair}»`,
+    );
+});
+
+// The book's table (PDF 49): Yo · Tú, Usted · Él, Ella · Nosotros/Nosotras · Vosotros/Vosotras, Ustedes · Ellos/Ellas.
+const PRONOUNS = ['yo', 'tú', 'usted', 'él', 'ella', 'nosotros', 'nosotras', 'vosotros', 'vosotras', 'ustedes', 'ellos', 'ellas'];
+const answersOf = (t) => {
+  if (t.type === 'substitute') return [t.answer];
+  if (t.type === 'choice' && !t.pics) return [t.options[t.answer]];
+  if (t.type === 'fill') return [t.answer];
+  if (t.type === 'pick') return [...t.text.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1]);
+  if (t.type === 'pairs') return t.pairs.flat();
+  if (t.type === 'sort') return t.items.map((it) => it.text);
+  return [];
+};
+
+test('lengua-poemas: every pronoun of the book table is an answer somewhere (substitute, choice, fill, pick, pairs, sort)', () => {
+  const { content: u } = bootPoemas();
+  const got = new Set(
+    lpTasks(u)
+      .flatMap(answersOf)
+      .map((a) => String(a).toLowerCase().trim()),
+  );
+  const missing = PRONOUNS.filter((p) => !got.has(p));
+  assert.deepEqual(missing, []);
+  // and the substitute tasks alone ask at least 5 different ones
+  const sub = new Set(
+    lpTasks(u)
+      .filter((t) => t.type === 'substitute')
+      .map((t) => t.answer.toLowerCase()),
+  );
+  assert.ok(sub.size >= 5, `substitute asks only ${[...sub].join(', ')}`);
+});
+
+test('lengua-poemas: own types are playable as authored (one stem+suffix pair makes the word; result starts with a capital and has the pronoun)', () => {
+  const { content: u } = bootPoemas();
+  for (const t of lpTasks(u)) {
+    const w = `${t.station}: ${t.q}`;
+    if (t.type === 'forge') {
+      const makes = t.stems.flatMap((s) => t.suffixes.map((x) => [s, x])).filter(([s, x]) => s + x === t.word);
+      assert.deepEqual(makes, [t.answer], `${w}: pairs that make «${t.word}»`);
+    }
+    if (t.type === 'save') {
+      assert.ok(t.reasons.length >= 2 && t.reasons.length <= 3, `${w}: reasons`);
+      if (t.ctx) assert.equal(t.ctx.length, 2, `${w}: ctx`);
+    }
+    if (t.type === 'substitute') {
+      assert.ok(t.options.length >= 3 && t.options.length <= 4, `${w}: options`);
+      assert.ok(/^[¿¡]?\p{Lu}/u.test(t.result), `${w}: result «${t.result}» starts with a capital`);
+      assert.ok(t.result.toLowerCase().includes(t.answer.toLowerCase()), `${w}: result has «${t.answer}»`);
+      assert.ok(!t.result.includes(t.chunks[t.target].replace(/[.,;:!?]+$/, '')), `${w}: result still has the replaced phrase`);
+    }
+  }
+});
+
+// LP_CHECK on a small valid unit, one thing broken at a time (rules from the contract).
+const lpUnit = () => ({
+  slug: 'lp-demo',
+  title: 'Demo',
+  stations: [
+    {
+      id: 'a',
+      title: 'A',
+      icon: '⚽',
+      intro: 'A',
+      tasks: [
+        { type: 'forge', q: 'Vende pan', stems: ['pan', 'panad'], suffixes: ['ero', 'ista'], answer: ['panad', 'ero'], word: 'panadero' },
+        {
+          type: 'save',
+          q: 'B o V',
+          word: 'jugaba',
+          gaps: [4],
+          ctx: ['Ayer', 'al fútbol.'],
+          reasons: ['aba', 'bir', 'memo'],
+          rule: 'aba',
+        },
+        {
+          type: 'substitute',
+          q: 'Cambia',
+          chunks: ['Celia y Olivia', 'juegan en el patio.'],
+          target: 0,
+          options: ['Ellas', 'Ellos', 'Vosotras'],
+          answer: 'Ellas',
+          result: 'Ellas juegan en el patio.',
+        },
+      ],
+    },
+  ],
+  exam: { perStation: { a: 1 } },
+});
+const LP_BROKEN = [
+  // forge
+  ['forge answer stem not in stems', (t) => Object.assign(t[0], { answer: ['pa', 'ero'], word: 'paero' })],
+  ['forge answer suffix not in suffixes', (t) => Object.assign(t[0], { answer: ['panad', 'eros'], word: 'panaderos' })],
+  ['forge stem + suffix is not the word', (t) => (t[0].word = 'panadera')],
+  ['forge with repeated stems', (t) => (t[0].stems = ['pan', 'pan', 'panad'])],
+  ['forge with repeated suffixes', (t) => (t[0].suffixes = ['ero', 'ista', 'ista'])],
+  ['forge with an empty stem', (t) => (t[0].stems = ['panad', ''])],
+  ['forge with one stem', (t) => (t[0].stems = ['panad'])],
+  ['forge with five suffixes', (t) => (t[0].suffixes = ['ero', 'ista', 'era', 'or', 'ora'])],
+  ['forge without a word', (t) => (t[0].word = '')],
+  // save
+  ['save gap out of the word', (t) => (t[1].gaps = [6])],
+  ['save gap below 0', (t) => (t[1].gaps = [-1])],
+  ['save repeated gaps', (t) => (t[1].gaps = [4, 4])],
+  ['save gap on a letter that is not b / v', (t) => (t[1].gaps = [0])],
+  ['save rule not in reasons', (t) => (t[1].rule = 'brbl')],
+  ['save reason that is not a rule id', (t) => (t[1].reasons = ['aba', 'ojo'])],
+  ['save repeated reasons', (t) => (t[1].reasons = ['aba', 'aba'])],
+  ['save with one reason', (t) => (t[1].reasons = ['aba'])],
+  // substitute
+  ['substitute target out of range', (t) => (t[2].target = 2)],
+  ['substitute target below 0', (t) => (t[2].target = -1)],
+  ['substitute answer not in options', (t) => Object.assign(t[2], { answer: 'Nosotras', result: 'Nosotras juegan en el patio.' })],
+  ['substitute repeated options', (t) => (t[2].options = ['Ellas', 'Ellas', 'Ellos'])],
+  ['substitute empty result', (t) => (t[2].result = '')],
+  ['substitute with Cyrillic in an option', (t) => (t[2].options = ['Ellas', 'Ellos', 'Вони'])],
+  ['substitute with Cyrillic in the result', (t) => (t[2].result = 'Ellas грають.')],
+  ['substitute with two options', (t) => (t[2].options = ['Ellas', 'Ellos'])],
+];
+
+test('LP_CHECK: the small valid unit passes', () => {
+  const { check } = bootPoemas();
+  assert.deepEqual(check(lpUnit()), []);
+});
+
+for (const [name, mutate] of LP_BROKEN) {
+  test(`LP_CHECK catches: ${name}`, () => {
+    const { check } = bootPoemas();
+    const u = lpUnit();
+    mutate(u.stations[0].tasks);
+    const errs = check(u);
+    assert.ok(errs.length > 0, 'no errors reported');
+    // the error names the broken task
+    const i = name.startsWith('forge') ? 1 : name.startsWith('save') ? 2 : 3;
+    assert.ok(
+      errs.some((e) => e.includes(`task ${i}`)),
+      `error not about task ${i}: ${JSON.stringify(errs)}`,
+    );
+  });
+}

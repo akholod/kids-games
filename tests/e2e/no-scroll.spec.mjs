@@ -418,3 +418,49 @@ test('cultura-asturiana: hub, a reading, every own type (the biggest ones) and b
     await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what}: next`);
   }
 });
+
+test('lengua-poemas: every station dialog, the biggest forge / save / substitute / fix fit; next button visible', async ({ page, tap }) => {
+  test.setTimeout(120_000);
+  const lp = examPlayer('__lp');
+  const { openIntro, allTasks, playOnly } = unitPage('LP_CONTENT', '__lp');
+  await open(page, '/games/lengua-poemas/');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  const ids = await page.evaluate(() => LP_CONTENT.stations.map((s) => s.id));
+  for (const id of ids) {
+    await openIntro(page, tap, id);
+    const m = await page.evaluate(() => {
+      const d = document.getElementById('intro-dlg').getBoundingClientRect();
+      const g = document.getElementById('intro-go').getBoundingClientRect();
+      return { top: d.top, bottom: d.bottom, goBottom: g.bottom, h: innerHeight };
+    });
+    expect(m.top, `${id}: dialog top`).toBeGreaterThanOrEqual(0);
+    expect(m.bottom, `${id}: dialog bottom`).toBeLessThanOrEqual(m.h);
+    expect(m.goBottom, `${id}: start button bottom`).toBeLessThanOrEqual(m.bottom);
+    await tap(page.locator('#intro-back'));
+  }
+  const tasks = await allTasks(page);
+  const size = (t) => JSON.stringify(t).length;
+  const most = (type, by = size) => [...tasks.filter((t) => t.type === type)].sort((a, b) => by(b) - by(a))[0];
+  const picks = [
+    ['the biggest forge', most('forge')],
+    ['the forge with the longest word', most('forge', (t) => t.stems.join('').length + t.suffixes.join('').length)],
+    ['the biggest save', most('save')],
+    ['the save with the longest sentence', most('save', (t) => (t.ctx ?? []).join(' ').length + t.word.length)],
+    ['the biggest substitute', most('substitute')],
+    ['the substitute with the longest sentence', most('substitute', (t) => t.chunks.join(' ').length)],
+    ['the biggest fix', most('fix')],
+  ];
+  for (const [what, t] of picks) {
+    expect(t, what).toBeTruthy();
+    for (const wrong of [false, true]) {
+      await open(page, '/games/lengua-poemas/');
+      await playOnly(page, t);
+      await expectFits(page, what);
+      await lp.answerTask(page, tap, { wrong: wrong && t.type !== 'fix' });
+      await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what}${wrong ? ' (wrong)' : ''}: next`);
+      // the contract: the task + feedback + next button fit 1280×650 without page scroll (2 px tolerance, as above).
+      await page.waitForTimeout(400);
+      expect.soft(await overflow(page), `${what}${wrong ? ' (wrong)' : ''} after the answer: page scroll`).toBeLessThanOrEqual(2);
+    }
+  }
+});
