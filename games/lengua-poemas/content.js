@@ -327,8 +327,8 @@ window.LP_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'pick',
-            q: 'Toca los verbos que acaban en -aba, -abas o -aban.',
-            text: 'Ayer yo [jugaba], tú [pensabas] y ellos [cantaban], pero Eva vivía en otra ciudad.',
+            q: 'Toca las palabras que se escriben con b.',
+            text: 'Ayer yo [juga_a], tú [pensa_as] y ellos [canta_an], pero Eva _i_ía en otra ciudad.',
             fact: 'Vivía no acaba en -aba: es una excepción y lleva v.',
           },
           {
@@ -407,9 +407,9 @@ window.LP_CONTENT = /** @type {ExamUnit} */ (
           },
           {
             type: 'pick',
-            q: 'Toca las palabras que llevan br o bl.',
-            text: 'En el [establo] hay una [cabra] [blanca] y un burro negro.',
-            fact: 'Establo, cabra y blanca: la b va antes de l o de r.',
+            q: 'Toca las palabras que se escriben con b.',
+            text: 'En el [esta_lo] hay una [ca_ra] [_lanca] y una _aca negra.',
+            fact: 'Establo, cabra y blanca: la b va antes de l o de r. Vaca se aprende de memoria.',
           },
           {
             type: 'fill',
@@ -732,11 +732,12 @@ window.LP_CONTENT = /** @type {ExamUnit} */ (
             items: ['El perro de San Roque', 'no tiene rabo,', 'porque Ramón Rodríguez', 'se lo ha robado.'],
           },
           {
-            type: 'pick',
-            q: 'Toca las palabras que empiezan por r.',
+            type: 'fill',
+            q: 'Escucha y completa el trabalenguas.',
             listen: 'El perro de San Roque no tiene rabo, porque Ramón Rodríguez se lo ha robado.',
-            text: 'El perro de San [Roque] no tiene [rabo], porque [Ramón] [Rodríguez] se lo ha [robado].',
-            fact: 'En este trabalenguas se repite el sonido de la r.',
+            text: 'El perro de San Roque no tiene rabo, porque Ramón Rodríguez se lo ha ___.',
+            answer: 'robado',
+            fact: 'En este trabalenguas se repite el sonido fuerte de la r: Roque, rabo, Ramón, Rodríguez, robado.',
           },
           {
             type: 'choice',
@@ -846,8 +847,8 @@ window.LP_CONTENT = /** @type {ExamUnit} */ (
           {
             type: 'pick',
             q: 'Toca las palabras que se escriben con z.',
-            text: 'El [zorro] pisó un [zapato] en la [plaza].',
-            fact: 'Zorro, zapato y plaza: la z va delante de o, a.',
+            text: 'El [_orro] pisó un [_apato] en la [pla_a] y se comió una _iruela.',
+            fact: 'Zorro, zapato y plaza: la z va delante de o, a. Ciruela lleva c, porque va delante de i.',
           },
           {
             type: 'choice',

@@ -1186,10 +1186,11 @@ const taught = (u) => [...saveWords(u).map((t) => t.word), ...lpTasks(u).flatMap
 
 test('lengua-poemas: b/v coverage — the five -aba endings, -bir, hervir / servir / vivir are asked; br and bl as save gaps', () => {
   const { content: u } = bootPoemas();
-  // a sort card may show the b/v as a gap: «her_ir»
+  // a sort card or a pick word may show the b/v as a gap: «her_ir», «canta_an» (the -aba endings: with the b filled in)
   const all = taught(u)
     .flatMap((w) => w.split(/[^\p{L}_]+/u))
-    .filter(Boolean);
+    .filter(Boolean)
+    .flatMap((w) => (w.includes('_') ? [w, w.replace(/_/g, 'b')] : [w]));
   for (const end of ['aba', 'abas', 'ábamos', 'abais', 'aban'])
     assert.ok(
       all.some((w) => w.endsWith(end) && w.length > end.length + 1),
