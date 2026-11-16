@@ -142,6 +142,15 @@ interface ExamConfig {
   perStation: Record<string, number>;
   /** Red card after this many mistakes (default 3). */
   redAfter?: number;
+  /** Opt-in (default false). In the final exam each correct answer pays no coin at once; one coin per correct answer is paid at the
+   *  end, only if the exam was finished without a red card (plus the usual first-perfect bonus). The redAfter-th mistake sends the
+   *  player off: after its feedback «Siguiente» opens #finish[data-sendoff="1"] (no coins, the exam record is not improved).
+   *  Yellow feedback says how many cards are left before the red. Practice stations are unchanged. */
+  sendOff?: boolean;
+  /** Only with sendOff: cost in coins of the «VAR» (default 0 = none). On the red card, once per exam, #var-btn «📺 VAR: anular la
+   *  roja (N 🪙)» (key A) spends N coins with KF.spendCoins and cancels the red (mistakes back to redAfter − 1, the exam goes on);
+   *  the next red card is a send-off. Disabled with the note #var-note «Necesitas N 🪙» when the player has fewer coins. */
+  var?: number;
 }
 
 /** Per task type: at most N of it in one round (types not listed: no limit). */
@@ -191,6 +200,8 @@ interface ExamUnit {
    *  the questions and the intro dialog gets a «📜 Leer el texto» button (#intro-read) that opens the reading in the text dialog
    *  (🔊 Escuchar; closing it gives the focus back to the button, the intro stays open). The play head «📜 Texto» stays either way. */
   readFirst?: boolean;
+  /** Opt-in: coin option of KF.answer in station rounds (0 < x <= 1, e.g. 0.5 = every 2nd right answer; default 1). */
+  practiceCoin?: number;
   /** Station id → tile colour. */
   hues?: Record<string, string>;
   sampling?: ExamSampling;
@@ -355,6 +366,10 @@ interface ExamSession {
   startCoins: number;
   task?: ExamSessionTask;
   answered?: boolean;
+  /** ExamConfig.sendOff: the red card was shown, the next «Siguiente» ends the exam with the send-off screen. */
+  sentOff?: boolean;
+  /** ExamConfig.var: the VAR was used in this exam. */
+  varUsed?: boolean;
 }
 
 /** KF.gameData(slug): sync merges numbers by adding deltas, so the engine clamps them on load. */

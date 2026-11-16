@@ -64,6 +64,19 @@
     restart: 'Empezar de nuevo ↺',
     yellow: '¡Tarjeta amarilla!',
     yellowText: 'No pasa nada. ¡Sigue jugando!',
+    // exam.sendOff: the red card sends the player off, no coins
+    examInfoOff: ({ n, red }) =>
+      `${n} preguntas de toda la unidad. Cada fallo es una 🟨 tarjeta amarilla y la ${red}.ª es una 🟥 roja: expulsión y sin monedas. ¡Con cuidado!`,
+    yellowLeft: ({ n }) => `¡Cuidado! Te quedan ${n}.`,
+    redOff: 'El árbitro te saca del campo.',
+    // exam.var: once per exam the red card can be cancelled for coins
+    varBtn: ({ n }) => `📺 VAR: anular la roja (${n} 🪙)`,
+    varNeed: ({ n }) => `Necesitas ${n} 🪙`,
+    varDone: 'VAR: ¡roja anulada!',
+    varDoneText: 'La 🟥 se anula y el partido sigue. ¡Con cuidado: la próxima roja ya no tiene VAR!',
+    sentOffTitle: '¡Expulsado! 🟥',
+    sentOffText: ({ n }) =>
+      `Con ${n} fallos el árbitro te saca del campo. Esta vez no hay monedas. Repasa las estaciones y vuelve a intentarlo.`,
     red: '¡Tarjeta roja!',
     redText: 'Llevas varios fallos, pero el examen sigue. Al final verás qué temas repasar.',
     kChoice: ({ n }) => `Teclas 1–${n}`,
@@ -211,7 +224,11 @@
         else if (n > s.tasks.length) err('exam', `perStation.${id} = ${n}, but the station has ${s.tasks.length} tasks`);
       }
       if (ex.redAfter !== undefined && !int(ex.redAfter)) err('exam', 'redAfter must be a positive integer');
+      if (ex.sendOff !== undefined && typeof ex.sendOff !== 'boolean') err('exam', 'sendOff must be a boolean');
+      if (ex.var !== undefined && !(Number.isInteger(ex.var) && ex.var >= 0)) err('exam', 'var must be a non-negative integer');
     }
+    if (unit.practiceCoin !== undefined && !(typeof unit.practiceCoin === 'number' && unit.practiceCoin > 0 && unit.practiceCoin <= 1))
+      err('unit', 'practiceCoin must be a number above 0 and at most 1');
     for (const id of Object.keys(unit.hues || {})) if (!stationIds.has(id)) err('hues', `no station «${id}»`);
     return errs;
   };
@@ -402,6 +419,11 @@
     const EXAM_TITLE = EXAM.title || T('examTitle');
     const EXAM_N = Object.values(EXAM.perStation).reduce((a, b) => a + b, 0);
     const RED = EXAM.redAfter || RED_AFTER;
+    // Opt-in: coins of a station answer (practiceCoin), and the exam where a red card sends the player off (sendOff).
+    const SEND_OFF = EXAM.sendOff === true;
+    const PRACTICE_COIN = unit.practiceCoin;
+    // VAR: cost in coins of cancelling the red card once per exam (only with sendOff).
+    const VAR_COST = SEND_OFF && EXAM.var ? EXAM.var : 0;
     const caps = unit.sampling?.caps || LIMITED;
     const examCaps = unit.sampling?.examCaps || LIMITED;
     const always = unit.sampling?.always || [];
@@ -603,7 +625,7 @@
         h('span', { text: T('tallyPassed', { n: passed, total: STATIONS.length }) }),
         h('span', { text: T('tallyStars', { n: stars, total: STATIONS.length * 3 }) }),
       );
-      $('exam-info').textContent = T('examInfo', { n: EXAM_N });
+      $('exam-info').textContent = SEND_OFF ? T('examInfoOff', { n: EXAM_N, red: RED }) : T('examInfo', { n: EXAM_N });
       $('exam-best').hidden = !data.exam;
       if (data.exam) $('exam-best').textContent = T('examBest', { grade: data.exam.grade, nota: data.exam.nota });
     };
@@ -1117,7 +1139,10 @@
       bs.total++;
       if (correct) bs.right++;
       session.byStation[task.station] = bs;
-      KF.answer(SLUG, correct);
+      // sendOff exam: no coin per answer, the correct ones are paid at the end of an exam finished without a red card.
+      if (session.mode === 'exam' && SEND_OFF) KF.answer(SLUG, correct, { coin: 0 });
+      else if (session.mode === 'station' && PRACTICE_COIN !== undefined) KF.answer(SLUG, correct, { coin: PRACTICE_COIN });
+      else KF.answer(SLUG, correct);
       if (opts.onAnswer) {
         try {
           opts.onAnswer(task, correct);
@@ -1144,6 +1169,13 @@
         drawCards();
       }
       const red = exam && !correct && session.cards === RED;
+      if (red && SEND_OFF) session.sentOff = true;
+      /** @type {HTMLElement | null} */
+      let refCard = null;
+      /** @type {HTMLElement | null} */
+      let refTitle = null;
+      /** @type {HTMLElement | null} */
+      let refText = null;
       const card =
         exam &&
         !correct &&
@@ -1151,12 +1183,14 @@
         h(
           'div',
           { class: 'ref' },
-          h('span', { class: `ref-card ${red ? 'r' : 'y'}`, 'aria-hidden': 'true' }),
+          (refCard = h('span', { class: `ref-card ${red ? 'r' : 'y'}`, 'aria-hidden': 'true' })),
           h(
             'div',
             {},
-            h('p', { class: 'fb-title', text: red ? T('red') : T('yellow') }),
-            h('p', { text: red ? T('redText') : T('yellowText') }),
+            (refTitle = h('p', { class: 'fb-title', text: red ? T('red') : T('yellow') })),
+            (refText = h('p', {
+              text: SEND_OFF ? (red ? T('redOff') : T('yellowLeft', { n: RED - session.cards })) : red ? T('redText') : T('yellowText'),
+            })),
           ),
         );
 
@@ -1181,9 +1215,44 @@
         'div',
         { class: 'fb-actions' },
         next,
-        red && h('button', { class: 'btn btn-light', type: 'button', onclick: startExam }, T('restart')),
+        red && !SEND_OFF && h('button', { class: 'btn btn-light', type: 'button', onclick: startExam }, T('restart')),
       );
-      ctrl = { onKey: (e) => (e.key === 'Enter' ? (next.click(), true) : false) };
+      // VAR: once per exam, the red card of a sendOff exam can be cancelled for coins.
+      /** @type {HTMLButtonElement | null} */
+      let varBtn = null;
+      if (red && SEND_OFF && VAR_COST && !session.varUsed) {
+        const poor = KF.get().coins < VAR_COST;
+        varBtn = /** @type {HTMLButtonElement} */ (
+          h(
+            'button',
+            { class: 'btn btn-light', type: 'button', id: 'var-btn', disabled: poor, onclick: useVar },
+            T('varBtn', { n: VAR_COST }),
+          )
+        );
+        actions.append(varBtn);
+        if (poor) actions.append(h('p', { class: 'meta', id: 'var-note', text: T('varNeed', { n: VAR_COST }) }));
+      }
+      function useVar() {
+        if (!varBtn || varBtn.disabled || !KF.spendCoins(VAR_COST)) return;
+        session.varUsed = true;
+        session.sentOff = false;
+        session.cards = RED - 1;
+        drawCards();
+        if (refCard) refCard.className = 'ref-card y';
+        if (refTitle) refTitle.textContent = T('varDone');
+        if (refText) refText.textContent = T('varDoneText');
+        varBtn.remove();
+        actions.querySelector('#var-note')?.remove();
+        next.focus({ preventScroll: true });
+      }
+      ctrl = {
+        onKey: (e) => {
+          if (e.key === 'Enter') return next.click(), true;
+          if (varBtn && !varBtn.disabled && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'a')
+            return varBtn.click(), true;
+          return false;
+        },
+      };
       // The sheet is sticky, so it is in view at once (scrollIntoView would do nothing). When it covers the end of the task,
       // scroll down just enough to set it in its place: on a laptop that is a few lines, the prompt stays on screen.
       KFG.feedback($('feedback'), box, actions, { scroll: false });
@@ -1193,7 +1262,7 @@
 
     const goNext = () => {
       session.index++;
-      if (session.index >= session.tasks.length) finish();
+      if (session.sentOff || session.index >= session.tasks.length) finish();
       else nextTask();
     };
 
@@ -1216,18 +1285,44 @@
       openIntro(s);
     };
 
+    // Red card in a sendOff exam: no coins, no perfect bonus, the exam record and keys stay as they were.
+    const finishSentOff = () => {
+      const { score, tasks, cards } = session;
+      KF.finishGame(SLUG, { score: Math.round((score / tasks.length) * NOTA_MAX), max: NOTA_MAX, bonus: 0 });
+      const el = $('finish');
+      el.dataset.sendoff = '1';
+      el.replaceChildren(
+        h('p', { class: 'eyebrow', text: T('examDone') }),
+        h('h1', { text: T('sentOffTitle') }),
+        h('div', { class: 'score-pill' }, `${score} / ${tasks.length}`, h('small', { text: '⚽' })),
+        h('p', { class: 'msg', text: T('sentOffText', { n: cards }) }),
+        h(
+          'div',
+          { class: 'actions' },
+          h('button', { class: 'btn btn-dark', type: 'button', onclick: startExam }, T('again')),
+          h('button', { class: 'btn btn-light', type: 'button', onclick: toHub }, T('toHub')),
+        ),
+      );
+      show('finish');
+      /** @type {HTMLElement | null} */ (el.querySelector('.actions .btn'))?.focus({ preventScroll: true });
+    };
+
     const finish = () => {
       ctrl = null;
       const { score, tasks, mode } = session;
       const max = tasks.length;
+      const el = $('finish');
+      delete el.dataset.sendoff;
+      if (session.sentOff) return finishSentOff();
       // The perfect-round bonus is paid until the station (or the exam) is done perfectly once.
       const old = mode === 'station' ? data.st[session.station] : null;
       const done = mode === 'station' ? !!old && old.best >= old.max : data.exam?.n >= NOTA_MAX;
       // Stations and the exam have different lengths but share one catalog record: report both as a nota out of 10.
+      // sendOff exam finished without a red card: one coin per correct answer (the daily budget still applies).
+      if (mode === 'exam' && SEND_OFF) KF.earn(SLUG, score);
       const res = KF.finishGame(SLUG, { score: Math.round((score / max) * NOTA_MAX), max: NOTA_MAX, bonus: done ? 0 : PERFECT_BONUS });
       const coins = KF.get().coins - session.startCoins;
       const bonus = res.bonus ? T('perfectBonus') : '';
-      const el = $('finish');
       if (mode === 'station') {
         const id = session.station;
         const st = stationOf(id);

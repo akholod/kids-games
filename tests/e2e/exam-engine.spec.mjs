@@ -1454,3 +1454,403 @@ test('tf: key letters are the first letters of «true» / «false» (T / F in En
   expect(await kbds()).toEqual(['V', 'F']);
   await pressAndCheck('v', 1);
 });
+
+// ---- opt-in rewards: unit.practiceCoin (station answers pay less) and exam.sendOff (the red card sends the player off) ----
+// Expected coins come from the parent's rule: practice pays 0.5 per right answer, the sendOff exam pays 1 per right answer only
+// at the end of an exam finished without a red card (+ the first-perfect bonus of 5), through the daily budget (40 in full, then a third).
+
+const SO_TASKS_A = [tf('SA1', true), tf('SA2', false), choice('SA3', ['x', 'y', 'z'], 2), tf('SA4', true), choice('SA5', ['x', 'y'], 1)];
+const SO_TASKS_B = [tf('SB1', false), choice('SB2', ['x', 'y', 'z'], 0), tf('SB3', true)];
+const SO_STATIONS = [station('a', SO_TASKS_A), station('b', SO_TASKS_B)];
+const SO_N = 6; // exam: 4 + 2
+const soExam = (extra = {}) => ({ perStation: { a: 4, b: 2 }, redAfter: 3, ...extra });
+const openRewards = (page, { practiceCoin, exam = {} } = {}) =>
+  openUnit(page, SO_STATIONS, {
+    unitExtra: { exam: soExam(exam), ...(practiceCoin !== undefined ? { practiceCoin } : {}) },
+  });
+const rightCount = (page) => page.evaluate(() => KF.get().stats.correct);
+const examData = (page) => page.evaluate((s) => KF.gameData(s).exam ?? null, SLUG);
+
+// Plays the running exam by keys: plan[i] = true (right) / false (wrong); `each(i)` runs after the feedback of task i is up.
+const playPlan = async (page, plan, each = async () => {}) => {
+  for (const [i, ok] of plan.entries()) {
+    await answerByKeys(page, { wrong: !ok });
+    await expect(page.locator('#feedback .fb')).toBeVisible();
+    await each(i);
+    await page.keyboard.press('Enter');
+  }
+};
+
+test('practiceCoin 0.5: a station answer pays half a coin (every 2nd right answer = 1 coin), the perfect bonus stays 5', async ({
+  page,
+}) => {
+  await openRewards(page, { practiceCoin: 0.5 });
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startStation('a'));
+  await answerByKeys(page);
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  expect((await coins(page)) - c0).toBe(0); // 0.5
+  await page.keyboard.press('Enter');
+  await answerByKeys(page);
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  expect((await coins(page)) - c0).toBe(1); // 0.5 + 0.5
+  await page.keyboard.press('Enter');
+  for (let i = 2; i < 4; i++) {
+    await answerByKeys(page);
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('#finish .score-pill')).toContainText('4 / 4');
+  expect((await coins(page)) - c0).toBe(7); // 4 × 0.5 + the first-perfect bonus 5
+  await expect(page.locator('#finish .msg')).toContainText('Has ganado 7 🪙.');
+  // the same station perfect again: no bonus, 2 coins
+  const c1 = await coins(page);
+  await page.evaluate(() => __exam.startStation('a'));
+  await playRound(page);
+  expect((await coins(page)) - c1).toBe(2);
+});
+
+test('practiceCoin is for stations only: the final exam (without sendOff) still pays 1 coin per right answer at once', async ({ page }) => {
+  await openRewards(page, { practiceCoin: 0.5 });
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  await answerByKeys(page);
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  expect((await coins(page)) - c0).toBe(1);
+});
+
+test('without practiceCoin a station answer pays 1 coin at once (default unchanged)', async ({ page }) => {
+  await openRewards(page);
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startStation('a'));
+  await answerByKeys(page);
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  expect((await coins(page)) - c0).toBe(1);
+});
+
+test('sendOff: the exam intro warns about the red card; without sendOff it does not', async ({ page }) => {
+  await openRewards(page, { exam: { sendOff: true } });
+  const info = page.locator('#exam-info');
+  await expect(info).toContainText(`${SO_N} preguntas`);
+  await expect(info).toContainText('🟨');
+  await expect(info).toContainText('🟥');
+  await expect(info).toContainText('3.ª'); // redAfter 3
+  await expect(info).toContainText('expulsión y sin monedas');
+  await openRewards(page);
+  await expect(page.locator('#exam-info')).toContainText(`${SO_N} preguntas`);
+  await expect(page.locator('#exam-info')).not.toContainText('🟥');
+  await expect(page.locator('#exam-info')).not.toContainText('sin monedas');
+});
+
+test('sendOff: no coin during the exam (answers still count); finished perfect = 1 per right answer + the first-perfect bonus, once', async ({
+  page,
+}) => {
+  await openRewards(page, { exam: { sendOff: true } });
+  const c0 = await coins(page);
+  const r0 = await rightCount(page);
+  await page.evaluate(() => __exam.startExam());
+  expect(await page.evaluate(() => __exam.session.tasks.length)).toBe(SO_N);
+  await playPlan(page, Array(SO_N).fill(true), async (i) => {
+    expect(await coins(page), `coins after answer ${i + 1}`).toBe(c0);
+    expect(await rightCount(page), `right answers counted after answer ${i + 1}`).toBe(r0 + i + 1);
+  });
+  await expect(page.locator('#finish')).toBeVisible();
+  await expect(page.locator('#finish')).not.toHaveAttribute('data-sendoff', /./);
+  await expect(page.locator('#finish .score-pill')).toContainText(`${SO_N} / ${SO_N}`);
+  expect((await coins(page)) - c0).toBe(SO_N + 5);
+  await expect(page.locator('#finish .msg')).toContainText(`Has ganado ${SO_N + 5} 🪙.`);
+  expect(await examData(page)).toMatchObject({ n: 10 });
+  // a second perfect exam: the right answers again, no bonus
+  const c1 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  await playPlan(page, Array(SO_N).fill(true));
+  await expect(page.locator('#finish')).toBeVisible();
+  expect((await coins(page)) - c1).toBe(SO_N);
+});
+
+test('sendOff: yellow cards say how many are left before the red; finished with 2 misses = the right answers paid, no bonus', async ({
+  page,
+}) => {
+  await openRewards(page, { exam: { sendOff: true } });
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  const ref = page.locator('#feedback .ref');
+  await playPlan(page, [false, true, false, true, true, true], async (i) => {
+    if (i === 0) {
+      await expect(ref.locator('.ref-card.y')).toBeVisible();
+      await expect(ref).toContainText('¡Tarjeta amarilla!');
+      await expect(ref).toContainText('¡Cuidado! Te quedan 2.');
+      await expect(ref).not.toContainText('No pasa nada');
+    }
+    if (i === 2) {
+      await expect(ref.locator('.ref-card.y')).toBeVisible();
+      await expect(ref).toContainText('¡Cuidado! Te quedan 1.');
+    }
+    expect(await coins(page)).toBe(c0);
+  });
+  await expect(page.locator('#finish')).toBeVisible();
+  await expect(page.locator('#finish')).not.toHaveAttribute('data-sendoff', /./);
+  await expect(page.locator('#finish .score-pill')).toContainText(`4 / ${SO_N}`);
+  expect((await coins(page)) - c0).toBe(4);
+  expect(await examData(page)).toMatchObject({ nota: '6,7' }); // 4/6
+});
+
+test('sendOff: the end-of-exam pay goes through the daily budget (after 40 coins of this game today: a third)', async ({ page }) => {
+  await openRewards(page, { exam: { sendOff: true } });
+  await page.evaluate((s) => KF.earn(s, 40), SLUG);
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  await playPlan(page, Array(SO_N).fill(true));
+  await expect(page.locator('#finish')).toBeVisible();
+  // budget units 40 → 40 + 6 + 5 = 51: paid floor(40 + 11 / 3) − 40 = 3
+  expect((await coins(page)) - c0).toBe(3);
+});
+
+test('sendOff: the red card sends the player off — no coins, the nota over the whole exam, no exam record; «Otra vez» starts clean', async ({
+  page,
+  tap,
+}) => {
+  await openRewards(page, { exam: { sendOff: true } });
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  // right, right, then three misses: the 3rd is the red card at task 5 of 6
+  for (const [i, ok] of [true, true, false, false, false].entries()) {
+    await answerByKeys(page, { wrong: !ok });
+    await expect(page.locator('#feedback .fb')).toBeVisible();
+    expect(await coins(page)).toBe(c0);
+    if (i < 4) await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('#feedback .ref-card.r')).toBeVisible();
+  await expect(page.locator('#feedback .ref')).toContainText('¡Tarjeta roja!');
+  await expect(page.locator('#cards i')).toHaveCount(3);
+  await page.keyboard.press('Enter');
+  const fin = page.locator('#finish');
+  await expect(fin).toBeVisible();
+  await expect(fin).toHaveAttribute('data-sendoff', '1');
+  await expect(fin.locator('h1')).toHaveText('¡Expulsado! 🟥');
+  await expect(fin.locator('.msg')).toContainText('Con 3 fallos el árbitro te saca del campo');
+  await expect(fin.locator('.msg')).toContainText('no hay monedas');
+  await expect(fin.locator('.actions .btn')).toHaveText(['Otra vez', 'A las estaciones']);
+  await expect(fin.locator('.actions .btn').first()).toBeFocused();
+  expect(await coins(page)).toBe(c0);
+  // nota over the full exam: 2 of 6 → 3 (not 2 of the 5 played → 4)
+  expect(await record(page, SLUG)).toMatchObject({ plays: 1, best: 3, max: 10 });
+  expect(await examData(page)).toBeNull();
+
+  // «Otra vez»: a new exam from the first task with no cards; finished with 2 misses it is a normal finish again
+  await tap(fin.locator('.actions .btn').first());
+  await expect(page.locator('#play')).toBeVisible();
+  expect(await page.evaluate(() => ({ m: __exam.session.mode, i: __exam.session.index, c: __exam.session.cards }))).toEqual({
+    m: 'exam',
+    i: 0,
+    c: 0,
+  });
+  await expect(page.locator('#cards i')).toHaveCount(0);
+  await playPlan(page, [true, false, true, false, true, true]);
+  await expect(fin).toBeVisible();
+  await expect(fin).not.toHaveAttribute('data-sendoff', /./);
+  await expect(fin.locator('h1')).toHaveCount(0);
+  expect((await coins(page)) - c0).toBe(4);
+  expect(await examData(page)).toMatchObject({ nota: '6,7' });
+});
+
+test('sendOff: the record of a finished exam is not touched by a later send-off; «A las estaciones» goes to the hub', async ({
+  page,
+  tap,
+}) => {
+  await openRewards(page, { exam: { sendOff: true } });
+  await page.evaluate(() => __exam.startExam());
+  await playPlan(page, [true, true, true, true, false, true]);
+  await expect(page.locator('#finish')).toBeVisible();
+  const best = await examData(page);
+  expect(best).toMatchObject({ nota: '8,3' }); // 5/6
+  await page.evaluate(() => __exam.startExam());
+  await playPlan(page, [false, false, false]);
+  await expect(page.locator('#finish')).toHaveAttribute('data-sendoff', '1');
+  expect(await examData(page)).toEqual(best);
+  await tap(page.locator('#finish .actions .btn').last());
+  await expect(page.locator('#hub')).toBeVisible();
+});
+
+test('without sendOff the red card changes nothing: coins at once, «No pasa nada», the restart button, the exam goes on to its end', async ({
+  page,
+}) => {
+  await openRewards(page);
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  await playPlan(page, [false, false, false, true, true, true], async (i) => {
+    const ref = page.locator('#feedback .ref');
+    if (i === 0) await expect(ref).toContainText('No pasa nada. ¡Sigue jugando!');
+    if (i === 2) {
+      await expect(ref.locator('.ref-card.r')).toBeVisible();
+      await expect(ref).toContainText('Llevas varios fallos, pero el examen sigue.');
+      await expect(page.locator('#feedback .fb-actions .btn')).toHaveCount(2); // «Siguiente» + «Empezar de nuevo»
+    }
+    if (i === 3) expect((await coins(page)) - c0).toBe(1);
+  });
+  await expect(page.locator('#finish')).toBeVisible();
+  await expect(page.locator('#finish')).not.toHaveAttribute('data-sendoff', /./);
+  await expect(page.locator('#finish .score-pill')).toContainText(`3 / ${SO_N}`);
+  expect((await coins(page)) - c0).toBe(3);
+  expect(await examData(page)).toMatchObject({ nota: '5,0' });
+});
+
+// ---- exam.var (only with sendOff): once per exam, the red card can be cancelled for `var` coins (KF.spendCoins) ----
+// Expected values from the parent's contract: the button «📺 VAR: anular la roja (2 🪙)» (#var-btn) next to «Siguiente», key A,
+// disabled with «Necesitas 2 🪙» under 2 coins; used = cards back to redAfter − 1 and the exam goes on; the next red = send-off, no VAR.
+
+const VAR_LABEL = '📺 VAR: anular la roja (2 🪙)';
+const openVar = (page, exam = { sendOff: true, var: 2 }) => openRewards(page, { exam });
+// Plays the plan by keys and stops on the feedback of its last answer (no Enter after it).
+const playUpTo = async (page, plan) => {
+  for (const [i, ok] of plan.entries()) {
+    await answerByKeys(page, { wrong: !ok });
+    await expect(page.locator('#feedback .fb')).toBeVisible();
+    if (i < plan.length - 1) await page.keyboard.press('Enter');
+  }
+};
+const tap0 = (page, sel) => page.locator(sel).first().click();
+const RED_PLAN = [true, false, false, false]; // the 3rd mistake (redAfter 3) is the red card, at task 4 of 6
+
+test('VAR: the red card offers the button next to «Siguiente»; used, it costs 2 coins, cancels the red and the exam goes on to a paid end', async ({
+  page,
+  tap,
+}) => {
+  await openVar(page);
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  await playUpTo(page, RED_PLAN);
+  await expect(page.locator('#feedback .ref-card.r')).toBeVisible();
+  const actions = page.locator('#feedback .fb-actions');
+  await expect(actions.locator('.btn').first()).toHaveText('Siguiente →');
+  await expect(actions.locator('#var-btn')).toHaveText(VAR_LABEL);
+  await expect(actions.locator('#var-btn')).toBeEnabled();
+  await expect(page.locator('#var-note')).toHaveCount(0);
+  await tap(page.locator('#var-btn'));
+  expect((await coins(page)) - c0).toBe(-2);
+  await expect(page.locator('#var-btn')).toHaveCount(0);
+  await expect(page.locator('#feedback .ref-card.y')).toBeVisible();
+  await expect(page.locator('#feedback .ref-card.r')).toHaveCount(0);
+  await expect(page.locator('#feedback .ref')).toContainText('roja anulada');
+  await expect(page.locator('#cards i')).toHaveCount(2);
+  expect(await page.evaluate(() => __exam.session.cards)).toBe(2);
+  // «Siguiente»: the next task, not the send-off
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  expect(await page.evaluate(() => __exam.session.index)).toBe(4);
+  await playPlan(page, [true, true]);
+  await expect(page.locator('#finish')).toBeVisible();
+  await expect(page.locator('#finish')).not.toHaveAttribute('data-sendoff', /./);
+  await expect(page.locator('#finish .score-pill')).toContainText(`3 / ${SO_N}`);
+  // the exam pay is unchanged: 3 right answers, paid at the end; minus the 2 of the VAR
+  expect((await coins(page)) - c0).toBe(1);
+  expect(await examData(page)).toMatchObject({ nota: '5,0' });
+});
+
+test('VAR: once per exam — the next mistake after a VAR is a red card without the button, «Siguiente» sends off', async ({ page }) => {
+  await openVar(page);
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  await playUpTo(page, RED_PLAN);
+  await page.keyboard.press('a');
+  expect((await coins(page)) - c0).toBe(-2);
+  await page.keyboard.press('Enter');
+  await answerByKeys(page, { wrong: true });
+  await expect(page.locator('#feedback .ref-card.r')).toBeVisible();
+  await expect(page.locator('#var-btn')).toHaveCount(0);
+  await page.keyboard.press('a'); // nothing to cancel any more
+  expect((await coins(page)) - c0).toBe(-2);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#finish')).toHaveAttribute('data-sendoff', '1');
+  expect((await coins(page)) - c0).toBe(-2);
+  expect(await examData(page)).toBeNull();
+  // a new exam: the VAR is there again
+  await tap0(page, '#finish .actions .btn');
+  await playUpTo(page, RED_PLAN);
+  await expect(page.locator('#var-btn')).toBeEnabled();
+});
+test('VAR not used: «Siguiente» (Enter) is the send-off as before, no coin spent', async ({ page }) => {
+  await openVar(page);
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  await playUpTo(page, RED_PLAN);
+  await expect(page.locator('#var-btn')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#finish')).toHaveAttribute('data-sendoff', '1');
+  expect(await coins(page)).toBe(c0);
+});
+
+test('VAR by keys: A uses it only on the red card (not on a yellow one); Enter then goes on', async ({ page }) => {
+  await openVar(page);
+  const c0 = await coins(page);
+  await page.evaluate(() => __exam.startExam());
+  await playUpTo(page, [false]); // a yellow card
+  await page.keyboard.press('a');
+  expect(await coins(page)).toBe(c0);
+  await expect(page.locator('#feedback .ref-card.y')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await playUpTo(page, [false, false]); // 3rd mistake: red
+  await expect(page.locator('#var-btn')).toBeVisible();
+  await page.keyboard.press('a');
+  expect((await coins(page)) - c0).toBe(-2);
+  await expect(page.locator('#var-btn')).toHaveCount(0);
+  await expect(page.locator('#feedback .fb-actions .btn').first()).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  expect(await page.evaluate(() => __exam.session.index)).toBe(3);
+});
+
+test('VAR with fewer than 2 coins: the button is disabled with «Necesitas 2 🪙»; A and a click do nothing; exactly 2 coins is enough', async ({
+  page,
+}) => {
+  await openVar(page);
+  await page.evaluate(() => KF.spendCoins(KF.get().coins - 1));
+  expect(await coins(page)).toBe(1);
+  await page.evaluate(() => __exam.startExam());
+  await playUpTo(page, RED_PLAN);
+  await expect(page.locator('#var-btn')).toBeDisabled();
+  await expect(page.locator('#var-btn')).toHaveText(VAR_LABEL);
+  await expect(page.locator('#var-note')).toHaveText('Necesitas 2 🪙');
+  await page.keyboard.press('a');
+  await page.locator('#var-btn').click({ force: true });
+  expect(await coins(page)).toBe(1);
+  await expect(page.locator('#feedback .ref-card.r')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#finish')).toHaveAttribute('data-sendoff', '1');
+
+  // exactly 2 coins: enabled, and the VAR leaves 0
+  await page.evaluate(() => KF.addCoins(1));
+  expect(await coins(page)).toBe(2);
+  await page.evaluate(() => __exam.startExam());
+  await playUpTo(page, RED_PLAN);
+  await expect(page.locator('#var-btn')).toBeEnabled();
+  await expect(page.locator('#var-note')).toHaveCount(0);
+  await page.keyboard.press('a');
+  expect(await coins(page)).toBe(0);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+});
+
+test('no VAR: without exam.var, with var 0, or with var but without sendOff (the red card then changes nothing)', async ({ page }) => {
+  for (const exam of [{ sendOff: true }, { sendOff: true, var: 0 }, { var: 2 }]) {
+    await openVar(page, exam);
+    await page.evaluate(() => __exam.startExam());
+    await playUpTo(page, RED_PLAN);
+    await expect(page.locator('#feedback .ref-card.r'), JSON.stringify(exam)).toBeVisible();
+    await expect(page.locator('#var-btn'), JSON.stringify(exam)).toHaveCount(0);
+    const before = await coins(page);
+    await page.keyboard.press('a');
+    expect(await coins(page), JSON.stringify(exam)).toBe(before);
+    await page.keyboard.press('Enter');
+    if (exam.sendOff) await expect(page.locator('#finish')).toHaveAttribute('data-sendoff', '1');
+    else await expect(page.locator('#play')).toBeVisible();
+  }
+});
+
+// The contract's wording of the cancelled-card title: «VAR: ¡roja anulada!».
+test('VAR: the cancelled card says «VAR: ¡roja anulada!»', async ({ page }) => {
+  await openVar(page);
+  await page.evaluate(() => __exam.startExam());
+  await playUpTo(page, RED_PLAN);
+  await page.keyboard.press('a');
+  await expect(page.locator('#feedback .ref .fb-title')).toHaveText('VAR: ¡roja anulada!');
+});
