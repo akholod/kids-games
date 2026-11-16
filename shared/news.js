@@ -7,6 +7,21 @@
 // and { title, text } per site language (es: Spain Spanish, «tú», no Cyrillic).
 window.KF_NEWS = [
   {
+    id: 'lengua-poemas',
+    date: '2026-11-16',
+    sites: ['uk', 'es'],
+    icon: '📝',
+    game: 'lengua-poemas',
+    uk: {
+      title: 'Нова гра: La liga de las palabras',
+      text: 'Готуйся до іспиту з Lengua: суфікси, B і V, займенники та скоромовки. Стань воротарем!',
+    },
+    es: {
+      title: 'Nuevo juego: La liga de las palabras',
+      text: 'Prepara el examen de Lengua: sufijos, b y v, pronombres y trabalenguas. ¡Haz grandes paradas!',
+    },
+  },
+  {
     id: 'cultura-asturiana',
     date: '2026-11-08',
     sites: ['uk', 'es'],

@@ -317,7 +317,7 @@
       emoji: '📝',
       category: 'lengua',
       desc: 'Готуємось до іспиту з Lengua Castellana: Tema 3 — похідні слова й суфікси, b чи v, займенники, проза і вірш, скоромовки, c/z/s, крапка і велика літера.',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: {
         title: 'La liga de las palabras',
