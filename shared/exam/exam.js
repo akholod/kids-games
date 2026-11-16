@@ -38,6 +38,8 @@
     examBest: ({ grade, nota }) => `Tu mejor nota: ${grade} (${nota})`,
     cardsLabel: 'Tarjetas',
     goalsLabel: 'Goles',
+    // the score icon (header counter, praise, score pills); a unit with another theme overrides it
+    scoreIcon: '⚽',
     review: 'Repaso',
     backBtn: 'Volver',
     start: 'Empezar',
@@ -477,7 +479,12 @@
             h('span', { class: 'label', id: 'play-label' }),
             h('div', { class: 'dots', id: 'dots', 'aria-hidden': 'true' }),
             h('span', { class: 'cards', id: 'cards', 'aria-label': T('cardsLabel') }),
-            h('span', { class: 'goals', id: 'goals', 'aria-label': T('goalsLabel') }, '⚽ ', h('b', { id: 'goals-n', text: '0' })),
+            h(
+              'span',
+              { class: 'goals', id: 'goals', 'aria-label': T('goalsLabel') },
+              `${T('scoreIcon')} `,
+              h('b', { id: 'goals-n', text: '0' }),
+            ),
           ),
           h('div', { class: 'prompt' }, h('p', { class: 'prompt-text', id: 'prompt', lang: contentLang })),
           h('div', { class: 'passage', id: 'passage', hidden: true, lang: contentLang }),
@@ -1202,7 +1209,7 @@
         h('p', {
           class: 'fb-title',
           text: correct
-            ? `${info.soft ? T('praiseSoft') : pick(lists.praise)} ⚽`
+            ? `${info.soft ? T('praiseSoft') : pick(lists.praise)} ${T('scoreIcon')}`
             : `${card ? '' : `${T('almost')} `}${info.answer ? T('answerIs', { a: info.answer }) : T('seeRight')}`,
         }),
         info.note && h('p', { text: info.note }),
@@ -1294,7 +1301,7 @@
       el.replaceChildren(
         h('p', { class: 'eyebrow', text: T('examDone') }),
         h('h1', { text: T('sentOffTitle') }),
-        h('div', { class: 'score-pill' }, `${score} / ${tasks.length}`, h('small', { text: '⚽' })),
+        h('div', { class: 'score-pill' }, `${score} / ${tasks.length}`, h('small', { text: T('scoreIcon') })),
         h('p', { class: 'msg', text: T('sentOffText', { n: cards }) }),
         h(
           'div',
@@ -1374,7 +1381,7 @@
             { class: 'big-stars', 'aria-label': T('stars', { n: stars }) },
             [0, 1, 2].map((i) => starSvg(i < stars)),
           ),
-          h('div', { class: 'score-pill' }, `${score} / ${max}`, h('small', { text: '⚽' })),
+          h('div', { class: 'score-pill' }, `${score} / ${max}`, h('small', { text: T('scoreIcon') })),
           h('p', {
             class: 'msg',
             text: `${passed ? T('stationGreat') : T('stationKeep', { need, n: max })} ${T('stationMsg', { coins })}${bonus}`,
@@ -1411,7 +1418,7 @@
             h('span', { text: T('nota', { n: g.nota }) }),
           ),
           h('br'),
-          h('div', { class: 'score-pill' }, `${score} / ${max}`, h('small', { text: '⚽' })),
+          h('div', { class: 'score-pill' }, `${score} / ${max}`, h('small', { text: T('scoreIcon') })),
           h('p', {
             class: 'msg',
             text: `${g.i >= 4 ? T('examMsgTop') : g.i >= 2 ? T('examMsgOk') : T('examMsgLow')} ${session.cards ? T('examCards', { y, r }) : T('noCards')} ${T('stationMsg', { coins })}${bonus}`,
