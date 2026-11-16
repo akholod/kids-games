@@ -260,6 +260,12 @@ const T = KF.i18n({
     'merge.yes': 'Так, додати',
     'merge.done': 'Готово! Прогрес гостя тепер у профілі {name} 🎉',
     'merge.fail': 'Не вийшло додати. Спробуй ще раз пізніше.',
+    'news.eyebrow': 'Новини клубу',
+    'news.title': 'Що нового',
+    'news.text': 'Ми додали дещо нове — подивись!',
+    'news.play': 'Грати →',
+    'news.open': 'Відкрити →',
+    'news.ok': 'Круто!',
   },
   es: {
     title: 'Keeper Fun Games — juega y colecciona cartas',
@@ -519,6 +525,12 @@ const T = KF.i18n({
     'merge.yes': 'Sí, añadir',
     'merge.done': '¡Listo! El progreso de invitado ya está en el perfil de {name} 🎉',
     'merge.fail': 'No se ha podido añadir. Prueba otra vez más tarde.',
+    'news.eyebrow': 'Noticias del club',
+    'news.title': 'Novedades',
+    'news.text': 'Hemos añadido cosas nuevas. ¡Échales un vistazo!',
+    'news.play': 'Jugar →',
+    'news.open': 'Abrir →',
+    'news.ok': '¡Genial!',
   },
 });
 // Static markup and the pack template, before anything is drawn; CSS labels come in as custom properties.
@@ -2471,4 +2483,135 @@ function askDialog({ icon, title, text, primary, secondary }) {
     if (!auth.user) openLogin();
     else if (auth.status === 'expired') openLogin(auth.user);
   }
+})();
+
+// What's new (shared/news.js via KF.news()): shown once per player, never on top of another dialog.
+// Waits for the first sync of a logged-in player (status 'pending', at most 4 s) so news seen on another device stay hidden.
+(() => {
+  const nd = /** @type {HTMLDialogElement} */ (document.getElementById('news-dialog'));
+  const list = document.getElementById('news-list');
+  const ok = document.getElementById('news-ok');
+  if (!nd || !KF.news) return;
+  const WAIT = 4000;
+  let want = true; // this player's news still has to be decided
+  let deadline = Date.now() + WAIT;
+  let timer = 0;
+  let who = KF.auth.user?.id ?? null;
+  /** @type {string[]} */
+  let shown = [];
+  let lockY = 0;
+
+  const otherOpen = () => [...document.querySelectorAll('dialog[open]')].some((d) => d !== nd);
+  function check() {
+    clearTimeout(timer);
+    if (!want || nd.open || otherOpen()) return; // a closing dialog calls check() again
+    if (KF.auth.status === 'pending' && Date.now() < deadline) {
+      timer = setTimeout(check, deadline - Date.now() + 20);
+      return;
+    }
+    want = false;
+    const items = KF.news();
+    if (items.length) open(items);
+  }
+
+  /** @param {KFNewsItem[]} items */
+  function open(items) {
+    shown = items.map((n) => n.id);
+    list.replaceChildren(
+      ...items.map((n, i) => {
+        const el = document.createElement(n.href ? 'a' : 'div');
+        el.className = 'news-item';
+        el.dataset.id = n.id;
+        el.style.setProperty('--i', String(i));
+        if (n.href) el.setAttribute('href', n.href);
+        const icon = Object.assign(document.createElement('span'), { className: 'news-icon', textContent: n.icon });
+        icon.setAttribute('aria-hidden', 'true');
+        el.append(icon, Object.assign(document.createElement('b'), { textContent: n.title }));
+        el.append(Object.assign(document.createElement('p'), { textContent: n.text }));
+        if (n.href) {
+          el.append(
+            Object.assign(document.createElement('span'), { className: 'news-go', textContent: T(n.game ? 'news.play' : 'news.open') }),
+          );
+          const key = Object.assign(document.createElement('kbd'), { textContent: String(i + 1) });
+          key.setAttribute('aria-hidden', 'true');
+          el.append(key);
+        }
+        return el;
+      }),
+    );
+    lock(true);
+    nd.showModal();
+    // keyboard + mouse: the button, ready for Enter; touch: no focus ring at all (Enter still works from the dialog)
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) ok.focus();
+    else nd.focus();
+  }
+
+  // iOS Safari scrolls the page behind a modal dialog: pin the body while it is open.
+  function lock(on) {
+    const b = document.body.style;
+    if (on) {
+      lockY = scrollY;
+      const gap = innerWidth - document.documentElement.clientWidth; // keep the width when the scrollbar goes away
+      Object.assign(b, { position: 'fixed', top: `-${lockY}px`, left: '0', right: '0', paddingRight: gap > 0 ? `${gap}px` : '' });
+      return;
+    }
+    if (b.position !== 'fixed') return;
+    b.position = b.top = b.left = b.right = b.paddingRight = '';
+    const html = document.documentElement.style;
+    html.scrollBehavior = 'auto'; // no smooth scroll back to where the page was
+    scrollTo(0, lockY);
+    html.scrollBehavior = '';
+  }
+
+  // Every way out marks the shown news as seen first.
+  function finish() {
+    if (shown.length) KF.seeNews(shown);
+    shown = [];
+    lock(false);
+    if (nd.open) nd.close();
+  }
+
+  ok.addEventListener('click', finish);
+  list.addEventListener('click', (e) => {
+    const a = /** @type {HTMLAnchorElement | null} */ (/** @type {Element} */ (e.target).closest('a.news-item'));
+    if (!a) return;
+    const href = a.getAttribute('href');
+    finish();
+    if (!href.startsWith('#')) return; // a game: the link navigates
+    e.preventDefault();
+    if (location.hash === href)
+      dispatchEvent(new Event('hashchange')); // the album listens to hashchange
+    else location.hash = href;
+  });
+  nd.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const target = /** @type {Element} */ (e.target);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      finish();
+    } else if (e.key === 'Enter' && !target.closest?.('a')) {
+      e.preventDefault();
+      ok.click();
+    } else if (/^[1-4]$/.test(e.key)) {
+      const item = list.children[Number(e.key) - 1];
+      if (item instanceof HTMLAnchorElement) {
+        e.preventDefault();
+        item.click();
+      }
+    }
+  });
+  nd.addEventListener('cancel', finish); // Esc / the system back gesture
+  nd.addEventListener('close', finish);
+
+  for (const d of document.querySelectorAll('dialog')) if (d !== nd) d.addEventListener('close', () => setTimeout(check, 120)); // a login can be followed by the merge question
+  KF.on('auth', ({ user }) => {
+    const id = user?.id ?? null;
+    if (id !== who) {
+      who = id;
+      want = true;
+      deadline = Date.now() + WAIT;
+    }
+    if (want) check();
+  });
+  check();
 })();

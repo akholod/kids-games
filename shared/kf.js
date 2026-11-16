@@ -396,6 +396,12 @@
   // 'beta' = only in test mode (?parent): no collection, no creature achievements for the kids; 'ready' = for everyone.
   const CREATURES_STATUS = /** @type {'beta' | 'ready'} */ ('ready');
   const CREATURES_ON = CREATURES_STATUS === 'ready' || TEST_MODE;
+  // What's new dialog (shared/news.js): 'beta' = only in test mode.
+  const NEWS_STATUS = /** @type {'beta' | 'ready'} */ ('ready');
+  const NEWS_ON = NEWS_STATUS === 'ready' || TEST_MODE;
+  const NEWS_DAYS = 21;
+  const NEWS_MAX = 4;
+
   const CREATURES = CREATURES_ON && Array.isArray(window.KF_CREATURES) ? window.KF_CREATURES : [];
   const CREATURE_BY_ID = new Map(CREATURES.map((c) => [c.id, c]));
   const CREATURE_CATS = {
@@ -608,6 +614,7 @@
     games: {}, // slug -> { plays, best, max, lastPlayed }
     gameData: {}, // slug -> game-specific saved data (KF.gameData)
     earned: {}, // day -> slug -> coin units a game gave that day, before the cap (only today is kept)
+    newsSeen: [], // ids of the shared/news.js entries this player has seen
     stats: { correct: 0, wrong: 0, games: 0, perfect: 0, streak: 0, bestStreak: 0, packs: 0, dayStreak: 0, lastDay: '' },
   });
 
@@ -1308,6 +1315,43 @@
         title: g.es && LANG === 'es' ? g.es.title : g.title,
         desc: g.es && LANG === 'es' ? g.es.desc : g.desc,
       })),
+
+    NEWS_DAYS,
+
+    // What's new (shared/news.js, catalog only): unseen entries of this site from the last NEWS_DAYS days
+    // (a future date waits), newest first. A game entry needs that game listed on the site.
+    news() {
+      if (!NEWS_ON || !Array.isArray(window.KF_NEWS)) return [];
+      const seen = new Set(state.newsSeen || []);
+      const day = today();
+      const from = new Date(Date.now() - NEWS_DAYS * 864e5).toISOString().slice(0, 10);
+      const games = new Map(KF.siteGames().map((g) => [g.slug, g]));
+      return window.KF_NEWS.filter(
+        (n) => n.sites.includes(LANG) && n.date >= from && n.date <= day && !seen.has(n.id) && (!n.game || games.has(n.game)),
+      )
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, NEWS_MAX)
+        .map((n) => {
+          const t = (LANG === 'es' && n.es) || n.uk;
+          const game = n.game ? games.get(n.game) || null : null;
+          return {
+            id: n.id,
+            date: n.date,
+            icon: n.icon,
+            title: t.title,
+            text: t.text,
+            game,
+            href: game ? `games/${game.slug}/` : n.link || null,
+          };
+        });
+    },
+
+    seeNews(ids) {
+      const add = [...new Set(ids)].filter((id) => !state.newsSeen.includes(id));
+      if (!add.length) return;
+      state.newsSeen = [...state.newsSeen, ...add];
+      save();
+    },
 
     on(type, fn) {
       if (!listeners[type]) listeners[type] = [];

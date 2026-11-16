@@ -31,6 +31,8 @@ export const test = base.extend({
       if (m.type() === 'error') errors.push(`console: ${m.text()} (${m.location().url})`);
     });
     await page.addInitScript(seedScript, seed);
+    // No «what's new» dialog in the other specs (its dates move with the calendar); news.spec.mjs routes its own entries.
+    await page.route('**/shared/news.js', (r) => r.fulfill({ contentType: 'application/javascript', body: 'window.KF_NEWS = [];' }));
     await use(page);
     expect(errors, 'page errors / console errors').toEqual([]);
   },

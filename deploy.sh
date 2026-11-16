@@ -39,6 +39,8 @@ fi
 # Safety net: unit + Playwright e2e tests must pass before anything is published (set -e aborts on failure).
 [ -d node_modules ] || pnpm install --frozen-lockfile
 pnpm test
+# Safari engine (iPad / iPhone / desktop Safari) in docker: this host cannot run WebKit itself.
+pnpm test:webkit
 
 # The first remote call sometimes fails with a transient Cloudflare API error: retry.
 tries=0

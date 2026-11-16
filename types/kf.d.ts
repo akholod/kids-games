@@ -53,7 +53,37 @@ interface KFState {
   gameData: Record<string, any>;
   /** day -> slug -> coin units a game gave that day before the cap (only today is kept) */
   earned: Record<string, Record<string, number>>;
+  /** ids of the window.KF_NEWS entries this player has seen (KF.seeNews) */
+  newsSeen: string[];
   stats: KFStats;
+}
+
+/** Entry of window.KF_NEWS (shared/news.js). */
+interface KFNewsEntry {
+  id: string;
+  /** release day YYYY-MM-DD */
+  date: string;
+  sites: KFLang[];
+  icon: string;
+  /** slug of the game the item opens */
+  game?: string;
+  /** catalog hash the item opens, e.g. '#creatures' */
+  link?: string;
+  uk: { title: string; text: string };
+  es?: { title: string; text: string };
+}
+
+/** A news item as returned by KF.news(): texts in the site language. */
+interface KFNewsItem {
+  id: string;
+  date: string;
+  icon: string;
+  title: string;
+  text: string;
+  /** the listed game it opens (title in the site language), or null */
+  game: KFGame | null;
+  /** the game URL (games/<slug>/) or the catalog hash, or null */
+  href: string | null;
 }
 
 // ---- registry ----
@@ -210,6 +240,12 @@ interface KFAPI {
   isListed(game: Pick<KFGame, 'status'>): boolean;
   /** Listed games of the current site, title/desc in the site language. */
   siteGames(): KFGame[];
+  /** Days a news entry stays visible after its date. */
+  NEWS_DAYS: number;
+  /** Unseen news of this site from the last NEWS_DAYS days, newest first, at most 4 ([] while the feature is beta, outside test mode). */
+  news(): KFNewsItem[];
+  /** Marks news entries as seen by this player (synced like the rest of the progress). */
+  seeNews(ids: string[]): void;
   on<K extends keyof KFEvents>(type: K, fn: (payload: KFEvents[K]) => void): () => void;
 
   /** Correct answer = +1 coin; coin: 0.5 pays every 2nd, false/0 nothing. */
@@ -323,6 +359,7 @@ declare var KFUI: KFUIAPI;
 declare var KF_SITE: { lang: KFLang };
 declare var KF_CARDS: KFCard[];
 declare var KF_CREATURES: KFCreature[];
+declare var KF_NEWS: KFNewsEntry[];
 declare var MathExam: MathExamAPI;
 // Loosely typed for now (typed by the lanes that migrate those games).
 declare var SP_CONTENT: SPContent;
