@@ -76,6 +76,7 @@ const NEW_GAMES = new Set([
   'english-animals',
   'cultura-asturiana',
   'lengua-poemas',
+  'sociales-clima',
 ]);
 const legacy = (list) => list.filter((g) => !NEW_GAMES.has(g.slug));
 

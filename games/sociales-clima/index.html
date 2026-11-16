@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2f7fc0">
+<title>La vuelta al mundo en globo — Keeper Fun Games</title>
+<link rel="stylesheet" href="../../shared/kf.css">
+<link rel="stylesheet" href="../../shared/exam/exam.css">
+<style>
+/* «La vuelta al mundo en globo»: sky blue, a sunset orange, the balloon's red and yellow stripes, diary paper. Drawings: art.js. */
+#exam-root{--sc-sky:#8ecdf0;--sc-sky-d:#2f7fc0;--sc-night:#1d3557;--sc-dusk:#f58a3c;--sc-red:#e2483d;--sc-yel:#ffcf3f;--sc-paper:#fbf3df;--sc-ink:#2b3a4a;--sc-tile:#c8d6d9;--sc-temp:#c63b30;--sc-rain:#2f6fb0}
+
+/* ---------- Hub: the balloon over the diary; the exam card is the sky at sunset ---------- */
+.hero{grid-template-columns:minmax(0,1fr) min(330px,42%)}
+.hero-art{width:100%;transform:rotate(-1.5deg)}
+.hero .eyebrow{color:var(--sc-sky-d)}
+@media(prefers-reduced-motion:no-preference){
+  .sc-hero .sc-balloon-in{animation:sc-bob 3.6s ease-in-out infinite alternate}
+  .sc-hero .sc-stamp.is-on .sc-stamp-in{animation:sc-stamp .5s cubic-bezier(.2,1.5,.4,1) both}
+}
+@keyframes sc-bob{to{translate:0 -7px;rotate:1.5deg}}
+@keyframes sc-stamp{from{scale:1.25;opacity:0}}
+.sc-hero .sc-balloon-in,.sc-hero .sc-stamp-in{transform-box:fill-box;transform-origin:center}
+.stations .station:after{content:"☁️";position:absolute;right:12px;top:10px;font-size:.9rem;line-height:1;opacity:.45}
+.exam-card{background:
+  radial-gradient(ellipse 60px 22px at 88% 30%,#ffffff40 98%,transparent),
+  radial-gradient(ellipse 38px 16px at 80% 36%,#ffffff40 98%,transparent),
+  radial-gradient(ellipse 50px 18px at 12% 82%,#ffffff2e 98%,transparent),
+  linear-gradient(115deg,#1d3557 0%,#2f7fc0 46%,#f2955a 88%,#f8b45c 100%)}
+.exam-card .eyebrow{color:var(--sc-yel)}
+.exam-card p{color:#e6f1fb}
+@media(max-width:600px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .hero-art{width:min(100%,280px);justify-self:center;align-self:auto;transform:none}
+}
+
+/* ---------- The cards tray re-themed: a mistake is a ☁️ cloud, the last one a ⛈️ storm cloud (play head, hub card, feedback) ---------- */
+.cards i.y,.cards i.r,.mini-card.y,.mini-card.r,.ref-card.y,.ref-card.r{border-radius:0;box-shadow:none;background:center/contain no-repeat}
+.cards i.y,.mini-card.y,.ref-card.y{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 22'%3E%3Cpath d='M7 20.5a5.8 5.8 0 0 1-.6-11.5 8 8 0 0 1 15-3.4 6.2 6.2 0 0 1 7.6 6.4 4.4 4.4 0 0 1-1 8.5z' fill='%23fff' stroke='%239fb3c4' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.cards i.r,.mini-card.r,.ref-card.r{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 30'%3E%3Cpath d='M7 18.5a5.8 5.8 0 0 1-.6-11.5 8 8 0 0 1 15-3.4 6.2 6.2 0 0 1 7.6 6.4 4.4 4.4 0 0 1-1 8.5z' fill='%235d6b7d' stroke='%233b4654' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M17 15l-5 8h4l-2 6.5 7-9h-4.2l2.2-5.5z' fill='%23ffcf3f' stroke='%23c98a00' stroke-width='1' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.cards{gap:3px}
+.cards i.y{width:26px;height:18px}.cards i.r{width:26px;height:24px}
+.mini-card.y{width:20px;height:14px}.mini-card.r{width:20px;height:19px}
+.ref-card.y,.ref-card.r{width:62px;height:46px;filter:drop-shadow(0 6px 8px #1d355740)}.ref-card.r{height:58px}
+
+/* Task stickers (art.js, 160 × 120) */
+.art .sc-art{max-width:320px;border-radius:16px;box-shadow:0 0 0 1px oklch(0 0 0 / .08)}
+@media(max-width:600px){.art .sc-art{max-height:clamp(120px,calc(100svh - 560px),200px)}}
+
+/* ---------- Label scenes: smaller chips on the slots so the long line names fit ---------- */
+.scene:has(.sc-scene) .slot{font-size:clamp(.72rem,2.3vw,.9rem);line-height:1.08;padding:3px 6px}
+@media(max-width:600px){.scene:has(.sc-scene) .slot{min-height:40px;padding:2px 4px}}
+/* A scene draws a leader (or a line's link) for every spot; only those of the slots on screen stay */
+.scene:not(:has(.slot[data-spot="artico"])) [data-ld="artico"],
+.scene:not(:has(.slot[data-spot="cancer"])) [data-ld="cancer"],
+.scene:not(:has(.slot[data-spot="ecuador"])) [data-ld="ecuador"],
+.scene:not(:has(.slot[data-spot="capricornio"])) [data-ld="capricornio"],
+.scene:not(:has(.slot[data-spot="antartico"])) [data-ld="antartico"],
+.scene:not(:has(.slot[data-spot="fria"])) [data-ld="fria"],
+.scene:not(:has(.slot[data-spot="montana"])) [data-ld="montana"],
+.scene:not(:has(.slot[data-spot="valle"])) [data-ld="valle"],
+.scene:not(:has(.slot[data-spot="meseta"])) [data-ld="meseta"],
+.scene:not(:has(.slot[data-spot="llanura"])) [data-ld="llanura"],
+.scene:not(:has(.slot[data-spot="golfo"])) [data-ld="golfo"],
+.scene:not(:has(.slot[data-spot="isla"])) [data-ld="isla"],
+.scene:not(:has(.slot[data-spot="cabo"])) [data-ld="cabo"],
+.scene:not(:has(.slot[data-spot="acantilado"])) [data-ld="acantilado"],
+.scene:not(:has(.slot[data-spot="playa"])) [data-ld="playa"]{display:none}
+
+/* ---------- Shared bits of the three own types ---------- */
+.sc-row-label{margin:0;font:900 .76rem/1 system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.sc-actions .btn{min-width:170px;min-height:52px}
+.sc-actions:empty{display:none}
+@media(max-width:600px){.sc-actions{width:100%}.sc-actions .btn{flex:1 1 0;min-width:0}}
+/* SVG «buttons» (regions, months, scene elements) draw their own focus ring */
+.sc-reg:focus,.sc-col:focus,.sc-hit:focus{outline:none}
+@media(prefers-reduced-motion:no-preference){
+  .is-pop{animation:sc-pop .45s cubic-bezier(.2,1.6,.4,1)}
+}
+@keyframes sc-pop{from{scale:.5;opacity:0}}
+.sc-badge,.sc-bar,.sc-dot,.sc-col,.sc-pill{transform-box:fill-box;transform-origin:center}
+
+/* ---------- spainMap: the weather forecast / the climates of Spain ---------- */
+.sc-mapgame{display:grid;gap:12px;justify-items:center;width:min(100%,940px)}
+.sc-map{width:min(100%,560px)}
+.sc-map-svg{display:block;width:100%;height:auto;border-radius:18px;box-shadow:0 0 0 1px oklch(0 0 0 / .1),0 8px 18px #1d355714}
+.sc-reg{fill:#e6e1d3;stroke:#fff;stroke-width:1.2;transition:fill .16s}
+.sc-reg.is-asked{fill:#fffaf0;cursor:pointer}
+@media(hover:hover){.sc-mapgame:not(.is-done) .sc-reg.is-asked:not(.is-locked):hover{fill:#ffeeb8}}
+.sc-mapgame[data-mode=climate] .sc-reg.is-full{fill-opacity:.88}
+.sc-reg.is-locked{cursor:default}
+.sc-ring{fill:none;stroke:#3d8fd6;stroke-width:2.2;stroke-dasharray:5 4;stroke-linejoin:round}
+.sc-mapgame.is-done .sc-ring:not(.is-right,.is-fixed){stroke:none}
+.sc-ring.is-right{stroke:var(--okd);stroke-width:3.4;stroke-dasharray:none}
+.sc-ring.is-wrong{stroke:var(--missd);stroke-width:3.4;stroke-dasharray:6 4}
+.sc-ring.is-fixed{stroke:var(--missd);stroke-width:3.4;stroke-dasharray:none}
+.sc-ring.is-focus{stroke:#e69b10;stroke-width:5;stroke-dasharray:none}
+.sc-pill{cursor:pointer}
+.sc-pill-bg{fill:#fff;stroke:#7d9aa8;stroke-width:1.4;filter:drop-shadow(0 2px 2px #1d355733);transition:fill .16s,stroke .16s}
+@media(hover:hover){.sc-mapgame:not(.is-done) .sc-pill:not(.is-right):hover .sc-pill-bg{fill:#fff6d8;stroke:#e69b10}}
+.sc-pill.is-full .sc-pill-bg{stroke:var(--sc-ink)}
+.sc-pill.is-right .sc-pill-bg{fill:#f2fae4;stroke:var(--okd);stroke-width:2.6}
+.sc-pill.is-fixed .sc-pill-bg{fill:#fff3d6;stroke:var(--missd);stroke-width:2.6}
+.sc-pill.is-right{cursor:default}
+.sc-pill-name{font:800 16px system-ui,sans-serif;fill:var(--sc-ink)}
+.sc-lead{fill:none;stroke:var(--sc-ink);stroke-width:1.6;stroke-dasharray:2 3}
+.sc-lead-dot{fill:var(--sc-ink);stroke:#fff;stroke-width:1.5}
+.sc-pill-empty{fill:#eef3f6;stroke:#9aaeb8;stroke-width:1.6;stroke-dasharray:3 3}
+.sc-pill-q{font:900 14px system-ui,sans-serif;fill:#8aa0ab;text-anchor:middle}
+.sc-map-side{display:grid;gap:10px;justify-items:center;width:100%;min-width:0}
+/* The forecast: a little TV screen */
+.sc-forecast{width:min(100%,420px);padding:10px 14px 12px;border-radius:18px;background:linear-gradient(160deg,var(--sc-night),#24497a);color:#fff;box-shadow:0 0 0 4px #c9d4dc,0 0 0 6px #8a9aa6,0 8px 16px #1d355733}
+.sc-forecast-head{margin:0 0 4px;font:900 .72rem/1 system-ui;letter-spacing:.12em;text-transform:uppercase;color:#9fd6f5}
+.sc-forecast-text{margin:0;font:800 clamp(1rem,3.4vw,1.12rem)/1.35 var(--display);text-wrap:pretty}
+.sc-palette{display:grid;gap:8px;justify-items:center;width:100%}
+.sc-toks{display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:12px 10px;width:min(100%,420px)}
+.sc-tok{position:relative;display:flex;align-items:center;gap:8px;min-height:56px;padding:6px 12px;border:2px solid var(--sc-tile);border-radius:16px;background:#fff;color:var(--ink);font:850 1rem/1.15 system-ui,sans-serif;text-align:left;box-shadow:0 4px 0 #d3dfe2;touch-action:manipulation;transition:transform .16s,background-color .16s,border-color .16s,box-shadow .16s}
+.sc-tok:hover:not(:disabled){border-color:#8ec1e2;background:#f0f8ff}
+.sc-tok:active:not(:disabled){transform:scale(.96)}
+.sc-tok[aria-pressed=true]{border-color:var(--sea-d);background:#e3f1fc;box-shadow:0 0 0 4px #3f8fc955,0 4px 0 #9cc3dd;transform:translateY(-2px)}
+.sc-tok:disabled{cursor:default;box-shadow:none;opacity:.55}
+.sc-tok kbd{position:absolute;top:-8px;left:-6px;padding:2px 5px;font-size:.66rem;background:#fff}
+.sc-tok-ico{flex:none;display:grid;place-items:center;width:40px;height:40px}
+.sc-tok-emoji{font-size:1.6rem;line-height:1}
+.sc-swatch{display:block;width:30px;height:30px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 2.5px #fff,0 0 0 1.5px #0003}
+.sc-tok-text{min-width:0;text-wrap:balance;hyphens:auto}
+/* Weather: four or five small tiles in a row, the symbol over its name */
+.sc-mapgame[data-mode=weather] .sc-toks{grid-template-columns:repeat(auto-fit,minmax(78px,1fr))}
+.sc-mapgame[data-mode=weather] .sc-tok{flex-direction:column;justify-content:center;gap:2px;min-height:74px;padding:6px 4px 4px;text-align:center;font-size:.92rem}
+/* Climates: two per row, the long names wrap */
+.sc-mapgame[data-mode=climate] .sc-toks{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sc-mapgame[data-mode=climate] .sc-tok{font-size:.95rem}
+/* The hint beside the check button: the side column stays short enough for a 650px-high laptop */
+.sc-checkrow{display:flex;align-items:center;justify-content:center;gap:12px;width:min(100%,420px)}
+.sc-checkrow .inline-hint{flex:1 1 0;margin:0;text-align:left}
+.sc-checkrow .inline-hint:empty{flex:0 0 0;min-height:0}
+@media(min-width:760px){
+  .sc-mapgame{grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:24px}
+  /* the map takes the height left (the feedback sheet covers the bottom of it on short laptops: it only shows the answer) */
+  .sc-map{width:min(560px,calc((var(--avail) - 4px) * var(--ar,1.23)))}
+}
+@media(min-width:760px) and (max-height:760px){
+  .sc-map-side{gap:8px}
+  .sc-tok{min-height:50px;padding-block:4px}
+  .sc-mapgame[data-mode=weather] .sc-tok{min-height:68px}
+  .sc-forecast{padding:8px 12px 10px}
+  .sc-forecast-text{font-size:1rem;line-height:1.3}
+  .sc-palette .sc-row-label{display:none}
+}
+/* Phones: forecast and palette above the map, the check button below it */
+@media(max-width:759px){
+  .sc-map-side{display:contents}
+  .sc-forecast{order:-2}
+  .sc-palette{order:-1}
+  .sc-checkrow,.sc-mapgame .kbd-hint{order:1}
+  .sc-palette .sc-row-label{display:none}
+  .sc-forecast{padding:8px 12px 10px}
+  .sc-forecast-text{font-size:.98rem;line-height:1.3}
+  .sc-checkrow{flex-direction:column;gap:8px}
+  .sc-checkrow .inline-hint{text-align:center}
+  .sc-mapgame{gap:10px}
+  .sc-toks{gap:10px 8px}
+  .sc-tok{min-height:50px;padding:4px 8px;gap:6px;font-size:.9rem}
+  .sc-mapgame[data-mode=weather] .sc-toks{grid-template-columns:repeat(auto-fit,minmax(64px,1fr))}
+  .sc-mapgame[data-mode=weather] .sc-tok{min-height:62px;padding:4px 2px 3px;font-size:.8rem}
+  .sc-mapgame[data-mode=climate] .sc-tok{font-size:.84rem;padding-inline:6px}
+  .sc-mapgame[data-mode=climate] .sc-tok-ico{width:24px;height:24px}
+  .sc-swatch{width:22px;height:22px}
+  .sc-tok-ico{width:32px;height:32px}
+  .sc-tok-ico .sc-wx{width:32px;height:32px}
+}
+
+/* ---------- climograma ---------- */
+.sc-climo{display:grid;gap:10px;justify-items:center;width:min(100%,940px)}
+.sc-chart{display:grid;gap:4px;justify-items:center;width:min(100%,560px)}
+.sc-chart-svg{display:block;width:100%;height:auto;border-radius:18px;background:#fff;box-shadow:0 0 0 1px oklch(0 0 0 / .1),0 8px 18px #1d355714;touch-action:none}
+.sc-plot{fill:#fbfdff}
+.sc-grid{stroke:#e3ebf0;stroke-width:1.2}
+.sc-grid.is-base{stroke:#8fa3ae;stroke-width:2}
+.sc-ax{font:700 15px system-ui,sans-serif}
+.sc-ax-t{fill:var(--sc-temp)}.sc-ax-r{fill:var(--sc-rain)}
+.sc-unit{font-weight:900;font-size:16px}
+.sc-mon{font:900 17px system-ui,sans-serif;fill:#6f8790;pointer-events:none}
+.sc-mon.is-sel{fill:var(--sc-ink)}
+.sc-bars,.sc-line,.sc-val{pointer-events:none}
+.sc-col{fill:transparent;transition:fill .14s}
+.sc-climo[data-mode=tapMonth] .sc-col{cursor:pointer}
+@media(hover:hover){.sc-climo[data-mode=tapMonth]:not(.is-done) .sc-col:not(.is-wrong):hover{fill:#fff6d6}}
+.sc-col.is-sel{fill:#ffe9a8}
+.sc-col:focus-visible{stroke:#e69b10;stroke-width:3}
+.sc-col.is-wrong{fill:#fff3d6;stroke:var(--missd);stroke-width:2;stroke-dasharray:5 4;cursor:not-allowed}
+.sc-col.is-right{fill:#e5f4cf;stroke:var(--okd);stroke-width:2.4}
+.sc-col.is-fixed{fill:#ffe7b3;stroke:var(--missd);stroke-width:2.4}
+.sc-col.is-miss{fill:#fff1dc;stroke:var(--sc-dusk);stroke-width:2;stroke-dasharray:6 5;cursor:ns-resize}
+.sc-col.is-miss.is-right{fill:#e5f4cf;stroke:var(--okd);stroke-dasharray:none}
+.sc-col.is-miss.is-fixed{fill:#ffe7b3;stroke:var(--missd);stroke-dasharray:none}
+.sc-bar{fill:#4a90d9}
+.sc-bar.is-input{fill:#7fb6ea;stroke:#1d5fa8;stroke-width:2;stroke-dasharray:5 3}
+.sc-bar.is-right{fill:#4a90d9;stroke:var(--okd);stroke-width:3;stroke-dasharray:none}
+.sc-bar.is-fixed{fill:#4a90d9;stroke:var(--missd);stroke-width:3;stroke-dasharray:none}
+.sc-tline{fill:none;stroke:var(--sc-red);stroke-width:3.4;stroke-linejoin:round;stroke-linecap:round}
+.sc-tline.is-gap{stroke-dasharray:6 6;opacity:.75}
+.sc-dot{fill:#fff;stroke:var(--sc-red);stroke-width:3}
+.sc-dot.is-input{r:8px;fill:#ffd9d4;stroke-dasharray:4 3}
+.sc-dot.is-right,.sc-dot.is-fixed{r:8px;stroke-dasharray:none}
+.sc-val{font:900 17px system-ui,sans-serif;fill:var(--sc-ink);paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
+.sc-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px;margin:0;font:800 .8rem/1.2 system-ui;color:var(--muted)}
+.sc-legend span{display:inline-flex;align-items:center;gap:6px}
+.sc-lg-t:before{content:"";width:18px;height:3px;border-radius:2px;background:var(--sc-red);box-shadow:inset 0 0 0 0 #fff}
+.sc-lg-r:before{content:"";width:10px;height:14px;border-radius:2px;background:#4a90d9}
+.sc-table-wrap{width:min(100%,640px);overflow-x:auto}
+.sc-table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border-radius:14px;box-shadow:0 0 0 1px var(--line);font:800 .92rem/1 system-ui;font-variant-numeric:tabular-nums;text-align:center}
+.sc-table th,.sc-table td{padding:6px 2px;min-width:26px}
+.sc-table thead th{color:#6f8790;font-weight:900}
+.sc-table thead tr>*{border-bottom:1px solid var(--line)}
+.sc-table tbody th{color:#6f8790;font-weight:900;padding-inline:8px}
+.sc-table .is-t td{color:var(--sc-temp)}.sc-table .is-r td{color:var(--sc-rain)}
+.sc-table .is-miss{background:#fff1dc}
+.sc-table thead .is-miss{color:var(--sc-ink);box-shadow:inset 0 3px 0 var(--sc-dusk)}
+.sc-climo-side{display:grid;gap:10px;justify-items:center;width:100%;min-width:0}
+.sc-picked{display:grid;gap:4px;justify-items:center;margin:0;min-width:200px;padding:10px 18px;border-radius:18px;background:#fff;box-shadow:0 0 0 2px #ffe9a8,0 4px 0 #f0d58f}
+.sc-picked span{font:900 .72rem/1 system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.sc-picked-val{font:900 1.5rem/1.1 var(--display);color:var(--sc-ink)}
+.sc-picked.is-empty{box-shadow:0 0 0 2px var(--line),0 4px 0 #e3e9e0}
+.sc-picked.is-empty .sc-picked-val{font-size:1rem;color:var(--muted)}
+.sc-stepper{display:grid;gap:8px;justify-items:center}
+.sc-step-row{display:flex;align-items:center;gap:10px}
+.sc-stepbtn{width:60px;height:56px;display:grid;place-items:center;border:2px solid var(--sc-tile);border-radius:16px;background:#fff;color:var(--sea-d);font-size:1.4rem;line-height:1;box-shadow:0 4px 0 #d3dfe2;touch-action:manipulation;transition:transform .16s,background-color .16s,border-color .16s}
+.sc-stepbtn:hover:not(:disabled){border-color:#8ec1e2;background:#f0f8ff}
+.sc-stepbtn:active:not(:disabled){transform:scale(.96)}
+.sc-stepbtn:disabled{opacity:.4;cursor:default;box-shadow:none}
+.sc-step-val{min-width:96px;padding:8px 10px;border-radius:14px;background:#fff1dc;box-shadow:inset 0 0 0 2px var(--sc-dusk);font:900 1.4rem/1 var(--display);font-variant-numeric:tabular-nums;text-align:center;color:var(--sc-ink)}
+.sc-climo.is-done .sc-step-val{background:#f2fae4;box-shadow:inset 0 0 0 2px var(--okd)}
+.sc-climo.is-done.is-fixed .sc-step-val{background:#fff3d6;box-shadow:inset 0 0 0 2px var(--missd)}
+@media(min-width:760px){
+  .sc-climo{grid-template-columns:auto minmax(220px,300px);align-items:center;column-gap:24px}
+  .sc-climo>.sc-table-wrap{grid-column:1/-1}
+  /* 520 × 300 chart + a 20px legend: as big as the height left allows */
+  .sc-chart{width:min(560px,calc((var(--avail) - 26px) * 1.733))}
+  .sc-climo.has-table .sc-chart{width:min(560px,calc((var(--avail) - 100px) * 1.733))}
+}
+@media(min-width:760px) and (max-height:760px){
+  .sc-table th,.sc-table td{padding-block:4px}
+  .sc-climo{row-gap:8px}
+}
+@media(max-width:600px){
+  .sc-climo{gap:8px}
+  .sc-table{font-size:.8rem}
+  .sc-table th,.sc-table td{padding:5px 0;min-width:22px}
+  .sc-table tbody th{padding-inline:4px}
+  /* the picked month / the stepper and the check button share one row; the hints go under it */
+  .sc-climo-side{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px}
+  .sc-climo-side>.inline-hint,.sc-climo-side>.kbd-hint{flex:1 0 100%;order:1}
+  .sc-picked{min-width:0;flex:1 1 0;padding:6px 10px}
+  .sc-picked-val{font-size:1.15rem}
+  .sc-stepper .sc-row-label{display:none}
+  .sc-step-row{gap:6px}
+  .sc-stepbtn{width:50px;height:52px}
+  .sc-step-val{min-width:70px;padding-inline:6px;font-size:1.15rem}
+  .sc-climo-side .sc-actions{width:auto;flex:0 0 auto}
+  .sc-climo-side .sc-actions .btn{min-width:0;padding-inline:14px}
+}
+
+/* The weather forecast is already in our card: the engine's copy of the `listen` sentence after the answer would say it twice */
+#play:has(.sc-mapgame.is-said-dup) #listen-said{display:none}
+
+/* ---------- Answered (laptops): the feedback sheet (--fb, measured by types.js) comes under the work area. Spent controls go,
+   the map / chart / scene shrink to the height left, so task + feedback + next fit 1280×650 without page scroll ---------- */
+@media(min-width:760px){
+  .sc-mapgame.is-done .sc-palette,.sc-mapgame.is-done .sc-checkrow{display:none}
+  .sc-mapgame.is-done:not(:has(.sc-forecast:not([hidden]))){grid-template-columns:auto}
+  .sc-mapgame.is-done:not(:has(.sc-forecast:not([hidden]))) .sc-map-side{display:none}
+  .sc-mapgame.is-done .sc-map{width:min(560px,calc((var(--avail) - 4px) * var(--ar,1.23)),max(180px,calc((var(--room) - var(--fb,130px) - 6px) * var(--ar,1.23))))}
+  .sc-climo.is-done .sc-climo-side>:not(.sc-picked,.sc-stepper){display:none}
+  .sc-climo.is-done .sc-stepbtn{display:none}
+  .sc-climo.is-done .sc-legend{display:none}
+  .sc-climo.is-done .sc-chart{width:min(560px,calc((var(--avail) - 26px) * 1.733),max(260px,calc((var(--room) - var(--fb,130px) - 8px) * 1.733)))}
+  .sc-climo.is-done.has-table .sc-chart{width:min(560px,calc((var(--avail) - 100px) * 1.733),max(260px,calc((var(--room) - var(--fb,130px) - 84px) * 1.733)))}
+  .sc-spot.is-done .sc-spot-side>.inline-hint{display:none}
+  /* Label scenes (engine renderer): once the feedback is on screen the emptied name column goes, the scene shrinks to the height
+     left above a ~150px sheet and the filled names get slimmer (nothing to tap any more) */
+  #play:has(.feedback:not(:empty)) .label-task:has(.sc-scene){grid-template-columns:minmax(0,1fr)}
+  #play:has(.feedback:not(:empty)) .label-task:has(.sc-scene) .label-side{display:none}
+  #play:has(.feedback:not(:empty)) .scene.sc-scene{width:min(100%,640px,calc((var(--avail) - 32px) * var(--ar,1.5)),max(240px,calc((var(--room) - 152px) * var(--ar,1.5))))}
+  #play:has(.feedback:not(:empty)) .scene.sc-scene .slot{min-height:0;padding:2px 5px;font-size:.74rem;line-height:1.05}
+  .sc-spot.is-done .sc-spot-scene{width:min(640px,calc((var(--avail) - 4px) * 1.5),max(300px,calc((var(--room) - var(--fb,130px) - 6px) * 1.5)))}
+}
+
+/* ---------- spot: the landscape detective ---------- */
+.sc-spot{display:grid;gap:10px;justify-items:center;width:min(100%,940px)}
+.sc-spot-scene{width:min(100%,640px)}
+.sc-spot-svg{display:block;width:100%;height:auto;border-radius:18px;box-shadow:0 0 0 1px oklch(0 0 0 / .1),0 8px 18px #1d355714}
+.sc-item-art{cursor:pointer;transition:opacity .2s,filter .2s}
+.sc-item-art.is-wrong{opacity:.55;filter:grayscale(.5)}
+.sc-spot.is-done .sc-item-art{cursor:default}
+.sc-hit{fill:transparent;stroke:transparent;stroke-width:4;cursor:pointer;transition:fill .16s,stroke .16s}
+@media(hover:hover){.sc-spot:not(.is-done) .sc-hit:not(.is-right,.is-wrong):hover{fill:#ffffff38;stroke:#fff;stroke-dasharray:7 7}}
+.sc-hit:focus-visible{stroke:#e69b10;stroke-width:5;stroke-dasharray:none;fill:#ffffff2e}
+.sc-hit.is-right{stroke:var(--okd);stroke-width:5;fill:#c9f2692e;cursor:default}
+.sc-hit.is-wrong{stroke:var(--missd);stroke-width:4;stroke-dasharray:8 6;fill:#ffffff1f;cursor:default}
+.sc-hit.is-fixed{stroke:var(--sc-dusk);stroke-width:5;fill:#ffd36b40}
+@media(prefers-reduced-motion:no-preference){.sc-hit.is-fixed{animation:sc-ping 1.2s ease-in-out 2}}
+@keyframes sc-ping{50%{stroke-width:9}}
+.sc-badges{pointer-events:none}
+.sc-badge-bg{fill:#fff;filter:drop-shadow(0 2px 3px #1d355740)}
+.sc-badge.is-ok .sc-badge-dot{fill:var(--okd)}
+.sc-badge.is-no .sc-badge-dot{fill:var(--missd)}
+.sc-badge.is-no .sc-badge-name{text-decoration:line-through;fill:#6f7d86}
+.sc-badge.is-fix .sc-badge-dot{fill:var(--sc-dusk)}
+.sc-badge-mark{font:900 15px system-ui,sans-serif;fill:#fff}
+.sc-badge-name{font:800 17px system-ui,sans-serif;fill:var(--sc-ink)}
+.sc-spot-side{display:grid;gap:10px;justify-items:center;width:100%;min-width:0}
+.sc-found{display:grid;gap:6px;justify-items:center;margin:0;font:900 1.05rem/1.2 var(--display)}
+.sc-fdots{display:flex;gap:6px}
+.sc-fdot{width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 2px #9aaeb8;transition:background-color .2s,box-shadow .2s}
+.sc-fdot.is-on{background:var(--okd);box-shadow:none}
+.sc-found-list{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:0;padding:0;list-style:none}
+.sc-found-list:empty{display:none}
+.sc-found-list li{padding:4px 10px;border-radius:100px;background:#eef8dc;box-shadow:inset 0 0 0 1.5px var(--okd);font:800 .88rem/1.2 system-ui}
+@media(min-width:760px){
+  .sc-spot{grid-template-columns:auto minmax(200px,260px);align-items:center;column-gap:24px}
+  .sc-spot-scene{width:min(640px,calc((var(--avail) - 4px) * 1.5))}
+}
+@media(max-width:600px){
+  .sc-spot-side{gap:6px}
+  .sc-found-list li{font-size:.8rem;padding:3px 8px}
+}
+</style>
+<script src="../../shared/site.js"></script>
+</head>
+<body>
+<header class="site-header"><div class="wrap header-inner"><a class="brand" href="../../"><span class="brand-mark"><span>⚽</span></span><span><small>Keeper Fun</small>Games</span></a><div class="coin-pill" aria-label="Monedas" data-i18n-aria-label="coins">🪙 <span data-kf-coins>0</span></div></div></header>
+<main class="wrap game-shell" id="exam-root"></main>
+
+<script src="../../shared/cards.js"></script><script src="../../shared/kf.js"></script>
+<script src="../../shared/kf-ui.js"></script>
+<script src="../../shared/audio.js"></script>
+<script src="../../shared/kf-game.js"></script>
+<script src="../../shared/exam/exam.js"></script>
+<script src="../../shared/exam/types.js"></script>
+<script src="../sociales-planeta/maps.js"></script>
+<script src="content.js"></script>
+<script src="art.js"></script>
+<script src="types.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

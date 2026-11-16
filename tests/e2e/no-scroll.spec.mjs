@@ -464,3 +464,48 @@ test('lengua-poemas: every station dialog, the biggest forge / save / substitute
     }
   }
 });
+
+test('sociales-clima: every station dialog and the biggest task of every own type / mode fit 1280×650 before and after the answer', async ({
+  page,
+  tap,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 650 });
+  const sc = examPlayer('__sc');
+  const { openIntro, allTasks, playOnly } = unitPage('SC_CONTENT', '__sc');
+  await open(page, '/games/sociales-clima/');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  for (const id of await page.evaluate(() => SC_CONTENT.stations.map((s) => s.id))) {
+    await openIntro(page, tap, id);
+    const m = await page.evaluate(() => {
+      const d = document.getElementById('intro-dlg').getBoundingClientRect();
+      const g = document.getElementById('intro-go').getBoundingClientRect();
+      return { top: d.top, bottom: d.bottom, goBottom: g.bottom, h: innerHeight };
+    });
+    expect(m.top, `${id}: dialog top`).toBeGreaterThanOrEqual(0);
+    expect(m.bottom, `${id}: dialog bottom`).toBeLessThanOrEqual(m.h);
+    expect(m.goBottom, `${id}: start button bottom`).toBeLessThanOrEqual(m.bottom);
+    await tap(page.locator('#intro-back'));
+  }
+  const tasks = await allTasks(page);
+  const most = (ok) => tasks.filter(ok).sort((a, b) => JSON.stringify(b).length - JSON.stringify(a).length)[0];
+  const picks = [
+    ['the biggest weather map', most((t) => t.type === 'spainMap' && t.mode === 'weather')],
+    ['the biggest climate map', most((t) => t.type === 'spainMap' && t.mode === 'climate')],
+    ['the biggest climograma tapMonth', most((t) => t.type === 'climograma' && t.mode === 'tapMonth')],
+    ['the biggest climograma fillBar', most((t) => t.type === 'climograma' && t.mode === 'fillBar')],
+    ...['valle', 'costa', 'llanura'].map((s) => [`spot ${s}`, most((t) => t.type === 'spot' && t.scene === s)]),
+  ];
+  for (const [what, t] of picks) {
+    expect(t, what).toBeTruthy();
+    for (const wrong of [false, true]) {
+      await open(page, '/games/sociales-clima/');
+      await playOnly(page, t);
+      await expectFits(page, what);
+      await sc.answerTask(page, tap, { wrong });
+      await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what}${wrong ? ' (wrong)' : ''}: next`);
+      await page.waitForTimeout(400);
+      expect.soft(await overflow(page), `${what}${wrong ? ' (wrong)' : ''} after the answer: page scroll`).toBeLessThanOrEqual(2);
+    }
+  }
+});

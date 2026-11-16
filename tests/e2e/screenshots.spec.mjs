@@ -157,3 +157,9 @@ test('lengua-poemas-hub: stations and the stadium hero', async ({ page }) => {
   await expect(page.locator('#hero-art svg.lp-hero')).toBeVisible();
   await snap(page, 'lengua-poemas-hub');
 });
+
+test('sociales-clima-hub: stations and the balloon hero', async ({ page }) => {
+  await open(page, '/games/sociales-clima/');
+  await expect(page.locator('#hero-art svg.sc-hero')).toBeVisible();
+  await snap(page, 'sociales-clima-hub');
+});

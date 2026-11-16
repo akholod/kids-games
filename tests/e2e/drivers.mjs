@@ -930,7 +930,102 @@ export const examPlayer = (hook) => {
     await check();
   };
 
+  // ---- sociales-clima's own types. `wrong` = the task ends not right; `mistakes: 1` = one wrong check / tap first, then right (soft).
+  //      Answers from the task data only; keyboard = keys only (arrows walk the focus until it is on the wanted element). ----
+  const focusedData = (page, attr) => page.evaluate((a) => document.activeElement?.getAttribute?.(a) ?? null, attr);
+  const arrowTo = async (page, attr, want) => {
+    for (let k = 0; k < 24; k++) {
+      if ((await focusedData(page, attr)) === want) return;
+      await page.keyboard.press('ArrowRight');
+    }
+    throw new Error(`no focus on ${attr}=${want}`);
+  };
+
+  // spainMap: token `.sc-tok[data-token]` (keys 1–5 by position), then the region's pill `.sc-pill[data-region]` (keyboard: → to the
+  // region, Space); `.sc-check` / Enter. A wrong check = another token on the first asked region (right ones lock, it empties).
+  const spainMap = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const toks = await page.locator('#work .sc-tok').evaluateAll((els) => els.map((e) => e.dataset.token));
+    const put = async (region, token) => {
+      await pressOrTap(page, tap, keyboard, String(toks.indexOf(token) + 1), page.locator(`#work .sc-tok[data-token="${token}"]`));
+      if (!keyboard) return tap(page.locator(`#work .sc-pill[data-region="${region}"]`));
+      await arrowTo(page, 'data-region', region);
+      await page.keyboard.press(' ');
+    };
+    const check = () => pressOrTap(page, tap, keyboard, 'Enter', page.locator('#work .sc-check'));
+    const entries = Object.entries(t.answer);
+    const [r0, a0] = entries[0];
+    const other = t.tokens.find((x) => x.id !== a0).id;
+    const misses = wrong ? 2 : mistakes;
+    for (let m = 0; m < misses; m++) {
+      for (const [r, tok] of m === 0 ? entries : []) await put(r, r === r0 ? other : tok);
+      if (m > 0) await put(r0, other);
+      await check();
+    }
+    if (wrong) return;
+    for (const [r, tok] of misses ? [[r0, a0]] : entries) await put(r, tok);
+    await check();
+  };
+
+  // climograma tapMonth: `.sc-col[data-month]` (keyboard: → from no pick walks the months that are still pickable), `.sc-check` / Enter;
+  // a wrong pick = the month after the answer. Fill: `.sc-up` / ↑ to the value (step 15 mm / 5 °C), a wrong one = one step more.
+  const climograma = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const check = () => pressOrTap(page, tap, keyboard, 'Enter', page.locator('#work .sc-check'));
+    const misses = wrong ? 2 : mistakes;
+    if (t.mode === 'tapMonth') {
+      const bad = [(t.answer + 1) % 12, (t.answer + 2) % 12];
+      const out = [];
+      const pick = async (m) => {
+        if (!keyboard) return tap(page.locator(`#work .sc-col[data-month="${m}"]`));
+        const free = [...Array(12).keys()].filter((i) => !out.includes(i));
+        for (let k = 0; k <= free.indexOf(m); k++) await page.keyboard.press('ArrowRight');
+      };
+      for (let m = 0; m < misses; m++) {
+        await pick(bad[m]);
+        await check();
+        out.push(bad[m]);
+      }
+      if (wrong) return;
+      await pick(t.answer);
+      return check();
+    }
+    const bar = t.mode === 'fillBar';
+    const steps = (bar ? t.rain : t.temp)[t.missing] / (bar ? 15 : 5);
+    const up = (n) => (n > 0 ? pressOrTap(page, tap, keyboard, 'ArrowUp', page.locator('#work .sc-up')).then(() => up(n - 1)) : null);
+    const down = () => pressOrTap(page, tap, keyboard, 'ArrowDown', page.locator('#work .sc-down'));
+    if (misses) {
+      await up(steps + 1);
+      await check();
+      if (wrong) return check();
+      await down();
+      return check();
+    }
+    await up(steps);
+    await check();
+  };
+
+  // spot: every id of t.find on `.sc-hit[data-id]` (keyboard: → to it, Enter); wrong taps first on what is not asked
+  // (SCArt.spotItems(scene) minus t.find): 1 = soft, 2 (wrong) = not right.
+  const spot = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const others = await page.evaluate(
+      ([scene, find]) =>
+        SCArt.spotItems(scene)
+          .map((i) => i.id)
+          .filter((id) => !find.includes(id)),
+      [t.scene, t.find],
+    );
+    const hit = async (id) => {
+      if (!keyboard) return tap(page.locator(`#work .sc-hit[data-id="${id}"]`));
+      await arrowTo(page, 'data-id', id);
+      await page.keyboard.press('Enter');
+    };
+    for (const id of others.slice(0, wrong ? 2 : mistakes)) await hit(id);
+    for (const id of t.find) await hit(id);
+  };
+
   const BY_TYPE = {
+    spainMap,
+    climograma,
+    spot,
     choice,
     tf,
     sort,

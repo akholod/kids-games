@@ -1363,3 +1363,623 @@ for (const [name, mutate] of LP_BROKEN) {
     );
   });
 }
+
+// ---------- sociales-clima: «La vuelta al mundo en globo», Ciencias Sociales 3.º, Tema 2 ----------
+// Expected values from the plan (.pi/plan-sociales-clima.md: stations, exam settings, type contracts, theme strings) and the book
+// (.pi/book-cs/unit2.md: the exam topics map, the p. 34 table, the climates of p. 39).
+
+const bootClima = () => {
+  const node = () => ({ attrs: {}, dataset: {}, style: {}, setAttribute() {}, append() {}, set innerHTML(_) {}, classList: { add() {} } });
+  const sb = {
+    console,
+    Math,
+    KF: { lang: 'uk', i18n: () => (key) => key, gameData: () => ({}) },
+    KFG: { shuffle: (a) => [...a], canSay: () => false },
+    document: { createElementNS: node, createElement: node },
+  };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of [
+    'shared/exam/exam.js',
+    'shared/exam/types.js',
+    'games/sociales-planeta/maps.js',
+    'games/sociales-clima/content.js',
+    'games/sociales-clima/art.js',
+    'games/sociales-clima/types.js',
+  ]) {
+    vm.runInContext(read(f), sb, { filename: f });
+  }
+  return {
+    E: sb.KFExam,
+    content: clone(sb.SC_CONTENT),
+    raw: sb.SC_CONTENT,
+    types: sb.SC_TYPES,
+    art: sb.SCArt,
+    check: (u, a) => [...sb.SC_CHECK(u, a)],
+  };
+};
+const SC_STATIONS = ['tiempo', 'parte', 'factores', 'zonas', 'paisajes', 'climograma', 'forma', 'espana'];
+const SC_OWN = ['spainMap', 'climograma', 'spot'];
+const scTasks = (u) => u.stations.flatMap((s) => s.tasks.map((t) => ({ ...t, station: s.id })));
+
+test('sociales-clima: valid; stations, exam of 15 (parte 1, the rest 2), red after 4, sendOff, VAR at 2, practice at 0.5, own types always', () => {
+  const { E, content: u } = bootClima();
+  assert.deepEqual([...E.validate(clone(u))], []);
+  assert.equal(u.slug, 'sociales-clima');
+  assert.equal(u.testHook, '__sc');
+  assert.deepEqual(
+    u.stations.map((s) => s.id),
+    SC_STATIONS,
+  );
+  // ~10 tasks per station, ≈80 in all
+  for (const s of u.stations) assert.ok(s.tasks.length >= 8 && s.tasks.length <= 12, `${s.id}: ${s.tasks.length} tasks`);
+  const total = u.stations.reduce((a, s) => a + s.tasks.length, 0);
+  assert.ok(total >= 75 && total <= 90, `${total} tasks`);
+  assert.equal(u.readFirst, false);
+  assert.equal(u.round, 6);
+  assert.equal(u.practiceCoin, 0.5);
+  assert.deepEqual(
+    { ...u.exam.perStation },
+    { tiempo: 2, parte: 1, factores: 2, zonas: 2, paisajes: 2, climograma: 2, forma: 2, espana: 2 },
+  );
+  assert.equal(
+    Object.values(u.exam.perStation).reduce((a, b) => a + b, 0),
+    15,
+  );
+  assert.equal(u.exam.redAfter, 4);
+  assert.equal(u.exam.sendOff, true);
+  assert.equal(u.exam.var, 2);
+  assert.deepEqual([...u.sampling.always].sort(), [...SC_OWN].sort());
+  for (const k of SC_OWN) {
+    assert.ok(u.sampling.caps?.[k] >= 1 && u.sampling.caps[k] <= 2, `sampling.caps.${k} = ${u.sampling.caps?.[k]}`);
+    assert.equal(u.sampling.examCaps?.[k], 1, `sampling.examCaps.${k}`);
+  }
+  const used = new Set(scTasks(u).map((t) => t.type));
+  for (const k of [...SC_OWN, 'label']) assert.ok(used.has(k), `no ${k} task`);
+  for (const k of [...Object.keys(u.sampling.caps ?? {}), ...Object.keys(u.sampling.examCaps ?? {}), ...(u.sampling.always ?? [])])
+    assert.ok(used.has(k), `sampling names «${k}»`);
+  // the weather maps carry the forecast as listen (2–3 tasks)
+  const listens = scTasks(u).filter((t) => t.type === 'spainMap' && t.mode === 'weather' && t.listen);
+  assert.ok(listens.length >= 2 && listens.length <= 3, `${listens.length} weather maps with listen`);
+  // the station «parte» is the weather map; «espana» has the climate map
+  assert.ok(u.stations[1].tasks.some((t) => t.type === 'spainMap' && t.mode === 'weather'));
+  assert.ok(u.stations[7].tasks.some((t) => t.type === 'spainMap' && t.mode === 'climate'));
+});
+
+test('sociales-clima: every station has a uk glossary of 7–8 pairs and a short rule note (25–35 words) as its text', () => {
+  const { content: u } = bootClima();
+  for (const s of u.stations) {
+    assert.ok(s.vocab?.length >= 7 && s.vocab.length <= 8, `${s.id}: ${s.vocab?.length} glossary pairs`);
+    for (const [es, uk] of s.vocab) {
+      assert.ok(!CYR.test(es), `${s.id}: Spanish term «${es}» has Cyrillic`);
+      assert.ok(CYR.test(uk), `${s.id}: «${es}» has no Ukrainian translation («${uk}»)`);
+    }
+    assert.ok(s.text?.paragraphs?.length >= 1, `${s.id}: rule note`);
+    const n = words(s.text.paragraphs.join(' '));
+    assert.ok(n >= 25 && n <= 35, `${s.id}: the rule note has ${n} words`);
+  }
+});
+
+test('sociales-clima: Cyrillic nowhere outside the glossaries; the right option of a text choice is not clearly the longest', () => {
+  const { content: u } = bootClima();
+  const noVocab = { ...u, stations: u.stations.map(({ vocab, ...s }) => s) };
+  assert.ok(!CYR.test(JSON.stringify(noVocab)), 'Cyrillic outside the glossaries');
+  for (const t of scTasks(u)) {
+    if (t.type !== 'choice' || t.pics) continue;
+    const ok = t.options[t.answer].length;
+    const mx = Math.max(...t.options.filter((_, i) => i !== t.answer).map((o) => o.length));
+    assert.ok(!(ok > mx * 1.3 && ok - mx > 6), `«${t.options[t.answer]}» stands out in «${t.q}»`);
+  }
+});
+
+test('sociales-clima: valid with the renderers; SC_CHECK passes with and without the art; art keys and scenes exist', () => {
+  const { E, content: u, types, art, check } = bootClima();
+  assert.deepEqual(Object.keys(types).sort(), ['climograma', 'spainMap', 'spot']);
+  assert.deepEqual([...E.validate(clone(u), { ...E.types, ...types })], []);
+  assert.deepEqual(check(clone(u)), []);
+  assert.deepEqual(check(clone(u), art), []);
+  for (const t of scTasks(u)) {
+    if (t.art) assert.ok(art.has(t.art), `art «${t.art}» does not exist`);
+    if (t.type === 'choice' && t.pics) for (const k of t.options) assert.ok(art.has(k), `picture «${k}» does not exist`);
+  }
+  assert.equal(typeof art.hero, 'function');
+  // the label scenes of the plan: the globe with its 5 lines + 3 zones, the relief of book p. 37 with its 9 forms
+  assert.deepEqual([...art.scene('globo').spots.map((p) => p.id)].sort(), [
+    'antartico',
+    'artico',
+    'calida',
+    'cancer',
+    'capricornio',
+    'ecuador',
+    'fria',
+    'templada',
+  ]);
+  assert.deepEqual([...art.scene('relieve').spots.map((p) => p.id)].sort(), [
+    'acantilado',
+    'cabo',
+    'golfo',
+    'isla',
+    'llanura',
+    'meseta',
+    'montana',
+    'playa',
+    'valle',
+  ]);
+  // spot scenes: what people made and what is natural, as in the plan
+  const human = (name) =>
+    [...art.spotItems(name)]
+      .filter((i) => i.human)
+      .map((i) => i.id)
+      .sort();
+  assert.deepEqual(human('valle'), ['carretera', 'cultivos', 'pueblo', 'puente', 'torre-electrica']);
+  assert.deepEqual(human('costa'), ['barcos', 'faro', 'hotel', 'puerto']);
+  assert.deepEqual(human('llanura'), ['carretera', 'cultivos', 'granja']);
+});
+
+test('sociales-clima: every station text paragraph and every listen sentence has a clip in shared/audio.js', () => {
+  const { content: u } = bootClima();
+  const audio = { window: {} };
+  vm.createContext(audio);
+  vm.runInContext(read('shared/audio.js'), audio);
+  const es = new Set(audio.window.KF_AUDIO?.es ?? audio.KF_AUDIO.es);
+  const texts = [
+    ...u.stations.flatMap((s) => s.text?.paragraphs ?? []),
+    ...scTasks(u)
+      .map((t) => t.listen)
+      .filter(Boolean),
+  ];
+  assert.ok(texts.length >= 10);
+  for (const t of texts) {
+    const slug = buildSlug(t);
+    assert.ok(es.has(slug), `no clip for «${t.slice(0, 50)}…» (${slug}): run scripts/build-audio.mjs`);
+  }
+});
+
+// What a task states as true: the q with its right answer, a true statement, the fix of a false one, the pairs, sort items with their bin.
+const scTruths = (u) =>
+  scTasks(u).flatMap((t) => {
+    if (t.type === 'choice') return [`${t.q} ${t.pics ? t.labels?.[t.answer] || t.options[t.answer] : t.options[t.answer]}`];
+    if (t.type === 'tf') return [t.truth ? t.q : t.fix || ''];
+    if (t.type === 'pairs') return t.pairs.map((p) => p.join(' = '));
+    if (t.type === 'sort') return t.items.map((it) => `${it.text} = ${t.bins.find((b) => b.id === it.bin).label}`);
+    if (t.type === 'fill') return [t.text.replace('___', t.answer)];
+    return [];
+  });
+const sortBinOf = (u, re) =>
+  scTasks(u)
+    .filter((t) => t.type === 'sort')
+    .flatMap((t) => t.items.filter((it) => re.test(it.text)).map((it) => it.bin));
+const labelSpots = (u, scene) =>
+  new Set(
+    scTasks(u)
+      .filter((t) => t.type === 'label' && t.scene === scene)
+      .flatMap((t) => t.labels.map((l) => l.id)),
+  );
+const said = (u, re) => scTruths(u).some((s) => re.test(s));
+
+test('sociales-clima: exam-critical facts are asked — cabo vs golfo (and the swap trap), valle, meseta, sierra', () => {
+  const { content: u } = bootClima();
+  assert.ok(
+    said(u, /golfo.*(mar|agua).*(entra|entrante).*tierra|(mar|agua) (que )?entra en la tierra.*golfo/i),
+    'golfo = mar en la tierra',
+  );
+  assert.ok(said(u, /cabo.*tierra.*(entra|entrante).*mar|tierra (que )?entra en el mar/i), 'cabo = tierra en el mar');
+  // the classic swap as a false statement
+  assert.ok(
+    scTasks(u).some((t) => t.type === 'tf' && t.truth === false && /cabo/i.test(t.q) && /mar en la tierra/i.test(t.q)),
+    'no tf trap «un cabo es un entrante del mar en la tierra» (false)',
+  );
+  assert.ok(said(u, /valle.*llanura entre montañas/i), 'valle = llanura entre montañas');
+  assert.ok(said(u, /meseta.*llanura elevada/i), 'meseta = llanura elevada');
+  assert.ok(said(u, /sierra.*muchas montañas/i), 'sierra = muchas montañas juntas');
+  // the relief scene asks all nine forms of book p. 37 (interior and costa)
+  assert.deepEqual([...labelSpots(u, 'relieve')].sort(), [
+    'acantilado',
+    'cabo',
+    'golfo',
+    'isla',
+    'llanura',
+    'meseta',
+    'montana',
+    'playa',
+    'valle',
+  ]);
+  // costa / interior: cabo and golfo are costa, valle and meseta interior
+  assert.deepEqual([...new Set(sortBinOf(u, /^(cabo|golfo)$/))], ['costa']);
+  assert.deepEqual([...new Set(sortBinOf(u, /^(valle|meseta)$/))], ['interior']);
+});
+
+test('sociales-clima: the four factors of the climate, each with its effect (book p. 31)', () => {
+  const { content: u } = bootClima();
+  assert.ok(said(u, /altitud.*(frío|alto, más frío)/i), 'altitud: más alto, más frío');
+  assert.ok(said(u, /relieve.*viento|montañas.*(barreras|frenan).*viento/i), 'relieve: montañas = barrera para el viento');
+  assert.ok(said(u, /mar.*suave/i), 'distancia al mar: junto al mar, clima suave');
+  assert.ok(said(u, /polos.*frío/i), 'distancia a los polos: más cerca, más frío');
+  const pairs = scTasks(u).find(
+    (t) => t.type === 'pairs' && t.pairs.length === 4 && t.pairs.every((p) => /altitud|relieve|mar|polos/.test(p[0])),
+  );
+  assert.ok(pairs, 'a pairs task with the four factors');
+  assert.deepEqual(pairs.pairs.map((p) => p[0].replace(/^(la|el) /, '')).sort(), [
+    'altitud',
+    'distancia a los polos',
+    'distancia al mar',
+    'relieve',
+  ]);
+});
+
+test('sociales-clima: three zones between the imaginary lines; Cáncer N, Capricornio S, Ártico N, Antártico S', () => {
+  const { content: u } = bootClima();
+  assert.deepEqual([...labelSpots(u, 'globo')].sort(), [
+    'antartico',
+    'artico',
+    'calida',
+    'cancer',
+    'capricornio',
+    'ecuador',
+    'fria',
+    'templada',
+  ]);
+  assert.ok(
+    said(u, /tres/i) && scTasks(u).some((t) => t.type === 'choice' && /cuántas zonas/i.test(t.q) && t.options[t.answer] === 'tres'),
+  );
+  assert.ok(said(u, /Cáncer.*norte/i), 'Cáncer al norte');
+  assert.ok(said(u, /Capricornio.*sur/i), 'Capricornio al sur');
+  assert.ok(said(u, /ártico.*norte/i), 'Ártico al norte');
+  assert.ok(said(u, /antártico.*sur/i), 'Antártico al sur');
+  assert.ok(said(u, /cálid.*entre.*ecuador.*trópicos|ecuador y los trópicos/i), 'cálida entre el ecuador y los trópicos');
+  assert.ok(said(u, /dentro de los círculos polares.*fría|fría.*dentro de los círculos polares/i), 'fría dentro de los círculos polares');
+  assert.ok(said(u, /redonda/i), 'why: la Tierra es redonda, rayos desiguales');
+  // the zone sort: places between the lines go to the book's zone
+  assert.deepEqual([...new Set(sortBinOf(u, /^Entre el ecuador|ecuador$/))], ['calida']);
+  assert.deepEqual([...new Set(sortBinOf(u, /^Dentro del círculo polar/))], ['fria']);
+  assert.deepEqual([...new Set(sortBinOf(u, /^Entre .*(trópico .* círculo|círculo .* trópico)/))], ['templada']);
+});
+
+test('sociales-clima: the six landscapes go to their zone, with the book plants; mediterráneo keeps its leaves', () => {
+  const { content: u } = bootClima();
+  for (const [re, zone] of [
+    [/^taiga$/, 'fria'],
+    [/^tundra$/, 'fria'],
+    [/^bosque mediterráneo$/, 'templada'],
+    [/^bosque (frondoso|atlántico)$/, 'templada'],
+    [/^selva$/, 'calida'],
+    [/^sabana$/, 'calida'],
+  ])
+    assert.deepEqual([...new Set(sortBinOf(u, re))], [zone], `${re}`);
+  assert.ok(said(u, /taiga.*conífera/i), 'taiga = coníferas');
+  assert.ok(said(u, /tundra.*arbustos y musgo/i), 'tundra = arbustos y musgo');
+  assert.ok(said(u, /mediterráneo.*pinos y encinas/i), 'mediterráneo = pinos y encinas');
+  assert.ok(said(u, /frondoso.*hayas y castaños/i), 'frondoso = hayas y castaños');
+  assert.ok(said(u, /mediterráneo siempre tienen hojas|mediterráneo.*hoja perenne/i), 'mediterráneo: siempre tiene hojas');
+  assert.ok(said(u, /selva.*(lluviosas|llueve mucho)|llueve menos que en la selva.*sabana/i), 'selva más lluvia que sabana');
+});
+
+// Book p. 39 + the plan's defensible regions: the climate of each region the map may ask.
+const BOOK_CLIMATE = {
+  galicia: 'oceanico',
+  asturias: 'oceanico',
+  cantabria: 'oceanico',
+  'pais-vasco': 'oceanico',
+  'castilla-y-leon': 'mediterraneo-interior',
+  madrid: 'mediterraneo-interior',
+  'castilla-la-mancha': 'mediterraneo-interior',
+  extremadura: 'mediterraneo-interior',
+  cataluna: 'mediterraneo-litoral',
+  valencia: 'mediterraneo-litoral',
+  murcia: 'mediterraneo-litoral',
+  baleares: 'mediterraneo-litoral',
+  canarias: 'subtropical',
+};
+
+test('sociales-clima: the four climates on the map of Spain, each region with the book climate; Asturias oceánico; montaña never a token', () => {
+  const { content: u } = bootClima();
+  const maps = scTasks(u).filter((t) => t.type === 'spainMap' && t.mode === 'climate');
+  assert.ok(maps.length >= 2, `${maps.length} climate maps`);
+  const tokens = new Set(maps.flatMap((t) => t.tokens.map((x) => x.id)));
+  assert.deepEqual([...tokens].sort(), ['mediterraneo-interior', 'mediterraneo-litoral', 'oceanico', 'subtropical']);
+  const asked = {};
+  for (const t of maps)
+    for (const [r, tok] of Object.entries(t.answer)) {
+      assert.equal(tok, BOOK_CLIMATE[r], `${r}: ${tok}`);
+      asked[r] = tok;
+    }
+  assert.equal(asked.asturias, 'oceanico');
+  assert.equal(asked.canarias, 'subtropical');
+  assert.equal(asked.andalucia, undefined);
+  // every climate is the answer of some region
+  assert.deepEqual([...new Set(Object.values(asked))].sort(), ['mediterraneo-interior', 'mediterraneo-litoral', 'oceanico', 'subtropical']);
+  for (const t of scTasks(u).filter((x) => x.type === 'spainMap'))
+    for (const x of t.tokens) assert.ok(!/monta/i.test(`${x.id} ${x.label}`));
+  // de montaña is asked as text (pairs / choice / tf)
+  assert.ok(said(u, /de montaña.*(frío en invierno|verano fresco)/i), 'clima de montaña: frío en invierno, verano fresco');
+  assert.ok(
+    said(u, /zona templada/i) && said(u, /España.*zona templada|zona templada.*España|España.*templada/i),
+    'España en la zona templada',
+  );
+});
+
+// The region names of the forecasts, and the words that say each weather symbol.
+const REGION_NAME = {
+  galicia: 'Galicia',
+  asturias: 'Asturias',
+  cantabria: 'Cantabria',
+  'pais-vasco': 'País Vasco',
+  navarra: 'Navarra',
+  'la-rioja': 'La Rioja',
+  aragon: 'Aragón',
+  cataluna: 'Cataluña',
+  'castilla-y-leon': 'Castilla y León',
+  madrid: 'Madrid',
+  'castilla-la-mancha': 'Castilla-La Mancha',
+  valencia: 'Valencia',
+  murcia: 'Murcia',
+  extremadura: 'Extremadura',
+  andalucia: 'Andalucía',
+  baleares: 'Baleares',
+  canarias: 'Canarias',
+};
+const WEATHER_WORD = {
+  sol: /\bsol\b/i,
+  nubes: /\bnubes?\b/i,
+  lluvia: /lluev|lluvia/i,
+  nieve: /niev/i,
+  tormenta: /tormenta/i,
+  niebla: /niebla/i,
+};
+
+test('sociales-clima: each weather map answer is what its forecast says (region and symbol in the same sentence)', () => {
+  const { content: u } = bootClima();
+  const maps = scTasks(u).filter((t) => t.type === 'spainMap' && t.mode === 'weather');
+  assert.ok(maps.length >= 2);
+  for (const t of maps) {
+    assert.equal(t.text, t.listen, 'the forecast read aloud is the one shown');
+    const sentences = t.text.split(/\.\s*/).filter(Boolean);
+    for (const [region, tok] of Object.entries(t.answer)) {
+      const s = sentences.find((x) => x.includes(REGION_NAME[region]));
+      assert.ok(s, `«${t.text}» does not name ${REGION_NAME[region]}`);
+      assert.ok(WEATHER_WORD[tok].test(s), `«${s}»: ${region} should be ${tok}`);
+    }
+    // every region the forecast names is asked
+    for (const [id, name] of Object.entries(REGION_NAME)) if (t.text.includes(name)) assert.ok(id in t.answer, `${name} named, not asked`);
+  }
+});
+
+// The book's table (p. 34): never the drawn bars of p. 35. July is the warmest (20 °C), May the rainiest (95 mm).
+const BOOK_TEMP = [1, 3, 6, 9, 13, 17, 20, 18, 17, 11, 6, 3];
+const BOOK_RAIN = [38, 45, 70, 65, 95, 89, 43, 80, 75, 78, 65, 61];
+
+test('sociales-clima: the climograms of the book use the p. 34 table; line = temperatura, barras = precipitaciones; tiempo vs clima', () => {
+  const { content: u } = bootClima();
+  const climos = scTasks(u).filter((t) => t.type === 'climograma');
+  const book = climos.filter((t) => /libro/i.test(t.place ?? ''));
+  assert.ok(book.length >= 1, 'no climogram of the book');
+  for (const t of book) {
+    assert.deepEqual(t.temp, BOOK_TEMP);
+    assert.deepEqual(t.rain, BOOK_RAIN);
+  }
+  const hottest = book.find((t) => t.mode === 'tapMonth' && /calor/i.test(t.q));
+  if (hottest) assert.equal(hottest.answer, 6);
+  // a fill task asks a value of the book table: September 75 mm
+  const fillBook = book.find((t) => t.mode === 'fillBar');
+  if (fillBook) assert.equal(fillBook.rain[fillBook.missing], 75);
+  assert.ok(climos.some((t) => t.mode === 'tapMonth') && climos.some((t) => t.mode === 'fillBar'));
+  assert.ok(said(u, /línea.*temperatura/i), 'línea = temperatura');
+  assert.ok(said(u, /barras.*precipitaciones/i), 'barras = precipitaciones');
+  assert.ok(said(u, /temperatura.*°C/) && said(u, /precipitaciones.*mm/), 'units °C and mm');
+  // tiempo = momento y lugar; clima = muchos años (~30); meteorólogos vs climatólogos
+  assert.ok(said(u, /tiempo atmosférico.*momento.*lugar/i), 'tiempo = momento y lugar');
+  assert.ok(said(u, /clima.*(30|muchos) años|30 años/i), 'clima = ~30 años');
+  assert.ok(said(u, /meteorólogos = Dicen qué tiempo hará|meteorólogos.*(predic|tiempo que hará)/i), 'meteorólogos predicen el tiempo');
+  assert.ok(said(u, /climatólogos.*clima/i), 'climatólogos estudian el clima');
+  assert.deepEqual([...new Set(sortBinOf(u, /^(Hoy|Esta tarde|Mañana)/))], ['tiempo']);
+  assert.ok(
+    scTasks(u).some((t) => t.type === 'tf' && t.truth === false && /tiempo atmosférico/i.test(t.q) && /muchos años|30 años/i.test(t.q)),
+    'no tf trap «el tiempo atmosférico … durante muchos años» (false)',
+  );
+});
+
+// Football words the balloon unit must not show (plan: «No footballs anywhere in this unit»).
+const FOOTBALL = /⚽|🟨|🟥|\bgol(es|azo)?\b|partido|árbitro|\bcampo\b|tarjeta|expuls|\bVAR\b/i;
+const SAMPLE_ARGS = {
+  n: 3,
+  red: 4,
+  y: 2,
+  r: 1,
+  grade: 'Bien',
+  nota: '7,0',
+  score: 1,
+  max: 2,
+  total: 8,
+  title: 'T',
+  i: 1,
+  a: 'x',
+  text: 'x',
+  l: 'C',
+  item: 'x',
+  bin: 'y',
+  coins: 3,
+  need: 4,
+};
+const strOf = (v) => (typeof v === 'function' ? v(SAMPLE_ARGS) : String(v));
+// The engine's DEFAULT_STRINGS / DEFAULT_LISTS (not exported): read from the source, so a new football default shows up here.
+const engineDefaults = (name) => {
+  const src = read('shared/exam/exam.js');
+  const at = src.indexOf(`const ${name} = {`);
+  const body = src.slice(src.indexOf('{', at), src.indexOf('\n  };\n', at) + 4);
+  return vm.runInNewContext(`(${body})`);
+};
+
+test('sociales-clima: the balloon theme — scoreIcon 🎈 and the plan strings; no football word in unit.strings or lists', () => {
+  const { content: u, raw } = bootClima();
+  const s = raw.strings;
+  assert.equal(s.scoreIcon, '🎈');
+  assert.equal(s.goalsLabel, 'Aciertos');
+  assert.equal(s.yellow, '¡Una nube!');
+  assert.equal(s.red, '¡Tormenta!');
+  assert.equal(s.redOff, 'El globo tiene que aterrizar.');
+  assert.equal(s.varBtn({ n: 2 }), '📡 Radar: esquivar la tormenta (2 🪙)');
+  assert.equal(s.varDone, 'Radar: ¡tormenta esquivada!');
+  assert.equal(s.sentOffTitle, '¡Aterrizaje forzoso! ⛈️');
+  assert.equal(s.examCards({ y: 2, r: 0 }), 'Nubes: 2 ☁️');
+  assert.equal(s.examCards({ y: 3, r: 1 }), 'Nubes: 3 ☁️ · 1 ⛈️');
+  assert.equal(s.noCards, '¡Cielo despejado, sin nubes!');
+  assert.match(strOf(s.examInfoOff), /☁️/);
+  assert.match(strOf(s.examInfoOff), /⛈️/);
+  assert.match(strOf(s.examInfoOff), /no hay monedas/);
+  for (const [k, v] of Object.entries(s)) assert.ok(!FOOTBALL.test(strOf(v)), `strings.${k}: «${strOf(v)}»`);
+  for (const [k, xs] of Object.entries(u.lists ?? {})) for (const x of xs) assert.ok(!FOOTBALL.test(x), `lists.${k}: «${x}»`);
+  // and the unit's own text: titles, intros, tasks
+  // («un campo de cultivo» is a field of crops, not a pitch: «campo» is left out here)
+  const shown = JSON.stringify(u.stations.map(({ vocab, ...st }) => st)) + u.title + u.intro + u.exam.title;
+  const hit = shown.match(/⚽|🟨|🟥|\bgol(es|azo)?\b|partido|árbitro|tarjeta|expuls|\bVAR\b/gi);
+  assert.equal(hit, null, `football words in the content: ${hit}`);
+});
+
+test('sociales-clima: every engine default the player sees with a football word is overridden by the unit', () => {
+  const { raw } = bootClima();
+  const defaults = engineDefaults('DEFAULT_STRINGS');
+  assert.equal(defaults.scoreIcon, '⚽', 'the engine default score icon stays ⚽ for the other units');
+  // the sort / order hints call their chips «tarjetas» (cards to tap, not football cards)
+  const CHIP_CARDS = ['kSort', 'pickCard', 'kOrder', 'orderNeedAll'];
+  const merged = { ...defaults, ...raw.strings };
+  for (const k of CHIP_CARDS) delete merged[k];
+  const left = Object.entries(merged)
+    .filter(([, v]) => FOOTBALL.test(strOf(v)))
+    .map(([k, v]) => `${k}: «${strOf(v)}»`);
+  assert.deepEqual(left, []);
+  const lists = { ...engineDefaults('DEFAULT_LISTS'), ...raw.lists };
+  for (const [k, xs] of Object.entries(lists)) for (const x of xs) assert.ok(!FOOTBALL.test(x), `lists.${k}: «${x}»`);
+});
+
+// SC_CHECK on a small valid unit, one thing broken at a time (rules from the plan's type contracts).
+const scUnit = () => ({
+  slug: 'sc-demo',
+  title: 'Demo',
+  stations: [
+    {
+      id: 'a',
+      title: 'A',
+      icon: '🎈',
+      intro: 'A',
+      tasks: [
+        {
+          type: 'spainMap',
+          q: 'Pon cada símbolo en su comunidad.',
+          mode: 'weather',
+          tokens: [
+            { id: 'sol', label: 'Sol', icon: '☀️' },
+            { id: 'lluvia', label: 'Lluvia', icon: '🌧️' },
+          ],
+          answer: { galicia: 'lluvia', andalucia: 'sol' },
+          text: 'Llueve en Galicia. Sol en Andalucía.',
+        },
+        {
+          type: 'spainMap',
+          q: 'Pon cada clima en su comunidad.',
+          mode: 'climate',
+          tokens: [
+            { id: 'oceanico', label: 'Oceánico', color: '#2b6cb0' },
+            { id: 'subtropical', label: 'Subtropical', color: '#d9534f' },
+          ],
+          answer: { asturias: 'oceanico', canarias: 'subtropical' },
+        },
+        {
+          type: 'climograma',
+          q: 'Toca el mes en que hace más calor.',
+          mode: 'tapMonth',
+          temp: [...BOOK_TEMP],
+          rain: [...BOOK_RAIN],
+          answer: 6,
+        },
+        {
+          type: 'climograma',
+          q: 'Construye la barra.',
+          mode: 'fillBar',
+          temp: [...BOOK_TEMP],
+          rain: [...BOOK_RAIN],
+          missing: 8,
+          table: true,
+        },
+        {
+          type: 'climograma',
+          q: 'Construye el punto.',
+          mode: 'fillTemp',
+          temp: [...BOOK_TEMP],
+          rain: [...BOOK_RAIN],
+          missing: 6,
+          table: true,
+        },
+        { type: 'spot', q: 'Toca todo lo que han hecho las personas.', scene: 'costa', find: ['puerto', 'faro', 'hotel', 'barcos'] },
+      ],
+    },
+  ],
+  exam: { perStation: { a: 1 } },
+});
+// [name, task number (1-based) the error must name, mutate]
+const SC_BROKEN = [
+  // spainMap
+  ['spainMap: unknown region', 1, (t) => (t[0].answer = { galicia: 'lluvia', narnia: 'sol' })],
+  ['spainMap: answer token not in tokens', 1, (t) => (t[0].answer = { galicia: 'granizo', andalucia: 'sol' })],
+  ['spainMap: repeated token ids', 1, (t) => (t[0].tokens = [t[0].tokens[0], { ...t[0].tokens[0] }, t[0].tokens[1]])],
+  ['spainMap: one token', 1, (t) => (t[0].tokens = [t[0].tokens[1]]) && (t[0].answer = { galicia: 'lluvia', asturias: 'lluvia' })],
+  [
+    'spainMap: six tokens',
+    1,
+    (t) => t[0].tokens.push(...['nubes', 'nieve', 'tormenta', 'niebla'].map((id) => ({ id, label: id }))) && t[0].tokens.length,
+  ],
+  ['spainMap: one region asked', 1, (t) => (t[0].answer = { galicia: 'lluvia' })],
+  ['spainMap: weather map without the forecast', 1, (t) => delete t[0].text],
+  ['spainMap: unknown mode', 1, (t) => (t[0].mode = 'rain')],
+  ['spainMap climate: Andalucía (not defensible)', 2, (t) => (t[1].answer = { asturias: 'oceanico', andalucia: 'subtropical' })],
+  ['spainMap climate: Aragón (not defensible)', 2, (t) => (t[1].answer.aragon = 'oceanico')],
+  // a token that is not one of the four climate ids: only the defensible-region rule can catch it
+  [
+    'spainMap climate: Andalucía with an own token',
+    2,
+    (t) => t[1].tokens.push({ id: 'sur', label: 'Sur', color: '#aa7733' }) && (t[1].answer.andalucia = 'sur'),
+  ],
+  ['spainMap climate: the wrong climate on a region', 2, (t) => (t[1].answer = { asturias: 'subtropical', canarias: 'oceanico' })],
+  ['spainMap climate: «de montaña» as a token', 2, (t) => t[1].tokens.push({ id: 'montana', label: 'De montaña', color: '#336655' })],
+  ['spainMap climate: token without a colour', 2, (t) => delete t[1].tokens[0].color],
+  // climograma
+  ['climograma: temp of 11 months', 3, (t) => t[2].temp.pop()],
+  ['climograma: rain of 13 months', 3, (t) => t[2].rain.push(40)],
+  ['climograma: temp above 35 °C', 3, (t) => (t[2].temp[0] = 36)],
+  ['climograma: rain above 210 mm', 3, (t) => (t[2].rain[0] = 211)],
+  ['climograma: the asked month is not unique (two months of 20 °C)', 3, (t) => (t[2].temp[7] = 20)],
+  ['climograma: the answer is not the warmest month', 3, (t) => (t[2].answer = 7)],
+  ['climograma: answer out of 0–11', 3, (t) => (t[2].answer = 12)],
+  ['climograma: unknown mode', 3, (t) => (t[2].mode = 'tapYear')],
+  ['climograma: missing bar off the 15 mm grid', 4, (t) => (t[3].rain[8] = 70)],
+  ['climograma: missing point off the 5 °C grid', 5, (t) => (t[4].missing = 4)],
+  ['climograma: missing out of 0–11', 4, (t) => (t[3].missing = -1)],
+  // spot (with the art)
+  ['spot: unknown element id', 6, (t) => (t[5].find = ['puerto', 'faro', 'hotel', 'castillo'])],
+  // a q that does not ask for what people made: only the id rule can catch it
+  ['spot: unknown element id (plain q)', 6, (t) => Object.assign(t[5], { q: 'Toca el faro.', find: ['faro', 'castillo'] })],
+  ['spot: find misses a human-made item', 6, (t) => (t[5].find = ['puerto', 'faro', 'hotel'])],
+  ['spot: find has a natural item', 6, (t) => t[5].find.push('playa')],
+  ['spot: unknown scene', 6, (t) => (t[5].scene = 'desierto')],
+  ['spot: repeated find ids', 6, (t) => t[5].find.push('faro')],
+  ['spot: empty find', 6, (t) => (t[5].find = [])],
+];
+
+test('SC_CHECK: the small valid unit passes (with and without the art)', () => {
+  const { check, art } = bootClima();
+  assert.deepEqual(check(scUnit()), []);
+  assert.deepEqual(check(scUnit(), art), []);
+});
+
+for (const [name, i, mutate] of SC_BROKEN) {
+  test(`SC_CHECK catches: ${name}`, () => {
+    const { check, art } = bootClima();
+    const u = scUnit();
+    mutate(u.stations[0].tasks);
+    const errs = check(u, art);
+    assert.ok(errs.length > 0, 'no errors reported');
+    assert.ok(
+      errs.every((e) => e.startsWith(`station a task ${i} `)),
+      `errors not only about task ${i}: ${JSON.stringify(errs)}`,
+    );
+  });
+}

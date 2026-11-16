@@ -351,6 +351,19 @@
       },
     },
     {
+      slug: 'sociales-clima',
+      title: 'La vuelta al mundo en globo',
+      emoji: '🎈',
+      category: 'sociales',
+      desc: 'Готуємось до іспиту з Ciencias Sociales: Tema 2 — погода і клімат, прогноз на карті Іспанії, кліматичні зони й ландшафти, кліматограма, рельєф, клімати Іспанії.',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: {
+        title: 'La vuelta al mundo en globo',
+        desc: 'Prepárate para la prueba de Sociales, Tema 2: tiempo y clima, el mapa del tiempo, zonas climáticas y paisajes, el climograma, el relieve y los climas de España.',
+      },
+    },
+    {
       slug: 'coach-simon',
       title: 'Тренер-Саймон',
       emoji: '🚦',

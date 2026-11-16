@@ -717,3 +717,74 @@ test('lengua-poemas: a station by keys from its tile, then forge, save, substitu
   await page.keyboard.press('Backspace');
   await expect(gap(0)).toHaveText('');
 });
+
+test('sociales-clima: a station by keys from its tile, then spainMap (weather, climate), climograma (tapMonth, fillBar) and spot with keys only (right, one slip, wrong)', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const sc = examPlayer('__sc');
+  const { taskWhere, playOnly } = unitPage('SC_CONTENT', '__sc');
+  await open(page, '/games/sociales-clima/');
+  const tile = page.locator('#stations .station').nth(await page.evaluate(() => SC_CONTENT.stations.findIndex((s) => s.id === 'espana')));
+  await tile.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-go')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  const n = (await sc.session(page)).tasks.length;
+  await sc.playSession(page, tapNever, { keyboard: true });
+  await expect(page.locator('#finish .score-pill')).toContainText(`${n} / ${n}`);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  const own = [
+    await taskWhere(page, 'spainMap', (t) => t.mode === 'weather'),
+    await taskWhere(page, 'spainMap', (t) => t.mode === 'climate'),
+    await taskWhere(page, 'climograma', (t) => t.mode === 'tapMonth'),
+    await taskWhere(page, 'climograma', (t) => t.mode === 'fillBar'),
+    await taskWhere(page, 'spot'),
+  ];
+  await playOnly(page, ...own);
+  expect(await sc.playSession(page, tapNever, { keyboard: true })).toEqual(own.map((t) => t.type));
+  await expect(page.locator('#finish .score-pill')).toContainText('5 / 5');
+  await page.keyboard.press('Escape');
+
+  // one slip (soft) and wrong, by keys
+  await playOnly(page, ...own, ...own);
+  for (const [i, t] of [...own, ...own].entries()) {
+    const wrong = i >= own.length;
+    await sc.answerTask(page, tapNever, { keyboard: true, wrong, mistakes: wrong ? 0 : 1 });
+    await expect(page.locator(`#feedback .fb.${wrong ? 'miss' : 'ok'}`), `${t.type} ${t.mode ?? ''}`).toBeVisible();
+    if (!wrong) await expect(page.locator('#feedback .fb-title').last()).toHaveText('¡Bien hecho! 🎈');
+    await sc.next(page, tapNever, { keyboard: true });
+  }
+  await expect(page.locator('#finish .score-pill')).toContainText('5 / 10');
+  await page.keyboard.press('Escape');
+
+  // spainMap: a digit picks a token, → walks the asked regions, Space puts, Backspace empties the focused region
+  const m = own[0];
+  await playOnly(page, m);
+  const [r0, a0] = Object.entries(m.answer)[0];
+  const k = m.tokens.findIndex((x) => x.id === a0) + 1;
+  await page.keyboard.press(String(k));
+  await expect(page.locator(`#work .sc-tok[data-token="${a0}"]`)).toHaveAttribute('aria-pressed', 'true');
+  for (let j = 0; j < 20 && (await page.evaluate(() => document.activeElement?.getAttribute('data-region'))) !== r0; j++)
+    await page.keyboard.press('ArrowRight');
+  await page.keyboard.press(' ');
+  await expect(page.locator(`#work .sc-reg[data-region="${r0}"]`)).toHaveAttribute('data-token', a0);
+  await page.keyboard.press('Backspace');
+  await expect(page.locator(`#work .sc-reg[data-region="${r0}"]`)).toHaveAttribute('data-token', '');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // climograma fill: ↓ / − step down, never below 0
+  const f = own[3];
+  await playOnly(page, f);
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.press('+');
+  await expect(page.locator('#work .sc-step-val')).toHaveText('30 mm');
+  await page.keyboard.press('-');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('#work .sc-step-val')).toHaveText('0 mm');
+});
