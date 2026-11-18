@@ -356,7 +356,7 @@
       emoji: '🎈',
       category: 'sociales',
       desc: 'Готуємось до іспиту з Ciencias Sociales: Tema 2 — погода і клімат, прогноз на карті Іспанії, кліматичні зони й ландшафти, кліматограма, рельєф, клімати Іспанії.',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: {
         title: 'La vuelta al mundo en globo',

@@ -7,6 +7,21 @@
 // and { title, text } per site language (es: Spain Spanish, «tú», no Cyrillic).
 window.KF_NEWS = [
   {
+    id: 'sociales-clima',
+    date: '2026-11-18',
+    sites: ['uk', 'es'],
+    icon: '🎈',
+    game: 'sociales-clima',
+    uk: {
+      title: 'Нова гра: La vuelta al mundo en globo',
+      text: 'Літай на повітряній кулі та готуйся до іспиту з Sociales: погода, клімат і краєвиди. Обминай грозу!',
+    },
+    es: {
+      title: 'Nuevo juego: La vuelta al mundo en globo',
+      text: 'Vuela en globo y prepara el examen de Sociales: el tiempo, el clima y los paisajes. ¡Esquiva la tormenta!',
+    },
+  },
+  {
     id: 'lengua-poemas',
     date: '2026-11-16',
     sites: ['uk', 'es'],
