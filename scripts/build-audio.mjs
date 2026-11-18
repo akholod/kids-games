@@ -13,6 +13,7 @@
 //          + every paragraph of every station reading of games/cultura-asturiana/content.js (CA_CONTENT),
 //          + the station notes and `listen` sentences of games/lengua-poemas/content.js (LP_CONTENT),
 //          + the station notes and `listen` sentences (the weather forecasts) of games/sociales-clima/content.js (SC_CONTENT),
+//          + the station notes (rule notes) of games/naturales-animales/content.js (NA_CONTENT),
 //          en also gets games/english-animals/content.js (EA_CONTENT): the `listen` sentence of every task and every paragraph of
 //          every station reading (`station.text`), read paragraph by paragraph (long ones: hashed slugs, see slug()),
 //          es-slow = the dictado sentences again, slower (KFG.say(text, 'es', { slow: true })),
@@ -123,6 +124,7 @@ const FILES = [
   'games/cultura-asturiana/content.js',
   'games/lengua-poemas/content.js',
   'games/sociales-clima/content.js',
+  'games/naturales-animales/content.js',
 ];
 for (const f of FILES) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sb, { filename: f });
 
@@ -158,10 +160,23 @@ const clima = sb.SC_CONTENT
       ...sb.SC_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.listen).map((t) => t.listen)),
     ]
   : [];
+// Naturales Unidad 2 (Expedición safari): the station rule notes and the `listen` sentences (none yet). NA_CONTENT may be missing.
+const animales = sb.NA_CONTENT
+  ? [
+      ...sb.NA_CONTENT.stations.flatMap((s) => s.text?.paragraphs ?? []),
+      ...sb.NA_CONTENT.stations.flatMap((s) => s.tasks.filter((t) => t.listen).map((t) => t.listen)),
+    ]
+  : [];
 // [the text the game says (→ the file name), what the voice reads]
 const SOURCES = {
   en: [...Object.values(sb.WM_CONTENT.words).map((w) => w.en), ...sb.SimonEngine.phrases('en'), ...english].map(same),
-  es: [...sb.SimonEngine.phrases('es'), ...dictado.map((t) => t.say), ...lengua, ...cultura, ...new Set([...poemas, ...clima])].map(same),
+  es: [
+    ...sb.SimonEngine.phrases('es'),
+    ...dictado.map((t) => t.say),
+    ...lengua,
+    ...cultura,
+    ...new Set([...poemas, ...clima, ...animales]),
+  ].map(same),
   'es-slow': dictado.filter((t) => t.type === 'cloze').map((t) => same(t.say)),
   uk: [
     ...Object.values(sb.CH_CONTENT.words).map((w) => [w.word, UK_STRESSED.has(w.word) ? w.syl.join('') : w.word]),

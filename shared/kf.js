@@ -364,6 +364,19 @@
       },
     },
     {
+      slug: 'naturales-animales',
+      title: 'Сафарі-експедиція',
+      emoji: '🦁',
+      category: 'sociales',
+      desc: 'Готуємось до іспиту з Ciencias de la Naturaleza: Unidad 2 — що їдять тварини, зуби, як рухаються й народжуються, хребетні й безхребетні.',
+      status: 'beta',
+      sites: ['uk', 'es'],
+      es: {
+        title: 'Expedición safari',
+        desc: 'Prepárate para el examen de Naturales, Unidad 2: qué comen los animales, sus dientes, cómo se mueven y nacen, vertebrados e invertebrados.',
+      },
+    },
+    {
       slug: 'coach-simon',
       title: 'Тренер-Саймон',
       emoji: '🚦',

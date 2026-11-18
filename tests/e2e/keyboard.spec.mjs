@@ -788,3 +788,75 @@ test('sociales-clima: a station by keys from its tile, then spainMap (weather, c
   await page.keyboard.press('ArrowDown');
   await expect(page.locator('#work .sc-step-val')).toHaveText('0 mm');
 });
+
+test('naturales-animales: a station by keys from its tile, then ficha (↑ ↓, digits, Enter) and clave (S / N, ← → + Enter) with keys only', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const na = examPlayer('__na');
+  const { taskWhere, playOnly } = unitPage('NA_CONTENT', '__na');
+  await open(page, '/games/naturales-animales/');
+  const tile = page.locator('#stations .station').nth(await page.evaluate(() => NA_CONTENT.stations.findIndex((s) => s.id === 'ficha')));
+  await tile.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#intro-go')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#play')).toBeVisible();
+  const n = (await na.session(page)).tasks.length;
+  await na.playSession(page, tapNever, { keyboard: true });
+  await expect(page.locator('#finish .score-pill')).toContainText(`${n} / ${n}`);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // right, one slip (soft), wrong — by keys
+  const own = [await taskWhere(page, 'ficha', (t) => t.rows.length >= 3), await taskWhere(page, 'clave', (t) => t.tree === 'vertebrados')];
+  await playOnly(page, ...own, ...own, ...own);
+  for (const [i, t] of [...own, ...own, ...own].entries()) {
+    const kind = Math.floor(i / own.length); // 0 right, 1 soft, 2 wrong
+    await na.answerTask(page, tapNever, { keyboard: true, wrong: kind === 2, mistakes: kind === 1 ? 1 : 0 });
+    await expect(page.locator(`#feedback .fb.${kind === 2 ? 'miss' : 'ok'}`), `${t.type} ${kind}`).toBeVisible();
+    const title = page.locator('#feedback .fb-title').last();
+    if (kind === 1) await expect(title).toHaveText('¡Bien hecho! 📸');
+    if (kind === 0) await expect(title).not.toHaveText('¡Bien hecho! 📸');
+    await na.next(page, tapNever, { keyboard: true });
+  }
+  await expect(page.locator('#finish .score-pill')).toContainText('4 / 6');
+  await page.keyboard.press('Escape');
+
+  // ficha: ↓ ↑ move the current row, a digit picks option n of it and goes on to the next empty row, Enter with an empty row = hint
+  const f = own[0];
+  await playOnly(page, f);
+  const row = (k) => page.locator('#work .na-row').nth(k);
+  await page.keyboard.press('ArrowDown');
+  await expect(row(1)).toHaveClass(/is-cur/);
+  await expect(page.locator('#work .na-ficha')).toHaveClass(/is-kbd/);
+  await page.keyboard.press('ArrowUp');
+  await expect(row(0)).toHaveClass(/is-cur/);
+  await page.keyboard.press('1');
+  await expect(row(0).locator('.na-opt').first()).toHaveAttribute('aria-pressed', 'true');
+  await expect(row(1)).toHaveClass(/is-cur/);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#work .na-actions .inline-hint')).toHaveText('Elige una respuesta en cada fila.');
+  expect(await page.evaluate(() => __na.session.answered)).toBe(false);
+  // → steps the pick within the current row (the row with the hint: the first empty one)
+  await page.keyboard.press('ArrowRight');
+  await expect(row(1).locator('.na-opt').first()).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('ArrowRight');
+  await expect(row(1).locator('.na-opt').nth(1)).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hub')).toBeVisible();
+
+  // clave: Enter with no pick = hint; ← picks Sí, → picks No, Enter answers the pick
+  const c = own[1];
+  await playOnly(page, c);
+  const path = await page.evaluate(() => NA_CLAVE_PATH(NA_CONTENT, __na.session.task));
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#work .na-clave .inline-hint')).toHaveText('Elige Sí o No.');
+  for (const side of path) {
+    await page.keyboard.press(side === 'yes' ? 'ArrowLeft' : 'ArrowRight');
+    await expect(page.locator(`#work .na-yn-btn[data-ans="${side}"]`)).toHaveClass(/is-sel/);
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.locator('#feedback .fb.ok')).toBeVisible();
+  await expect(page.locator('#work .na-clave')).toHaveAttribute('data-wrong', '0');
+});

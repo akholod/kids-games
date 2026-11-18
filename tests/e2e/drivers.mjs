@@ -1022,7 +1022,53 @@ export const examPlayer = (hook) => {
     for (const id of t.find) await hit(id);
   };
 
+  // ---- naturales-animales' own types. `wrong` = the task ends not right; `mistakes: 1` = one wrong check / step first, then right (soft).
+  //      Answers from the task data only (hooks: /tmp/na-design/hooks.md). ----
+
+  // ficha: rows `.na-row[data-row]`, chips `.na-opt[data-opt]` (keys: a digit = option n of the current row, then the next empty row),
+  // `.na-check` / Enter. A wrong check = another chip in the first row with 3+ chips (right rows lock, the wrong pick is struck out).
+  const ficha = async (page, tap, t, { wrong, mistakes = 0, keyboard }) => {
+    const shown = await page
+      .locator('#work .na-row')
+      .evaluateAll((els) => els.map((r) => ({ id: r.dataset.row, opts: [...r.querySelectorAll('.na-opt')].map((b) => b.dataset.opt) })));
+    const answer = (id) => t.rows.find((r) => r.id === id).answer;
+    const pick = async (row, opt) => {
+      const k = shown.find((r) => r.id === row).opts.indexOf(opt);
+      expect(k, `${row}: chip ${opt}`).toBeGreaterThanOrEqual(0);
+      if (keyboard) return page.keyboard.press(String(k + 1));
+      return tap(page.locator(`#work .na-row[data-row="${row}"] .na-opt[data-opt="${opt}"]`));
+    };
+    const check = () => pressOrTap(page, tap, keyboard, 'Enter', page.locator('#work .na-check'));
+    const misses = wrong ? 2 : mistakes;
+    const bad = shown.find((r) => r.opts.length >= 3) ?? shown[0];
+    const wrongOpts = bad.opts.filter((o) => o !== answer(bad.id));
+    if (misses === 0) {
+      for (const r of shown) await pick(r.id, answer(r.id));
+      return check();
+    }
+    // 1st check: every row right but `bad` (by keys, a digit fills its row and jumps to the next empty one: rows in order)
+    for (const r of shown) await pick(r.id, r.id === bad.id ? wrongOpts[0] : answer(r.id));
+    await check();
+    // after the 1st check the current row is the wrong one
+    await pick(bad.id, misses >= 2 ? wrongOpts[1] : answer(bad.id));
+    await check();
+  };
+
+  // clave: the right answers by NA_CLAVE_PATH; `.na-yn-btn[data-ans=yes|no]` or S / N. Wrong steps at the first node:
+  // 1 = retry there (soft), 2 = the game takes the right branch itself (miss), then the rest of the path.
+  const clave = async (page, tap, _t, { wrong, mistakes = 0, keyboard }) => {
+    const path = await page.evaluate((h) => NA_CLAVE_PATH(NA_CONTENT, window[h].session.task), hook);
+    expect(path?.length, 'clave path').toBeGreaterThan(0);
+    const say = (side) => pressOrTap(page, tap, keyboard, side === 'yes' ? 's' : 'n', page.locator(`#work .na-yn-btn[data-ans="${side}"]`));
+    const misses = wrong ? 2 : mistakes;
+    const other = (s) => (s === 'yes' ? 'no' : 'yes');
+    for (let m = 0; m < misses; m++) await say(other(path[0]));
+    for (const side of misses >= 2 ? path.slice(1) : path) await say(side);
+  };
+
   const BY_TYPE = {
+    ficha,
+    clave,
     spainMap,
     climograma,
     spot,

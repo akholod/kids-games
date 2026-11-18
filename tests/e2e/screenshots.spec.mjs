@@ -163,3 +163,9 @@ test('sociales-clima-hub: stations and the balloon hero', async ({ page }) => {
   await expect(page.locator('#hero-art svg.sc-hero')).toBeVisible();
   await snap(page, 'sociales-clima-hub');
 });
+
+test('naturales-animales-hub: stations and the jeep hero', async ({ page }) => {
+  await open(page, '/games/naturales-animales/');
+  await expect(page.locator('#hero-art svg.na-hero')).toBeVisible();
+  await snap(page, 'naturales-animales-hub');
+});

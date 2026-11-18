@@ -509,3 +509,59 @@ test('sociales-clima: every station dialog and the biggest task of every own typ
     }
   }
 });
+
+test('naturales-animales: every station dialog and the biggest ficha / clave fit 1280×650 before and after the answer', async ({
+  page,
+  tap,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 650 });
+  const na = examPlayer('__na');
+  const { openIntro, allTasks, playOnly } = unitPage('NA_CONTENT', '__na');
+  await open(page, '/games/naturales-animales/');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
+  for (const id of await page.evaluate(() => NA_CONTENT.stations.map((s) => s.id))) {
+    await openIntro(page, tap, id);
+    const m = await page.evaluate(() => {
+      const d = document.getElementById('intro-dlg').getBoundingClientRect();
+      const g = document.getElementById('intro-go').getBoundingClientRect();
+      return { top: d.top, bottom: d.bottom, goBottom: g.bottom, h: innerHeight };
+    });
+    expect(m.top, `${id}: dialog top`).toBeGreaterThanOrEqual(0);
+    expect(m.bottom, `${id}: dialog bottom`).toBeLessThanOrEqual(m.h);
+    expect(m.goBottom, `${id}: start button bottom`).toBeLessThanOrEqual(m.bottom);
+    await tap(page.locator('#intro-back'));
+  }
+  const tasks = await allTasks(page);
+  const most = (ok, size) => tasks.filter(ok).sort((a, b) => size(b) - size(a))[0];
+  const rowsSize = (t) => t.rows.reduce((a, r) => a + (r.options?.length ?? { come: 3, mueve: 5, nace: 3, grupo: 6 }[r.id]), 0);
+  const picks = [
+    ['the ficha with the most chips', most((t) => t.type === 'ficha', rowsSize)],
+    [
+      'the deepest clave',
+      most(
+        (t) => t.type === 'clave',
+        (t) => JSON.stringify(t).length + 1000 * (t.facts?.length ?? 0),
+      ),
+    ],
+    [
+      'the invertebrados clave',
+      most(
+        (t) => t.type === 'clave' && t.tree === 'invertebrados',
+        (t) => JSON.stringify(t).length,
+      ),
+    ],
+  ];
+  for (const [what, t] of picks) {
+    expect(t, what).toBeTruthy();
+    for (const wrong of [false, true]) {
+      await open(page, '/games/naturales-animales/');
+      await playOnly(page, t);
+      await expectFits(page, what);
+      await na.answerTask(page, tap, { wrong });
+      await expectOnScreen(page, page.locator('#feedback .fb-actions .btn').first(), `${what}${wrong ? ' (wrong)' : ''}: next`);
+      await page.waitForTimeout(400);
+      expect.soft(await overflow(page), `${what}${wrong ? ' (wrong)' : ''} after the answer: page scroll`).toBeLessThanOrEqual(2);
+    }
+  }
+});

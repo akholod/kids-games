@@ -1983,3 +1983,456 @@ for (const [name, i, mutate] of SC_BROKEN) {
     );
   });
 }
+
+// ---------- naturales-animales: «Expedición safari», Ciencias de la Naturaleza 3.º, Unidad 2 ----------
+// Expected values from the plan (.pi/plan-naturales-animales.md: stations, exam settings, the ficha / clave contracts, the theme,
+// the art keys, the book traps) and the driver hooks (/tmp/na-design/hooks.md: the NA_CHECK error kinds).
+
+const bootNa = () => {
+  const node = () => ({ attrs: {}, dataset: {}, style: {}, setAttribute() {}, append() {}, set innerHTML(_) {}, classList: { add() {} } });
+  const sb = {
+    console,
+    Math,
+    KF: { lang: 'uk', i18n: () => (key) => key, gameData: () => ({}) },
+    KFG: { shuffle: (a) => [...a], canSay: () => false },
+    document: { createElementNS: node, createElement: node },
+  };
+  sb.window = sb;
+  vm.createContext(sb);
+  for (const f of [
+    'shared/exam/exam.js',
+    'shared/exam/types.js',
+    'games/naturales-animales/content.js',
+    'games/naturales-animales/art.js',
+    'games/naturales-animales/types.js',
+  ]) {
+    vm.runInContext(read(f), sb, { filename: f });
+  }
+  return {
+    E: sb.KFExam,
+    content: clone(sb.NA_CONTENT),
+    raw: sb.NA_CONTENT,
+    types: sb.NA_TYPES,
+    art: sb.NAArt,
+    check: (u, a) => [...sb.NA_CHECK(u, a)],
+    path: (u, t) => {
+      const p = sb.NA_CLAVE_PATH(u, t);
+      return p ? [...p] : p;
+    },
+  };
+};
+const NA_STATIONS = ['comer', 'cazar', 'moverse', 'reproduccion', 'nacer', 'invertebrados', 'vertebrados', 'ficha'];
+const NA_OWN = ['ficha', 'clave'];
+// The plan's row option sets of a ficha (ids).
+const NA_ROWS = {
+  come: ['herbivoro', 'carnivoro', 'omnivoro'],
+  mueve: ['anda', 'salta', 'repta', 'nada', 'vuela'],
+  nace: ['viviparo', 'oviparo', 'ovoviviparo'],
+  grupo: ['mamifero', 'ave', 'pez', 'reptil', 'anfibio', 'invertebrado'],
+};
+// The plan's «Art keys (final)» (must) + the three skulls.
+const NA_ART_KEYS =
+  'vaca oveja caballo conejo leon leopardo lobo gato perro cerdo jabali zorro oso elefante canguro delfin ballena murcielago gallina buitre halcon pinguino pato serpiente tortuga cocodrilo lagarto rana salamandra tiburon atun pez-payaso caballito-mar estrella-mar erizo-mar lombriz medusa esponja caracol pulpo abeja mariposa hormiga mariquita arana escorpion cangrejo craneo-herbivoro craneo-carnivoro craneo-omnivoro'.split(
+    ' ',
+  );
+const naTasks = (u) => u.stations.flatMap((s) => s.tasks.map((t) => ({ ...t, station: s.id })));
+// Football words the safari unit must not show (plan: «Override every football word players can see»); «cuaderno de campo» is
+// the explorer's field notebook of station 8 (plan), not a pitch: that phrase is taken out before the check.
+const NA_FOOTBALL = /⚽|🟨|🟥|\bgol(es|azo)?\b|partido|árbitro|\bcampo\b|tarjeta|expuls|\bVAR\b/i;
+const naShown = (s) => s.replace(/cuadernos? de campo/gi, '');
+
+test('naturales-animales: valid; eight stations, exam of 15 (2 per station, 1 for one), red after 4, sendOff, VAR at 2, practice at 0.5', () => {
+  const { E, content: u } = bootNa();
+  assert.deepEqual([...E.validate(clone(u))], []);
+  assert.equal(u.slug, 'naturales-animales');
+  assert.equal(u.testHook, '__na');
+  assert.deepEqual(
+    u.stations.map((s) => s.id),
+    NA_STATIONS,
+  );
+  for (const s of u.stations) assert.ok(s.tasks.length >= 8 && s.tasks.length <= 12, `${s.id}: ${s.tasks.length} tasks`);
+  const total = u.stations.reduce((a, s) => a + s.tasks.length, 0);
+  assert.ok(total >= 75 && total <= 90, `${total} tasks`);
+  assert.equal(u.readFirst, false);
+  assert.equal(u.round, 6);
+  assert.equal(u.practiceCoin, 0.5);
+  assert.deepEqual(Object.keys(u.exam.perStation).sort(), [...NA_STATIONS].sort());
+  const per = Object.values(u.exam.perStation);
+  assert.equal(
+    per.reduce((a, b) => a + b, 0),
+    15,
+  );
+  assert.deepEqual(
+    per.filter((n) => n === 1),
+    [1],
+    'one station (the lightest) with 1',
+  );
+  assert.equal(per.filter((n) => n === 2).length, 7);
+  assert.equal(u.exam.redAfter, 4);
+  assert.equal(u.exam.sendOff, true);
+  assert.equal(u.exam.var, 2);
+  const used = new Set(naTasks(u).map((t) => t.type));
+  for (const k of NA_OWN) assert.ok(used.has(k), `no ${k} task`);
+  for (const k of [...Object.keys(u.sampling?.caps ?? {}), ...Object.keys(u.sampling?.examCaps ?? {}), ...(u.sampling?.always ?? [])])
+    assert.ok(used.has(k), `sampling names «${k}»`);
+  // station 8 «ficha» is mostly fichas plus claves; claves in invertebrados (columna, invertebrados) and vertebrados
+  const st = (id) => u.stations.find((s) => s.id === id).tasks;
+  assert.ok(st('ficha').filter((t) => t.type === 'ficha').length > st('ficha').length / 2, 'station ficha: mostly fichas');
+  assert.ok(st('ficha').some((t) => t.type === 'clave'));
+  assert.deepEqual(
+    [
+      ...new Set(
+        st('invertebrados')
+          .filter((t) => t.type === 'clave')
+          .map((t) => t.tree),
+      ),
+    ].sort(),
+    ['columna', 'invertebrados'],
+  );
+  assert.ok(st('vertebrados').some((t) => t.type === 'clave' && t.tree === 'vertebrados'));
+});
+
+test('naturales-animales: every station has a uk glossary of 7–8 pairs and a rule note of 25–35 words; no Cyrillic outside the glossaries', () => {
+  const { content: u } = bootNa();
+  for (const s of u.stations) {
+    assert.ok(s.vocab?.length >= 7 && s.vocab.length <= 8, `${s.id}: ${s.vocab?.length} glossary pairs`);
+    for (const [es, uk] of s.vocab) {
+      assert.ok(!CYR.test(es), `${s.id}: Spanish term «${es}» has Cyrillic`);
+      assert.ok(CYR.test(uk), `${s.id}: «${es}» has no Ukrainian translation («${uk}»)`);
+    }
+    assert.ok(s.text?.paragraphs?.length >= 1, `${s.id}: rule note`);
+    const n = words(s.text.paragraphs.join(' '));
+    assert.ok(n >= 25 && n <= 35, `${s.id}: the rule note has ${n} words`);
+  }
+  const noVocab = { ...u, stations: u.stations.map(({ vocab, ...s }) => s) };
+  assert.ok(!CYR.test(JSON.stringify(noVocab)), 'Cyrillic outside the glossaries');
+  for (const t of naTasks(u)) {
+    if (t.type !== 'choice' || t.pics) continue;
+    const ok = t.options[t.answer].length;
+    const mx = Math.max(...t.options.filter((_, i) => i !== t.answer).map((o) => o.length));
+    assert.ok(!(ok > mx * 1.3 && ok - mx > 6), `«${t.options[t.answer]}» stands out in «${t.q}»`);
+  }
+});
+
+test('naturales-animales: valid with the renderers; NA_CHECK passes with and without the art; every art key used exists', () => {
+  const { E, content: u, types, art, check } = bootNa();
+  assert.deepEqual(Object.keys(types).sort(), NA_OWN.slice().sort());
+  assert.deepEqual([...E.validate(clone(u), { ...E.types, ...types })], []);
+  assert.deepEqual(check(clone(u)), []);
+  assert.deepEqual(check(clone(u), art), []);
+  for (const k of NA_ART_KEYS) assert.equal(art.has(k), true, `plan art key «${k}» is not drawn`);
+  assert.equal(art.has('no-such-animal'), false);
+  let n = 0;
+  for (const t of naTasks(u)) {
+    const keys = [t.art, NA_OWN.includes(t.type) ? t.animal : null, ...(t.type === 'choice' && t.pics ? t.options : [])].filter(Boolean);
+    for (const k of keys) {
+      n++;
+      assert.equal(art.has(k), true, `${t.station}: art «${k}» does not exist`);
+    }
+  }
+  assert.ok(n >= 20, `${n} art keys used`);
+  assert.equal(typeof art.hero, 'function');
+});
+
+test('naturales-animales: every ficha row is a plan row, its answer is in its options (narrowed or the full set), 2–4 rows', () => {
+  const { content: u } = bootNa();
+  const fichas = naTasks(u).filter((t) => t.type === 'ficha');
+  assert.ok(fichas.length >= 6, `${fichas.length} fichas`);
+  for (const t of fichas) {
+    assert.ok(t.rows.length >= 2 && t.rows.length <= 4, `${t.name}: ${t.rows.length} rows`);
+    assert.equal(new Set(t.rows.map((r) => r.id)).size, t.rows.length, `${t.name}: repeated row`);
+    for (const r of t.rows) {
+      assert.ok(r.id in NA_ROWS, `${t.name}: unknown row ${r.id}`);
+      const opts = r.options ?? NA_ROWS[r.id];
+      for (const o of opts) assert.ok(NA_ROWS[r.id].includes(o), `${t.name} ${r.id}: unknown option ${o}`);
+      assert.ok(opts.length >= 2, `${t.name} ${r.id}: options`);
+      assert.ok(opts.includes(r.answer), `${t.name} ${r.id}: answer «${r.answer}» not in ${opts.join(', ')}`);
+    }
+  }
+});
+
+test('naturales-animales: every clave leaf is reachable — NA_CLAVE_PATH walks the tree to it; facts are 2–4 texts', () => {
+  const { content: u, path } = bootNa();
+  const claves = naTasks(u).filter((t) => t.type === 'clave');
+  assert.ok(claves.length >= 6, `${claves.length} claves`);
+  for (const t of claves) {
+    assert.ok(t.tree in u.trees, `${t.name}: no tree ${t.tree}`);
+    const p = path(u, t);
+    assert.ok(Array.isArray(p) && p.length >= 1, `${t.name}: no path to ${t.answer} in ${t.tree}`);
+    // walking the tree by the path ends exactly on the answer leaf
+    let n = u.trees[t.tree];
+    for (const side of p) {
+      assert.ok(side === 'yes' || side === 'no');
+      n = n[side];
+    }
+    assert.equal(n, t.answer, `${t.name}: the path ends on ${n}`);
+    assert.ok(typeof u.leaves[t.answer] === 'string' && u.leaves[t.answer].trim(), `${t.answer}: no label`);
+    assert.ok(t.facts?.length >= 2 && t.facts.length <= 4, `${t.name}: ${t.facts?.length} facts`);
+  }
+});
+
+// Leaves of a tree (every string reached from the root).
+const naLeaves = (n) => (typeof n === 'string' ? [n] : [...naLeaves(n.yes), ...naLeaves(n.no)]);
+
+test('naturales-animales: the plan trees — columna, vertebrados in the plan order, invertebrados starts with the arthropods', () => {
+  const { content: u, path } = bootNa();
+  assert.deepEqual(Object.keys(u.trees).sort(), ['columna', 'invertebrados', 'vertebrados']);
+  assert.deepEqual(naLeaves(u.trees.columna).sort(), ['invertebrado', 'vertebrado']);
+  assert.deepEqual(naLeaves(u.trees.vertebrados).sort(), ['anfibio', 'ave', 'mamifero', 'pez', 'reptil']);
+  const at = (tree, answer) => path(u, { tree, answer });
+  assert.deepEqual(at('columna', 'vertebrado'), ['yes']);
+  assert.deepEqual(at('columna', 'invertebrado'), ['no']);
+  // pelo → mamífero; plumas → ave; aletas → pez; piel desnuda → anfibio; else reptil
+  assert.deepEqual(at('vertebrados', 'mamifero'), ['yes']);
+  assert.deepEqual(at('vertebrados', 'ave'), ['no', 'yes']);
+  assert.deepEqual(at('vertebrados', 'pez'), ['no', 'no', 'yes']);
+  assert.deepEqual(at('vertebrados', 'anfibio'), ['no', 'no', 'no', 'yes']);
+  assert.deepEqual(at('vertebrados', 'reptil'), ['no', 'no', 'no', 'no']);
+  // patas articuladas → 6 patas insecto / 8 arácnido
+  assert.deepEqual(at('invertebrados', 'insecto'), ['yes', 'yes']);
+  assert.deepEqual(at('invertebrados', 'aracnido'), ['yes', 'no', 'yes']);
+  for (const l of ['insecto', 'aracnido', 'crustaceo', 'molusco']) assert.ok(naLeaves(u.trees.invertebrados).includes(l), l);
+  // a leaf outside the tree, or a tree that does not exist: no path
+  assert.equal(at('columna', 'mamifero'), null);
+  assert.equal(at('arboles', 'mamifero'), null);
+});
+
+// The plan's traps: the group of these animals wherever a ficha or a clave asks it.
+const NA_GROUP = {
+  delfin: 'mamifero',
+  ballena: 'mamifero',
+  murcielago: 'mamifero',
+  pinguino: 'ave',
+  rana: 'anfibio',
+  salamandra: 'anfibio',
+  tortuga: 'reptil',
+  serpiente: 'reptil',
+  cocodrilo: 'reptil',
+};
+
+test('naturales-animales: the book traps — murciélago / delfín mamífero, pingüino ave, rana anfibio, tortuga reptil; caballito de mar ovovivíparo', () => {
+  const { content: u } = bootNa();
+  let n = 0;
+  for (const t of naTasks(u)) {
+    const want = NA_GROUP[t.animal];
+    if (!want) continue;
+    if (t.type === 'ficha')
+      for (const r of t.rows.filter((x) => x.id === 'grupo')) {
+        n++;
+        assert.equal(r.answer, want, `ficha ${t.animal}`);
+      }
+    if (t.type === 'clave' && t.tree === 'vertebrados') {
+      n++;
+      assert.equal(t.answer, want, `clave ${t.animal}`);
+    }
+  }
+  assert.ok(n >= 3, `${n} trap rows / claves`);
+  for (const t of naTasks(u).filter((x) => x.type === 'ficha' && x.animal === 'caballito-mar'))
+    for (const r of t.rows.filter((x) => x.id === 'nace')) assert.equal(r.answer, 'ovoviviparo');
+  // a pingüino walks and swims: its «mueve» row is never asked with both
+  for (const t of naTasks(u).filter((x) => x.type === 'ficha' && x.animal === 'pinguino'))
+    for (const r of t.rows.filter((x) => x.id === 'mueve'))
+      assert.ok(!(r.options ?? NA_ROWS.mueve).includes('anda') || !(r.options ?? NA_ROWS.mueve).includes('nada'));
+});
+
+test('naturales-animales: every station text paragraph has a clip in shared/audio.js', () => {
+  const { content: u } = bootNa();
+  const audio = { window: {} };
+  vm.createContext(audio);
+  vm.runInContext(read('shared/audio.js'), audio);
+  const es = new Set(audio.window.KF_AUDIO?.es ?? audio.KF_AUDIO.es);
+  const texts = u.stations.flatMap((s) => s.text?.paragraphs ?? []);
+  assert.ok(texts.length >= 8);
+  for (const t of texts) {
+    const slug = buildSlug(t);
+    assert.ok(es.has(slug), `no clip for «${t.slice(0, 50)}…» (${slug}): run scripts/build-audio.mjs`);
+  }
+});
+
+test('naturales-animales: the safari theme — 📸 Fotos, 🕳️ bache, 🛞 rueda pinchada, 🔧 rueda de repuesto (2 🪙); no football word shown', () => {
+  const { content: u, raw } = bootNa();
+  const s = raw.strings;
+  assert.equal(s.scoreIcon, '📸');
+  assert.equal(s.goalsLabel, 'Fotos');
+  assert.match(s.yellow, /bache/i);
+  assert.match(s.red, /rueda pinchada/i);
+  assert.match(s.varBtn({ n: 2 }), /^🔧 Rueda de repuesto/);
+  assert.match(s.varBtn({ n: 2 }), /2 🪙/);
+  assert.match(strOf(s.examInfoOff), /🕳️/);
+  assert.match(strOf(s.examInfoOff), /🛞/);
+  assert.match(strOf(s.examInfoOff), /no hay monedas/);
+  for (const [k, v] of Object.entries(s)) assert.ok(!NA_FOOTBALL.test(naShown(strOf(v))), `strings.${k}: «${strOf(v)}»`);
+  assert.ok(u.lists?.praise?.length >= 3, 'own praise list (the default has «¡Golazo!»)');
+  for (const [k, xs] of Object.entries(u.lists ?? {})) for (const x of xs) assert.ok(!NA_FOOTBALL.test(x), `lists.${k}: «${x}»`);
+  // the unit's own text: titles, intros, notes, tasks, tree questions, leaves (the uk glossaries are not shown on es, checked anyway)
+  const shown = naShown(JSON.stringify(u.stations) + JSON.stringify(u.trees) + JSON.stringify(u.leaves) + u.title + u.intro + u.exam.title);
+  const hit = shown.match(new RegExp(NA_FOOTBALL.source, 'gi'));
+  assert.equal(hit, null, `football words in the content: ${hit}`);
+  assert.ok(!shown.includes('⚽'));
+});
+
+test('naturales-animales: every engine default the player sees with a football word is overridden by the unit', () => {
+  const { raw } = bootNa();
+  const defaults = engineDefaults('DEFAULT_STRINGS');
+  // the sort / order hints call their chips «tarjetas» (cards to tap, not football cards)
+  const CHIP_CARDS = ['kSort', 'pickCard', 'kOrder', 'orderNeedAll'];
+  const merged = { ...defaults, ...raw.strings };
+  for (const k of CHIP_CARDS) delete merged[k];
+  const left = Object.entries(merged)
+    .filter(([, v]) => NA_FOOTBALL.test(naShown(strOf(v))))
+    .map(([k, v]) => `${k}: «${strOf(v)}»`);
+  assert.deepEqual(left, []);
+  const lists = { ...engineDefaults('DEFAULT_LISTS'), ...raw.lists };
+  for (const [k, xs] of Object.entries(lists)) for (const x of xs) assert.ok(!NA_FOOTBALL.test(x), `lists.${k}: «${x}»`);
+});
+
+// NA_CHECK on a small valid unit, one thing broken at a time (the error kinds of the hooks: «NA_CHECK negatives»).
+const naUnit = () => ({
+  slug: 'na-demo',
+  title: 'Demo',
+  stations: [
+    {
+      id: 'a',
+      title: 'A',
+      icon: '📸',
+      intro: 'A',
+      tasks: [
+        {
+          type: 'ficha',
+          q: 'Rellena la ficha.',
+          animal: 'vaca',
+          name: 'la vaca',
+          rows: [
+            { id: 'come', answer: 'herbivoro' },
+            { id: 'mueve', answer: 'anda', options: ['anda', 'nada', 'vuela'] },
+            { id: 'grupo', answer: 'mamifero' },
+          ],
+          fact: 'La vaca come hierba.',
+        },
+        {
+          type: 'clave',
+          q: '¿Quién es?',
+          animal: 'abeja',
+          name: 'la abeja',
+          facts: ['No tiene huesos', 'Tiene seis patas'],
+          tree: 'k',
+          answer: 'insecto',
+        },
+        { type: 'choice', pics: true, q: '¿Cuál vuela?', options: ['vaca', 'halcon'], labels: ['vaca', 'halcón'], answer: 1 },
+      ],
+    },
+  ],
+  trees: {
+    k: { q: '¿Tiene huesos?', yes: 'vertebrado', no: { q: '¿Tiene seis patas?', yes: 'insecto', no: 'otro' } },
+  },
+  leaves: { vertebrado: 'Vertebrado', insecto: 'Insecto', otro: 'Otro' },
+  exam: { perStation: { a: 1 } },
+});
+const T1 = /^station a task 1 \(ficha\): /;
+const T2 = /^station a task 2 \(clave\): /;
+const T3 = /^station a task 3 \(choice\): /;
+// [name, the scope every error must have, a word of the kind, mutate(unit)] — tasks = u.stations[0].tasks
+const NA_BROKEN = [
+  // ficha
+  ['ficha: unknown row id', T1, /unknown row/, (u) => (u.stations[0].tasks[0].rows[0].id = 'vive')],
+  ['ficha: unknown row answer', T1, /unknown answer/, (u) => (u.stations[0].tasks[0].rows[0].answer = 'frugivoro')],
+  ['ficha: unknown option', T1, /unknown option/, (u) => u.stations[0].tasks[0].rows[1].options.push('corre')],
+  ['ficha: options < 2', T1, /options/, (u) => (u.stations[0].tasks[0].rows[1].options = ['anda'])],
+  ['ficha: options not unique', T1, /unique/, (u) => u.stations[0].tasks[0].rows[1].options.push('nada')],
+  ['ficha: answer not in its options', T1, /not in its options/, (u) => (u.stations[0].tasks[0].rows[1].options = ['nada', 'vuela'])],
+  ['ficha: 1 row', T1, /2–4/, (u) => (u.stations[0].tasks[0].rows = [{ id: 'come', answer: 'herbivoro' }])],
+  [
+    'ficha: 5 rows',
+    T1,
+    /2–4/,
+    (u) =>
+      (u.stations[0].tasks[0].rows = [
+        { id: 'come', answer: 'herbivoro' },
+        { id: 'mueve', answer: 'anda' },
+        { id: 'nace', answer: 'viviparo' },
+        { id: 'grupo', answer: 'mamifero' },
+        { id: 'come', answer: 'herbivoro' },
+      ]),
+  ],
+  ['ficha: duplicate row id', T1, /unique/, (u) => (u.stations[0].tasks[0].rows[2] = { id: 'come', answer: 'herbivoro' })],
+  ['ficha: q missing', T1, /\bq\b/, (u) => delete u.stations[0].tasks[0].q],
+  ['ficha: animal missing', T1, /animal/, (u) => delete u.stations[0].tasks[0].animal],
+  ['ficha: name missing', T1, /name/, (u) => (u.stations[0].tasks[0].name = ' ')],
+  ['ficha: Cyrillic in the name', T1, /Cyrillic/, (u) => (u.stations[0].tasks[0].name = 'корова')],
+  ['ficha: Cyrillic in the fact', T1, /Cyrillic/, (u) => (u.stations[0].tasks[0].fact = 'La vaca — корова.')],
+  ['ficha: no art for the animal', T1, /no art «unicornio»/, (u) => (u.stations[0].tasks[0].animal = 'unicornio')],
+  // clave
+  ['clave: q missing', T2, /\bq\b/, (u) => (u.stations[0].tasks[1].q = '')],
+  ['clave: animal missing', T2, /animal/, (u) => delete u.stations[0].tasks[1].animal],
+  ['clave: name missing', T2, /name/, (u) => delete u.stations[0].tasks[1].name],
+  ['clave: no art for the animal', T2, /no art «unicornio»/, (u) => (u.stations[0].tasks[1].animal = 'unicornio')],
+  ['clave: Cyrillic in facts', T2, /Cyrillic/, (u) => (u.stations[0].tasks[1].facts = ['Шість лап', 'No tiene huesos'])],
+  ['clave: 5 facts', T2, /facts/, (u) => (u.stations[0].tasks[1].facts = ['a', 'b', 'c', 'd', 'e'])],
+  ['clave: an empty fact', T2, /facts/, (u) => (u.stations[0].tasks[1].facts = ['Tiene seis patas', ''])],
+  // the tree «k» is then not used either: the error about the task and the one about the tree
+  ['clave: no tree', /^station a task 2 \(clave\): |^tree k: /, /no tree «bosque»/, (u) => (u.stations[0].tasks[1].tree = 'bosque')],
+  [
+    'clave: answer leaf not in the tree',
+    T2,
+    /not in tree/,
+    (u) => (u.stations[0].tasks[1].answer = 'vertebrado2') && (u.leaves.vertebrado2 = 'V'),
+  ],
+  // the leaf is in the tree but not in leaves: reported for the task and for the tree
+  [
+    'clave: answer leaf without a label',
+    /^station a task 2 \(clave\): |^tree k root\.no\.yes: /,
+    /^station a task 2 \(clave\): .*no label/,
+    (u) => delete u.leaves.insecto,
+  ],
+  // pictures
+  ['choice pics: an option with no art', T3, /no picture «grifo»/, (u) => (u.stations[0].tasks[2].options[0] = 'grifo')],
+  [
+    'task art: no art',
+    T3,
+    /no art «grifo»/,
+    (u) => Object.assign(u.stations[0].tasks[2], { pics: false, options: ['a', 'b'], art: 'grifo' }),
+  ],
+  // trees / leaves
+  ['tree: node without q', /^tree k root\.no: /, /without q/, (u) => delete u.trees.k.no.q],
+  ['tree: Cyrillic in a node q', /^tree k root: /, /Cyrillic/, (u) => (u.trees.k.q = 'Є кістки?')],
+  ['tree: node without a yes branch', /^tree k root: /, /«yes»/, (u) => delete u.trees.k.yes],
+  ['tree: node without a no branch', /^tree k root\.no: /, /«no»/, (u) => delete u.trees.k.no.no],
+  ['tree: leaf without a label in leaves', /^tree k root\.no\.no: /, /no label/, (u) => delete u.leaves.otro],
+  ['leaves: Cyrillic label', /^leaf «otro»: /, /Spanish/, (u) => (u.leaves.otro = 'Інше')],
+  ['tree: a leaf reached twice', /^tree k: /, /reached 2 times/, (u) => (u.trees.k.no.no = 'vertebrado')],
+  ['tree: a tree no clave uses', /^tree j: /, /no clave/, (u) => (u.trees.j = { q: '¿Vuela?', yes: 'vertebrado', no: 'otro' })],
+];
+
+test('NA_CHECK: the small valid unit passes (with and without the art)', () => {
+  const { check, art } = bootNa();
+  assert.deepEqual(check(naUnit()), []);
+  assert.deepEqual(check(naUnit(), art), []);
+});
+
+for (const [name, scope, kind, mutate] of NA_BROKEN) {
+  test(`NA_CHECK catches: ${name}`, () => {
+    const { check, art } = bootNa();
+    const u = naUnit();
+    mutate(u);
+    const errs = check(u, art);
+    assert.ok(errs.length > 0, 'no errors reported');
+    assert.ok(
+      errs.every((e) => scope.test(e)),
+      `errors not only about ${scope}: ${JSON.stringify(errs)}`,
+    );
+    assert.ok(
+      errs.some((e) => kind.test(e)),
+      `no «${kind}» error: ${JSON.stringify(errs)}`,
+    );
+  });
+}
+
+test('NA_CLAVE_PATH: the yes / no answers node by node; null for a leaf outside the tree or no tree', () => {
+  const { path } = bootNa();
+  const u = naUnit();
+  assert.deepEqual(path(u, { tree: 'k', answer: 'vertebrado' }), ['yes']);
+  assert.deepEqual(path(u, { tree: 'k', answer: 'insecto' }), ['no', 'yes']);
+  assert.deepEqual(path(u, { tree: 'k', answer: 'otro' }), ['no', 'no']);
+  assert.equal(path(u, { tree: 'k', answer: 'pez' }), null);
+  assert.equal(path(u, { tree: 'nada', answer: 'otro' }), null);
+});
