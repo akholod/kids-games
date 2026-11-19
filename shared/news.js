@@ -7,6 +7,21 @@
 // and { title, text } per site language (es: Spain Spanish, «tú», no Cyrillic).
 window.KF_NEWS = [
   {
+    id: 'naturales-animales',
+    date: '2026-11-19',
+    sites: ['uk', 'es'],
+    icon: '🦁',
+    game: 'naturales-animales',
+    uk: {
+      title: 'Нова гра: Expedición safari',
+      text: 'Вирушай на сафарі на джипі та готуйся до іспиту з Naturales: що їдять тварини, як рухаються, як народжуються і до якої групи належать.',
+    },
+    es: {
+      title: 'Nuevo juego: Expedición safari',
+      text: 'Sal de safari en jeep y prepara el examen de Naturales: qué comen los animales, cómo se mueven, cómo nacen y a qué grupo pertenecen.',
+    },
+  },
+  {
     id: 'sociales-clima',
     date: '2026-11-18',
     sites: ['uk', 'es'],

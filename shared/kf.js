@@ -369,7 +369,7 @@
       emoji: '🦁',
       category: 'sociales',
       desc: 'Готуємось до іспиту з Ciencias de la Naturaleza: Unidad 2 — що їдять тварини, зуби, як рухаються й народжуються, хребетні й безхребетні.',
-      status: 'beta',
+      status: 'ready',
       sites: ['uk', 'es'],
       es: {
         title: 'Expedición safari',
